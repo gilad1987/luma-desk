@@ -1,0 +1,14 @@
+<header id="top">
+    <div class="brand"><i></i>LUMA<b>DESK</b></div>
+    <div class="showname" id="showName">Demo Show — Sultan's Pool, Jerusalem</div>
+    <div class="tbg"><label>View</label>
+      <button data-view="foh" class="on">FOH</button><button data-view="front">Front</button><button data-view="stage">On Stage</button><button data-view="top">Top</button><button data-view="side">Side</button><button data-view="crowd">Crowd</button><button data-view="band">Band</button><button data-view="orch">Orchestra</button><button data-view="ring">Ring</button><button data-view="wide">Wide</button><button data-view="aud">Audience</button><button data-view="drums">Drums</button><button data-view="valley">Old City</button><button data-view="walls">Walls</button>
+    </div>
+    <div class="tbg"><label>House</label><input type="range" id="house" min="0" max="100" value="30" style="width:70px" title="Audience house lights"></div>
+    <div class="tbg"><label>Haze</label><input type="range" id="haze" min="0" max="100" value="62" style="width:90px"></div>
+    <div class="tbg"><button id="glowBtn" class="on">Glow</button><button id="idsBtn">Fixture IDs</button><button id="realBtn" class="on" title="Real spot lights & shadows on performers">Real light</button></div>
+    <div class="spacer"></div>
+    <div class="tbg" id="layoutBox"><label>Layout</label><select id="layoutSel" title="פריסת מסך"><option value="ma">Console (MA)</option><option value="desk">Desk</option><option value="classic">Classic</option></select><select id="deskZoom" title="גודל הקונסולה"><option value="auto">Auto</option><option value=".85">85%</option><option value="1">100%</option><option value="1.15">115%</option><option value="1.3">130%</option><option value="1.5">150%</option></select></div>
+    <div class="tbg"><button id="recBtn" title="הקלטת וידאו של התצוגה (.webm)">● REC</button><button id="fsBtn" title="מסך מלא (F)">⛶</button><button id="installBtn" style="display:none">⬇ התקן אפליקציה</button><button id="midiBtn">MIDI</button><button id="fileBtn">Show File</button><button id="helpBtn" class="on">📖 מדריך</button></div>
+    <div id="clock"></div><div id="fps"></div>
+  </header>
