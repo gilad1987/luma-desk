@@ -1,7 +1,7 @@
 import type { LoadedSong } from '../../../audio/SongPlayer';
 import type { AutoStyle } from '../../../autoshow/AutoStyle';
 import { sectionName, type Section } from '../../../autoshow/sections';
-import { cssRgb } from '../../../core/color';
+import { cssRgb } from '../../../core';
 import { colorByName } from '../../../engine/colorByName';
 
 /** The idle text of `#autoStatus`. */

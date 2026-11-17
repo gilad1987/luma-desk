@@ -33,10 +33,11 @@ export class SheetPanel implements UiPanel {
     this.#table = byId('sheet');
     this.#table.onclick = (ev) => {
       const tr = ev.target instanceof Element ? ev.target.closest<HTMLElement>('tr[data-id]') : null;
-      if (tr) deps.selection.set([Number(tr.dataset.id)], ev.shiftKey ? 'toggle' : 'replace');
+      if (tr) deps.selection.set([Number(tr.dataset['id'])], ev.shiftKey ? 'toggle' : 'replace');
     };
   }
 
+  /** The sheet is polled, not evented: its values change every frame, so it repaints on the slow tick while shown. */
   slow(): void {
     if (this.#deps.sideTab() === 'sheet') this.render();
   }

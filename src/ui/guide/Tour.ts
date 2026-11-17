@@ -1,5 +1,6 @@
 import { he } from '../../i18n/he';
 import { byId } from '../dom';
+import type { TourStepText } from '../../i18n/he/tourStepText';
 import { tipPlacement, visibleTargetBox } from './tourGeometry';
 import { TOUR_TARGETS, type TourHooks } from './tourTargets';
 
@@ -44,7 +45,7 @@ export class Tour {
     const target = TOUR_TARGETS[i],
       step = he.tour.steps[i];
     if (!target || !step) throw new RangeError(`tour step ${i} does not exist`);
-    const text = typeof step.text === 'string' ? step.text : this.#hooks.isMa() ? step.text.ma : step.text.other;
+    const text = this.#textFor(step);
     target.before?.(this.#hooks);
     requestAnimationFrame(() => {
       const e = document.querySelector<HTMLElement>(target.selector);
@@ -71,5 +72,11 @@ export class Tour {
       tip.style.left = at.left + 'px';
       tip.style.top = at.top + 'px';
     });
+  }
+
+  /** Some steps word the text per layout; the layout is read before the step's `before` hook, as the old code did. */
+  #textFor(step: TourStepText): string {
+    if (typeof step.text === 'string') return step.text;
+    return this.#hooks.isMa() ? step.text.ma : step.text.other;
   }
 }

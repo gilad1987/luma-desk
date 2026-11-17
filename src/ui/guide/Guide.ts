@@ -81,7 +81,7 @@ export class Guide {
     byId('gPrev').style.visibility = i ? 'visible' : 'hidden';
     byId('gNext').style.visibility = i < chapters.length - 1 ? 'visible' : 'hidden';
     nav.querySelectorAll<HTMLElement>('button[data-i]').forEach((b) => {
-      b.onclick = () => this.show(Number(b.dataset.i));
+      b.onclick = () => this.show(Number(b.dataset['i']));
     });
     byId('gTour').onclick = () => {
       this.close();

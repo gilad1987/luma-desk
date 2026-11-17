@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { AttrName } from '../../../../src/domain/attributes';
+import { TYPES } from '../../../../src/domain/fixtureTypes';
 import { sheetRowView, sheetTable } from '../../../../src/ui/panels/sheet/sheetCells';
 import type { SheetFixture } from '../../../../src/ui/panels/sheet/SheetFixture';
 
 const base = { dim: 0, pan: 12.6, tilt: -3.4, r: 50, g: 10, b: 100, gobo: 2.2, grot: 0, zoom: 7, strobe: 0 };
 const fixture = (attrs: readonly AttrName[]): SheetFixture => ({
   id: 201,
-  T: { name: 'Spot' },
+  T: { ...TYPES.spot, name: 'Spot' },
   base,
   out: { dim: 49.5 },
   has: (a) => attrs.includes(a),
@@ -41,5 +42,11 @@ describe('sheet cells (same values as the original renderSheet)', () => {
     const view = sheetRowView(fixture([]), false, {});
     expect(view.cells.map(([, text]) => text)).toEqual(['50', '', '', '', '']);
     expect([view.rowClass, view.swatch]).toEqual(['', '#333']);
+  });
+
+  it('shows NaN for a value not output yet, as the old Math.round(undefined) did', () => {
+    const view = sheetRowView({ ...fixture(['pan', 'zoom', 'r']), base: {}, out: {} }, false, {});
+    expect(view.cells.map(([, text]) => text)).toEqual(['NaN', 'NaN', '', '', 'NaN']);
+    expect(view.swatch).toBe('rgb(NaN,NaN,NaN)');
   });
 });

@@ -18,7 +18,8 @@ function rowClass(e: Executor, i: number): string {
 
 /**
  * The cue table of `e`: header, one row per cue (`data-i` is the cue index), or a hint row when there are no cues.
- * Cue names are not escaped (quirk Q11).
+ * Cue names are not escaped (quirk Q11). The old page appended the hint row with `innerHTML +=`, which re-parsed the
+ * table and put the hint row in a second `<tbody>`; the explicit bodies give that same DOM without the re-parse.
  */
 export function cueTable(e: Executor): string {
   const rows = e.cues.map((c, i) => {
@@ -32,5 +33,6 @@ export function cueTable(e: Executor): string {
   const empty =
     '<tr><td colspan="4" style="color:var(--mut);padding:14px">No cues. Build a look in the programmer, then STORE → ' +
     'click this executor (or type <b>Store Cue 1</b>).</td></tr>';
-  return `<tr><th>Cue</th><th>Name</th><th>Fade</th><th>Content</th></tr>` + rows.join('') + (rows.length ? '' : empty);
+  const header = '<tr><th>Cue</th><th>Name</th><th>Fade</th><th>Content</th></tr>';
+  return rows.length ? header + rows.join('') : `<tbody>${header}</tbody><tbody>${empty}</tbody>`;
 }

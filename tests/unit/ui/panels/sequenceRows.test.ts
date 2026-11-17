@@ -31,11 +31,17 @@ describe('sequence rows (same strings as the original renderSeq)', () => {
     );
   });
 
-  it('shows the hint row when there are no cues', () => {
+  // The old `t.innerHTML += hint` re-parsed `<tbody>HEAD</tbody>` + hint, and the parser gives a `<tr>` after a
+  // closed `<tbody>` a new implicit one: two bodies, which this markup states explicitly.
+  it('shows the hint row in a second tbody when there are no cues, as the old innerHTML += did', () => {
     expect(cueTable(exec({}))).toBe(
-      HEAD +
+      `<tbody>${HEAD}</tbody><tbody>` +
         '<tr><td colspan="4" style="color:var(--mut);padding:14px">No cues. Build a look in the programmer, then ' +
-        'STORE → click this executor (or type <b>Store Cue 1</b>).</td></tr>',
+        'STORE → click this executor (or type <b>Store Cue 1</b>).</td></tr></tbody>',
     );
+  });
+
+  it('keeps one implicit tbody when there are cues', () => {
+    expect(cueTable(exec({ cues: [cue(1, 'A', 2, 0, 0)] as unknown as Executor['cues'] }))).not.toContain('tbody');
   });
 });
