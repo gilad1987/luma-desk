@@ -34,7 +34,7 @@ export class Encoder {
       'encoder',
       `<div class="lb">${range.label}</div><div class="knob"><div class="ind"></div></div><div class="val">—</div>`,
     );
-    this.element.dataset.a = attr;
+    this.element.dataset['a'] = attr;
     this.#knob = requireChild(this.element, '.knob');
     this.#value = requireChild(this.element, '.val');
     this.#indicator = requireChild(this.element, '.ind');

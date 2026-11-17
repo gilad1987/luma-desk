@@ -26,7 +26,7 @@ export class FeatureTabs {
     this.#host.innerHTML = '';
     this.#buttons = FEATS.map(([k, n]) => {
       const b = createElement('button', k === current ? 'on' : '', n);
-      b.dataset.f = k;
+      b.dataset['f'] = k;
       b.onclick = () => this.#pick(k);
       this.#host.appendChild(b);
       return [k, b] as const;

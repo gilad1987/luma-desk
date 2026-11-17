@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Programmer } from '../../../../../src/engine/Programmer';
-import { colorPad } from '../../../../../src/ui/panels/color/ColorPad';
-import { FakeCanvas } from '../../fakes/FakeElement';
-import { pointer } from '../../fakes/fakePointer';
-import { FakeDom } from '../../fakes/installFakeDom';
+import type { Programmer } from '../../../../src/engine/Programmer';
+import { colorPad } from '../../../../src/ui/components/ColorPad';
+import { asReal } from '../fakes/asReal';
+import { FakeCanvas } from '../fakes/FakeElement';
+import { pointer } from '../fakes/fakePointer';
+import { FakeDom } from '../fakes/installFakeDom';
 
 /** A canvas whose 2D context records every fill. */
 class PaintCanvas extends FakeCanvas {
@@ -31,7 +32,7 @@ describe('colorPad', () => {
     canvas.rect = { left: 0, top: 0, width: 3, height: 2 };
     canvas.offsetParent = dom.body;
     const programmer = programmerWith(targets);
-    colorPad(canvas as unknown as HTMLCanvasElement, programmer as unknown as Programmer);
+    colorPad(asReal<HTMLCanvasElement>(canvas), asReal<Programmer>(programmer));
     return { canvas, programmer };
   };
 

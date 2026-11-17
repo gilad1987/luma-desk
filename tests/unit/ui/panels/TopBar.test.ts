@@ -5,8 +5,8 @@ import type { EngineEvents } from '../../../../src/engine/events';
 import { TopBar, type TopBarRender } from '../../../../src/ui/panels/top/TopBar';
 import { topBarMarkup } from '../../../../src/ui/panels/top/topBarMarkup';
 import { FakeDom } from '../fakes/installFakeDom';
-import { FakeButton } from './fakes/FakeButton';
-import { FakeHost } from './fakes/FakeHost';
+import { FakeButton } from '../fakes/FakeButton';
+import { FakeHost } from '../fakes/FakeHost';
 
 describe('TopBar', () => {
   afterEach(() => vi.unstubAllGlobals());

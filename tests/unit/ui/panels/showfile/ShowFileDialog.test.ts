@@ -6,8 +6,8 @@ import type { ShowFileDeps } from '../../../../../src/ui/panels/showfile/ShowFil
 import { showFileMarkup } from '../../../../../src/ui/panels/showfile/showFileMarkup';
 import { FakeElement } from '../../fakes/FakeElement';
 import { FakeDom } from '../../fakes/installFakeDom';
-import { FakeButton } from '../fakes/FakeButton';
-import { legacyMarkup } from '../fakes/legacyMarkup';
+import { FakeButton } from '../../fakes/FakeButton';
+import { legacyMarkup } from '../../legacy/legacyMarkup';
 
 vi.mock('../../../../../src/engine/defaultGroups', () => ({ defaultGroups: () => ({ defaults: true }) }));
 
@@ -42,7 +42,7 @@ describe('ShowFileDialog', () => {
 
   it('opens the original markup from #fileBtn', () => {
     const { modal } = openDialog();
-    expect(showFileMarkup).toBe(legacyMarkup('../showfile/showFile'));
+    expect(showFileMarkup).toBe(legacyMarkup('showFile'));
     expect(modal.open).toHaveBeenCalledWith(showFileMarkup);
   });
 

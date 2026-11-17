@@ -9,13 +9,19 @@ export interface CueHudText {
   readonly next: string;
 }
 
+/** The current-cue line: the cue as HTML, else whether GO would start the executor or it has no cues. */
+function cueLineHtml(e: Executor): string {
+  const cue = e.cues[e.cur];
+  if (cue) return `<span>${cue.num}</span> ${cue.name}`;
+  return e.cues.length ? 'Off — press GO' : 'No cues';
+}
+
 /** The HUD for the selected executor `e` (0-based `i`); the next line has two spaces before the fade (quirk Q31). */
 export function executorHudText(e: Executor, i: number): CueHudText {
-  const c = e.cues[e.cur];
   const nx = e.cues.length > 1 ? e.cues[(e.cur + 1) % e.cues.length] : null;
   return {
     exec: `Exec ${i + 1} · ${e.name || 'empty'}`,
-    cueHtml: c ? `<span>${c.num}</span> ${c.name}` : e.cues.length ? 'Off — press GO' : 'No cues',
+    cueHtml: cueLineHtml(e),
     next: nx ? `Next: ${nx.num} ${nx.name}  (fade ${nx.fade}s)` : '',
   };
 }

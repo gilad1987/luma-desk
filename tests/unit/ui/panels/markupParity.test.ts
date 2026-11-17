@@ -5,7 +5,7 @@ import { sequenceMarkup } from '../../../../src/ui/panels/sequence/sequenceMarku
 import { sheetMarkup } from '../../../../src/ui/panels/sheet/sheetMarkup';
 import { sideTabsMarkup } from '../../../../src/ui/panels/side/sideTabsMarkup';
 import { topBarMarkup } from '../../../../src/ui/panels/top/topBarMarkup';
-import { legacyMarkup } from './fakes/legacyMarkup';
+import { legacyMarkup } from '../legacy/legacyMarkup';
 
 // byte for byte, whitespace included: no normalisation, so no whitespace claim needs proof
 describe('panel markup equals the original page', () => {

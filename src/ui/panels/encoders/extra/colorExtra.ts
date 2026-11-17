@@ -1,7 +1,7 @@
 import { cssRgb } from '../../../../core';
 import { COLORS } from '../../../../engine/presetColors';
 import { createElement } from '../../../shared';
-import { colorPad } from '../../color/ColorPad';
+import { colorPad } from '../../../components/ColorPad';
 import { buttonGrid } from './buttonGrid';
 import type { ExtraContext } from './ExtraContext';
 import { labelled, xlabel } from './labelled';

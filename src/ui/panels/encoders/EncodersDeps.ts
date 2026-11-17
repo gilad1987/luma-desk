@@ -4,7 +4,7 @@ import type { EngineBus } from '../../../engine/events';
 import type { Programmer } from '../../../engine/Programmer';
 import type { Selection } from '../../../engine/Selection';
 import type { Modal } from '../../shared';
-import type { AimHeight } from '../focus/AimHeight';
+import type { AimHeight } from '../../components/AimHeight';
 import type { LayoutMode } from '../layoutMode';
 
 /** What the encoders turn and read: the programmer and selection, the rig behind the ids, and the dialogs. */
