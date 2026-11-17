@@ -43,13 +43,15 @@ export function buildFixtureScene() {
   return { fixtures, scene, screenMesh, registered, gobo, beam, visuals, props, state };
 }
 
+const isMesh = (o: Object3D): o is Mesh<BufferGeometry, Material | Material[]> => o instanceof Mesh;
+
 /** Every object's uuid in scene order: equal lists mean equal creation order under a seeded Math.random. */
 export function uuidTrace(root: Object3D): string[] {
   const out: string[] = [];
   root.traverse((o) => {
     out.push(o.uuid);
-    if (!(o instanceof Mesh)) return;
-    const mesh: Mesh<BufferGeometry, Material | Material[]> = o;
+    if (!isMesh(o)) return;
+    const mesh = o;
     out.push(mesh.geometry.uuid, ...[mesh.material].flat().map((m) => m.uuid));
   });
   return out;
