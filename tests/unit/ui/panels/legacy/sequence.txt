@@ -1,0 +1,5 @@
+<div class="pane" id="pane-seq">
+        <div id="seqHead"><select id="seqSel"></select><span class="sp"></span><button id="seqBack">GO−</button><button id="seqGo">GO+</button><button id="seqDel">Delete Cue</button></div>
+        <table id="seqTable"></table>
+        <div class="seqHelp">Click a cue = Goto · Double-click name/fade to edit · STORE then click a cue = merge programmer into it.</div>
+      </div>
