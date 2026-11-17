@@ -6,9 +6,9 @@ const LENGTH_TOLERANCE_M = 1e-9;
 
 /**
  * Deep compare of plain design data: numbers, strings, booleans, null, arrays and records of them. Value compare, not
- * identity, because the property panel builds a new tuple or params object for every edit. The edit ops compare
- * `{ ...current, ...patch }` with `current`, so every key counts, a field added later too, and an unchanged patch
- * returns the design itself, so History adds no undo step.
+ * identity, because the property panel builds a new tuple or params object for every edit. The edit ops compare the
+ * list the parser read with the stored list, so every key counts, a field added later too, and a patch that changes no
+ * stored value returns the design itself, so History adds no undo step.
  */
 export function isSameData(a: unknown, b: unknown): boolean {
   if (isList(a) && isList(b)) return a.length === b.length && a.every((v, i) => isSameData(v, b[i]));

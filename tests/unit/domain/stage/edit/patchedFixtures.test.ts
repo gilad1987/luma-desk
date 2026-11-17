@@ -1,7 +1,7 @@
 /**
  * Owns the input checks of `setFixtureProps`, made by `patchedFixtures` (rules P6, P7): a patch the parser would refuse
- * throws the parser's own errors, and each refused row proves the parser refuses the same fixture. The screen fixture type rule is owned by
- * screenFixtureType.test.ts. Valid patches are also owned by noOps.test.ts and propsPatch.test.ts.
+ * throws the parser's own errors, and each refused row proves the parser refuses the same fixture. The screen fixture
+ * type rule is owned by screenFixtureType.test.ts. Valid patches are also owned by noOps.test.ts and propsPatch.test.ts.
  */
 import { describe, expect, it } from 'vitest';
 import type { Mount } from '../../../../../src/domain/Fixture.ts';
