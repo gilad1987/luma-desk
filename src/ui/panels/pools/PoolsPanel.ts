@@ -10,7 +10,9 @@ import { presetSlot } from './presetSlot';
 const GROUP_SLOTS = 48;
 /** Slots per preset pool. */
 const PRESET_SLOTS = 30;
-const PRESET_TAB_ORDER = Object.keys(PRESET_TYPES).map(Number) as PresetType[];
+const isPresetType = (n: number): n is PresetType => n in PRESET_TYPES;
+/** The tabs in pool-number order, as the old `for…in` over the pool names gave them. */
+const PRESET_TAB_ORDER = Object.keys(PRESET_TYPES).map(Number).filter(isPresetType);
 
 /**
  * The group and preset pools. It repaints only when the pools change (`poolsChanged`, synchronous, so exactly where

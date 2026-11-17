@@ -13,7 +13,7 @@ export function wireCueRows(table: HTMLElement, e: Executor, deps: SequenceDeps)
     bus.emit('showChanged', undefined);
   };
   table.querySelectorAll<HTMLTableRowElement>('tr[data-i]').forEach((tr) => {
-    const i = Number(tr.dataset.i),
+    const i = Number(tr.dataset['i']),
       c = e.cues[i];
     if (!c) return;
     tr.onclick = (ev) => {

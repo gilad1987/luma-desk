@@ -6,6 +6,10 @@ export class CommandHistory {
   readonly #entries: string[] = [];
   #index = -1;
 
+  /**
+   * Adds the newest entry. The input passes `resetIndex` so the next ArrowUp starts again from it; the keypad ENTER
+   * does not, which is the old behaviour (quirk Q6).
+   */
   push(entry: string, resetIndex: boolean): void {
     this.#entries.unshift(entry);
     if (resetIndex) this.#index = -1;

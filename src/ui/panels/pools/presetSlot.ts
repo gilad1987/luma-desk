@@ -1,4 +1,4 @@
-import { cssRgb } from '../../../core/color';
+import { cssRgb } from '../../../core';
 import type { PresetType } from '../../../engine/presetTypes';
 import { createElement } from '../../shared';
 import type { PoolsDeps } from './PoolsDeps';
@@ -14,7 +14,7 @@ function decorate(slot: HTMLDivElement, type: PresetType, n: number, deps: Pools
     sw.style.color = c;
     slot.appendChild(sw);
   }
-  if (pr && type === 3 && 'gobo' in pr && pr.gobo != null) {
+  if (pr && type === 3 && 'gobo' in pr && pr.gobo !== undefined && pr.gobo !== null) {
     const im = createElement('img', 'gi');
     // an index past the wheel sets the src "undefined", as the original assignment of a missing entry did
     im.src = deps.goboIcons[pr.gobo] ?? 'undefined';

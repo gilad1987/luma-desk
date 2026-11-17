@@ -11,7 +11,9 @@ import { wireAutoSettings } from './wireAutoSettings';
 import { wireLookButtons } from './wireLookButtons';
 import { wireSong } from './wireSong';
 
-const STYLE_IDS = Object.keys(STYLES) as AutoStyleId[];
+const isStyleId = (id: string): id is AutoStyleId => id in STYLES;
+/** The style grid order: the key order of `STYLES`. */
+const STYLE_IDS = Object.keys(STYLES).filter(isStyleId);
 
 /**
  * The Auto Show pane. The style grid and the START button repaint on a style click and when Auto starts or stops
@@ -68,6 +70,10 @@ export class AutoShowPanel implements UiPanel {
     this.#go.textContent = auto.on ? '■ STOP AUTO' : '▶ START AUTO';
   }
 
+  /**
+   * Runs on the fast tick because the beat dots must follow the beat. The countdown and status lines are written only
+   * while the Auto pane shows, as the old code did.
+   */
   fast(now: number): void {
     const { auto, tempo, sideTab } = this.#deps;
     const { beat, bar } = beatPosition(now, tempo),

@@ -6,38 +6,57 @@ import { appShellMarkup } from '../../../../src/ui/layouts/appShellMarkup';
 import { DESK_CONSOLE_MARKUP } from '../../../../src/ui/layouts/deskConsoleMarkup';
 import { MA_CONSOLE_MARKUP } from '../../../../src/ui/layouts/maConsoleMarkup';
 
-/** Whitespace runs render as one space (or nothing between blocks), so compare with them collapsed. */
-const collapse = (html: string): string => html.replace(/\s+/g, ' ').trim();
-/** The legacy page has no formatter whitespace between tags; compare structure and text only. */
-const tagsOnly = (html: string): string =>
-  collapse(html)
-    .replace(/ >/g, '>')
-    .replace(/> </g, '><')
-    .replace(/ style="([^"]*)"/g, (_, s: string) => ` style="${s.replace(/[: ;]+/g, '')}"`);
+/** Elements that are block-level in these fragments (no stylesheet makes any of them inline). */
+const BLOCK = 'div|section|nav|header|main|aside|footer|h2|h4|p';
+const breakAfterBlock = new RegExp(`(<\\/?(?:${BLOCK})\\b[^>]*>)\\n\\s*(?=<)`, 'g');
+const breakBeforeBlock = new RegExp(`>\\n\\s*(?=<\\/?(?:${BLOCK})\\b)`, 'g');
 
-const page = collapse(readFileSync('index.html', 'utf8'));
-const legacy = tagsOnly(execFileSync('git', ['show', '48a3b63:index.html'], { encoding: 'utf8' }));
+/**
+ * The markup the parser and the CSS see, without the layout Prettier adds. Exactly three differences are dropped:
+ * a line break plus indent inside an end tag (`</i\n  >`), which the tokenizer discards; a line break plus indent
+ * between two tags where one side is a block element, which is collapsible white space at a line start or end and
+ * renders nothing; and spaces around `:` and `;` in a style attribute, which CSS parsing ignores. A line break between
+ * two inline elements would render a space, so it is kept and fails the comparison.
+ */
+function renderEquivalent(html: string): string {
+  return html
+    .replace(/(<\/[a-z0-9]+)\n\s*>/g, '$1>')
+    .replace(breakAfterBlock, '$1')
+    .replace(breakBeforeBlock, '>')
+    .replace(/ style="([^"]*)"/g, (_, s: string) => ` style="${s.replace(/\s*([:;])\s*/g, '$1')}"`);
+}
+
+const page = renderEquivalent(readFileSync('index.html', 'utf8'));
+const legacySource = execFileSync('git', ['show', '48a3b63:index.html'], { encoding: 'utf8' });
+const legacy = renderEquivalent(legacySource);
 
 describe('shell markup', () => {
+  it('keeps a line break between two inline elements, so it cannot hide a rendered space', () => {
+    expect(renderEquivalent('<b>a</b>\n  <i>b</i>')).toBe('<b>a</b>\n  <i>b</i>');
+  });
+
   for (const [name, markup] of [
     ['desk console', DESK_CONSOLE_MARKUP],
     ['MA console', MA_CONSOLE_MARKUP],
     ['guide and tour', guideMarkup()],
   ] as const) {
-    it(`${name} matches the current page and the legacy page`, () => {
-      expect(page).toContain(collapse(markup));
-      expect(legacy).toContain(tagsOnly(markup));
+    it(`${name} is render-equivalent to the current page and the legacy page`, () => {
+      expect(page).toContain(renderEquivalent(markup));
+      expect(legacy).toContain(renderEquivalent(markup));
     });
   }
 
   it('wraps the panel slots in the legacy containers, in order', () => {
-    const shell = collapse(appShellMarkup({ top: 'T', viewer: 'V', side: 'S', enc: 'E', desk: 'D' }));
+    const shell = renderEquivalent(appShellMarkup({ top: 'T', viewer: 'V', side: 'S', enc: 'E', desk: 'D' }));
     expect(shell).toMatch(
-      /^<div id="app"> <header id="top">T<\/header> <main id="main"> <section id="viewer">V<\/section> <aside id="side">S<\/aside> <\/main> <section id="enc">E<\/section> <section id="console">/,
+      /^<div id="app"><header id="top">T<\/header><main id="main"><section id="viewer">V<\/section><aside id="side">S<\/aside><\/main><section id="enc">E<\/section><section id="console">/,
     );
-    expect(shell).toMatch(/<\/section> <footer id="desk">D<\/footer> <\/div> <div id="guide">/);
-    expect(shell.endsWith('<div id="modal"><div class="mbox" id="mbox"></div></div> <div id="toast"></div>')).toBe(
-      true,
-    );
+    expect(shell).toMatch(/<\/section><footer id="desk">D<\/footer><\/div><div id="guide">/);
+  });
+
+  it('ends with the legacy overlay bytes', () => {
+    const tail = '\n<div id="modal"><div class="mbox" id="mbox"></div></div>\n<div id="toast"></div>';
+    expect(legacySource).toContain(`</div>${tail}\n`);
+    expect(appShellMarkup({ top: '', viewer: '', side: '', enc: '', desk: '' }).endsWith(tail)).toBe(true);
   });
 });

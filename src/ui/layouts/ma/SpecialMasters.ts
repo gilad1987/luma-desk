@@ -9,9 +9,13 @@ const SPECS = [
   ['aMaster', 'AUTO'],
 ] as const;
 
+/** One strip, with the parts `paint` writes looked up once at build time (it runs every 50 ms). */
 interface Strip {
   readonly input: HTMLInputElement;
   readonly root: HTMLElement;
+  readonly value: HTMLElement;
+  readonly fill: HTMLElement;
+  readonly cap: HTMLElement;
 }
 
 /**
@@ -28,12 +32,12 @@ export class SpecialMasters {
 
   /** Repaints every strip from its slider (fast UI tick, MA only). */
   paint(): void {
-    for (const { input, root } of this.strips) {
+    for (const { input, root, value, fill, cap } of this.strips) {
       const k = (Number(input.value) - Number(input.min)) / (Number(input.max) - Number(input.min));
       root.style.setProperty('--lv', String(k));
-      requireChild(root, '.sv').textContent = input.value;
-      requireChild(root, '.ff').style.height = k * 100 + '%';
-      requireChild(root, '.cap').style.bottom = k * 100 + '%';
+      value.textContent = input.value;
+      fill.style.height = k * 100 + '%';
+      cap.style.bottom = k * 100 + '%';
     }
   }
 }
@@ -57,7 +61,13 @@ function buildStrip(host: HTMLElement, input: HTMLInputElement, key: string, nam
     },
   );
   sendChangeOnRelease(root, fader, input);
-  return { input, root };
+  return {
+    input,
+    root,
+    value: requireChild(root, '.sv'),
+    fill: requireChild(root, '.ff'),
+    cap: requireChild(root, '.cap'),
+  };
 }
 
 /**

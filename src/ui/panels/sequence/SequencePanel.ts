@@ -1,3 +1,4 @@
+import { cueAt } from '../../../engine/CueList';
 import type { Executor } from '../../../engine/Executor';
 import { byId } from '../../dom';
 import type { UiPanel } from '../UiPanel';
@@ -29,10 +30,9 @@ export class SequencePanel implements UiPanel {
     byId('seqGo').onclick = () => pool.go(this.#selected(), 1);
     byId('seqBack').onclick = () => pool.go(this.#selected(), -1);
     byId('seqDel').onclick = () => {
-      const e = this.#selected(),
-        cue = e.cues[e.cur];
-      if (!cue) bus.emit('message', { kind: 'toast', text: 'Goto the cue you want to delete first' });
-      else deps.runCommand(`Delete Cue ${cue.num}`);
+      const e = this.#selected();
+      if (e.cur < 0) bus.emit('message', { kind: 'toast', text: 'Goto the cue you want to delete first' });
+      else deps.runCommand(`Delete Cue ${cueAt(e.cues, e.cur).num}`);
     };
   }
 
