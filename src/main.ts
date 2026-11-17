@@ -5,11 +5,26 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { clamp, cssRgb, D2R, hash, hsv, jsonClone, lerp, rng } from './core';
+import { clamp, cssRgb, D2R, EventBus, hsv, jsonClone, lerp, performanceClock, rng } from './core';
 import { aimAt, dirFrom } from './domain/aim';
 import { ATTR, FEAT_ATTRS, FEATS, GOBO_NAMES, SCREEN_MODES } from './domain/attributes';
 import { buildRig } from './domain/rig';
 import { ANG, BAND_PTS, DECK, RING, ROOF, SCREEN, STAGE, SXZ, TOWERS, TOWX, TOWZ, TR } from './domain/venue';
+import { AppState } from './engine/AppState';
+import { addNewDefaultGroups, defaultGroups } from './engine/defaultGroups';
+import { defaultPresets } from './engine/defaultPresets';
+import type { EngineEvents } from './engine/events';
+import { ExecutorPool } from './engine/ExecutorPool';
+import { GroupLibrary } from './engine/GroupLibrary';
+import { OutputMerger } from './engine/OutputMerger';
+import { COLORS } from './engine/presetColors';
+import { PRESET_FNS } from './engine/presetFunctions';
+import { PresetLibrary } from './engine/PresetLibrary';
+import { PRESET_TYPES } from './engine/presetTypes';
+import { Programmer } from './engine/Programmer';
+import { Selection } from './engine/Selection';
+import { PHASER_TYPES } from './engine/shared';
+import { Tempo } from './engine/Tempo';
 
 /* ====================================================================
    HELPERS
@@ -62,68 +77,6 @@ const DELAYS = [
   [-24, 33],
   [24, 33],
 ];
-
-/* ====================================================================
-   POSITION MATH
-==================================================================== */
-const ringU = (f) => {
-  const dx = f.pos.x - RING.x,
-    dz = f.pos.z - RING.z,
-    l = Math.hypot(dx, dz) || 1;
-  return [dx / l, dz / l, Math.atan2(dx, dz)];
-};
-const POS = {
-  ringDown: (f) => (f.mount === 'floor' ? aimAt(f, f.pos.x, 40, f.pos.z) : aimAt(f, f.pos.x, DECK, f.pos.z)),
-  ringCone: (f) => aimAt(f, RING.x, f.mount === 'floor' ? 34 : DECK, RING.z),
-  ringSun: (f) => {
-    const [ux, uz] = ringU(f);
-    return aimAt(f, f.pos.x + ux * 40, f.pos.y - 5, f.pos.z + uz * 40);
-  },
-  ringTwist: (f) => {
-    const [, , a] = ringU(f),
-      b = a + 2.3;
-    return aimAt(
-      f,
-      RING.x + Math.sin(b) * RING.R * 0.9,
-      f.mount === 'floor' ? 34 : DECK,
-      RING.z + Math.cos(b) * RING.R * 0.9,
-    );
-  },
-  ringCrown: (f) => {
-    const [ux, uz] = ringU(f);
-    return aimAt(f, f.pos.x + ux * 22, 70, f.pos.z + uz * 22);
-  },
-  converge: (f) => aimAt(f, 0, 12, 42),
-  wingFan: (f) => aimAt(f, f.pos.x * 3.2, 3, f.pos.z + 55),
-  home: (f) => ({ pan: 0, tilt: 0 }),
-  straight: (f) => ({ pan: 0, tilt: 0 }),
-  center: (f) => aimAt(f, f.pos.x * 0.6, DECK, -9 + (f.pos.z + 9) * 0.25),
-  singer: (f) => aimAt(f, 0, DECK + 1.5, -3.2),
-  drums: (f) => aimAt(f, 0, DECK + 1.7, -13.2),
-  down: (f) => aimAt(f, f.pos.x * 0.55, DECK, -1.2),
-  audience: (f) => aimAt(f, clamp(f.pos.x * 1.6, -38, 38), 1.2, 30),
-  fanAud: (f, k, n) => aimAt(f, lerp(-60, 60, n > 1 ? k / (n - 1) : 0.5), 1, 42),
-  crowd: (f, k, n) =>
-    f.pos.z > 20
-      ? aimAt(f, f.pos.x * 0.45, 1.2, [18, 30, 46][k % 3])
-      : aimAt(f, lerp(-36, 36, n > 1 ? k / (n - 1) : 0.5), 1.2, 14 + (k % 3) * 12),
-  skyFan: (f, k, n) =>
-    f.mount === 'floor'
-      ? aimAt(f, lerp(-45, 45, n > 1 ? k / (n - 1) : 0.5), 60, f.pos.z + 12)
-      : aimAt(f, lerp(-60, 60, n > 1 ? k / (n - 1) : 0.5), 30, 70),
-  cross: (f) => aimAt(f, -f.pos.x * 0.9, DECK, f.pos.z < -12 ? -5 : -9),
-  screen: (f) => aimAt(f, f.pos.x * 0.75, DECK + 5, SCREEN.z),
-  vOut: (f) => (f.mount === 'floor' ? aimAt(f, f.pos.x * 4, 40, f.pos.z) : aimAt(f, f.pos.x * 2.5, DECK, f.pos.z + 6)),
-  band: (f, k, n) => {
-    const P = BAND_PTS[k % BAND_PTS.length];
-    return aimAt(f, P[0], DECK + 1.3 + (P[2] || 0), P[1]);
-  },
-  orch: (f, k, n) => {
-    const sx = f.pos.x < 0 ? -1 : f.pos.x > 0 ? 1 : k % 2 ? 1 : -1;
-    return aimAt(f, sx * (16.4 + ((k % 3) - 1) * 2.1), DECK + 1.6, -11.6 + ((k % 3) - 1) * 2.4);
-  },
-  tunnel: (f) => aimAt(f, 0, f.mount === 'floor' ? 40 : DECK, 40),
-};
 
 /* ====================================================================
    THREE.JS SCENE
@@ -2346,6 +2299,7 @@ const puffs = [];
 }
 // a soft puff of haze rises from each hazer; its density follows the Haze master
 function updateProps(now) {
+  hazeU.value = appState.haze;
   const h = hazeU.value;
   for (const p of puffs) {
     p.sp.visible = h > 0.01;
@@ -2407,463 +2361,19 @@ function updateProps(now) {
 }
 
 /* ====================================================================
-   SHOW DATA: groups, presets, executors, programmer
+   SHOW DATA: the engine (state, playback, programmer) and its event bus
 ==================================================================== */
-let groups = {},
-  presets = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {} };
-const PRESET_TYPES = { 1: 'Dimmer', 2: 'Position', 3: 'Gobo', 4: 'Color', 5: 'Beam' };
-const PT_FEAT = { 1: ['dim'], 2: ['pos'], 3: ['gobo'], 4: ['color'], 5: ['beam'] };
-const execs = [...Array(10)].map((_, i) => ({
-  name: '',
-  cues: [],
-  cur: -1,
-  level: 0,
-  on: false,
-  lastGo: 0,
-  vals: {},
-  fx: {},
-  fade: null,
-  flash: false,
-  flashOnly: false,
-  cache: {},
-}));
-const autoExec = {
-  name: 'AUTO',
-  cues: [],
-  cur: -1,
-  level: 0,
-  on: false,
-  lastGo: 0,
-  vals: {},
-  fx: {},
-  fade: null,
-  flash: false,
-  cache: {},
-  auto: true,
-};
-const allExecs = [...execs, autoExec];
-let selExec = 0;
-const prog = { vals: {}, fxList: [], fx: {} };
-let sel = [];
-let beatOrigin = 0;
-let bpm = 120,
-  gm = 1,
-  blackout = false,
-  highlight = false,
-  fanMode = false,
-  storeMode = false;
-
-function defaultGroups() {
-  const g = {};
-  let n = 1;
-  const G = (name, ids) => (g[n++] = { name, ids });
-  G('FOH Spots', rig.range(101, 199));
-  G('Beams Truss 2', rig.range(201, 299));
-  G('Washes Truss 3', rig.range(301, 399));
-  G('Spots Truss 4', rig.range(401, 499));
-  G('Back Beams', rig.range(501, 599));
-  G('Tower Washes', rig.range(601, 699));
-  G('Floor Beams', rig.range(701, 799));
-  G('Floor Washes', rig.range(1001, 1099));
-  G('Screen Pars', rig.range(1101, 1199));
-  G('Blinders', rig.range(801, 899));
-  G('Strobes', rig.range(901, 999));
-  G('LED Screen', [2001]);
-  G('All Beams', [
-    ...rig.range(201, 299),
-    ...rig.range(501, 599),
-    ...rig.range(701, 799),
-    ...rig.range(1201, 1299),
-    ...rig.range(1401, 1499),
-    ...rig.range(1601, 1699),
-  ]);
-  G('All Spots', rig.idsOfType('spot'));
-  G('All Washes', rig.idsOfType('wash'));
-  G(
-    'All Movers',
-    fixtures.filter((f) => f.T.moving).map((f) => f.id),
-  );
-  G(
-    'Floor Beams Odd',
-    rig.range(701, 799).filter((_, i) => i % 2 === 0),
-  );
-  G(
-    'Floor Beams Even',
-    rig.range(701, 799).filter((_, i) => i % 2 === 1),
-  );
-  G('Beams T2 Left', rig.range(201, 215));
-  G('Beams T2 Right', rig.range(216, 230));
-  G('Towers Left', rig.range(601, 612));
-  G('Towers Right', rig.range(613, 624));
-  G('Everything', rig.lightIds());
-  G('Ring Beams', rig.range(1201, 1299));
-  G('Ring Washes', rig.range(1301, 1399));
-  G('Angled Beams', rig.range(1401, 1499));
-  G('Angled Spots', rig.range(1501, 1599));
-  G(
-    'Ring Odd',
-    rig.range(1201, 1299).filter((_, i) => i % 2 === 0),
-  );
-  G(
-    'Ring Even',
-    rig.range(1201, 1299).filter((_, i) => i % 2 === 1),
-  );
-  G('All Angled', rig.range(1401, 1599));
-  G('Tower Beams', rig.range(1601, 1699));
-  G('Tower Washes', rig.range(1701, 1799));
-  G('Audience Washes', rig.range(1801, 1899));
-  G('Delay Towers', rig.range(1813, 1818));
-  G('LED Bars', rig.range(2101, 2199));
-  G('Follow Spots', rig.range(1901, 1999));
-  G('Profiles', rig.range(2201, 2299)); // 35-37: append only, the demo show uses group numbers
-  return g;
-}
-const COLORS = [
-  ['White', 100, 100, 100],
-  ['Warm', 100, 80, 55],
-  ['CTO', 100, 58, 22],
-  ['Red', 100, 0, 0],
-  ['Orange', 100, 32, 0],
-  ['Amber', 100, 52, 0],
-  ['Yellow', 100, 88, 0],
-  ['Lime', 55, 100, 0],
-  ['Green', 0, 100, 8],
-  ['Cyan', 0, 100, 100],
-  ['Lt Blue', 25, 65, 100],
-  ['Blue', 0, 12, 100],
-  ['Congo', 28, 0, 100],
-  ['Lavender', 62, 40, 100],
-  ['Magenta', 100, 0, 100],
-  ['Pink', 100, 22, 55],
-];
-function defaultPresets() {
-  const p = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {} };
-  [
-    ['Full', 100],
-    ['75%', 75],
-    ['50%', 50],
-    ['25%', 25],
-    ['Zero', 0],
-  ].forEach(([n, v], i) => (p[1][i + 1] = { name: n, kind: 'global', vals: { dim: v } }));
-  [
-    ['Home', 'home'],
-    ['Center', 'center'],
-    ['Singer', 'singer'],
-    ['Drums', 'drums'],
-    ['Downstage', 'down'],
-    ['Band', 'band'],
-    ['Orchestra', 'orch'],
-    ['Cross', 'cross'],
-    ['Audience', 'audience'],
-    ['Fan Audience', 'fanAud'],
-    ['Sky Fan', 'skyFan'],
-    ['V Out', 'vOut'],
-    ['Screen', 'screen'],
-    ['Tunnel', 'tunnel'],
-    ['Straight', 'straight'],
-    ['Ring Down', 'ringDown'],
-    ['Ring Cone', 'ringCone'],
-    ['Ring Sunburst', 'ringSun'],
-    ['Ring Twist', 'ringTwist'],
-    ['Ring Crown', 'ringCrown'],
-    ['Converge', 'converge'],
-    ['Wing Fan', 'wingFan'],
-    ['Crowd', 'crowd'],
-  ].forEach(([n, fn], i) => (p[2][i + 1] = { name: n, kind: 'fn', fn }));
-  GOBO_NAMES.forEach((n, i) => (p[3][i + 1] = { name: n, kind: 'global', vals: { gobo: i }, gobo: i }));
-  p[3][9] = { name: 'Rot Slow', kind: 'global', vals: { grot: 12 } };
-  p[3][10] = { name: 'Rot Fast', kind: 'global', vals: { grot: 55 } };
-  p[3][11] = { name: 'Rot Stop', kind: 'global', vals: { grot: 0 } };
-  COLORS.forEach(([n, r, g, b], i) => (p[4][i + 1] = { name: n, kind: 'global', vals: { r, g, b } }));
-  p[5][1] = { name: 'Narrow', kind: 'fn', fn: 'zMin' };
-  p[5][2] = { name: 'Medium', kind: 'fn', fn: 'zMid' };
-  p[5][3] = { name: 'Wide', kind: 'fn', fn: 'zMax' };
-  p[5][4] = { name: 'Strobe Slow', kind: 'global', vals: { strobe: 25 } };
-  p[5][5] = { name: 'Strobe Fast', kind: 'global', vals: { strobe: 80 } };
-  p[5][6] = { name: 'Shutter Open', kind: 'global', vals: { strobe: 0 } };
-  return p;
-}
-const PFN = {
-  ...POS,
-  zMin: (f) => ({ zoom: f.T.zr[0] }),
-  zMid: (f) => ({ zoom: (f.T.zr[0] + f.T.zr[1]) / 2 }),
-  zMax: (f) => ({ zoom: f.T.zr[1] }),
-};
-function presetVals(pr, f, k, n) {
-  if (pr.kind === 'global') return pr.vals;
-  if (pr.kind === 'fn') return PFN[pr.fn](f, k, n);
-  return pr.fix && pr.fix[f.id];
-}
-function colorTargets() {
-  if (sel.length) {
-    const ok = sel.filter((id) => FX[id].has('r'));
-    if (!ok.length) toast('לגופים שנבחרו אין שליטת צבע');
-    return ok;
-  }
-  const lit = fixtures.filter((f) => f.has('r') && f.out.dim > 1).map((f) => f.id);
-  if (!lit.length) {
-    toast('בחר קודם גופים (Group / לחיצה על הבמה) — אין כרגע גופים דולקים');
-    return [];
-  }
-  toast(`אין בחירה — הצבע הוחל על כל ${lit.length} הגופים הדולקים`);
-  return lit;
-}
-
-/* --- phasers --- */
-const FXT = {
-  circle: { name: 'Circle', feat: 'pos', size: 22 },
-  pan: { name: 'Pan Sweep', feat: 'pos', size: 40 },
-  tilt: { name: 'Tilt Bounce', feat: 'pos', size: 28 },
-  bally: { name: 'Ballyhoo', feat: 'pos', size: 32 },
-  dimSine: { name: 'Dim Wave', feat: 'dim', size: 100 },
-  dimChase: { name: 'Dim Chase', feat: 'dim', size: 100 },
-  dimSaw: { name: 'Swipe', feat: 'dim', size: 100 },
-  flash: { name: 'Random Flash', feat: 'dim', size: 100 },
-  rainbow: { name: 'Rainbow', feat: 'color', size: 100 },
-  rgbChase: { name: 'Color Chase', feat: 'color', size: 100 },
-};
-function fxEval(ref, f, now, out) {
-  const I = ref.inst,
-    def = FXT[I.type];
-  const freq = (bpm / 60 / 4) * I.rate;
-  const tb = now - beatOrigin;
-  const ph = (tb * freq + (I.spread / 360) * (ref.n > 1 ? ref.idx / ref.n : 0)) * Math.PI * 2;
-  const S = I.size;
-  switch (I.type) {
-    case 'circle':
-      out.dp = S * Math.sin(ph);
-      out.dt = S * Math.cos(ph);
-      break;
-    case 'pan':
-      out.dp = S * Math.sin(ph);
-      break;
-    case 'tilt':
-      out.dt = S * Math.sin(ph);
-      break;
-    case 'bally':
-      out.dp = S * Math.sin(ph);
-      out.dt = S * 0.6 * Math.sin(2 * ph + 1);
-      break;
-    case 'dimSine':
-      out.dim = S * (0.5 + 0.5 * Math.sin(ph));
-      break;
-    case 'dimChase':
-      out.dim = S * Math.pow(0.5 + 0.5 * Math.cos(ph), 10);
-      break;
-    case 'dimSaw': {
-      const x = (((ph / (Math.PI * 2)) % 1) + 1) % 1;
-      out.dim = S * Math.pow(1 - x, 3);
-      break;
-    }
-    case 'flash': {
-      const step = Math.floor(tb * freq * 16),
-        fr = tb * freq * 16 - step;
-      out.dim = hash(step * 13.7 + f.id * 3.1) > 0.82 && fr < 0.35 ? S : 0;
-      break;
-    }
-    case 'rainbow': {
-      const c = hsv((((ph / (Math.PI * 2)) % 1) + 1) % 1, 1, 1);
-      out.r = c[0] * 100;
-      out.g = c[1] * 100;
-      out.b = c[2] * 100;
-      break;
-    }
-    case 'rgbChase': {
-      const k = ((Math.floor((ph / (Math.PI * 2)) * 3) % 3) + 3) % 3;
-      out.r = k === 0 ? 100 : 0;
-      out.g = k === 1 ? 100 : 0;
-      out.b = k === 2 ? 100 : 0;
-      break;
-    }
-  }
-}
-function rebuildProgFx() {
-  prog.fx = {};
-  for (const inst of prog.fxList) {
-    const feat = FXT[inst.type].feat;
-    inst.ids.forEach((id, idx) => (prog.fx[id + '|' + feat] = { inst, idx, n: inst.ids.length }));
-  }
-}
-
-/* --- executors / tracking --- */
-function tracked(e, i) {
-  if (e.cache[i]) return e.cache[i];
-  const vals = {},
-    fx = {};
-  for (let c = 0; c <= i; c++) {
-    const cue = e.cues[c];
-    if (!cue) continue;
-    for (const id in cue.vals) {
-      const v = cue.vals[id];
-      vals[id] = Object.assign(vals[id] || {}, v);
-      for (const a in v) delete fx[id + '|' + ATTR[a].feat];
-    }
-    for (const inst of cue.fx || []) {
-      const feat = FXT[inst.type].feat;
-      inst.ids.forEach((id, idx) => (fx[id + '|' + feat] = { inst, idx, n: inst.ids.length }));
-    }
-  }
-  return (e.cache[i] = { vals, fx });
-}
-const nowS = () => performance.now() / 1000;
-function gotoCue(e, i, fadeOverride) {
-  if (!e.cues.length) return;
-  i = clamp(i, 0, e.cues.length - 1);
-  const tr = tracked(e, i);
-  const dur = fadeOverride != null ? fadeOverride : (e.cues[i].fade ?? 2);
-  e.fade = { from: jsonClone(e.vals), to: tr.vals, t0: nowS(), dur, paused: false };
-  e.fx = tr.fx;
-  e.cur = i;
-  e.on = true;
-  e.lastGo = nowS();
-}
-function execGo(e, dir = 1) {
-  if (!e.cues.length) {
-    toast('Executor is empty — STORE a cue first');
-    return;
-  }
-  if (e.fade && e.fade.paused) {
-    e.fade.paused = false;
-    e.fade.t0 = nowS() - e.fade.pausedAt;
-    return;
-  }
-  if (!e.on && e.level === 0) e.level = 1;
-  let n = e.cur + dir;
-  if (n >= e.cues.length) n = 0;
-  if (n < 0) n = e.cues.length - 1;
-  gotoCue(e, n);
-  log(`Exec ${execs.indexOf(e) + 1}: Cue ${e.cues[n].num} ${e.cues[n].name}`, 'ok');
-}
-function execOff(e) {
-  e.on = false;
-  e.cur = -1;
-  e.vals = {};
-  e.fx = {};
-  e.fade = null;
-}
-function execPause(e) {
-  if (e.fade && !e.fade.paused) {
-    e.fade.paused = true;
-    e.fade.pausedAt = nowS() - e.fade.t0;
-  }
-}
-function invalidate(e) {
-  e.cache = {};
-  if (e.on && e.cur >= 0) {
-    const tr = tracked(e, e.cur);
-    e.vals = jsonClone(tr.vals);
-    e.fx = tr.fx;
-    e.fade = null;
-  }
-}
-
-function stepFades(now) {
-  for (const e of allExecs) {
-    const F = e.fade;
-    if (!F) continue;
-    if (F.paused) continue;
-    const p = F.dur > 0 ? clamp((now - F.t0) / F.dur, 0, 1) : 1,
-      k = p * p * (3 - 2 * p);
-    if (p >= 1) {
-      e.vals = jsonClone(F.to);
-      e.fade = null;
-      continue;
-    }
-    const v = {};
-    const ids = new Set([...Object.keys(F.from), ...Object.keys(F.to)]);
-    for (const id of ids) {
-      const a = F.from[id] || {},
-        b = F.to[id] || {},
-        o = (v[id] = {});
-      for (const at of new Set([...Object.keys(a), ...Object.keys(b)])) {
-        let fa = a[at],
-          fb = b[at];
-        if (at === 'dim') {
-          fa = fa ?? 0;
-          fb = fb ?? 0;
-        } else {
-          if (fa == null) fa = fb;
-          if (fb == null) {
-            if (k < 1) o[at] = fa;
-            continue;
-          }
-        }
-        o[at] = at === 'gobo' ? (k < 0.5 ? fa : fb) : fa + (fb - fa) * k;
-      }
-    }
-    e.vals = v;
-  }
-}
-
-/* --- output computation --- */
-const fxTmp = {};
-function computeOutput(now) {
-  const active = allExecs.filter((e) => e.on && (e.level > 0 || e.flash)).sort((a, b) => a.lastGo - b.lastGo);
-  for (const f of fixtures) {
-    const o = f.out,
-      T = f.T;
-    o.dim = 0;
-    o.pan = f.fixed ? f.fixed.pan : 0;
-    o.tilt = f.fixed ? f.fixed.tilt : 0;
-    o.r = o.g = o.b = 100;
-    if (T.defColor) [o.r, o.g, o.b] = T.defColor;
-    o.zoom = T.z0;
-    o.gobo = 0;
-    o.grot = 0;
-    o.strobe = 0;
-    if (f.type === 'screen') o.gobo = 1;
-    const fxSel = { pos: null, dim: null, color: null };
-    for (const e of active) {
-      const lv = (e.flash ? 1 : e.level) * (e.auto && (f.type === 'beam' || f.type === 'spot') ? autoPump : 1),
-        v = e.vals[f.id];
-      if (v)
-        for (const a in v) {
-          if (a === 'dim') o.dim = Math.max(o.dim, v.dim * lv);
-          else o[a] = v[a];
-        }
-      for (const ft of ['pos', 'dim', 'color']) {
-        const r = e.fx[f.id + '|' + ft];
-        if (r) fxSel[ft] = { r, lv };
-      }
-    }
-    if (f.type === 'blinder' && autoHitUntil > now && autoExec.on) o.dim = Math.max(o.dim, 100 * autoExec.level);
-    const pv = prog.vals[f.id];
-    if (pv)
-      for (const a in pv) {
-        o[a] = pv[a];
-        fxSel[ATTR[a].feat] = null;
-      }
-    for (const ft of ['pos', 'dim', 'color']) {
-      const r = prog.fx[f.id + '|' + ft];
-      if (r) fxSel[ft] = { r, lv: 1 };
-    }
-    Object.assign(f.base, o);
-    for (const ft in fxSel) {
-      const s = fxSel[ft];
-      if (!s) continue;
-      fxTmp.dp = fxTmp.dt = 0;
-      fxEval(s.r, f, now, fxTmp);
-      if (ft === 'pos' && T.moving) {
-        o.pan += fxTmp.dp;
-        o.tilt += fxTmp.dt;
-      }
-      if (ft === 'dim' && f.has('dim')) o.dim = fxTmp.dim * s.lv;
-      if (ft === 'color' && f.has('r')) {
-        o.r = fxTmp.r;
-        o.g = fxTmp.g;
-        o.b = fxTmp.b;
-      }
-    }
-    if (T.tiltOnly) o.pan = 0; // a bar has no pan axis: never let a stray pan value turn its beam out of its tilt plane
-    if (highlight && f.sel) {
-      o.dim = 100;
-      o.r = o.g = o.b = 100;
-      o.strobe = 0;
-      o.gobo = f.type === 'screen' ? 0 : 0;
-    }
-    o.dim *= blackout ? 0 : gm;
-  }
-}
+const bus = new EventBus<EngineEvents>();
+const clock = performanceClock;
+const appState = new AppState(bus);
+const selection = new Selection(rig, bus);
+const tempo = new Tempo();
+const groupLibrary = new GroupLibrary(bus);
+const presetLibrary = new PresetLibrary(bus);
+const pool = new ExecutorPool(clock, bus);
+const { execs, autoExec } = pool;
+const programmer = new Programmer({ rig, selection, presets: presetLibrary, pool, state: appState, clock, bus });
+const merger = new OutputMerger({ rig, pool, programmer, master: appState, selection, tempo });
 
 /* ====================================================================
    VISUAL UPDATE
@@ -2967,7 +2477,7 @@ function updateVisuals(now, dt) {
       vo.tiltG.rotation.x = -v.tilt * D2R;
     } else vo.pivot.quaternion.setFromUnitVectors(DOWN, tmpD);
     const col = [o.r / 100, o.g / 100, o.b / 100];
-    vo.bodyMat.emissive.setHex(f.sel ? 0x7a5a00 : 0x000000);
+    vo.bodyMat.emissive.setHex(selection.has(f.id) ? 0x7a5a00 : 0x000000);
     vo.lensMat.color.setRGB(0.03 + col[0] * I * 3, 0.03 + col[1] * I * 3, 0.03 + col[2] * I * 3);
     if (vo.pix) vo.pix.material.color.setRGB(0.02 + col[0] * I * 2.2, 0.02 + col[1] * I * 2.2, 0.02 + col[2] * I * 2.2);
     const on = I > 0.004;
@@ -3087,197 +2597,6 @@ function updateVisuals(now, dt) {
 }
 
 /* ====================================================================
-   PROGRAMMER OPERATIONS
-==================================================================== */
-function setSel(ids, mode = 'replace') {
-  ids = ids.filter((id) => FX[id]);
-  if (mode === 'replace') sel = [...new Set(ids)];
-  else if (mode === 'add') {
-    for (const id of ids) if (!sel.includes(id)) sel.push(id);
-  } else if (mode === 'sub') sel = sel.filter((id) => !ids.includes(id));
-  else if (mode === 'toggle') {
-    for (const id of ids) sel = sel.includes(id) ? sel.filter((x) => x !== id) : [...sel, id];
-  }
-  fixtures.forEach((f) => (f.sel = false));
-  sel.forEach((id) => (FX[id].sel = true));
-  uiDirty.sel = true;
-}
-function progSet(id, attr, val) {
-  const f = FX[id];
-  if (!f || !f.has(attr)) return;
-  const A = ATTR[attr];
-  let mn = A.min,
-    mx = A.max;
-  if (attr === 'zoom') {
-    mn = f.T.zr[0];
-    mx = f.T.zr[1];
-  }
-  val = clamp(val, mn, mx);
-  if (A.step) val = Math.round(val);
-  (prog.vals[id] = prog.vals[id] || {})[attr] = +(+val).toFixed(2);
-}
-function progRemoveFeat(ids, feat) {
-  for (const id of ids) {
-    const v = prog.vals[id];
-    if (v) {
-      for (const a of FEAT_ATTRS[feat] || []) delete v[a];
-      if (!Object.keys(v).length) delete prog.vals[id];
-    }
-  }
-  for (const inst of prog.fxList)
-    if (FXT[inst.type].feat === feat) inst.ids = inst.ids.filter((id) => !ids.includes(id));
-  prog.fxList = prog.fxList.filter((i) => i.ids.length);
-  rebuildProgFx();
-}
-function applyPreset(type, slot) {
-  const pr = presets[type][slot];
-  if (!pr) return;
-  const ids = type === 4 ? colorTargets() : sel;
-  if (!ids.length) {
-    if (type !== 4) toast('בחר קודם גופים (Select fixtures first)');
-    return;
-  }
-  ids.forEach((id, k) => {
-    const f = FX[id],
-      v = presetVals(pr, f, k, ids.length);
-    if (!v) return;
-    for (const a in v) progSet(id, a, v[a]);
-  });
-  if (type === 2) {
-    /* position preset also tidies running pos phasers */
-  }
-  log(`Preset ${type}.${slot} "${pr.name}"`, 'ok');
-}
-function applyFx(type) {
-  if (!sel.length) {
-    toast('בחר קודם גופים (Select fixtures first)');
-    return;
-  }
-  const def = FXT[type],
-    feat = def.feat;
-  for (const inst of prog.fxList)
-    if (FXT[inst.type].feat === feat) inst.ids = inst.ids.filter((id) => !sel.includes(id));
-  const ids = sel.filter((id) =>
-    feat === 'pos' ? FX[id].T.moving : feat === 'color' ? FX[id].has('r') : FX[id].has('dim'),
-  );
-  if (!ids.length) {
-    toast('Selected fixtures do not support this phaser');
-    return;
-  }
-  prog.fxList = prog.fxList.filter((i) => i.ids.length);
-  prog.fxList.push({ type, rate: 1, size: def.size, spread: 360, ids: [...ids] });
-  rebuildProgFx();
-  log(`Phaser ${def.name} → ${ids.length} fixtures`, 'ok');
-}
-function selFxInsts() {
-  return prog.fxList.filter((i) => i.ids.some((id) => sel.includes(id)));
-}
-function clearProg() {
-  prog.vals = {};
-  prog.fxList = [];
-  rebuildProgFx();
-}
-let lastClear = 0;
-function doClear() {
-  const t = performance.now();
-  if (t - lastClear < 400) {
-    setSel([]);
-    clearProg();
-    highlight = false;
-    log('Clear All', 'ok');
-  } else if (sel.length) {
-    setSel([]);
-    log('Clear Selection');
-  } else {
-    clearProg();
-    highlight = false;
-    log('Clear Programmer');
-  }
-  lastClear = t;
-  uiDirty.all = true;
-}
-function progHasContent() {
-  return Object.keys(prog.vals).length || prog.fxList.length;
-}
-
-/* store */
-function storeCue(ei, num, opts = {}) {
-  const e = execs[ei];
-  if (!progHasContent()) {
-    log('Store: programmer is empty', 'er');
-    return;
-  }
-  if (num == null) num = e.cues.length ? Math.floor(e.cues[e.cues.length - 1].num) + 1 : 1;
-  let cue = e.cues.find((c) => c.num === num);
-  if (cue && !opts.merge) {
-    cue.vals = {};
-    cue.fx = [];
-  }
-  if (!cue) {
-    cue = { num, name: opts.name || `Cue ${num}`, fade: opts.fade ?? 2, vals: {}, fx: [] };
-    e.cues.push(cue);
-    e.cues.sort((a, b) => a.num - b.num);
-  }
-  for (const id in prog.vals) cue.vals[id] = Object.assign(cue.vals[id] || {}, jsonClone(prog.vals[id]));
-  // cue-local phasers: remove stored fixtures from same-feature phasers in this cue, then add
-  for (const inst of prog.fxList) {
-    const ft = FXT[inst.type].feat;
-    for (const old of cue.fx) if (FXT[old.type].feat === ft) old.ids = old.ids.filter((id) => !inst.ids.includes(id));
-    cue.fx = cue.fx.filter((i) => i.ids.length);
-    cue.fx.push(jsonClone(inst));
-  }
-  if (opts.fade != null) cue.fade = opts.fade;
-  if (!e.name) e.name = `Seq ${ei + 1}`;
-  invalidate(e);
-  log(`Stored Cue ${num} in Exec ${ei + 1} (${e.name})`, 'ok');
-  toast(`Cue ${num} stored → Exec ${ei + 1}`);
-  uiDirty.all = true;
-  persist();
-}
-function storeGroup(slot) {
-  if (!sel.length) {
-    log('Store Group: nothing selected', 'er');
-    return;
-  }
-  groups[slot] = { name: groups[slot]?.name || `Group ${slot}`, ids: [...sel] };
-  log(`Stored Group ${slot}`, 'ok');
-  renderPools();
-  persist();
-}
-function storePreset(type, slot) {
-  const feats = PT_FEAT[type],
-    fix = {};
-  for (const id of sel) {
-    const v = prog.vals[id];
-    if (!v) continue;
-    const o = {};
-    for (const ft of feats) for (const a of FEAT_ATTRS[ft]) if (v[a] != null) o[a] = v[a];
-    if (Object.keys(o).length) fix[id] = o;
-  }
-  if (!Object.keys(fix).length) {
-    log(`Store Preset: no ${PRESET_TYPES[type]} values in programmer for selection`, 'er');
-    return;
-  }
-  presets[type][slot] = {
-    name:
-      presets[type][slot]?.name && presets[type][slot].kind === 'fix'
-        ? presets[type][slot].name
-        : `${PRESET_TYPES[type]} ${slot}`,
-    kind: 'fix',
-    fix,
-  };
-  log(`Stored Preset ${type}.${slot}`, 'ok');
-  renderPools();
-  persist();
-}
-function setStore(on) {
-  storeMode = on;
-  $('#kStore').classList.toggle('on', on);
-  document.body.classList.toggle('storing', on);
-  if (on) log('STORE — click an executor, cue, group or preset slot (or type)');
-}
-
-/* ====================================================================
    COMMAND LINE
 ==================================================================== */
 const ALIAS = {
@@ -3372,7 +2691,7 @@ function runCmd(raw) {
   };
   const selectIds = (list) => {
     if (!list.length) throw 'No fixtures match';
-    setSel(list, mode === 'replace' && !selected ? 'replace' : mode === 'sub' ? 'sub' : 'add');
+    selection.set(list, mode === 'replace' && !selected ? 'replace' : mode === 'sub' ? 'sub' : 'add');
     selected = true;
     mode = 'replace';
   };
@@ -3390,8 +2709,8 @@ function runCmd(raw) {
           break;
         case 'group': {
           const n = num();
-          if (!groups[n]) throw `Group ${n} is empty`;
-          selectIds([...groups[n].ids]);
+          if (!groupLibrary.all[n]) throw `Group ${n} is empty`;
+          selectIds([...groupLibrary.all[n].ids]);
           break;
         }
         case 'all':
@@ -3421,26 +2740,26 @@ function runCmd(raw) {
               i++;
             } else v = num();
           }
-          if (!sel.length) throw 'No selection';
-          sel.forEach((id) => progSet(id, 'dim', v));
-          log(`${sel.length} fixtures At ${v}`, 'ok');
+          if (!selection.ids.length) throw 'No selection';
+          selection.ids.forEach((id) => programmer.set(id, 'dim', v));
+          log(`${selection.ids.length} fixtures At ${v}`, 'ok');
           break;
         }
         case 'store': {
           const k = word();
           if (k === 'group') {
             i++;
-            storeGroup(num());
+            groupLibrary.store(num(), selection.ids);
           } else if (k === 'preset') {
             i++;
             const [a, b] = String(T[i++]).split('.').map(Number);
-            if (!presets[a] || !b) throw 'Use Store Preset 4.12';
-            storePreset(a, b);
+            if (!presetLibrary.all[a] || !b) throw 'Use Store Preset 4.12';
+            presetLibrary.storeFromProgrammer(a, b, selection.ids, programmer.vals);
           } else {
             if (k === 'cue') i++;
             let n = null,
               fade,
-              ex = selExec;
+              ex = appState.selExec;
             if (word() === '#') n = num();
             while (i < T.length) {
               const kk = word();
@@ -3453,82 +2772,83 @@ function runCmd(raw) {
               } else break;
             }
             if (!execs[ex]) throw 'No such executor';
-            storeCue(ex, n, { fade });
+            programmer.storeCue(ex, n, { fade });
           }
-          setStore(false);
+          appState.setStoreMode(false);
           break;
         }
         case 'exec': {
-          selExec = clamp(num() - 1, 0, 9);
+          appState.selectExec(clamp(num() - 1, 0, 9));
           uiDirty.all = true;
-          log(`Exec ${selExec + 1} selected`, 'ok');
+          log(`Exec ${appState.selExec + 1} selected`, 'ok');
           break;
         }
         case 'go': {
-          let ex = selExec;
+          let ex = appState.selExec;
           if (word() === 'exec') {
             i++;
             ex = num() - 1;
           }
-          execGo(execs[ex], 1);
+          pool.go(execs[ex], 1);
           break;
         }
         case 'goback': {
-          let ex = selExec;
+          let ex = appState.selExec;
           if (word() === 'exec') {
             i++;
             ex = num() - 1;
           }
-          execGo(execs[ex], -1);
+          pool.go(execs[ex], -1);
           break;
         }
         case 'goto': {
           if (word() === 'cue') i++;
           const n = num();
-          const e = execs[selExec];
+          const e = execs[appState.selExec];
           const idx = e.cues.findIndex((c) => c.num === n);
           if (idx < 0) throw `Cue ${n} not found`;
           if (!e.on && e.level === 0) e.level = 1;
-          gotoCue(e, idx);
+          e.goto(idx);
           log(`Goto Cue ${n}`, 'ok');
           break;
         }
         case 'pause':
-          execPause(execs[selExec]);
+          execs[appState.selExec].pause();
           break;
         case 'off': {
-          let ex = selExec;
+          let ex = appState.selExec;
           if (word() === 'exec') {
             i++;
             ex = num() - 1;
           }
-          execOff(execs[ex]);
+          const e = execs[ex];
+          // quirk C2: an unknown executor must fail on this write, as the old execOff did, so the log
+          // shows the same browser TypeError text
+          e.on = false;
+          e.off();
           log(`Exec ${ex + 1} Off`, 'ok');
           break;
         }
         case 'clear':
-          doClear();
+          programmer.clearPress();
           break;
         case 'clearall':
-          setSel([]);
-          clearProg();
-          highlight = false;
-          log('Clear All', 'ok');
+          programmer.clearAll();
           break;
         case 'preset': {
           const [a, b] = String(T[i++]).split('.').map(Number);
-          if (!presets[a] || !presets[a][b]) throw 'Preset not found';
-          applyPreset(a, b);
+          if (!presetLibrary.all[a] || !presetLibrary.all[a][b]) throw 'Preset not found';
+          programmer.applyPreset(a, b);
           break;
         }
         case 'delete': {
           if (word() === 'cue') i++;
           const n = num();
-          const e = execs[selExec];
+          const e = execs[appState.selExec];
           const idx = e.cues.findIndex((c) => c.num === n);
           if (idx < 0) throw `Cue ${n} not found`;
           e.cues.splice(idx, 1);
-          invalidate(e);
+          e.invalidate();
           if (e.cur >= e.cues.length) e.cur = e.cues.length - 1;
           log(`Deleted Cue ${n}`, 'ok');
           persist();
@@ -3541,12 +2861,12 @@ function runCmd(raw) {
           const name = orig.slice(i).join(' ').replace(/^"|"$/g, '');
           i = T.length;
           if (k === 'cue') {
-            const c = execs[selExec].cues.find((c) => c.num === n);
+            const c = execs[appState.selExec].cues.find((c) => c.num === n);
             if (!c) throw 'Cue not found';
             c.name = name;
           } else if (k === 'group') {
-            if (!groups[n]) throw 'Group empty';
-            groups[n].name = name;
+            if (!groupLibrary.all[n]) throw 'Group empty';
+            groupLibrary.all[n].name = name;
             renderPools();
           } else if (k === 'exec') {
             execs[n - 1].name = name;
@@ -3556,14 +2876,14 @@ function runCmd(raw) {
           break;
         }
         case 'highlight':
-          highlight = !highlight;
+          appState.highlight = !appState.highlight;
           break;
         case 'blackout':
-          blackout = !blackout;
+          appState.blackout = !appState.blackout;
           break;
         case 'fade': {
           const n = num();
-          const e = execs[selExec];
+          const e = execs[appState.selExec];
           if (e.cur >= 0) {
             e.cues[e.cur].fade = n;
             log(`Cue fade = ${n}s`, 'ok');
@@ -3575,7 +2895,7 @@ function runCmd(raw) {
       }
     }
     if (selected && !T.some((t) => ['at', 'full', 'zero'].includes(ALIAS[t])))
-      log(`${sel.length} fixtures selected`, 'ok');
+      log(`${selection.ids.length} fixtures selected`, 'ok');
   } catch (err) {
     log(String(err), 'er');
   }
@@ -3602,12 +2922,11 @@ $$('[data-view]').forEach((b) => (b.onclick = () => setView(b.dataset.view)));
 /* pools */
 let presetTab = 4;
 const GROUP_SLOTS = 48; // a full grid: 6 x 8 in Desk/Classic, 12 x 4 in the MA layout
-const NEW_GROUPS = ['LED Bars', 'Follow Spots', 'Profiles'];
 function renderPools() {
   const gp = $('#groupPool');
   gp.innerHTML = '';
   for (let n = 1; n <= GROUP_SLOTS; n++) {
-    const g = groups[n],
+    const g = groupLibrary.all[n],
       d = el(
         'div',
         'slot grp' + (g ? '' : ' empty'),
@@ -3615,13 +2934,13 @@ function renderPools() {
       );
     if (g) d.title = `${g.ids.length} fixtures`;
     d.onclick = (ev) => {
-      if (storeMode) {
-        storeGroup(n);
-        setStore(false);
+      if (appState.storeMode) {
+        groupLibrary.store(n, selection.ids);
+        appState.setStoreMode(false);
         return;
       }
       if (!g) return;
-      setSel([...g.ids], ev.shiftKey ? 'add' : 'replace');
+      selection.set([...g.ids], ev.shiftKey ? 'add' : 'replace');
       log(`Group ${n} "${g.name}" (${g.ids.length})`, 'ok');
     };
     d.ondblclick = () => {
@@ -3647,7 +2966,7 @@ function renderPools() {
   const pp = $('#presetPool');
   pp.innerHTML = '';
   for (let n = 1; n <= 30; n++) {
-    const pr = presets[presetTab][n];
+    const pr = presetLibrary.all[presetTab][n];
     const d = el(
       'div',
       'slot' + (pr ? '' : ' empty'),
@@ -3666,12 +2985,12 @@ function renderPools() {
       d.appendChild(im);
     }
     d.onclick = () => {
-      if (storeMode) {
-        storePreset(presetTab, n);
-        setStore(false);
+      if (appState.storeMode) {
+        presetLibrary.storeFromProgrammer(presetTab, n, selection.ids, programmer.vals);
+        appState.setStoreMode(false);
         return;
       }
-      if (pr) applyPreset(presetTab, n);
+      if (pr) programmer.applyPreset(presetTab, n);
     };
     d.ondblclick = () => {
       if (!pr) return;
@@ -3778,17 +3097,17 @@ function renderEncoders() {
   renderEncExtra();
 }
 function encDelta(a, d) {
-  if (!sel.length && ['r', 'g', 'b'].includes(a)) {
-    const ids = colorTargets();
+  if (!selection.ids.length && ['r', 'g', 'b'].includes(a)) {
+    const ids = programmer.colorTargets();
     if (!ids.length) return;
-    setSel(ids);
+    selection.set(ids);
   }
-  if (!sel.length) {
+  if (!selection.ids.length) {
     toast('בחר קודם גופים (Select fixtures first)');
     return;
   }
   if (a in FXP) {
-    const insts = selFxInsts();
+    const insts = programmer.phasersOnSelection();
     if (!insts.length) {
       toast('No phaser on selection');
       return;
@@ -3796,33 +3115,33 @@ function encDelta(a, d) {
     for (const I of insts) I[a] = clamp(I[a] + d, FXP[a].min, FXP[a].max);
     return;
   }
-  const n = sel.length;
-  sel.forEach((id, k) => {
+  const n = selection.ids.length;
+  selection.ids.forEach((id, k) => {
     const f = FX[id];
     if (!f.has(a)) return;
-    const cur = prog.vals[id]?.[a] ?? f.base[a] ?? ATTR[a].def;
-    const m = fanMode && n > 1 ? lerp(-1, 1, k / (n - 1)) : 1;
-    progSet(id, a, cur + d * m);
+    const cur = programmer.vals[id]?.[a] ?? f.base[a] ?? ATTR[a].def;
+    const m = appState.fanMode && n > 1 ? lerp(-1, 1, k / (n - 1)) : 1;
+    programmer.set(id, a, cur + d * m);
   });
 }
 function encAbs(a, v) {
   if (a in FXP) {
-    for (const I of selFxInsts()) I[a] = clamp(v, FXP[a].min, FXP[a].max);
+    for (const I of programmer.phasersOnSelection()) I[a] = clamp(v, FXP[a].min, FXP[a].max);
     return;
   }
-  sel.forEach((id) => progSet(id, a, v));
+  selection.ids.forEach((id) => programmer.set(id, a, v));
 }
 function fmtVal(a, v) {
   if (v == null) return '—';
   if (a === 'gobo')
-    return feat === 'gobo' && sel.length && FX[sel[0]].type === 'screen'
+    return feat === 'gobo' && selection.ids.length && FX[selection.ids[0]].type === 'screen'
       ? SCREEN_MODES[Math.round(v)]
       : `${Math.round(v)} ${GOBO_NAMES[Math.round(v)] || ''}`;
   const R = encRange(a);
   return (Math.abs(v) < 10 && a !== 'dim' ? (+v).toFixed(1) : Math.round(v)) + (R.unit || '');
 }
 function updateEncUI() {
-  const f0 = sel.map((id) => FX[id])[0];
+  const f0 = selection.ids.map((id) => FX[id])[0];
   $$('#encoders .encoder').forEach((d) => {
     const a = d.dataset.a,
       R = encRange(a);
@@ -3830,22 +3149,22 @@ function updateEncUI() {
       p = false,
       en = true;
     if (a in FXP) {
-      const I = selFxInsts()[0];
+      const I = programmer.phasersOnSelection()[0];
       en = !!I;
       if (I) {
         v = I[a];
         p = true;
       }
     } else {
-      const f = sel.map((id) => FX[id]).find((f) => f.has(a));
+      const f = selection.ids.map((id) => FX[id]).find((f) => f.has(a));
       en = !!f;
       if (f) {
-        const pv = prog.vals[f.id]?.[a];
+        const pv = programmer.vals[f.id]?.[a];
         p = pv != null;
         v = p ? pv : f.base[a];
       }
     }
-    d.classList.toggle('dis', !en && sel.length > 0);
+    d.classList.toggle('dis', !en && selection.ids.length > 0);
     const vv = d.querySelector('.val');
     vv.textContent = fmtVal(a, v);
     vv.classList.toggle('p', p);
@@ -3858,10 +3177,10 @@ function updateEncUI() {
   $$('#featTabs button').forEach((b) => {
     const ft = b.dataset.f;
     let hasP = false;
-    if (ft === 'fx') hasP = prog.fxList.length > 0;
+    if (ft === 'fx') hasP = programmer.fxList.length > 0;
     else
-      for (const id in prog.vals)
-        if (FEAT_ATTRS[ft].some((a) => prog.vals[id][a] != null)) {
+      for (const id in programmer.vals)
+        if (FEAT_ATTRS[ft].some((a) => programmer.vals[id][a] != null)) {
           hasP = true;
           break;
         }
@@ -3977,7 +3296,7 @@ function focusPad(c) {
       x.fill();
     }
     x.fillStyle = '#ffc21a88';
-    for (const id of sel) {
+    for (const id of selection.ids) {
       const f = FX[id];
       x.fillRect(mx(f.pos.x) - 1, mz(f.pos.z) - 1, 2, 2);
     }
@@ -4006,17 +3325,17 @@ function focusPad(c) {
       Z3 = iz(py),
       on = X3 > STAGE.x0 && X3 < STAGE.x1 && Z3 > STAGE.z0 && Z3 < STAGE.z1;
     const Y3 = (on ? DECK : 0) + aimH;
-    sel.forEach((id) => {
+    selection.ids.forEach((id) => {
       const f = FX[id];
       if (!f.T.moving) return;
       const a = aimAt(f, X3, Y3, Z3);
-      progSet(id, 'pan', a.pan);
-      progSet(id, 'tilt', a.tilt);
+      programmer.set(id, 'pan', a.pan);
+      programmer.set(id, 'tilt', a.tilt);
     });
     draw([px, py]);
   };
   c.onpointerdown = (ev) => {
-    if (!sel.length) {
+    if (!selection.ids.length) {
       toast('בחר קודם גופים (Select fixtures first)');
       return;
     }
@@ -4043,15 +3362,15 @@ function colorPad(c) {
       s = clamp(1 - v, 0, 1);
     const [r, g, b] = hsv(h, s, 1);
     pickIds.forEach((id) => {
-      progSet(id, 'r', r * 100);
-      progSet(id, 'g', g * 100);
-      progSet(id, 'b', b * 100);
+      programmer.set(id, 'r', r * 100);
+      programmer.set(id, 'g', g * 100);
+      programmer.set(id, 'b', b * 100);
     });
   };
   let pickIds = [],
     map = null;
   c.onpointerdown = (ev) => {
-    pickIds = colorTargets();
+    pickIds = programmer.colorTargets();
     if (!pickIds.length) return;
     c.setPointerCapture(ev.pointerId);
     map = boxMap(c);
@@ -4065,7 +3384,7 @@ function renderEncExtra() {
   const X = $('#encExtra');
   X.innerHTML = '';
   const knock = () => {
-    progRemoveFeat(sel, feat);
+    programmer.removeFeature(selection.ids, feat);
     log(`Knockout ${feat} from selection`);
   };
   if (feat === 'dim') {
@@ -4122,29 +3441,29 @@ function renderEncExtra() {
         [
           'Home',
           () =>
-            sel.forEach((id) => {
-              progSet(id, 'pan', 0);
-              progSet(id, 'tilt', 0);
+            selection.ids.forEach((id) => {
+              programmer.set(id, 'pan', 0);
+              programmer.set(id, 'tilt', 0);
             }),
         ],
         ['Knockout', knock],
         [
-          'Fan ' + (fanMode ? 'ON' : 'off'),
+          'Fan ' + (appState.fanMode ? 'ON' : 'off'),
           () => {
-            fanMode = !fanMode;
-            $('#kFan').classList.toggle('on', fanMode);
+            appState.fanMode = !appState.fanMode;
+            $('#kFan').classList.toggle('on', appState.fanMode);
             renderEncExtra();
           },
-          fanMode ? 'on' : '',
+          appState.fanMode ? 'on' : '',
         ],
-        ['Center', () => applyPreset(2, 2)],
+        ['Center', () => programmer.applyPreset(2, 2)],
       ]),
     );
     X.appendChild(hRow);
   }
   if (feat === 'gobo') {
     const w = el('div');
-    const isScreen = sel.length && FX[sel[0]].type === 'screen';
+    const isScreen = selection.ids.length && FX[selection.ids[0]].type === 'screen';
     w.appendChild(el('div', 'xlabel', isScreen ? 'LED screen content' : 'Gobo wheel'));
     const r = el('div', 'goboRow');
     if (isScreen)
@@ -4195,10 +3514,10 @@ function renderEncExtra() {
       d.title = n;
       d.style.background = cssRgb(r, g, b);
       d.onclick = () =>
-        colorTargets().forEach((id) => {
-          progSet(id, 'r', r);
-          progSet(id, 'g', g);
-          progSet(id, 'b', b);
+        programmer.colorTargets().forEach((id) => {
+          programmer.set(id, 'r', r);
+          programmer.set(id, 'g', g);
+          programmer.set(id, 'b', b);
         });
       sw.appendChild(d);
     });
@@ -4229,9 +3548,9 @@ function renderEncExtra() {
       el('div', 'xlabel', 'Phaser templates — applied to the selection, ordered by selection (Phase = spread)'),
     );
     const g = el('div', 'fxGrid');
-    for (const k in FXT) {
-      const b = el('button', '', FXT[k].name);
-      b.onclick = () => applyFx(k);
+    for (const k in PHASER_TYPES) {
+      const b = el('button', '', PHASER_TYPES[k].name);
+      b.onclick = () => programmer.applyPhaser(k);
       g.appendChild(b);
     }
     w.appendChild(g);
@@ -4240,14 +3559,7 @@ function renderEncExtra() {
     w2.appendChild(el('div', 'xlabel', 'Selection'));
     w2.appendChild(
       btnGrid(1, [
-        [
-          'Remove Phasers',
-          () => {
-            for (const inst of prog.fxList) inst.ids = inst.ids.filter((id) => !sel.includes(id));
-            prog.fxList = prog.fxList.filter((i) => i.ids.length);
-            rebuildProgFx();
-          },
-        ],
+        ['Remove Phasers', () => programmer.removePhasers(selection.ids)],
         ['Phase 0°', () => encAbs('spread', 0)],
         ['Phase 360°', () => encAbs('spread', 360)],
         ['Phase 720°', () => encAbs('spread', 720)],
@@ -4257,7 +3569,7 @@ function renderEncExtra() {
   }
 }
 function applyPresetTo(t, n) {
-  applyPreset(t, n);
+  programmer.applyPreset(t, n);
 }
 
 /* executors */
@@ -4275,12 +3587,6 @@ function faderDrag(elm, get, set) {
   };
   elm.ondblclick = () => set(get() > 0.5 ? 0 : 1);
 }
-function setLevel(e, v) {
-  const was = e.level;
-  e.level = v;
-  if (v > 0 && !e.on && e.cues.length) gotoCue(e, Math.max(0, e.cur));
-  if (v === 0 && was > 0 && !e.flash) execOff(e);
-}
 function buildExecs() {
   const X = $('#execs');
   X.innerHTML = '';
@@ -4296,13 +3602,13 @@ function buildExecs() {
     X.appendChild(d);
     e.dom = d;
     const sel_ = () => {
-      selExec = i;
+      appState.selectExec(i);
       uiDirty.all = true;
     };
     d.querySelector('.ex-name').onclick = d.querySelector('.ex-sel').onclick = () => {
-      if (storeMode) {
-        storeCue(i, null);
-        setStore(false);
+      if (appState.storeMode) {
+        programmer.storeCue(i, null);
+        appState.setStoreMode(false);
       }
       sel_();
     };
@@ -4312,40 +3618,33 @@ function buildExecs() {
         persist();
       });
     d.querySelector('.ex-off').onclick = () => {
-      execOff(e);
+      e.off();
       e.level = i === 0 ? e.level : 0;
     };
     d.querySelector('.b-go').onclick = () => {
-      if (storeMode) {
-        storeCue(i, null);
-        setStore(false);
+      if (appState.storeMode) {
+        programmer.storeCue(i, null);
+        appState.setStoreMode(false);
         sel_();
         return;
       }
       sel_();
-      execGo(e, 1);
+      pool.go(e, 1);
     };
     d.querySelector('.b-back').onclick = () => {
       sel_();
-      execGo(e, -1);
+      pool.go(e, -1);
     };
     const fl = d.querySelector('.b-flash');
     fl.onpointerdown = () => {
       if (!e.cues.length) return;
-      e.flash = true;
-      if (!e.on) {
-        e.flashOnly = true;
-        gotoCue(e, Math.max(0, e.cur), 0);
-      }
-      e.lastGo = nowS();
+      pool.flashPress(e);
       fl.classList.add('on');
     };
     const flUp = () => {
       if (!e.flash) return;
-      e.flash = false;
+      pool.flashRelease(e);
       fl.classList.remove('on');
-      if (e.flashOnly && e.level === 0) execOff(e);
-      e.flashOnly = false;
     };
     fl.onpointerup = flUp;
     fl.onpointerleave = flUp;
@@ -4354,7 +3653,7 @@ function buildExecs() {
       () => e.level,
       (v) => {
         e.flashOnly = false;
-        setLevel(e, v);
+        pool.setLevel(e, v);
       },
     );
   });
@@ -4362,7 +3661,7 @@ function buildExecs() {
 function updateExecUI() {
   execs.forEach((e, i) => {
     const d = e.dom;
-    d.classList.toggle('sel', i === selExec);
+    d.classList.toggle('sel', i === appState.selExec);
     d.classList.toggle('on', e.on);
     d.querySelector('.ex-name').textContent = e.name || (e.cues.length ? `Seq ${i + 1}` : 'empty');
     const c = e.cues[e.cur],
@@ -4374,9 +3673,9 @@ function updateExecUI() {
     d.querySelector('.ex-lvl').textContent = Math.round(e.level * 100) + '%';
     d.style.setProperty('--lv', e.level);
   });
-  const e = execs[selExec];
-  $('#mSelName').textContent = `${selExec + 1} ${e.name || ''}`;
-  $('#hudExec').textContent = `Exec ${selExec + 1} · ${e.name || 'empty'}`;
+  const e = execs[appState.selExec];
+  $('#mSelName').textContent = `${appState.selExec + 1} ${e.name || ''}`;
+  $('#hudExec').textContent = `Exec ${appState.selExec + 1} · ${e.name || 'empty'}`;
   const c = e.cues[e.cur];
   $('#hudCue').innerHTML = c ? `<span>${c.num}</span> ${c.name}` : e.cues.length ? 'Off — press GO' : 'No cues';
   const nx = e.cues.length > 1 ? e.cues[(e.cur + 1) % e.cues.length] : null;
@@ -4385,14 +3684,14 @@ function updateExecUI() {
     $('#hudExec').textContent = 'AUTO SHOW · ' + STYLES[auto.style].name;
     $('#hudCue').innerHTML = `<span>●</span> ${SEC_NAMES[auto.sec] || ''}`;
     const nb = autoBars(),
-      bf = ((nowS() - beatOrigin) * bpm) / 240;
-    $('#hudNext').textContent = `${bpm} BPM · new look every ${nb} bars`;
+      bf = ((clock.nowSeconds() - tempo.beatOrigin) * tempo.bpm) / 240;
+    $('#hudNext').textContent = `${tempo.bpm} BPM · new look every ${nb} bars`;
     $('#hudBar').style.width = ((((bf % nb) + nb) % nb) / nb) * 100 + '%';
     return;
   }
   const F = e.fade;
   $('#hudBar').style.width = F
-    ? clamp((F.paused ? F.pausedAt : nowS() - F.t0) / (F.dur || 1), 0, 1) * 100 + '%'
+    ? clamp((F.paused ? F.pausedAt : clock.nowSeconds() - F.t0) / (F.dur || 1), 0, 1) * 100 + '%'
     : e.on
       ? '100%'
       : '0';
@@ -4401,8 +3700,8 @@ function updateExecUI() {
 /* GM fader */
 faderDrag(
   $('#gmFader'),
-  () => gm,
-  (v) => (gm = v),
+  () => appState.gm,
+  (v) => (appState.gm = v),
 );
 
 /* sequence pane */
@@ -4411,10 +3710,10 @@ function renderSeq() {
   s.innerHTML = execs
     .map(
       (e, i) =>
-        `<option value="${i}" ${i === selExec ? 'selected' : ''}>Exec ${i + 1} — ${e.name || 'empty'} (${e.cues.length})</option>`,
+        `<option value="${i}" ${i === appState.selExec ? 'selected' : ''}>Exec ${i + 1} — ${e.name || 'empty'} (${e.cues.length})</option>`,
     )
     .join('');
-  const e = execs[selExec],
+  const e = execs[appState.selExec],
     t = $('#seqTable');
   t.innerHTML =
     `<tr><th>Cue</th><th>Name</th><th>Fade</th><th>Content</th></tr>` +
@@ -4432,13 +3731,13 @@ function renderSeq() {
       c = e.cues[i];
     tr.onclick = (ev) => {
       if (ev.detail > 1) return;
-      if (storeMode) {
-        storeCue(selExec, c.num, { merge: true });
-        setStore(false);
+      if (appState.storeMode) {
+        programmer.storeCue(appState.selExec, c.num, { merge: true });
+        appState.setStoreMode(false);
         return;
       }
       if (!e.on && e.level === 0) e.level = 1;
-      gotoCue(e, i);
+      e.goto(i);
       uiDirty.all = true;
     };
     tr.querySelector('.name').ondblclick = () =>
@@ -4456,13 +3755,13 @@ function renderSeq() {
   });
 }
 $('#seqSel').onchange = (ev) => {
-  selExec = +ev.target.value;
+  appState.selectExec(+ev.target.value);
   uiDirty.all = true;
 };
-$('#seqGo').onclick = () => execGo(execs[selExec], 1);
-$('#seqBack').onclick = () => execGo(execs[selExec], -1);
+$('#seqGo').onclick = () => pool.go(execs[appState.selExec], 1);
+$('#seqBack').onclick = () => pool.go(execs[appState.selExec], -1);
 $('#seqDel').onclick = () => {
-  const e = execs[selExec];
+  const e = execs[appState.selExec];
   if (e.cur < 0) {
     toast('Goto the cue you want to delete first');
     return;
@@ -4494,7 +3793,7 @@ function renderSheet() {
   fixtures.forEach((f, i) => {
     const R = sheetRows[i],
       o = f.base,
-      p = prog.vals[f.id] || {},
+      p = programmer.vals[f.id] || {},
       c = (a) => (p[a] != null ? 'p' : ''),
       V = R.v;
     const put = (k, v, fn) => {
@@ -4503,7 +3802,7 @@ function renderSheet() {
         fn(v);
       }
     };
-    put('sel', f.sel ? 'sel' : '', (v) => (R.tr.className = v));
+    put('sel', selection.has(f.id) ? 'sel' : '', (v) => (R.tr.className = v));
     const cells = [
       [2, 'dim', String(Math.round(f.out.dim))],
       [3, 'pan', f.has('pan') ? String(Math.round(o.pan)) : ''],
@@ -4521,46 +3820,35 @@ function renderSheet() {
 }
 $('#sheet').onclick = (ev) => {
   const tr = ev.target.closest('tr[data-id]');
-  if (tr) setSel([+tr.dataset.id], ev.shiftKey ? 'toggle' : 'replace');
+  if (tr) selection.set([+tr.dataset.id], ev.shiftKey ? 'toggle' : 'replace');
 };
 
 /* keys */
-$('#kStore').onclick = () => setStore(!storeMode);
-$('#kClear').onclick = doClear;
+$('#kStore').onclick = () => appState.setStoreMode(!appState.storeMode);
+$('#kClear').onclick = () => programmer.clearPress();
 $('#kHigh').onclick = () => {
-  highlight = !highlight;
+  appState.highlight = !appState.highlight;
 };
 $('#kFan').onclick = () => {
-  fanMode = !fanMode;
+  appState.fanMode = !appState.fanMode;
   if (feat === 'pos') renderEncExtra();
 };
-$('#kAll').onclick = () => setSel(rig.lightIds());
-$('#kOdd').onclick = () => setSel(sel.filter((_, i) => i % 2 === 0));
-$('#kEven').onclick = () => setSel(sel.filter((_, i) => i % 2 === 1));
+$('#kAll').onclick = () => selection.set(rig.lightIds());
+$('#kOdd').onclick = () => selection.set(selection.ids.filter((_, i) => i % 2 === 0));
+$('#kEven').onclick = () => selection.set(selection.ids.filter((_, i) => i % 2 === 1));
 $('#kRev').onclick = () => {
-  sel.reverse();
-  setSel([...sel]);
+  selection.reverse();
   log('Selection order reversed');
 };
-$('#goBig').onclick = () => execGo(execs[selExec], 1);
-$('#goBack').onclick = () => execGo(execs[selExec], -1);
-$('#pauseBtn').onclick = () => execPause(execs[selExec]);
-$('#offBtn').onclick = () => execOff(execs[selExec]);
+$('#goBig').onclick = () => pool.go(execs[appState.selExec], 1);
+$('#goBack').onclick = () => pool.go(execs[appState.selExec], -1);
+$('#pauseBtn').onclick = () => execs[appState.selExec].pause();
+$('#offBtn').onclick = () => execs[appState.selExec].off();
 $('#boBtn').onclick = () => {
-  blackout = !blackout;
+  appState.blackout = !appState.blackout;
 };
-let taps = [];
-$('#tapBtn').onclick = () => {
-  const t = performance.now();
-  taps = taps.filter((x) => t - x < 2500);
-  taps.push(t);
-  beatOrigin = t / 1000;
-  if (taps.length >= 2) {
-    const iv = (taps[taps.length - 1] - taps[0]) / (taps.length - 1);
-    bpm = clamp(Math.round(60000 / iv), 40, 220);
-  }
-};
-$('#haze').oninput = (ev) => (hazeU.value = ev.target.value / 100);
+$('#tapBtn').onclick = () => tempo.tap(clock.nowMs());
+$('#haze').oninput = (ev) => (appState.haze = ev.target.value / 100);
 $('#house').oninput = (ev) => (houseLevel = ev.target.value / 100);
 $('#glowBtn').onclick = (ev) => {
   glowOn = !glowOn;
@@ -4589,7 +3877,7 @@ cmd.onkeydown = (ev) => {
       hi = -1;
     }
     if (/^\s*store\s*$/i.test(v)) {
-      setStore(true);
+      appState.setStoreMode(true);
       cmd.value = '';
       return;
     }
@@ -4599,7 +3887,7 @@ cmd.onkeydown = (ev) => {
   } else if (ev.key === 'Escape') {
     cmd.value = '';
     cmd.blur();
-    setStore(false);
+    appState.setStoreMode(false);
   } else if (ev.key === 'ArrowUp') {
     hi = Math.min(hi + 1, hist.length - 1);
     if (hist[hi]) cmd.value = hist[hi];
@@ -4620,11 +3908,11 @@ document.addEventListener('keydown', (ev) => {
   }
   if (ev.code === 'Space') {
     ev.preventDefault();
-    execGo(execs[selExec], 1);
+    pool.go(execs[appState.selExec], 1);
     return;
   }
   if (ev.key === 'Escape') {
-    setStore(false);
+    appState.setStoreMode(false);
     return;
   }
   if (ev.key.length === 1 && !ev.ctrlKey && !ev.metaKey) {
@@ -4695,40 +3983,37 @@ const LS = 'lumadesk-show-v6';
 function serialize() {
   return {
     v: 1,
-    groups,
+    groups: groupLibrary.all,
     presets: Object.fromEntries(
-      Object.entries(presets).map(([t, m]) => [
+      Object.entries(presetLibrary.all).map(([t, m]) => [
         t,
         Object.fromEntries(Object.entries(m).filter(([, p]) => p.kind !== 'fn')),
       ]),
     ),
     execs: execs.map((e) => ({ name: e.name, cues: e.cues, level: e.level })),
-    bpm,
-    haze: hazeU.value,
+    bpm: tempo.bpm,
+    haze: appState.haze,
   };
 }
 function loadShow(d) {
-  groups = d.groups || defaultGroups();
-  presets = defaultPresets();
+  const presets = defaultPresets();
   // shows saved before the LED Bars / Follow Spots / Profiles groups existed: add them, but only into slots that are still empty
-  if (d.groups) {
-    const dg = defaultGroups();
-    for (const n in dg) if (NEW_GROUPS.includes(dg[n].name) && !groups[n]) groups[n] = dg[n];
-  }
+  groupLibrary.replace(d.groups ? addNewDefaultGroups(d.groups, defaultGroups(rig)) : defaultGroups(rig));
   for (const t in d.presets || {}) for (const s in d.presets[t]) presets[t][s] = d.presets[t][s];
+  presetLibrary.replace(presets);
   execs.forEach((e, i) => {
-    execOff(e);
+    e.off();
     const x = (d.execs || [])[i] || {};
     e.name = x.name || '';
     e.cues = x.cues || [];
     e.level = x.level ?? 0;
-    e.cache = {};
+    e.resetTracking();
   });
-  bpm = d.bpm || 120;
-  hazeU.value = d.haze ?? 0.62;
-  $('#haze').value = hazeU.value * 100;
-  clearProg();
-  setSel([]);
+  tempo.setBpm(d.bpm || 120);
+  appState.haze = d.haze ?? 0.62;
+  $('#haze').value = appState.haze * 100;
+  programmer.clear();
+  selection.set([]);
   renderPools();
   uiDirty.all = true;
 }
@@ -4771,7 +4056,7 @@ $('#fileBtn').onclick = () => {
     toast('Demo show loaded');
   };
   $('#fNew').onclick = () => {
-    loadShow({ groups: defaultGroups() });
+    loadShow({ groups: defaultGroups(rig) });
     persist();
     closeModal();
     toast('New show');
@@ -4806,29 +4091,30 @@ $('#fileBtn').onclick = () => {
    DEMO SHOW
 ==================================================================== */
 function buildDemo() {
-  groups = defaultGroups();
-  presets = defaultPresets();
+  groupLibrary.replace(defaultGroups(rig));
+  presetLibrary.replace(defaultPresets());
   const V = (spec) => {
     const vals = {};
     for (const [ids, v] of spec)
       ids.forEach((id, k) => {
         const f = FX[id];
         if (!f) return;
-        let o = typeof v === 'function' ? v(f, k, ids.length) : typeof v === 'string' ? PFN[v](f, k, ids.length) : v;
+        let o =
+          typeof v === 'function' ? v(f, k, ids.length) : typeof v === 'string' ? PRESET_FNS[v](f, k, ids.length) : v;
         const out = (vals[id] = vals[id] || {});
         for (const a in o) if (f.has(a)) out[a] = a === 'zoom' ? clamp(o[a], f.T.zr[0], f.T.zr[1]) : o[a];
       });
     return vals;
   };
   const M = (...objs) => Object.assign({}, ...objs.map((o) => (typeof o === 'string' ? {} : o)));
-  const P = (name) => (f, k, n) => PFN[name](f, k, n);
+  const P = (name) => (f, k, n) => PRESET_FNS[name](f, k, n);
   const C = (n) => {
     const c = COLORS.find((x) => x[0] === n);
     return { r: c[1], g: c[2], b: c[3] };
   };
-  const both = (pos, extra) => (f, k, n) => ({ ...PFN[pos](f, k, n), ...extra });
-  const G = (n) => groups[n].ids;
-  const FXI = (type, ids, o = {}) => ({ type, rate: 1, size: FXT[type].size, spread: 360, ids, ...o });
+  const both = (pos, extra) => (f, k, n) => ({ ...PRESET_FNS[pos](f, k, n), ...extra });
+  const G = (n) => groupLibrary.all[n].ids;
+  const FXI = (type, ids, o = {}) => ({ type, rate: 1, size: PHASER_TYPES[type].size, spread: 360, ids, ...o });
   const allMovers = fixtures.filter((f) => f.T.moving).map((f) => f.id);
   const SCR = [2001];
   const cues = [];
@@ -4838,7 +4124,7 @@ function buildDemo() {
     fade: 3,
     vals: V([
       [rig.lightIds(), { dim: 0, gobo: 0, grot: 0, strobe: 0 }],
-      [allMovers, (f, k, n) => ({ ...PFN.center(f, k, n), ...C('Blue') })],
+      [allMovers, (f, k, n) => ({ ...PRESET_FNS.center(f, k, n), ...C('Blue') })],
       [G(3), { dim: 32, zoom: 40 }],
       [G(6), { dim: 22, ...C('Congo') }],
       [G(9), { dim: 70, ...C('Congo') }],
@@ -5147,18 +4433,18 @@ function buildDemo() {
   });
   const ex = (i, name, cs, level = 0) => {
     const e = execs[i];
-    execOff(e);
+    e.off();
     e.name = name;
     e.cues = cs;
     e.level = level;
-    e.cache = {};
+    e.resetTracking();
   };
   execs.forEach((e) => {
-    execOff(e);
+    e.off();
     e.name = '';
     e.cues = [];
     e.level = 0;
-    e.cache = {};
+    e.resetTracking();
   });
   ex(0, 'Main Show', cues, 1);
   ex(1, 'Blinders', [{ num: 1, name: 'Hit', fade: 0, vals: V([[G(10), { dim: 100 }]]), fx: [] }]);
@@ -5255,14 +4541,14 @@ function buildDemo() {
       fx: [],
     },
   ]);
-  bpm = 124;
-  hazeU.value = 0.62;
+  tempo.setBpm(124);
+  appState.haze = 0.62;
   $('#haze').value = 62;
-  clearProg();
-  setSel([]);
+  programmer.clear();
+  selection.set([]);
   renderPools();
-  gotoCue(execs[0], 0, 0);
-  selExec = 0;
+  execs[0].goto(0, 0);
+  appState.selectExec(0);
   uiDirty.all = true;
   persist();
 }
@@ -5319,7 +4605,7 @@ window.addEventListener('pointerup', (ev) => {
       if (sx >= x0 && sx <= x1 && sy >= y0 && sy <= y1) ids.push(f);
     }
     ids.sort((a, b) => a.id - b.id);
-    setSel(
+    selection.set(
       ids.map((f) => f.id),
       'add',
     );
@@ -5327,7 +4613,7 @@ window.addEventListener('pointerup', (ev) => {
   } else if (moved < 5 && ev.target === canvas) {
     const f = pickAt(ev.clientX, ev.clientY);
     if (f) {
-      setSel([f.id], down.shift ? 'toggle' : 'replace');
+      selection.set([f.id], down.shift ? 'toggle' : 'replace');
       log(`Fixture ${f.id} (${f.T.name})`, 'ok');
     }
   }
@@ -5375,9 +4661,9 @@ $('#midiBtn').onclick = async () => {
             type = st & 0xf0;
           if (type === 0xb0 && d1 >= 1 && d1 <= 10) {
             const e = execs[d1 - 1];
-            setLevel(e, d2 / 127);
-          } else if (type === 0x90 && d2 > 0 && d1 >= 36 && d1 <= 45) execGo(execs[d1 - 36], 1);
-          else if (type === 0xb0 && d1 === 0) gm = d2 / 127;
+            pool.setLevel(e, d2 / 127);
+          } else if (type === 0x90 && d2 > 0 && d1 >= 36 && d1 <= 45) pool.go(execs[d1 - 36], 1);
+          else if (type === 0xb0 && d1 === 0) appState.gm = d2 / 127;
         };
       });
       return n;
@@ -5407,7 +4693,7 @@ function drawOverlay() {
     if (tmpP.z > 1 || Math.abs(tmpP.x) > 1 || Math.abs(tmpP.y) > 1) continue;
     const x = ((tmpP.x + 1) / 2) * w,
       y = ((1 - tmpP.y) / 2) * h - 10 * dpr;
-    ovx.fillStyle = f.sel ? '#ffc21a' : '#ffffff99';
+    ovx.fillStyle = selection.has(f.id) ? '#ffc21a' : '#ffffff99';
     ovx.fillText(f.id, x, y);
   }
 }
@@ -5442,12 +4728,12 @@ function loop(t) {
   const dt = Math.min((t - last) / 1000, 0.1);
   last = t;
   const now = t / 1000;
-  crowdU.uBeat.value = (((now - beatOrigin) * bpm) / 60) * Math.PI;
+  crowdU.uBeat.value = (((now - tempo.beatOrigin) * tempo.bpm) / 60) * Math.PI;
   crowdU.uJump.value = auto.pulse === 'audio' && song.an ? 0.3 + autoPump : 1;
   songSync();
   autoTick(now);
-  stepFades(now);
-  computeOutput(now);
+  pool.stepFades(now);
+  merger.compute(now, { pump: autoPump, hitUntil: autoHitUntil });
   updateVisuals(now, dt);
   updateProps(now);
   animPerformers(now);
@@ -5464,19 +4750,19 @@ function loop(t) {
     updateAutoUI(now);
     if (deskMode === 'ma') updateMaUI();
     $('#selInfo').innerHTML =
-      `Selection: <b>${sel.length}</b>${sel.length ? ` <span style="color:var(--mut)">${sel.length < 6 ? sel.join(' ') : sel[0] + '…' + sel[sel.length - 1]}</span>` : ''}`;
-    const np = Object.keys(prog.vals).length;
+      `Selection: <b>${selection.ids.length}</b>${selection.ids.length ? ` <span style="color:var(--mut)">${selection.ids.length < 6 ? selection.ids.join(' ') : selection.ids[0] + '…' + selection.ids[selection.ids.length - 1]}</span>` : ''}`;
+    const np = Object.keys(programmer.vals).length;
     $('#progInfo').innerHTML =
-      np || prog.fxList.length
-        ? `Programmer: <b style="color:var(--prog)">${np} fix${prog.fxList.length ? ' · ' + prog.fxList.length + ' fx' : ''}</b>`
+      np || programmer.fxList.length
+        ? `Programmer: <b style="color:var(--prog)">${np} fix${programmer.fxList.length ? ' · ' + programmer.fxList.length + ' fx' : ''}</b>`
         : 'Programmer: empty';
-    $('#kHigh').classList.toggle('on', highlight);
-    $('#boBtn').classList.toggle('on', blackout);
-    $('#kFan').classList.toggle('on', fanMode);
-    $('#bpmBox').textContent = bpm + ' BPM';
-    $('#gmVal').textContent = Math.round(gm * 100);
-    $('#gmFader .ff').style.height = gm * 100 + '%';
-    $('#gmFader .cap').style.bottom = gm * 100 + '%';
+    $('#kHigh').classList.toggle('on', appState.highlight);
+    $('#boBtn').classList.toggle('on', appState.blackout);
+    $('#kFan').classList.toggle('on', appState.fanMode);
+    $('#bpmBox').textContent = tempo.bpm + ' BPM';
+    $('#gmVal').textContent = Math.round(appState.gm * 100);
+    $('#gmFader .ff').style.height = appState.gm * 100 + '%';
+    $('#gmFader .cap').style.bottom = appState.gm * 100 + '%';
   }
   if (t - slowT > 400 || uiDirty.all) {
     slowT = t;
@@ -5766,33 +5052,33 @@ function genLook(S, sec) {
       ? pickR(['center', 'band', 'singer'])
       : pickR(['center', 'band', 'cross', 'down', 'orch']);
   set(AG.t3, (f, k, n) => ({
-    ...PFN[wPos](f, k, n),
+    ...PRESET_FNS[wPos](f, k, n),
     ...(k % 2 ? c2 : c1),
     dim: L(S.calm ? 62 : 78),
     zoom: S.calm ? 34 : 24,
   }));
   set(AG.tow, (f, k, n) => ({
-    ...PFN[S.orch || Math.random() < 0.4 ? 'orch' : 'band'](f, k, n),
+    ...PRESET_FNS[S.orch || Math.random() < 0.4 ? 'orch' : 'band'](f, k, n),
     ...c2,
     dim: L(S.calm ? 50 : 66),
     zoom: 28,
   }));
   set(AG.pars, { ...c2, dim: L(85) });
   set(AG.audW, (f, k, n) => ({
-    ...PFN.crowd(f, k, n),
+    ...PRESET_FNS.crowd(f, k, n),
     ...(big ? COL('White') : c2),
     dim: L(big ? 95 : S.calm ? 25 : 45),
     zoom: 50,
     strobe: sec === 'drop' && S.strobe && auto.strobes ? 50 : 0,
   }));
   set(AG.towW, (f, k, n) => ({
-    ...PFN[S.calm || S.orch ? 'band' : pickR(['band', 'audience', 'center'])](f, k, n),
+    ...PRESET_FNS[S.calm || S.orch ? 'band' : pickR(['band', 'audience', 'center'])](f, k, n),
     ...(k % 2 ? c1 : c2),
     dim: L(S.calm ? 40 : 60),
     zoom: 30,
   }));
   set(AG.fwash, (f, k, n) => ({
-    ...PFN[sec === 'verse' || S.calm ? 'down' : 'vOut'](f, k, n),
+    ...PRESET_FNS[sec === 'verse' || S.calm ? 'down' : 'vOut'](f, k, n),
     ...c1,
     dim: L(sec === 'verse' || S.calm ? 35 : 62),
     zoom: 20,
@@ -5805,10 +5091,10 @@ function genLook(S, sec) {
     zoom: big ? 6 : 30,
   }));
   if ((sec === 'build' || sec === 'drop') && S.fxPos.length)
-    fx.push({ type: 'tilt', rate: pickR(S.rate || [1]), size: FXT.tilt.size, spread: 360, ids: [...AG.bars] });
+    fx.push({ type: 'tilt', rate: pickR(S.rate || [1]), size: PHASER_TYPES.tilt.size, spread: 360, ids: [...AG.bars] });
   // follow spots stay on the lead singer; profiles add a side wash
   set(AG.follow, (f, k, n) => ({
-    ...PFN.singer(f, k, n),
+    ...PRESET_FNS.singer(f, k, n),
     ...COL('Warm'),
     dim: L(big ? 85 : 55),
     zoom: big ? 7 : 11,
@@ -5818,7 +5104,7 @@ function genLook(S, sec) {
   const gob = pickR(S.gobos || [1, 2, 3, 4, 5, 7]);
   if (S.calm || !big)
     set(AG.foh, (f, k, n) => ({
-      ...PFN[S.orch && k % 2 ? 'orch' : 'singer'](f, k, n),
+      ...PRESET_FNS[S.orch && k % 2 ? 'orch' : 'singer'](f, k, n),
       ...COL('Warm'),
       dim: L(72),
       gobo: S.calm ? (S.gobos ? gob : 0) : gob,
@@ -5827,7 +5113,7 @@ function genLook(S, sec) {
     }));
   else
     set(AG.foh, (f, k, n) => ({
-      ...PFN[pickR(['audience', 'cross', 'fanAud'])](f, k, n),
+      ...PRESET_FNS[pickR(['audience', 'cross', 'fanAud'])](f, k, n),
       ...COL('White'),
       dim: L(82),
       gobo: gob,
@@ -5835,7 +5121,7 @@ function genLook(S, sec) {
       grot: pickR([-30, 20, 40]),
     }));
   set(AG.t4, (f, k, n) => ({
-    ...PFN[S.orch ? 'orch' : pickR(['cross', 'band', 'down', 'orch'])](f, k, n),
+    ...PRESET_FNS[S.orch ? 'orch' : pickR(['cross', 'band', 'down', 'orch'])](f, k, n),
     ...(S.mono ? COL('White') : c1),
     dim: L(S.calm ? 48 : 62),
     gobo: pickR(S.gobos || [1, 2, 3, 7]),
@@ -5843,14 +5129,14 @@ function genLook(S, sec) {
     grot: pickR([-12, 12, 0]),
   }));
   set(AG.rwash, (f, k, n) => ({
-    ...PFN[S.calm ? 'ringCone' : pickR(['center', 'ringCone', 'band'])](f, k, n),
+    ...PRESET_FNS[S.calm ? 'ringCone' : pickR(['center', 'ringCone', 'band'])](f, k, n),
     ...(k % 2 ? c1 : c2),
     dim: L(S.calm ? 45 : 70),
     zoom: 26,
   }));
   if (!S.calm || S.orch)
     set(AG.angS, (f, k, n) => ({
-      ...PFN[S.orch ? 'orch' : pickR(['cross', 'band', 'audience'])](f, k, n),
+      ...PRESET_FNS[S.orch ? 'orch' : pickR(['cross', 'band', 'audience'])](f, k, n),
       ...(S.mono ? COL('White') : c2),
       dim: L(S.calm ? 45 : 70),
       gobo: pickR(S.gobos || [1, 3, 5, 7]),
@@ -5875,14 +5161,14 @@ function genLook(S, sec) {
             ? pickR(['wingFan', 'converge', 'ringCrown', ...S.pos])
             : pickR(S.pos),
       col = S.mono ? COL(pickR(['White', 'White', n1])) : gi % 2 ? c2 : c1;
-    set(ids, (f, k, n) => ({ ...PFN[pn](f, k, n), ...col, dim: L(S.calm ? 50 : 95), zoom: 2, gobo: 0 }));
+    set(ids, (f, k, n) => ({ ...PRESET_FNS[pn](f, k, n), ...col, dim: L(S.calm ? 50 : 95), zoom: 2, gobo: 0 }));
     const rate = pickR(S.rate || [1]) * (sec === 'drop' || sec === 'build' ? 2 : 1);
     if (S.fxPos.length && Math.random() < (S.calm ? 0.7 : 0.85)) {
       const t = pickR(S.fxPos);
       fx.push({
         type: t,
         rate,
-        size: FXT[t].size * (S.calm ? 0.5 : sec === 'drop' ? 1.2 : 1),
+        size: PHASER_TYPES[t].size * (S.calm ? 0.5 : sec === 'drop' ? 1.2 : 1),
         spread: pickR([0, 180, 360, 720]),
         ids: [...ids],
       });
@@ -5919,10 +5205,11 @@ function autoNewLook() {
   const cue = genLook(S, sec);
   auto.sec = sec;
   autoExec.cues = [cue];
-  autoExec.cache = {};
+  autoExec.resetTracking();
   autoExec.level = auto.master;
-  gotoCue(autoExec, 0, S.fade);
-  if (auto.hits && S.blinders && (sec === 'chorus' || sec === 'drop' || sec === 'hook')) autoHitUntil = nowS() + 0.28;
+  autoExec.goto(0, S.fade);
+  if (auto.hits && S.blinders && (sec === 'chorus' || sec === 'drop' || sec === 'hook'))
+    autoHitUntil = clock.nowSeconds() + 0.28;
 }
 function autoBars() {
   return auto.bars || STYLES[auto.style].bars;
@@ -5931,20 +5218,20 @@ function autoStart() {
   auto.on = true;
   auto.secIdx = 0;
   auto.lastBar = null;
-  if (auto.take) execs.forEach(execOff);
-  if (progHasContent()) toast('Note: programmer values override Auto — press CLEAR twice to release');
-  beatOrigin = nowS();
+  if (auto.take) execs.forEach((e) => e.off());
+  if (programmer.hasContent()) toast('Note: programmer values override Auto — press CLEAR twice to release');
+  tempo.setBeatOrigin(clock.nowSeconds());
   autoNewLook();
   auto.lastBar = 0;
   renderAuto();
 }
 function autoStop() {
   auto.on = false;
-  execOff(autoExec);
+  autoExec.off();
   renderAuto();
 }
 function autoTick(now) {
-  const beatF = ((now - beatOrigin) * bpm) / 60,
+  const beatF = ((now - tempo.beatOrigin) * tempo.bpm) / 60,
     beat = Math.floor(beatF),
     bar = Math.floor(beat / 4);
   // pulse
@@ -6067,8 +5354,8 @@ function toggleSong() {
 }
 function songSync() {
   if (song.el && !song.el.paused && song.bpm) {
-    bpm = song.bpm;
-    beatOrigin = nowS() - (song.el.currentTime - song.off);
+    tempo.setBpm(song.bpm);
+    tempo.setBeatOrigin(clock.nowSeconds() - (song.el.currentTime - song.off));
   }
 }
 /* auto UI */
@@ -6099,12 +5386,12 @@ function renderAuto() {
   b.textContent = auto.on ? '■ STOP AUTO' : '▶ START AUTO';
 }
 function updateAutoUI(now) {
-  const beatF = ((now - beatOrigin) * bpm) / 60,
+  const beatF = ((now - tempo.beatOrigin) * tempo.bpm) / 60,
     beat = ((Math.floor(beatF) % 4) + 4) % 4,
     bar = Math.floor(beatF / 4),
     nb = autoBars();
   $$('#beatDots i').forEach((d, i) => d.classList.toggle('on', i === beat));
-  $('#autoBpm').textContent = bpm + ' BPM';
+  $('#autoBpm').textContent = tempo.bpm + ' BPM';
   if (sideTab === 'auto') {
     const left = nb - (((bar % nb) + nb) % nb);
     $('#autoSec').textContent = auto.on
@@ -6147,19 +5434,19 @@ $('#aSave').onclick = () => {
     toast('Start Auto first');
     return;
   }
-  const e = execs[selExec],
+  const e = execs[appState.selExec],
     num = e.cues.length ? Math.floor(e.cues[e.cues.length - 1].num) + 1 : 1;
   const c = jsonClone(autoExec.cues[0]);
   c.num = num;
   c.name = `${STYLES[auto.style].name.split(' ')[0]} ${SEC_NAMES[c.sec] || ''}`;
   delete c.sec;
   e.cues.push(c);
-  if (!e.name) e.name = `Seq ${selExec + 1}`;
-  invalidate(e);
+  if (!e.name) e.name = `Seq ${appState.selExec + 1}`;
+  e.invalidate();
   persist();
   uiDirty.all = true;
-  toast(`Look saved as Cue ${num} in Exec ${selExec + 1}`);
-  log(`Auto look → Exec ${selExec + 1} Cue ${num}`, 'ok');
+  toast(`Look saved as Cue ${num} in Exec ${appState.selExec + 1}`);
+  log(`Auto look → Exec ${appState.selExec + 1} Cue ${num}`, 'ok');
 };
 $('#aList').onclick = () => {
   const S = STYLES[auto.style];
@@ -6180,15 +5467,15 @@ $('#aList').onclick = () => {
   const e = execs[ei];
   e.name = S.name;
   e.cues = cues;
-  e.cache = {};
-  selExec = ei;
+  e.resetTracking();
+  appState.selectExec(ei);
   persist();
   uiDirty.all = true;
   toast(`8-cue ${S.name} list built in Exec ${ei + 1}`);
   log(`Built ${S.name} cue list → Exec ${ei + 1}`, 'ok');
 };
 function animPerformers(now) {
-  const bf = (((now - beatOrigin) * bpm) / 60) * Math.PI * 2;
+  const bf = (((now - tempo.beatOrigin) * tempo.bpm) / 60) * Math.PI * 2;
   for (const p of performers) {
     const b = Math.sin(bf + p.ph);
     p.g.position.y = p.y + Math.abs(b) * p.amp;
@@ -6345,7 +5632,7 @@ const GUIDE = [
     h: () => `
   <p>405 גופים בבריכת הסולטן. מספרי הגופים לפי מיקום:</p>
   <table><tr><th>מספרים</th><th>סוג</th><th>מיקום</th></tr>${RIG_TABLE.map((r) => `<tr><td><code>${r[0]}</code></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>
-  <h3>קבוצות מוכנות</h3><table>${Object.entries(defaultGroups())
+  <h3>קבוצות מוכנות</h3><table>${Object.entries(defaultGroups(rig))
     .map(
       ([n, g]) =>
         `<tr><td><code>Group ${n}</code></td><td>${g.name}</td><td style="color:var(--mut)">${g.ids.length} גופים</td></tr>`,
@@ -6738,7 +6025,7 @@ function kpPress(t) {
     if (v.trim()) {
       hist.unshift(v);
       if (/^\s*store\s*$/i.test(v)) {
-        setStore(true);
+        appState.setStoreMode(true);
         cmd.value = '';
         return;
       }
@@ -6933,7 +6220,7 @@ SPECS.forEach(([id, name], i) => {
 colorPad($('#tsCol'));
 const tsPosDraw = focusPad($('#tsPos'));
 let tsPosKey = null;
-const curVal = (f, a) => prog.vals[f.id]?.[a] ?? f.base[a];
+const curVal = (f, a) => programmer.vals[f.id]?.[a] ?? f.base[a];
 function updateMaUI() {
   $$('#maSpecs .spc').forEach((d, i) => {
     const inp = $('#' + SPECS[i][0]),
@@ -6943,7 +6230,7 @@ function updateMaUI() {
     d.querySelector('.ff').style.height = k * 100 + '%';
     d.querySelector('.cap').style.bottom = k * 100 + '%';
   });
-  const fs = sel.map((id) => FX[id]),
+  const fs = selection.ids.map((id) => FX[id]),
     fc = fs.find((f) => f.has('r')),
     mk = $('#tsColMk');
   if (fc) {
@@ -6965,8 +6252,10 @@ function updateMaUI() {
     $('#tsColInfo').textContent = '';
   }
   $('#tsColNone').style.display = fc ? 'none' : '';
-  $('#tsColNone').textContent = sel.length ? 'NO COLOR IN SELECTION' : 'NO SELECTION · PICKS GO TO LIT FIXTURES';
-  const k = sel.join();
+  $('#tsColNone').textContent = selection.ids.length
+    ? 'NO COLOR IN SELECTION'
+    : 'NO SELECTION · PICKS GO TO LIT FIXTURES';
+  const k = selection.ids.join();
   if (k !== tsPosKey) {
     tsPosKey = k;
     tsPosDraw();
@@ -6975,7 +6264,7 @@ function updateMaUI() {
   $('#tsPosInfo').textContent = fp
     ? `PAN ${Math.round(curVal(fp, 'pan'))}° TILT ${Math.round(curVal(fp, 'tilt'))}°`
     : '';
-  $('#tsPosNone').style.display = sel.length ? 'none' : '';
+  $('#tsPosNone').style.display = selection.ids.length ? 'none' : '';
   const fd = fs.find((f) => f.has('dim'));
   $('#lvlVal').textContent = fd ? Math.round(curVal(fd, 'dim')) : '—';
 }
@@ -7091,17 +6380,17 @@ addEventListener('resize', () => {
 }
 setInterval(() => {
   if (deskMode === 'ma') {
-    const e = execs[selExec],
+    const e = execs[appState.selExec],
       F = FEATS.find((f) => f[0] === feat);
     $('#d1info').textContent = (sideTab || '').toUpperCase();
-    $('#d2info').textContent = `${F ? F[1].toUpperCase() : ''} · ${sel.length} SEL`;
-    $('#d3info').textContent = `EXEC ${selExec + 1} ${e.name || ''}`;
+    $('#d2info').textContent = `${F ? F[1].toUpperCase() : ''} · ${selection.ids.length} SEL`;
+    $('#d3info').textContent = `EXEC ${appState.selExec + 1} ${e.name || ''}`;
     return;
   }
   if (deskMode !== 'desk') return;
-  const e = execs[selExec];
-  $('#cwPbInfo').textContent = `EXEC ${selExec + 1} · ${e.name || 'empty'}`;
-  $('#cwProgInfo').textContent = `${sel.length} SELECTED`;
+  const e = execs[appState.selExec];
+  $('#cwPbInfo').textContent = `EXEC ${appState.selExec + 1} · ${e.name || 'empty'}`;
+  $('#cwProgInfo').textContent = `${selection.ids.length} SELECTED`;
   $('#cwScreenInfo').textContent = (sideTab || '').toUpperCase();
 }, 250);
 try {
@@ -7118,6 +6407,15 @@ $('#layoutSel').value = deskMode;
 $('#deskZoom').value = deskZoom;
 applyLayout();
 
+/* engine -> UI: the engine reports through the bus; until Phase 5 these subscribers are the UI side */
+bus.on('message', (m) => (m.kind === 'log' ? log(m.text, m.level) : toast(m.text)));
+bus.on('poolsChanged', () => renderPools());
+bus.on('showChanged', () => persist());
+bus.on('stateDirty', () => (uiDirty.all = true));
+bus.on('storeModeChanged', ({ on }) => {
+  $('#kStore').classList.toggle('on', on);
+  document.body.classList.toggle('storing', on);
+});
 /* boot */
 renderFeatTabs();
 renderEncoders();
@@ -7130,7 +6428,7 @@ try {
     loadShow(JSON.parse(s));
     loaded = execs.some((e) => e.cues.length);
     if (loaded && execs[0].cues.length) {
-      gotoCue(execs[0], 0, 0);
+      execs[0].goto(0, 0);
       if (!execs[0].level) execs[0].level = 1;
     }
   }
@@ -7144,21 +6442,21 @@ window.__desk = {
   renderer,
   THREE,
   perf: performers,
-  prog,
-  applyPreset,
+  prog: programmer,
+  applyPreset: (type, slot) => programmer.applyPreset(type, slot),
   runCmd,
   execs,
   setView,
   FX,
-  sel: () => sel,
-  execGo,
-  gotoCue,
+  sel: () => selection.ids,
+  execGo: (e, dir) => pool.go(e, dir),
+  gotoCue: (e, i, fadeOverride) => e.goto(i, fadeOverride),
   scene,
   camera,
   controls,
   fixtures,
   puffs,
-  groups: () => groups,
+  groups: () => groupLibrary.all,
 };
 // TEST HOOK (see the "?test" block in <head>): read-only views and drivers for the Playwright suite; absent without "?test"
 if (window.__deskClock) {
@@ -7170,12 +6468,12 @@ if (window.__deskClock) {
   const state = () => {
     const show = serialize();
     return jsonClone({
-      sel,
-      prog: prog.vals,
-      progFx: prog.fxList,
-      selExec,
-      highlight,
-      blackout,
+      sel: selection.ids,
+      prog: programmer.vals,
+      progFx: programmer.fxList,
+      selExec: appState.selExec,
+      highlight: appState.highlight,
+      blackout: appState.blackout,
       deskMode,
       execs: execs.map((e) => ({
         name: e.name,
@@ -7196,8 +6494,8 @@ if (window.__deskClock) {
     outputAt: (sec) => {
       if (sec * 1000 > C.now()) C.advance(sec * 1000 - C.now());
       const now = C.now() / 1000;
-      stepFades(now);
-      computeOutput(now);
+      pool.stepFades(now);
+      merger.compute(now, { pump: autoPump, hitUntil: autoHitUntil });
       return fixtures.map((f) => ({ id: f.id, ...f.out }));
     },
     // run one command line and return the log lines it wrote, the toast it showed (null if none) and the state after it
@@ -7210,6 +6508,6 @@ if (window.__deskClock) {
       return { line, log: added.map((n) => [n.firstChild?.className || '', n.textContent]), toast, state: state() };
     },
     // start a programmer phaser on the selection, as the phaser buttons do
-    applyFx: (type) => applyFx(type),
+    applyFx: (type) => programmer.applyPhaser(type),
   };
 }
