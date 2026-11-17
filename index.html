@@ -262,102 +262,202 @@ body.desk .mRow button{padding:9px 0}
 @media (max-width:1700px){#top .tbg label{display:none}}
 #layoutBox select{background:var(--p3);color:var(--txt);border:1px solid var(--line2);border-radius:4px;padding:2px 4px;font-size:11px}
 
-/* ================= MA CONSOLE LAYOUT: a physical grandMA-style desk under the stage ================= */
+/* ================= MA CONSOLE LAYOUT: a large hardware console under the stage ================= */
 #maConsole{display:none}
-body.ma #app{grid-template-rows:40px minmax(0,1fr) auto;grid-template-columns:minmax(0,1fr);width:100vw}
+.ex-sel{display:none}
+body.ma #app{grid-template-rows:40px minmax(0,1fr);grid-template-columns:minmax(0,1fr);width:100vw;min-width:0}
 body.ma #maConsole{min-width:0;max-width:100vw}
-body.ma .keypad{grid-auto-rows:1fr;align-content:stretch}
-body.ma #kySlot .keys{flex:0 0 auto}
 body.ma #main{grid-template-columns:minmax(0,1fr)}
 body.ma #viewer{border-right:0}
 body.ma #desk,body.ma #app>#enc,body.ma #console{display:none}
-body.ma #maConsole{display:block;background:radial-gradient(120% 140% at 50% 0%,#0a0a0d 0%,#030304 70%);padding:10px 10px 0;overflow:hidden}
-.maDesk{zoom:var(--mz,1);width:1900px;margin:0 auto;position:relative;padding:12px 16px 0;border-radius:24px 24px 6px 6px;
-  background:linear-gradient(#2c2c31 0%,#1d1d21 38%,#151518 100%);box-shadow:0 -24px 60px #000,inset 0 1px 0 #ffffff22,inset 1px 0 0 #ffffff0d,inset -1px 0 0 #ffffff0d}
-.maDesk::before{content:'';position:absolute;left:24px;right:24px;top:4px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,#ffffff26,transparent)}
-.maScreens{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;height:224px;padding:10px 12px;border-radius:14px;
-  background:linear-gradient(#111113,#08080a);box-shadow:inset 0 3px 8px #000,0 1px 0 #ffffff12}
-.disp{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;background:#000;border:8px solid #050506;border-radius:7px;
-  box-shadow:0 0 0 1px #2c2c31,0 6px 14px #000c;overflow:hidden}
-.disp::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(118deg,rgba(255,255,255,.055) 0%,rgba(255,255,255,.015) 28%,transparent 42%)}
-.dhead{display:flex;justify-content:space-between;align-items:center;height:20px;padding:0 8px;background:linear-gradient(#1b2433,#121925);border-bottom:1px solid #000;font:700 9.5px var(--mono);letter-spacing:.14em;color:#8fb3e6;flex:0 0 auto}
+/* the console stands at the control position in front of the operator: an overlay on the bottom of the stage view;
+   only its planes take pointer events, so the stage stays usable around and above it */
+body.ma #maConsole{display:block;position:fixed;left:0;right:0;bottom:0;z-index:4;pointer-events:none;background:none;overflow:hidden}
+/* the control platform the console stands on: a dark floor in perspective with a lit front edge, plus the contact shadow */
+body.ma #maConsole::before{content:'';position:absolute;left:0;right:0;bottom:0;height:calc(var(--ch,470px) * .58);clip-path:polygon(0 100%,3% 0,97% 0,100% 100%);
+  background:radial-gradient(42% 90% at 50% 100%,#000 0%,#000c 60%,transparent 100%),linear-gradient(#3a3a42 0,#1a1a1f 3px,#0d0d10 30%,#060607)}
+.maScreens,.maDeck{pointer-events:auto}
+/* structural faces never take the pointer: in 3D they can lie in front of keys in hit testing */
+.maCheek,.maHinge,.maRest,.maFront,.maScreens::before{pointer-events:none}
+body.ma #cueHud{bottom:calc(var(--ch,0px) + 10px)}
+body.ma #viewHint{top:8px;bottom:auto;padding:4px 8px;border-radius:6px;background:#000b;color:#ffffffa8}
+#maGrip{position:absolute;left:50%;top:1px;width:120px;height:9px;margin-left:-60px;border-radius:0 0 5px 5px;cursor:ns-resize;touch-action:none;background:linear-gradient(#5a5a62,#2a2a2f);box-shadow:inset 0 1px 0 #ffffff40}
+#maGrip:hover,#maGrip.on{background:linear-gradient(#ffd65a,#a07800)}
+/* 3D console: .maDesk is the scene (perspective + preserve-3d); the screen housing and the deck are planes hinged on one line.
+   overflow other than visible, opacity < 1, filter, clip-path and contain:paint flatten 3D children, so they stay on leaf planes only. */
+.maDesk{zoom:var(--mz,1);width:2050px;margin:var(--mt,0px) auto var(--mb,0px);position:relative;
+  perspective:2100px;perspective-origin:50% -40px;transform-style:preserve-3d}
+.maScreens{position:relative;transform-style:preserve-3d;transform-origin:50% 100%;transform:rotateX(6deg);
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;height:304px;padding:8px 34px 6px;border-radius:14px 14px 0 0;
+  background:linear-gradient(#34343a,#1c1c20 6%,#141417 70%,#26262b);box-shadow:inset 0 1px 0 #ffffff40,inset 0 -2px 0 #000}
+/* housing thickness: the top face runs back from the top edge and catches the light from above */
+.maScreens::before{content:'';position:absolute;left:12px;right:12px;top:0;height:56px;transform-origin:50% 0;transform:rotateX(-90deg);
+  background:linear-gradient(#4a4a51,#2a2a2f 25%,#141416);border-radius:0 0 10px 10px}
+/* side cheeks: perpendicular planes at both ends of the housing and of the deck, seen from inside as slim receding faces */
+.maCheek{position:absolute;left:0;top:-18px;bottom:-2px;width:88px;transform-origin:0 0;transform:translateZ(28px) rotateY(90deg);border-radius:40px 40px 0 0;
+  background:linear-gradient(90deg,#4a4a51,#26262b 6%,#151518 40%,#0b0b0c);box-shadow:inset 0 2px 0 #ffffff22}
+.maCheek.r{left:auto;right:0;transform-origin:100% 0;transform:translateZ(28px) rotateY(-90deg);background:linear-gradient(-90deg,#4a4a51,#26262b 6%,#151518 40%,#0b0b0c)}
+.maDeck>.maCheek{top:-12px;bottom:0;width:74px;transform:translateZ(22px) rotateY(90deg);border-radius:0 0 0 30px}
+.maDeck>.maCheek.r{transform:translateZ(22px) rotateY(-90deg);border-radius:0 0 30px 0}
+.disp{position:relative;z-index:1;display:flex;flex-direction:column;min-width:0;min-height:0;border:8px solid transparent;border-bottom-width:10px;border-radius:9px;
+  background:linear-gradient(#06080c,#06080c) padding-box,linear-gradient(#34343a,#0e0e10 12%,#060607 82%,#1f1f23) border-box;
+  box-shadow:0 0 0 1px #000,0 -1px 0 1px #5a5a62,0 0 26px #4a7cff1c;overflow:hidden}
+.disp::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(118deg,rgba(255,255,255,.05) 0%,rgba(255,255,255,.012) 28%,transparent 42%)}
+/* the deck slopes toward the operator; the two large screens glow onto its top */
+.maDeck{position:relative;transform-style:preserve-3d;transform-origin:50% 0;transform:rotateX(52deg);padding:0 34px;
+  background:linear-gradient(#000c,transparent 34px),radial-gradient(30% 90px at 27% 0,#5a8cff22,transparent),radial-gradient(30% 90px at 73% 0,#5a8cff22,transparent),linear-gradient(#19191c,#101012 35%,#0c0c0e)}
+.dhead{display:flex;justify-content:space-between;align-items:center;height:22px;padding:0 8px;background:linear-gradient(#1b2433,#121925);border-bottom:1px solid #000;font:700 12px var(--mono);letter-spacing:.14em;color:#8fb3e6;flex:0 0 auto}
 .dhead b{color:var(--acc);font-weight:700;letter-spacing:.06em}
 .dslot{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
-body.ma #side{flex:1;min-height:0;background:#050507}
-body.ma .tabs{background:#0d0f14}
+.dsplit{flex-direction:row}
+.dcmd{flex:0 0 auto;display:flex;flex-direction:column;background:#03050a;border-top:1px solid #1b2433;padding-bottom:6px}
+.dsub{display:flex;justify-content:space-between;height:19px;padding:0 8px;background:#0c121c;font:700 12px/19px var(--mono);letter-spacing:.14em;color:#6f8db8}
+.dsub b{color:var(--acc);letter-spacing:.04em}
+body.ma #side{flex:1;min-height:0;background:#06080c}
+body.ma .tabs{background:#0d111a}
+body.ma #sideTabs [data-t=pools]{display:none}
+body.ma .tabs button{padding:3px 0;font-size:12px}
 body.ma .pane{padding:6px}
-body.ma .slot{height:40px}
-body.ma #encExtra{padding:10px 12px;gap:12px;overflow:auto;flex-wrap:wrap;align-content:flex-start;background:#050507;flex:1}
-body.ma #cmdFb{height:auto;flex:0 0 auto;padding:6px 10px 4px;font-size:12px;line-height:17px;color:#9aa0a8;background:#050507}
-body.ma .cmdrow{margin:0 8px;height:30px;border-color:#2a3446;background:#02040a}
-#miniSeq{flex:1;min-height:0;overflow:hidden;margin:6px 8px 8px;border:1px solid #161a22;border-radius:4px;font:11.5px var(--mono)}
-#miniSeq .r{display:grid;grid-template-columns:44px 1fr 52px;gap:6px;padding:3px 8px;border-bottom:1px solid #0f1218;color:#9aa0a8}
-#miniSeq .r.cur{background:#0f2a18;color:#8ff0b0;box-shadow:inset 3px 0 0 var(--go)}
-#miniSeq .r.nx{color:#e3c45a}
-#miniSeq .h{color:#55606e;font-size:9.5px;letter-spacing:.12em}
-.maSurface{display:grid;grid-template-columns:770px minmax(0,1fr) 470px 214px;gap:12px;height:250px;padding:14px 2px 10px}
-.srf{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;padding:16px 8px 8px;border-radius:12px;
-  background:linear-gradient(#202024,#17171a);box-shadow:inset 0 1px 0 #ffffff14,inset 0 -1px 0 #000,0 3px 6px #0009}
-.slab{position:absolute;left:12px;top:3px;font:700 8px var(--mono);letter-spacing:.28em;color:#6e6e78}
+body.ma #pane-pools{display:block;flex:1;min-width:0;overflow:auto;padding:4px 8px;background:#06080c}
+body.ma .pool{grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;margin-bottom:4px}
+body.ma .ptitle{margin:2px 2px 3px;font-size:12px}
+body.ma .ptitle button{font-size:12px}
+body.ma .slot{height:44px;padding:1px 4px;border-radius:3px;background:#111722;border-color:#1d2638}
+body.ma .slot .n{font-size:12px;line-height:13px}
+body.ma .slot .t{font-size:12px;line-height:13px;letter-spacing:-.035em}
+body.ma .slot .sw{width:9px;height:9px;right:3px;top:3px}
+body.ma .slot .gi{width:13px;height:13px}
+body.ma #encExtra{flex:0 0 250px;width:250px;padding:8px 10px;gap:10px;overflow:auto;flex-wrap:wrap;align-content:flex-start;background:#090c12;border-left:1px solid #1b2433}
+body.ma .fxGrid{grid-template-columns:repeat(3,1fr)}
+body.ma .goboRow{max-width:none}
+body.ma .hint{max-width:none;font-size:12px}
+body.ma #encExtra .xlabel{font-size:12px}
+body.ma #encExtra button{font-size:12.5px}
+body.ma #cmdFb{height:21px;flex:0 0 auto;padding:2px 10px 1px;font-size:13px;line-height:17px;color:#9aa0a8;overflow:hidden}
+body.ma .cmdrow{margin:0 8px;height:27px;border-color:#2a3446;background:#02040a}
+body.ma .cmdrow>*{font-size:13px}
+/* the Fixture Sheet scrolls in whole rows under its sticky header */
+body.ma #pane-sheet{padding:0 6px;scroll-snap-type:y mandatory;scroll-padding-top:21px}
+body.ma #sheet th{top:0;padding:3px 6px;font-size:12px}
+body.ma #sheet td{height:20px;padding:0 6px;line-height:19px;font-size:12.5px}
+body.ma #sheet tr[data-id]{scroll-snap-align:start}
+.maHinge{position:relative;height:10px;margin:0 -34px;background:linear-gradient(#f4f4f8,#b8b8c0 30%,#6a6a72 75%,#2a2a2e);box-shadow:0 4px 8px #000}
+/* control surface */
+.maSurface{display:grid;grid-template-columns:965px minmax(0,1fr) 232px;gap:10px;height:396px;padding:8px 0 0}
+.srf{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;padding:25px 8px 6px;border-radius:8px;background:#0f0f11;box-shadow:inset 0 1px 0 #ffffff14,inset 0 0 0 1px #050506,0 2px 4px #0008}
+.slab{position:absolute;left:12px;top:4px;font:700 15.5px var(--mono);letter-spacing:.2em;color:#7e7e88}
+.slab.s2{left:306px}
 /* hardware keys */
-body.ma .keys button,body.ma .keypad button,body.ma #featTabs button,body.ma .ex-btns button,body.ma .mRow button,body.ma .ex-off{
+body.ma .keys button,body.ma .keypad button,body.ma #featTabs button,body.ma .ex-btns button,body.ma .mRow button,body.ma .ex-off,body.ma .ex-sel{
   background:linear-gradient(#3c3c42,#28282d);border:1px solid #08080a;border-radius:4px;color:#d6d6dd;
-  box-shadow:0 2px 0 #040405,inset 0 1px 0 rgba(255,255,255,.15);font-family:Inter,sans-serif}
-body.ma .keys button:active,body.ma .keypad button:active,body.ma .ex-btns button:active,body.ma .mRow button:active{transform:translateY(1px);box-shadow:0 1px 0 #040405,inset 0 1px 0 rgba(255,255,255,.1)}
+  box-shadow:0 3px 0 #040405,0 5px 6px #0009,inset 0 1px 0 rgba(255,255,255,.2);font-family:Inter,sans-serif}
+body.ma .keys button:active,body.ma .keypad button:active,body.ma .ex-btns button:active,body.ma .mRow button:active,body.ma .ex-off:active,body.ma .ex-sel:active{transform:none;box-shadow:0 1px 0 #040405,inset 0 1px 0 rgba(255,255,255,.1)}
 body.ma .keys button.on,body.ma #featTabs button.on{color:#ffd65a;box-shadow:0 2px 0 #040405,inset 0 0 10px rgba(255,194,26,.55),inset 0 1px 0 rgba(255,255,255,.18);border-color:#5a4500}
 body.ma .keys .store{color:#ff9a9a}
 body.ma .keys .store.on{background:linear-gradient(#6a1414,#3e0a0a);color:#fff;box-shadow:0 2px 0 #040405,inset 0 0 12px rgba(255,64,64,.7)}
-body.ma .keypad .n{background:linear-gradient(#45454b,#2e2e33);color:#fff}
-body.ma .keypad .w{background:linear-gradient(#2f3445,#20242f);color:#c4ceff}
-body.ma .keypad .en{background:linear-gradient(#2f7c49,#1b5631);color:#eafff0;box-shadow:0 2px 0 #040405,inset 0 0 10px rgba(80,255,140,.35)}
-body.ma .keys{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-bottom:6px}
-body.ma .keys button{height:30px;font-size:10px;font-weight:700;letter-spacing:.04em;padding:0}
-body.ma .keypad{grid-template-columns:repeat(6,1fr);gap:5px;flex:1}
+body.ma .keypad .n{background:linear-gradient(#45454b,#2e2e33);color:#fff;font-size:21px}
+body.ma .keypad .w{background:linear-gradient(#2f3445,#20242f);color:#c4ceff;font-size:13.5px;letter-spacing:-.04em}
+body.ma .keypad .bk{font-size:17px}
+body.ma .keypad .en{background:linear-gradient(#2f7c49,#1b5631);color:#eafff0;font-size:16px;box-shadow:0 2px 0 #040405,inset 0 0 10px rgba(80,255,140,.35)}
+body.ma .keys{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;flex:0 0 auto}
+body.ma .keys button{height:30px;font-size:13.5px;font-weight:700;letter-spacing:-.03em;padding:0}
+body.ma .keypad{grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:1fr;gap:4px;flex:1}
 body.ma .keypad button{min-height:0}
-/* feature keys + big encoders */
-body.ma #featTabs{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;border:0;background:none;margin-bottom:8px}
-body.ma #featTabs button{height:30px;padding:0;text-align:center;font-size:10.5px;font-weight:700;border-left:1px solid #08080a}
-body.ma #featTabs button.has::after{right:4px;top:4px;margin:0;width:5px;height:5px}
-body.ma #encoders{flex:1;display:flex;justify-content:space-around;align-items:center;gap:8px}
-body.ma .encoder{width:auto;gap:7px}
-body.ma .encoder .val{order:-1;background:#06110b;border:1px solid #18301f;color:#8ff0b0;font-size:12.5px;min-width:86px;box-shadow:inset 0 0 8px #000}
-body.ma .encoder .val.p{color:#ff6b6b;border-color:#4a1616;background:#140606}
-body.ma .encoder .lb{font:700 9px var(--mono);letter-spacing:.18em;color:#8a8a94}
-body.ma .knob{width:92px;height:92px;border:0;background:radial-gradient(circle at 50% 50%,#2a2a2f 0 46%,transparent 47%),repeating-conic-gradient(#38383e 0 5deg,#1a1a1d 5deg 10deg);
-  box-shadow:0 6px 12px #000,0 0 0 3px #0c0c0e,inset 0 2px 2px #ffffff22}
-body.ma .knob::before{inset:-9px;-webkit-mask:radial-gradient(circle,transparent 52px,#000 53px);mask:radial-gradient(circle,transparent 52px,#000 53px)}
-body.ma .knob .ind{top:10px;height:22px;transform-origin:1px 36px;background:#ffd65a;box-shadow:0 0 6px #ffc21a}
-/* executors: small displays above real faders */
-body.ma #execs{flex:1;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:7px;padding:0;min-height:0}
+/* fader wing: one letterbox LCD across all columns, then keys / fader / keys per column */
+.maLcd{position:absolute;left:5px;right:5px;top:22px;height:93px;border-radius:5px;border:3px solid #030304;background:#070a10;box-shadow:0 0 0 1px #2a2a30,inset 0 0 14px #000;pointer-events:none}
+.maFaders{position:relative;z-index:1;flex:1;display:flex;gap:14px;min-height:0}
+.maSpecs{flex:0 0 calc((100% - 2px) * 4.4 / 14.4 - 6px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0 6px;min-width:0}
+#pbSlot{flex:1;display:flex;min-width:0;min-height:0}
+body.ma #execs{flex:1;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:0 6px;padding:0;min-height:0}
+body.ma .ex,.spc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:21px 20px 32px 16px 34px minmax(0,1fr) 30px 30px;column-gap:4px;min-width:0;min-height:0}
 body.ma .ex{background:none;border:0;border-radius:0;overflow:visible}
-body.ma .ex-top,body.ma .ex-cue{background:#000;border:0}
-body.ma .ex-top{border:3px solid #050506;border-bottom:0;border-radius:4px 4px 0 0;padding:2px 4px;background:linear-gradient(#1b2433,#121925)}
-body.ma .ex-cue{border:3px solid #050506;border-top:0;border-radius:0 0 4px 4px;margin-bottom:6px;height:32px}
-body.ma .ex.sel .ex-top{background:linear-gradient(#3a2f05,#241c02)}
 body.ma .ex.sel{box-shadow:none}
-body.ma .ex.sel .ex-num{color:#fff}
-body.ma .ex-off{padding:0 3px;line-height:13px;font-size:9px}
-body.ma .ex-mid{padding:0;gap:6px}
-body.ma .ex-btns button{font-size:9.5px;font-weight:800}
-body.ma .ex-btns .b-go{color:#8dffb5;background:linear-gradient(#2c3a31,#1c261f);box-shadow:0 2px 0 #040405,inset 0 0 8px rgba(60,255,130,.28)}
+body.ma .ex-top,body.ma .ex-mid,body.ma .ex-btns{display:contents}
+body.ma .ex-num,body.ma .ex-name,body.ma .ex-cue,body.ma .ex-lvl,.spc>span{grid-column:1/3;min-width:0;padding:0 4px;background:#0d141f;white-space:nowrap;overflow:hidden}
+body.ma .ex-num,.spc .sk{grid-row:1;font:600 15.5px/21px var(--mono);color:#e3c45a;border-radius:3px 3px 0 0}
+body.ma .ex-name,.spc .sn{grid-row:2;font:600 17px/20px Inter,sans-serif;letter-spacing:-.03em;color:#e6edf7;text-overflow:ellipsis}
+body.ma .ex-cue{grid-row:3;height:auto;margin:0;border:0;padding:1px 4px;font-size:14.5px;line-height:15px;background:#0d141f}
+body.ma .ex-lvl,.spc .sl{grid-row:4;font:14.5px/16px var(--mono);text-align:right;color:#8fa0b8;border-radius:0 0 3px 3px;
+  background:linear-gradient(90deg,var(--lc,#22c55e) calc(var(--lv,0) * 100%),#1c2533 0) bottom/100% 2px no-repeat,#0d141f}
+body.ma .ex.sel .ex-num,body.ma .ex.sel .ex-name{background:#2e2505;color:#ffd65a}
+body.ma .ex.on .ex-num{box-shadow:inset 0 -1px 0 var(--go)}
+body.ma .ex-sel,body.ma .ex-off{grid-row:5;align-self:end;height:26px;padding:0;font-size:14.5px;font-weight:800;line-height:1}
+body.ma .ex-sel{display:block;grid-column:1}
+body.ma .ex-off{grid-column:2;font-size:15px}
+body.ma .ex .fader,.spc .fader{grid-row:6;grid-column:1/3;justify-self:center;margin:12px 0}
+body.ma .ex-btns button{align-self:end;height:26px;padding:0;font-size:13px;font-weight:800;letter-spacing:-.04em}
+body.ma .ex-btns .b-back{grid-row:7;grid-column:1}
+body.ma .ex-btns .b-go{grid-row:7;grid-column:2;color:#8dffb5;background:linear-gradient(#2c3a31,#1c261f);box-shadow:0 2px 0 #040405,inset 0 0 8px rgba(60,255,130,.28)}
+body.ma .ex-btns .b-flash{grid-row:8;grid-column:1/3}
 body.ma .ex.on .ex-btns .b-go{box-shadow:0 2px 0 #040405,inset 0 0 12px rgba(60,255,130,.7);color:#fff}
 body.ma .ex-btns .b-flash.on{background:#fff;color:#000}
+.spc{--lc:var(--acc)}
+.spc .sn{color:#ffd98a;padding:0 1px;font-size:15px;letter-spacing:-.04em;text-overflow:clip}
+.spc .sv{grid-row:3;font:600 20px/32px var(--mono);color:#fff}
 body.ma .fader{width:30px;border:0;border-radius:3px;background:linear-gradient(90deg,#030304,#101012 50%,#030304);box-shadow:inset 0 0 0 1px #000,0 1px 0 #ffffff10}
 body.ma .fader::before{content:'';position:absolute;left:50%;top:6px;bottom:6px;width:2px;margin-left:-1px;background:#000;box-shadow:0 0 0 1px #222}
 body.ma .fader .ff{background:linear-gradient(#22c55e55,#22c55e10);border-radius:3px}
-body.ma .fader .cap{left:-6px;right:-6px;height:24px;margin-bottom:-12px;border-radius:3px;background:linear-gradient(#f2f2f4,#b4b4ba 45%,#7c7c84);box-shadow:0 3px 5px #000,inset 0 1px 0 #fff}
+body.ma .fader .cap{left:-6px;right:-6px;height:24px;margin-bottom:-12px;border-radius:3px;background:linear-gradient(#f2f2f4,#b4b4ba 45%,#7c7c84);box-shadow:0 2px 0 #3a3a40,0 6px 7px #000,inset 0 1px 0 #fff}
 body.ma .fader .cap::after{left:4px;right:4px;top:11px;height:2px;background:#202024;box-shadow:0 -4px 0 #9a9aa0,0 4px 0 #9a9aa0}
-body.ma .ex-lvl{color:#7c7c86}
-/* master */
-body.ma #master{flex:1;display:grid;grid-template-columns:1fr 38px;gap:8px;padding:0;border:0}
-body.ma .mGo .sx{color:#7c7c86}
-body.ma #goBig{border-radius:8px;font-size:30px;border:1px solid #0a0a0b;background:linear-gradient(#2b7a47,#165530);color:#e6fff0;box-shadow:0 4px 0 #040405,inset 0 0 22px rgba(80,255,140,.45),inset 0 1px 0 rgba(255,255,255,.25)}
-body.ma #goBig:active{transform:translateY(2px);box-shadow:0 2px 0 #040405,inset 0 0 26px rgba(80,255,140,.6)}
-body.ma .mRow button{padding:7px 0;font-weight:800}
+.spc .fader .ff{background:linear-gradient(#ffc21a55,#ffc21a10)}
+.spc .fader .cap{background:linear-gradient(#fff0b8,#e2ab20 45%,#8a6100);box-shadow:0 2px 0 #5a4000,0 6px 7px #000,inset 0 1px 0 #fff6d0}
+.spc .fader .cap::after{background:#3a2a00;box-shadow:0 -4px 0 #b88a10,0 4px 0 #b88a10}
+/* programmer: feature keys, five encoders, touch screens, command keys */
+.maProg{gap:8px}
+body.ma #featTabs{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;border:0;background:none;margin:0}
+body.ma #featTabs button{height:30px;padding:0 0 0 8px;text-align:center;font-size:17.5px;font-weight:700;border-left:1px solid #08080a}
+body.ma #featTabs button::before{content:'';position:absolute;left:7px;top:50%;width:5px;height:5px;margin-top:-2.5px;border-radius:50%;background:#2a2a2f;box-shadow:inset 0 1px 1px #000}
+body.ma #featTabs button.on::before{background:#ffd65a;box-shadow:0 0 6px #ffc21a}
+body.ma #featTabs button.has::after{right:4px;top:4px;margin:0;width:5px;height:5px}
+#ecSlot{flex:0 0 136px;display:flex;min-height:0}
+body.ma #encoders{flex:1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;align-items:start}
+body.ma .encoder{width:auto;gap:6px}
+body.ma .encoder .lb,body.ma .encoder .val{width:100%;max-width:140px;text-align:center;background:#0d141f;border:2px solid #030304;box-shadow:0 0 0 1px #2a2a30}
+body.ma .encoder .lb{order:-2;margin-bottom:-6px;padding:2px 0 0;border-bottom:0;border-radius:4px 4px 0 0;font:700 14.5px var(--mono);letter-spacing:.1em;color:#8fb3e6;clip-path:inset(-2px -2px 0 -2px)}
+body.ma .encoder .val{order:-1;border-top:0;border-radius:0 0 4px 4px;color:#8ff0b0;font-size:16px;min-width:0;clip-path:inset(0 -2px -2px -2px)}
+body.ma .encoder .val.p{color:#ff6b6b;background:#140606}
+body.ma .knob{width:76px;height:76px;margin-top:6px;border:0;
+  background:radial-gradient(circle at 50% 30%,#6a6a72 0,#3a3a40 22%,#26262b 40%,#1c1c20 46%,transparent 47%),repeating-conic-gradient(#4a4a51 0 5deg,#1c1c1f 5deg 10deg);
+  box-shadow:inset 0 2px 1px #ffffff40,inset 0 -5px 6px #000c,0 2px 0 #2a2a2f,0 4px 0 #18181b,0 6px 0 #0b0b0c,0 7px 0 #000,0 16px 16px #000e,0 0 0 2px #050506}
+body.ma .knob::before{inset:-8px;-webkit-mask:radial-gradient(circle,transparent 44px,#000 45px);mask:radial-gradient(circle,transparent 44px,#000 45px)}
+body.ma .knob .ind{top:9px;height:20px;transform-origin:1px 30px;background:#ffd65a;box-shadow:0 0 6px #ffc21a}
+.maLow{flex:1;min-height:0;display:flex;gap:10px}
+.maLeft{flex:0 0 455px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.maTouch{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tscr{display:flex;flex-direction:column;min-height:0;border:5px solid #050506;border-bottom-width:7px;border-radius:6px;background:#06080c;box-shadow:0 0 0 1px #2c2c31,0 -1px 0 1px #45454c,0 0 20px #4a7cff26}
+.thead{display:flex;justify-content:space-between;height:20px;padding:0 6px;background:linear-gradient(#1b2433,#121925);font:700 13.5px/20px var(--mono);letter-spacing:.14em;color:#8fb3e6;flex:0 0 auto}
+.thead b{color:var(--acc);letter-spacing:.04em}
+.tbody{position:relative;flex:1;min-height:0;overflow:hidden}
+.tbody canvas{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:0}
+#tsPosNone{left:auto;bottom:auto;top:0}
+.tmk{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px #000,0 0 6px #000;pointer-events:none;display:none}
+.tnone{position:absolute;left:0;right:0;bottom:0;padding:2px 6px;background:#000c;font:700 13px var(--mono);letter-spacing:.04em;color:#ff9a9a;text-align:center;pointer-events:none}
+#kpSlot{flex:1;display:flex;min-width:0;min-height:0}
+/* master: GO section, grand master and level wheel */
+.maMs{flex-direction:row;gap:8px}
+#msSlot{flex:1;display:flex;min-width:0}
+body.ma #master{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:8px;padding:0;border:0}
+body.ma .mGo{justify-content:flex-end;gap:6px;min-width:0}
+body.ma .mGo .sx{margin-bottom:auto;padding:5px 6px;border:2px solid #030304;border-radius:4px;background:#0d141f;box-shadow:0 0 0 1px #2a2a30;font:600 15px/1.35 var(--mono);color:#8fb3e6;letter-spacing:.04em;overflow:hidden}
+body.ma .mGo .sx b{display:block;color:var(--acc);font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.ma #goBig{flex:0 0 112px;border-radius:8px;font-size:30px;border:1px solid #0a0a0b;background:linear-gradient(#2b7a47,#165530);color:#e6fff0;box-shadow:0 4px 0 #040405,inset 0 0 22px rgba(80,255,140,.45),inset 0 1px 0 rgba(255,255,255,.25)}
+body.ma #goBig:active{box-shadow:0 2px 0 #040405,inset 0 0 26px rgba(80,255,140,.6)}
+body.ma .mRow{gap:4px}
+body.ma .mRow button{height:30px;padding:0;font-size:13.5px;white-space:nowrap;letter-spacing:-.04em;font-weight:800}
+body.ma #bpmBox{font-size:12.5px;text-align:center;line-height:1.1}
 body.ma #boBtn.on{background:linear-gradient(#6a1414,#3e0a0a);color:#fff}
-body.ma .gm .fader{width:30px}
-.maRest{height:34px;margin:4px -16px 0;border-radius:0 0 6px 6px;background:linear-gradient(#2e2e33,#17171a 60%,#0d0d0f);box-shadow:inset 0 2px 2px #ffffff1c,0 -1px 0 #000;
-  display:flex;align-items:center;justify-content:center;font:800 9px Inter,sans-serif;letter-spacing:.5em;color:#4e4e56}
+body.ma .gm .fader{width:30px;margin:12px 0}
+body.ma .gm .lb,body.ma #gmVal{font-size:15.5px}
+.maWheel{flex:0 0 44px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px}
+.maWheel .lb{font:700 14px var(--mono);letter-spacing:.08em;color:var(--mut)}
+.wheel{position:relative;width:34px;height:120px;border-radius:8px;cursor:ns-resize;touch-action:none;background:repeating-linear-gradient(#4a4a51 0 2px,#16161a 2px 5px);
+  box-shadow:inset 0 14px 12px -6px #000,inset 0 -14px 12px -6px #000,0 0 0 2px #050506,0 0 0 3px #2c2c31}
+.maRest{height:30px;margin:6px -34px 0;border-radius:0 0 4px 4px;background:linear-gradient(#2a2a2f,#1b1b1e 30%,#121214 75%,#2e2e33);box-shadow:inset 0 1px 0 #ffffff1c,0 -2px 6px #0008}
+/* front face of the chassis: hangs straight down from the palm rest; its ::after is the contact shadow on the floor */
+.maFront{position:absolute;left:0;right:0;top:100%;height:30px;transform-origin:50% 0;transform:rotateX(calc(-1 * 52deg));
+  display:flex;align-items:center;justify-content:center;border-radius:0 0 6px 6px;background:linear-gradient(#3a3a40,#16161a 10%,#0b0b0c);
+  font:800 13px Inter,sans-serif;letter-spacing:.55em;color:#6a6a72}
+.maFront::after{content:'';position:absolute;left:-4%;right:-4%;top:100%;height:18px;background:radial-gradient(50% 100% at 50% 0,#000,transparent);pointer-events:none}
 /* guide */
 #guide{position:fixed;inset:0;background:#000d;z-index:70;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
 #guide.show{display:flex}
@@ -493,18 +593,33 @@ body.ma .gm .fader{width:30px}
     </div>
   </div></section>
   <section id="maConsole"><div class="maDesk" id="maBody">
-    <div class="maScreens">
-      <div class="disp"><div class="dhead"><span>1 · POOLS</span><b id="d1info"></b></div><div class="dslot" id="d1s"></div></div>
-      <div class="disp"><div class="dhead"><span>2 · PROGRAMMER</span><b id="d2info"></b></div><div class="dslot" id="d2s"></div></div>
-      <div class="disp"><div class="dhead"><span>3 · COMMAND</span><b id="d3info"></b></div><div class="dslot" id="d3s"><div id="miniSeq"></div></div></div>
+    <div class="maScreens"><i class="maCheek"></i><i class="maCheek r"></i><i id="maGrip" title="Drag: console size · double-click: default"></i>
+      <div class="disp"><div class="dhead"><span>1 · SHEETS + COMMAND</span><b id="d1info"></b></div><div class="dslot" id="d1s"></div>
+        <div class="dcmd" id="d3s"><div class="dsub"><span>COMMAND</span><b id="d3info"></b></div></div></div>
+      <div class="disp"><div class="dhead"><span>2 · POOLS + PROGRAMMER</span><b id="d2info"></b></div><div class="dslot dsplit" id="d2s"></div></div>
     </div>
+    <div class="maDeck"><i class="maCheek"></i><i class="maCheek r"></i>
+    <div class="maHinge"></div>
     <div class="maSurface">
-      <div class="srf"><span class="slab">PLAYBACK</span><div id="pbSlot" style="flex:1;display:flex;min-height:0"></div></div>
-      <div class="srf"><span class="slab">ENCODERS</span><div id="ftSlot"></div><div id="ecSlot" style="flex:1;display:flex;min-height:0"></div></div>
-      <div class="srf"><span class="slab">COMMAND</span><div id="kySlot" style="flex:1;display:flex;flex-direction:column;min-height:0"></div></div>
-      <div class="srf"><span class="slab">MASTER</span><div id="msSlot" style="flex:1;display:flex;min-height:0"></div></div>
+      <div class="srf"><span class="slab">SPECIAL MASTERS</span><span class="slab s2">PLAYBACK · EXECUTORS 1–10</span><div class="maLcd"></div>
+        <div class="maFaders"><div class="maSpecs" id="maSpecs"></div><div id="pbSlot"></div></div></div>
+      <div class="srf maProg"><span class="slab">PROGRAMMER</span><div id="ftSlot"></div><div id="ecSlot"></div>
+        <div class="maLow">
+          <div class="maLeft">
+            <div class="maTouch">
+              <div class="tscr"><div class="thead"><span>COLOR</span><b id="tsColInfo"></b></div><div class="tbody"><canvas class="pad" id="tsCol" width="204" height="124"></canvas><i class="tmk" id="tsColMk"></i><div class="tnone" id="tsColNone"></div></div></div>
+              <div class="tscr"><div class="thead"><span>POSITION</span><b id="tsPosInfo"></b></div><div class="tbody"><canvas class="pad" id="tsPos" width="204" height="124"></canvas><div class="tnone" id="tsPosNone">NO SELECTION</div></div></div>
+            </div>
+            <div id="kySlot"></div>
+          </div>
+          <div id="kpSlot"></div>
+        </div>
+      </div>
+      <div class="srf maMs"><span class="slab">MASTER</span><div id="msSlot"></div>
+        <div class="maWheel"><span class="lb">LEVEL</span><div class="wheel" id="lvlWheel" title="Dimmer of the selection (Shift = fine)"></div><span class="lb" id="lvlVal">—</span></div></div>
     </div>
-    <div class="maRest">LUMA DESK · LIGHTING CONSOLE</div>
+    <div class="maRest"></div>
+    <div class="maFront">LUMA DESK · LIGHTING CONSOLE</div></div>
   </div></section>
   <footer id="desk">
     <div id="cmdArea">
@@ -717,12 +832,16 @@ const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 1600);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true; controls.dampingFactor = .08; controls.maxPolarAngle = Math.PI * .495;
 const VIEWS = {
-  foh: { p: [0, 16, 74], t: [0, 9, -8] }, front: { p: [0, 6, 28], t: [0, 10, -10] }, stage: { p: [4, DECK + 1.8, -5], t: [-2, 6, 30] },
+  foh: { p: [0, 16, 74], t: [0, 9, -8] }, fohMa: { p: [0, 3.2, 49.5], t: [0, 7.5, -8] }, front: { p: [0, 6, 28], t: [0, 10, -10] }, stage: { p: [4, DECK + 1.8, -5], t: [-2, 6, 30] },
   top: { p: [0, 86, -9], t: [0, 0, -9.1] }, side: { p: [62, 13, -8], t: [0, 9, -8] }, crowd: { p: [-5, 2.3, 16], t: [0, 13, -10] },
   band: { p: [2.5, 5, 10], t: [0, 3, -9] }, ring: { p: [0, DECK + 1.7, 3], t: [0, 17, -9.5] }, walls: { p: [0, 30, 96], t: [0, 14, -20] }, wide: { p: [-30, 40, 120], t: [0, 6, -5] }, aud: { p: [0, 15, 1], t: [0, 2, 46] }, drums: { p: [2.2, DECK + 3.2, -5.5], t: [0, DECK + 1, -12.4] }, valley: { p: [55, 34, 98], t: [-30, 8, -10] }, orch: { p: [0, 9, 2], t: [-15.5, 2.4, -12] },
 };
+// MA layout: FOH is the operator's standing eye at the control position in the audience, behind the console overlay;
+// the scene's raised FOH riser and its desk are hidden there (they would show as a second, empty desk)
+let curView = 'foh', fohRig = [];
 function setView(v, instant) {
-  const V = VIEWS[v]; if (!V) return;
+  const ma = v === 'foh' && document.body.classList.contains('ma'), V = VIEWS[ma ? 'fohMa' : v]; if (!V) return;
+  curView = v; for (const m of fohRig) m.visible = !ma;
   const from = { p: camera.position.clone(), t: controls.target.clone() }, to = { p: new V3(...V.p), t: new V3(...V.t) };
   if (instant) { camera.position.copy(to.p); controls.target.copy(to.t); controls.update(); return; }
   const t0 = performance.now();
@@ -846,7 +965,7 @@ const box = (w, h, d, mat, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxG
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos.slice(0, n * 3), 3)); g.setAttribute('color', new THREE.BufferAttribute(col.slice(0, n * 3), 3));
     scene.add(new THREE.Points(g, new THREE.PointsMaterial({ size: 2.2, sizeAttenuation: false, vertexColors: true, transparent: true, opacity: .85, fog: false }))); }
   // FOH riser
-  box(8, 1.4, 4.5, matDark, 0, 4.3, 47); box(6.5, .9, .9, new THREE.MeshStandardMaterial({ color: 0x15151a }), 0, 5.45, 46);
+  fohRig = [box(8, 1.4, 4.5, matDark, 0, 4.3, 47), box(6.5, .9, .9, new THREE.MeshStandardMaterial({ color: 0x15151a }), 0, 5.45, 46)];
   { const cm = new THREE.MeshStandardMaterial({ color: 0x5c5f66, metalness: .8, roughness: .4 });  // crowd barricade
     for (let x = -36; x <= 36; x += 2.05) box(2, 1.25, .5, cm, x, .62, 6.2); }
 }
@@ -1649,18 +1768,23 @@ const ENC_DEF = {
   fx: ['rate', 'size', 'spread'],
 };
 const FXP = { rate: { label: 'Rate', min: .125, max: 8, unit: 'x' }, size: { label: 'Size', min: 0, max: 180, unit: '' }, spread: { label: 'Phase', min: 0, max: 1440, unit: '°' } };
-function encRange(a) { if (feat === 'fx') return FXP[a]; return ATTR[a]; }
+function encRange(a) { return ATTR[a] || FXP[a]; }
+// the MA console keeps all five encoders live: current feature first, then other attributes in this fixed order
+const ENC_FILL = ['dim', 'pan', 'tilt', 'r', 'g', 'b', 'zoom', 'strobe', 'gobo', 'grot'];
+function encList() { const L = ENC_DEF[feat]; return deskMode === 'ma' ? [...L, ...ENC_FILL.filter(a => !L.includes(a))].slice(0, Math.max(5, L.length)) : L; }
 function renderEncoders() {
   const E = $('#encoders'); E.innerHTML = '';
-  for (const a of ENC_DEF[feat]) {
+  for (const a of encList()) {
     const R = encRange(a);
     const d = el('div', 'encoder', `<div class="lb">${R.label}</div><div class="knob"><div class="ind"></div></div><div class="val">—</div>`);
     d.dataset.a = a; E.appendChild(d);
-    const knob = d.querySelector('.knob');
-    let lastY = 0;
-    knob.onpointerdown = ev => { knob.setPointerCapture(ev.pointerId); lastY = ev.clientY; ev.preventDefault(); };
-    knob.onpointermove = ev => { if (!knob.hasPointerCapture(ev.pointerId)) return; const dy = lastY - ev.clientY; lastY = ev.clientY; encDelta(a, dy * (R.max - R.min) / 320 * (ev.shiftKey ? .1 : 1)); };
-    knob.onwheel = ev => { ev.preventDefault(); encDelta(a, -Math.sign(ev.deltaY) * (R.max - R.min) / 100 * (ev.shiftKey ? .1 : 1)); };
+    const knob = d.querySelector('.knob'), stp = ATTR[a]?.step;
+    let lastY = 0, map = null, rem = 0;
+    // stepped attributes (gobo) collect the fractions of a drag until they make a whole step
+    const turn = v => { if (!stp) { encDelta(a, v); return; } rem += v; const n = Math.trunc(rem / stp) * stp; if (n) { rem -= n; encDelta(a, n); } };
+    knob.onpointerdown = ev => { knob.setPointerCapture(ev.pointerId); map = boxMap(knob); lastY = map(ev)[1] * map.h; rem = 0; ev.preventDefault(); };
+    knob.onpointermove = ev => { if (!knob.hasPointerCapture(ev.pointerId)) return; const y = map(ev)[1] * map.h, dy = lastY - y; lastY = y; turn(dy * (R.max - R.min) / 320 * (ev.shiftKey ? .1 : 1)); };
+    knob.onwheel = ev => { ev.preventDefault(); const s = -Math.sign(ev.deltaY); if (stp) encDelta(a, s * stp); else encDelta(a, s * (R.max - R.min) / 100 * (ev.shiftKey ? .1 : 1)); };
     d.querySelector('.val').ondblclick = () => openNumber(R.label, v => encAbs(a, v));
   }
   renderEncExtra();
@@ -1668,13 +1792,13 @@ function renderEncoders() {
 function encDelta(a, d) {
   if (!sel.length && ['r', 'g', 'b'].includes(a)) { const ids = colorTargets(); if (!ids.length) return; setSel(ids); }
   if (!sel.length) { toast('בחר קודם גופים (Select fixtures first)'); return; }
-  if (feat === 'fx') { const insts = selFxInsts(); if (!insts.length) { toast('No phaser on selection'); return; } for (const I of insts) I[a] = clamp(I[a] + d, FXP[a].min, FXP[a].max); return; }
+  if (a in FXP) { const insts = selFxInsts(); if (!insts.length) { toast('No phaser on selection'); return; } for (const I of insts) I[a] = clamp(I[a] + d, FXP[a].min, FXP[a].max); return; }
   const n = sel.length;
   sel.forEach((id, k) => { const f = FX[id]; if (!has(f, a)) return; const cur = prog.vals[id]?.[a] ?? f.base[a] ?? ATTR[a].def;
     const m = fanMode && n > 1 ? lerp(-1, 1, k / (n - 1)) : 1; progSet(id, a, cur + d * m); });
 }
 function encAbs(a, v) {
-  if (feat === 'fx') { for (const I of selFxInsts()) I[a] = clamp(v, FXP[a].min, FXP[a].max); return; }
+  if (a in FXP) { for (const I of selFxInsts()) I[a] = clamp(v, FXP[a].min, FXP[a].max); return; }
   sel.forEach(id => progSet(id, a, v));
 }
 function fmtVal(a, v) { if (v == null) return '—'; if (a === 'gobo') return feat === 'gobo' && sel.length && FX[sel[0]].type === 'screen' ? SCREEN_MODES[Math.round(v)] : `${Math.round(v)} ${GOBO_NAMES[Math.round(v)] || ''}`; const R = encRange(a); return (Math.abs(v) < 10 && a !== 'dim' ? (+v).toFixed(1) : Math.round(v)) + (R.unit || ''); }
@@ -1682,7 +1806,7 @@ function updateEncUI() {
   const f0 = sel.map(id => FX[id])[0];
   $$('#encoders .encoder').forEach(d => {
     const a = d.dataset.a, R = encRange(a); let v = null, p = false, en = true;
-    if (feat === 'fx') { const I = selFxInsts()[0]; en = !!I; if (I) { v = I[a]; p = true; } }
+    if (a in FXP) { const I = selFxInsts()[0]; en = !!I; if (I) { v = I[a]; p = true; } }
     else { const f = sel.map(id => FX[id]).find(f => has(f, a)); en = !!f; if (f) { const pv = prog.vals[f.id]?.[a]; p = pv != null; v = p ? pv : f.base[a]; } }
     d.classList.toggle('dis', !en && sel.length > 0);
     const vv = d.querySelector('.val'); vv.textContent = fmtVal(a, v); vv.classList.toggle('p', p);
@@ -1697,6 +1821,49 @@ function updateEncUI() {
     b.classList.toggle('has', hasP); });
 }
 function btnGrid(cols, items) { const g = el('div', 'btnGrid'); g.style.gridTemplateColumns = `repeat(${cols},auto)`; for (const [t, fn, cls] of items) { const b = el('button', cls || '', t); b.onclick = fn; g.appendChild(b); } return g; }
+// Pointer -> position in the element's own untransformed border box (0..1), correct under the MA console's CSS 3D
+// perspective and zoom: zero-size probes at the four corners give the projected quad, and the inverse of the
+// square-to-quad homography maps the pointer back. Built once per gesture, so a drag never forces layout per move.
+function boxMap(elm) {
+  const own = !(elm instanceof HTMLCanvasElement), host = own ? elm : elm.offsetParent, w = elm.offsetWidth, h = elm.offsetHeight;
+  const ox = own ? -elm.clientLeft : elm.offsetLeft, oy = own ? -elm.clientTop : elm.offsetTop;
+  const pr = [[0, 0], [w, 0], [w, h], [0, h]].map(([x, y]) => { const i = document.createElement('i');
+    i.style.cssText = `position:absolute;display:block;left:${ox + x}px;top:${oy + y}px;width:0;height:0;margin:0;padding:0;border:0;transform:none`; host.appendChild(i); return i; });
+  const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = pr.map(i => { const r = i.getBoundingClientRect(); return [r.left, r.top]; }); pr.forEach(i => i.remove());
+  const dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3, dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3, den = dx1 * dy2 - dx2 * dy1;
+  if (!den || !isFinite(den)) { const r = elm.getBoundingClientRect(), f = ev => [(ev.clientX - r.left) / r.width, (ev.clientY - r.top) / r.height]; f.w = r.width; f.h = r.height; return f; }
+  const g = (dx3 * dy2 - dx2 * dy3) / den, k = (dx1 * dy3 - dx3 * dy1) / den, a = x1 - x0 + g * x1, b = x3 - x0 + k * x3, d = y1 - y0 + g * y1, e = y3 - y0 + k * y3;
+  const A = e - y0 * k, B = x0 * k - b, C = b * y0 - x0 * e, D = y0 * g - d, E = a - x0 * g, F = x0 * d - a * y0, G = d * k - e * g, H = b * g - a * k, I = a * e - b * d;
+  const z = elm.currentCSSZoom || 1, f = ev => { const X = ev.clientX, Y = ev.clientY, q = G * X + H * Y + I; return [(A * X + B * Y + C) / q, (D * X + E * Y + F) / q]; };
+  f.w = w * z; f.h = h * z; return f;
+}
+// pads are built once for the MA touch screens and per feature change inside #encExtra for the other layouts
+let aimH = 1.4;
+function focusPad(c) {
+  const mx = x => (x + 25) / 50 * c.width, mz = z => (z + 22) / 28 * c.height, ix = px => px / c.width * 50 - 25, iz = py => py / c.height * 28 - 22;
+  const draw = (pt) => { const x = c.getContext('2d'); x.fillStyle = '#050506'; x.fillRect(0, 0, c.width, c.height);
+    x.fillStyle = '#16161a'; x.fillRect(mx(STAGE.x0), mz(STAGE.z0), mx(STAGE.x1) - mx(STAGE.x0), mz(STAGE.z1) - mz(STAGE.z0));
+    x.fillStyle = '#1f2a44'; x.fillRect(mx(SCREEN.x0), mz(SCREEN.z) - 2, mx(SCREEN.x1) - mx(SCREEN.x0), 3);
+    x.strokeStyle = '#3a3a44'; x.beginPath(); x.ellipse(mx(RING.x), mz(RING.z), RING.R / 50 * c.width, RING.R / 28 * c.height, 0, 0, 7); x.stroke();
+    x.fillStyle = '#555'; for (const [px, pz] of [...BAND_PTS, ...[-21.6, -19.5, -17.4, -15.3, -13.3, 13.3, 15.3, 17.4, 19.5, 21.6].flatMap(x => [[x, -8.7], [x, -11.6], [x, -14.6]])]) { x.beginPath(); x.arc(mx(px), mz(pz), 3, 0, 7); x.fill(); }
+    x.fillStyle = '#ffc21a88'; for (const id of sel) { const f = FX[id]; x.fillRect(mx(f.pos.x) - 1, mz(f.pos.z) - 1, 2, 2); }
+    x.fillStyle = '#888'; x.font = '9px Inter'; x.fillText('UPSTAGE', 4, 10); x.fillText('AUDIENCE ↓', 4, c.height - 4);
+    if (pt) { x.strokeStyle = '#ff4040'; x.beginPath(); x.arc(pt[0], pt[1], 6, 0, 7); x.moveTo(pt[0] - 10, pt[1]); x.lineTo(pt[0] + 10, pt[1]); x.moveTo(pt[0], pt[1] - 10); x.lineTo(pt[0], pt[1] + 10); x.stroke(); } };
+  draw();
+  let map = null;
+  const aim = ev => { const [u, v] = map(ev), px = u * c.width, py = v * c.height; const X3 = ix(px), Z3 = iz(py), on = X3 > STAGE.x0 && X3 < STAGE.x1 && Z3 > STAGE.z0 && Z3 < STAGE.z1;
+    const Y3 = (on ? DECK : 0) + aimH; sel.forEach(id => { const f = FX[id]; if (!f.T.moving) return; const a = aimAt(f, X3, Y3, Z3); progSet(id, 'pan', a.pan); progSet(id, 'tilt', a.tilt); }); draw([px, py]); };
+  c.onpointerdown = ev => { if (!sel.length) { toast('בחר קודם גופים (Select fixtures first)'); return; } c.setPointerCapture(ev.pointerId); map = boxMap(c); aim(ev); };
+  c.onpointermove = ev => { if (c.hasPointerCapture(ev.pointerId)) aim(ev); };
+  return draw;
+}
+function colorPad(c) {
+  const x = c.getContext('2d'); for (let px = 0; px < c.width; px++) for (let py = 0; py < c.height; py++) { const [r, g, b] = hsv(px / c.width, 1 - py / c.height, 1); x.fillStyle = `rgb(${r * 255},${g * 255},${b * 255})`; x.fillRect(px, py, 1, 1); }
+  const pick = ev => { const [u, v] = map(ev), h = clamp(u, 0, 1), s = clamp(1 - v, 0, 1); const [r, g, b] = hsv(h, s, 1); pickIds.forEach(id => { progSet(id, 'r', r * 100); progSet(id, 'g', g * 100); progSet(id, 'b', b * 100); }); };
+  let pickIds = [], map = null;
+  c.onpointerdown = ev => { pickIds = colorTargets(); if (!pickIds.length) return; c.setPointerCapture(ev.pointerId); map = boxMap(c); pick(ev); };
+  c.onpointermove = ev => { if (c.hasPointerCapture(ev.pointerId)) pick(ev); };
+}
 function renderEncExtra() {
   const X = $('#encExtra'); X.innerHTML = '';
   const knock = () => { progRemoveFeat(sel, feat); log(`Knockout ${feat} from selection`); };
@@ -1706,25 +1873,11 @@ function renderEncExtra() {
     X.appendChild(el('div', 'hint', 'Drag the encoder up/down (Shift = fine), mouse-wheel, or double-click the value to type. Command line: <b>At 75</b>, <b>Full</b>.'));
   }
   if (feat === 'pos') {
-    const w = el('div'); w.appendChild(el('div', 'xlabel', 'Focus pad — click/drag on the stage map to aim selection'));
-    const c = el('canvas', 'pad'); c.width = 300; c.height = 118; w.appendChild(c); X.appendChild(w);
-    const hRow = el('div'); hRow.appendChild(el('div', 'xlabel', 'Aim height')); const hs = el('input'); hs.type = 'range'; hs.min = 0; hs.max = 12; hs.step = .1; hs.value = 1.4; hs.style.width = '120px'; hRow.appendChild(hs);
+    if (deskMode !== 'ma') { const w = el('div'); w.appendChild(el('div', 'xlabel', 'Focus pad — click/drag on the stage map to aim selection'));
+      const c = el('canvas', 'pad'); c.width = 300; c.height = 118; w.appendChild(c); X.appendChild(w); focusPad(c); }
+    const hRow = el('div'); hRow.appendChild(el('div', 'xlabel', 'Aim height')); const hs = el('input'); hs.type = 'range'; hs.min = 0; hs.max = 12; hs.step = .1; hs.value = aimH; hs.style.width = '120px'; hs.oninput = () => aimH = +hs.value; hRow.appendChild(hs);
     hRow.appendChild(el('div', 'xlabel', '&nbsp;')); hRow.appendChild(btnGrid(2, [['Home', () => sel.forEach(id => { progSet(id, 'pan', 0); progSet(id, 'tilt', 0); })], ['Knockout', knock], ['Fan ' + (fanMode ? 'ON' : 'off'), () => { fanMode = !fanMode; $('#kFan').classList.toggle('on', fanMode); renderEncExtra(); }, fanMode ? 'on' : ''], ['Center', () => applyPreset(2, 2)]]));
     X.appendChild(hRow);
-    const mx = x => (x + 25) / 50 * c.width, mz = z => (z + 22) / 28 * c.height, ix = px => px / c.width * 50 - 25, iz = py => py / c.height * 28 - 22;
-    const draw = (pt) => { const x = c.getContext('2d'); x.fillStyle = '#050506'; x.fillRect(0, 0, c.width, c.height);
-      x.fillStyle = '#16161a'; x.fillRect(mx(STAGE.x0), mz(STAGE.z0), mx(STAGE.x1) - mx(STAGE.x0), mz(STAGE.z1) - mz(STAGE.z0));
-      x.fillStyle = '#1f2a44'; x.fillRect(mx(SCREEN.x0), mz(SCREEN.z) - 2, mx(SCREEN.x1) - mx(SCREEN.x0), 3);
-      x.strokeStyle = '#3a3a44'; x.beginPath(); x.ellipse(mx(RING.x), mz(RING.z), RING.R / 50 * c.width, RING.R / 28 * c.height, 0, 0, 7); x.stroke();
-      x.fillStyle = '#555'; for (const [px, pz] of [...BAND_PTS, ...[-21.6, -19.5, -17.4, -15.3, -13.3, 13.3, 15.3, 17.4, 19.5, 21.6].flatMap(x => [[x, -8.7], [x, -11.6], [x, -14.6]])]) { x.beginPath(); x.arc(mx(px), mz(pz), 3, 0, 7); x.fill(); }
-      x.fillStyle = '#ffc21a88'; for (const id of sel) { const f = FX[id]; x.fillRect(mx(f.pos.x) - 1, mz(f.pos.z) - 1, 2, 2); }
-      x.fillStyle = '#888'; x.font = '9px Inter'; x.fillText('UPSTAGE', 4, 10); x.fillText('AUDIENCE ↓', 4, c.height - 4);
-      if (pt) { x.strokeStyle = '#ff4040'; x.beginPath(); x.arc(pt[0], pt[1], 6, 0, 7); x.moveTo(pt[0] - 10, pt[1]); x.lineTo(pt[0] + 10, pt[1]); x.moveTo(pt[0], pt[1] - 10); x.lineTo(pt[0], pt[1] + 10); x.stroke(); } };
-    draw();
-    const aim = ev => { const r = c.getBoundingClientRect(), px = (ev.clientX - r.left) * c.width / r.width, py = (ev.clientY - r.top) * c.height / r.height; const X3 = ix(px), Z3 = iz(py), on = X3 > STAGE.x0 && X3 < STAGE.x1 && Z3 > STAGE.z0 && Z3 < STAGE.z1;
-      const Y3 = (on ? DECK : 0) + +hs.value; sel.forEach(id => { const f = FX[id]; if (!f.T.moving) return; const a = aimAt(f, X3, Y3, Z3); progSet(id, 'pan', a.pan); progSet(id, 'tilt', a.tilt); }); draw([px, py]); };
-    c.onpointerdown = ev => { if (!sel.length) { toast('בחר קודם גופים (Select fixtures first)'); return; } c.setPointerCapture(ev.pointerId); aim(ev); };
-    c.onpointermove = ev => { if (c.hasPointerCapture(ev.pointerId)) aim(ev); };
   }
   if (feat === 'gobo') {
     const w = el('div'); const isScreen = sel.length && FX[sel[0]].type === 'screen';
@@ -1736,13 +1889,8 @@ function renderEncExtra() {
     const w2 = el('div'); w2.appendChild(el('div', 'xlabel', 'Rotation')); w2.appendChild(btnGrid(2, [['◀ Fast', () => encAbs('grot', -60)], ['Fast ▶', () => encAbs('grot', 60)], ['◀ Slow', () => encAbs('grot', -12)], ['Slow ▶', () => encAbs('grot', 12)], ['Stop', () => encAbs('grot', 0)], ['Knockout', knock]])); X.appendChild(w2);
   }
   if (feat === 'color') {
-    const w = el('div'); w.appendChild(el('div', 'xlabel', 'Color picker'));
-    const c = el('canvas', 'pad'); c.width = 230; c.height = 112; w.appendChild(c); X.appendChild(w);
-    const x = c.getContext('2d'); for (let px = 0; px < c.width; px++) for (let py = 0; py < c.height; py++) { const [r, g, b] = hsv(px / c.width, 1 - py / c.height, 1); x.fillStyle = `rgb(${r * 255},${g * 255},${b * 255})`; x.fillRect(px, py, 1, 1); }
-    const pick = ev => { const R = c.getBoundingClientRect(); const h = clamp((ev.clientX - R.left) / R.width, 0, 1), s = clamp(1 - (ev.clientY - R.top) / R.height, 0, 1); const [r, g, b] = hsv(h, s, 1); pickIds.forEach(id => { progSet(id, 'r', r * 100); progSet(id, 'g', g * 100); progSet(id, 'b', b * 100); }); };
-    let pickIds = [];
-    c.onpointerdown = ev => { pickIds = colorTargets(); if (!pickIds.length) return; c.setPointerCapture(ev.pointerId); pick(ev); };
-    c.onpointermove = ev => { if (c.hasPointerCapture(ev.pointerId)) pick(ev); };
+    if (deskMode !== 'ma') { const w = el('div'); w.appendChild(el('div', 'xlabel', 'Color picker'));
+      const c = el('canvas', 'pad'); c.width = 230; c.height = 112; w.appendChild(c); X.appendChild(w); colorPad(c); }
     const w2 = el('div'); w2.appendChild(el('div', 'xlabel', 'Swatches (Color presets 4.x)')); const sw = el('div', 'swatches');
     COLORS.forEach(([n, r, g, b]) => { const d = el('div'); d.title = n; d.style.background = `rgb(${r * 2.55},${g * 2.55},${b * 2.55})`; d.onclick = () => colorTargets().forEach(id => { progSet(id, 'r', r); progSet(id, 'g', g); progSet(id, 'b', b); }); sw.appendChild(d); });
     w2.appendChild(sw); w2.appendChild(el('div', 'xlabel', '&nbsp;')); w2.appendChild(btnGrid(2, [['Knockout Color', knock]])); X.appendChild(w2);
@@ -1764,8 +1912,9 @@ function applyPresetTo(t, n) { applyPreset(t, n); }
 
 /* executors */
 function faderDrag(elm, get, set) {
-  const upd = ev => { const r = elm.getBoundingClientRect(); set(clamp(1 - (ev.clientY - r.top) / r.height, 0, 1)); };
-  elm.onpointerdown = ev => { elm.setPointerCapture(ev.pointerId); upd(ev); ev.preventDefault(); };
+  let map = null;
+  const upd = ev => set(clamp(1 - map(ev)[1], 0, 1));
+  elm.onpointerdown = ev => { elm.setPointerCapture(ev.pointerId); map = boxMap(elm); upd(ev); ev.preventDefault(); };
   elm.onpointermove = ev => { if (elm.hasPointerCapture(ev.pointerId)) upd(ev); };
   elm.ondblclick = () => set(get() > .5 ? 0 : 1);
 }
@@ -1777,13 +1926,13 @@ function setLevel(e, v) {
 function buildExecs() {
   const X = $('#execs'); X.innerHTML = '';
   execs.slice(0, 10).forEach((e, i) => {
-    const d = el('div', 'ex', `<div class="ex-top"><span class="ex-num">${i + 1}</span><span class="ex-name"></span><button class="ex-off" title="Off">⏻</button></div>
+    const d = el('div', 'ex', `<div class="ex-top"><span class="ex-num">${i + 1}</span><span class="ex-name"></span><button class="ex-off" title="Off">⏻</button><button class="ex-sel" title="Select">SEL</button></div>
       <div class="ex-cue"><span class="c"></span><span class="x"></span></div>
       <div class="ex-mid"><div class="fader"><div class="ff"></div><div class="cap"></div></div><div class="ex-btns"><button class="b-go">GO+</button><button class="b-back">GO−</button><button class="b-flash">FLASH</button></div></div>
       <div class="ex-lvl"></div>`);
     X.appendChild(d); e.dom = d;
     const sel_ = () => { selExec = i; uiDirty.all = true; };
-    d.querySelector('.ex-name').onclick = () => { if (storeMode) { storeCue(i, null); setStore(false); } sel_(); };
+    d.querySelector('.ex-name').onclick = d.querySelector('.ex-sel').onclick = () => { if (storeMode) { storeCue(i, null); setStore(false); } sel_(); };
     d.querySelector('.ex-name').ondblclick = () => openRename(`Executor ${i + 1}`, e.name, v => { e.name = v; persist(); });
     d.querySelector('.ex-off').onclick = () => { execOff(e); e.level = i === 0 ? e.level : 0; };
     d.querySelector('.b-go').onclick = () => { if (storeMode) { storeCue(i, null); setStore(false); sel_(); return; } sel_(); execGo(e, 1); };
@@ -1803,7 +1952,7 @@ function updateExecUI() {
     d.querySelector('.c').textContent = c ? `${c.num} ${c.name}` : (e.cues.length ? `${e.cues.length} cues` : '');
     d.querySelector('.x').textContent = nx && e.on ? `› ${nx.num} ${nx.name}` : '';
     d.querySelector('.ff').style.height = (e.level * 100) + '%'; d.querySelector('.cap').style.bottom = (e.level * 100) + '%';
-    d.querySelector('.ex-lvl').textContent = Math.round(e.level * 100) + '%';
+    d.querySelector('.ex-lvl').textContent = Math.round(e.level * 100) + '%'; d.style.setProperty('--lv', e.level);
   });
   const e = execs[selExec];
   $('#mSelName').textContent = `${selExec + 1} ${e.name || ''}`;
@@ -1838,15 +1987,25 @@ $('#seqBack').onclick = () => execGo(execs[selExec], -1);
 $('#seqDel').onclick = () => { const e = execs[selExec]; if (e.cur < 0) { toast('Goto the cue you want to delete first'); return; } runCmd(`Delete Cue ${e.cues[e.cur].num}`); };
 
 /* fixture sheet */
+// rows are built only when the fixture list changes; each tick writes just the cells whose text or class changed
+let sheetRows = null;
 function renderSheet() {
   const t = $('#sheet');
-  const rows = fixtures.map(f => {
-    const o = f.base, p = prog.vals[f.id] || {}, c = (a) => p[a] != null ? 'p' : '';
-    const sw = has(f, 'r') ? `rgb(${o.r * 2.55},${o.g * 2.55},${o.b * 2.55})` : '#333';
-    return `<tr data-id="${f.id}" class="${f.sel ? 'sel' : ''}"><td>${f.id}</td><td style="font-family:Inter">${f.T.name}</td><td class="${c('dim')}">${Math.round(f.out.dim)}</td>` +
-      `<td class="${c('pan')}">${has(f, 'pan') ? Math.round(o.pan) : ''}</td><td class="${c('tilt')}">${has(f, 'tilt') ? Math.round(o.tilt) : ''}</td>` +
-      `<td class="${c('r')}"><span class="cs" style="background:${sw}"></span></td><td class="${c('gobo')}">${has(f, 'gobo') ? Math.round(o.gobo) : ''}</td><td class="${c('zoom')}">${has(f, 'zoom') ? (+o.zoom).toFixed(1) : ''}</td></tr>`; }).join('');
-  t.innerHTML = `<tr><th>ID</th><th>Type</th><th>Dim</th><th>Pan</th><th>Tilt</th><th>Col</th><th>Gobo</th><th>Zoom</th></tr>` + rows;
+  if (!sheetRows || sheetRows.length !== fixtures.length) {
+    t.innerHTML = `<tr><th>ID</th><th>Type</th><th>Dim</th><th>Pan</th><th>Tilt</th><th>Col</th><th>Gobo</th><th>Zoom</th></tr>` +
+      fixtures.map(f => `<tr data-id="${f.id}"><td>${f.id}</td><td style="font-family:Inter">${f.T.name}</td><td></td><td></td><td></td><td><span class="cs"></span></td><td></td><td></td></tr>`).join('');
+    sheetRows = [...t.querySelectorAll('tr[data-id]')].map(tr => ({ tr, td: tr.cells, cs: tr.querySelector('.cs'), v: {} }));
+  }
+  fixtures.forEach((f, i) => {
+    const R = sheetRows[i], o = f.base, p = prog.vals[f.id] || {}, c = (a) => p[a] != null ? 'p' : '', V = R.v;
+    const put = (k, v, fn) => { if (V[k] !== v) { V[k] = v; fn(v); } };
+    put('sel', f.sel ? 'sel' : '', v => R.tr.className = v);
+    const cells = [[2, 'dim', String(Math.round(f.out.dim))], [3, 'pan', has(f, 'pan') ? String(Math.round(o.pan)) : ''], [4, 'tilt', has(f, 'tilt') ? String(Math.round(o.tilt)) : ''],
+      [6, 'gobo', has(f, 'gobo') ? String(Math.round(o.gobo)) : ''], [7, 'zoom', has(f, 'zoom') ? (+o.zoom).toFixed(1) : '']];
+    for (const [n, a, txt] of cells) { put('t' + n, txt, v => R.td[n].textContent = v); put('c' + n, c(a), v => R.td[n].className = v); }
+    put('c5', c('r'), v => R.td[5].className = v);
+    put('sw', has(f, 'r') ? `rgb(${o.r * 2.55},${o.g * 2.55},${o.b * 2.55})` : '#333', v => R.cs.style.background = v);
+  });
 }
 $('#sheet').onclick = ev => { const tr = ev.target.closest('tr[data-id]'); if (tr) setSel([+tr.dataset.id], ev.shiftKey ? 'toggle' : 'replace'); };
 
@@ -2127,10 +2286,15 @@ function drawOverlay() {
     const x = (tmpP.x + 1) / 2 * w, y = (1 - tmpP.y) / 2 * h - 10 * dpr;
     ovx.fillStyle = f.sel ? '#ffc21a' : '#ffffff99'; ovx.fillText(f.id, x, y); }
 }
+// projected height of the MA console overlay (0 in the other layouts), set by fitDesk()
+let maConH = 0;
 function resize() {
   const v = $('#viewer'), w = v.clientWidth, h = v.clientHeight;
   renderer.setSize(w, h, false); composer.setSize(w, h); bloom.setSize(w / 2, h / 2);
-  camera.aspect = w / h; camera.updateProjectionMatrix();
+  camera.aspect = w / h;
+  // MA: the console covers the bottom of the stage view, so the look-at point is moved to the middle of the free area above it
+  if (maConH) camera.setViewOffset(w, h, 0, Math.round(maConH / 2), w, h); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
   const d = Math.min(devicePixelRatio, 1.5); ov.width = w * d; ov.height = h * d;
 }
 new ResizeObserver(resize).observe($('#viewer')); resize();
@@ -2145,7 +2309,7 @@ function loop(t) {
   if (glowOn) composer.render(); else renderer.render(scene, camera);
   drawOverlay();
   fpsAcc += dt; fpsN++;
-  if (t - uiT > 50) { uiT = t; updateExecUI(); updateEncUI(); updateAutoUI(now);
+  if (t - uiT > 50) { uiT = t; updateExecUI(); updateEncUI(); updateAutoUI(now); if (deskMode === 'ma') updateMaUI();
     $('#selInfo').innerHTML = `Selection: <b>${sel.length}</b>${sel.length ? ` <span style="color:var(--mut)">${sel.length < 6 ? sel.join(' ') : sel[0] + '…' + sel[sel.length - 1]}</span>` : ''}`;
     const np = Object.keys(prog.vals).length; $('#progInfo').innerHTML = np || prog.fxList.length ? `Programmer: <b style="color:var(--prog)">${np} fix${prog.fxList.length ? ' · ' + prog.fxList.length + ' fx' : ''}</b>` : 'Programmer: empty';
     $('#kHigh').classList.toggle('on', highlight); $('#boBtn').classList.toggle('on', blackout); $('#kFan').classList.toggle('on', fanMode);
@@ -2362,10 +2526,10 @@ const GUIDE = [
   <table><tr><th>אזור</th><th>מה יש בו</th></tr>
   <tr><td>שורה עליונה</td><td>זוויות מצלמה, <b>House</b> (אורות קהל), <b>Haze</b> (עשן), <b>Glow</b>, <b>Real light</b> (אור אמיתי וצללים), <b>Fixture IDs</b> (מספרי גופים על הבמה), MIDI, Show File והמדריך.</td></tr>
   <tr><td>הבמה (מרכז)</td><td>תצוגת התלת־ממד. למעלה משמאל: כמה גופים נבחרים ומה יש בפרוגרמר. למטה משמאל: ה־Cue הנוכחי והבא באקזקיוטר הנבחר.</td></tr>
-  <tr><td>פאנל ימני</td><td><b>Pools</b> (קבוצות ו־Presets), <b>Auto Show</b>, <b>Sequence</b> (רשימת ה־Cues), <b>Fixture Sheet</b> (טבלת ערכים של כל הגופים).</td></tr>
+  <tr><td>פאנל המסכים</td><td><b>Pools</b> (קבוצות ו־Presets), <b>Auto Show</b>, <b>Sequence</b> (רשימת ה־Cues), <b>Fixture Sheet</b> (טבלת ערכים של כל הגופים). ב־Classic זה הפאנל הימני וב־Desk זה SCREEN משמאל, עם ארבעה טאבים. ב־Console (MA) ה־Pools תמיד במסך 2, והשלושה האחרים הם טאבים במסך 1.</td></tr>
   <tr><td>שורת אנקודרים</td><td>טאבים לפי תכונה: Dimmer, Position, Gobo, Color, Beam, Phaser. אנקודרים וכלים ייעודיים לכל טאב. נקודה אדומה ליד טאב = יש ערכים בפרוגרמר.</td></tr>
-  <tr><td>פריסה (Layout)</td><td>ברירת המחדל היא <b>Console (MA)</b>: קונסולה פיזית בסגנון grandMA מתחת לבמה, עם 3 מסכים למעלה (1 Pools, 2 Programmer, 3 Command ורשימת ה־Cues), ומשטח עם פיידרים, גלגלי אנקודר גדולים, מקלדת ו־GO. <b>Desk</b>: הבמה לכל הרוחב, ומתחתיה קונסולה אחת קומפקטית במרכז, כמו שולחן אמיתי. משמאל SCREEN (Pools, Auto, Sequence), באמצע PROGRAMMER ו־PLAYBACK, מימין COMMAND עם מקלדת מספרים ו־MASTER. הבורר שליד Layout מגדיל או מקטין את הקונסולה (Auto מתאים אותה לרוחב המסך). <b>Classic</b> מחזיר לפריסה הקודמת.</td></tr>
-  <tr><td>שולחן (למטה)</td><td>שורת פקודה ומקשים (STORE, CLEAR…), 10 אקזקיוטרים עם פיידרים, ומצד שמאל: GO הגדול, GO−, PAUSE, B.O., TAP, OFF ופיידר GM.</td></tr></table>
+  <tr><td>פריסה (Layout)</td><td>ברירת המחדל היא <b>Console (MA)</b>: קונסולה פיזית גדולה בסגנון grandMA מתחת לבמה. למעלה 2 מסכים גדולים: מסך 1 עם Fixture Sheet, Sequence ו־Auto Show ושורת הפקודה, ומסך 2 עם ה־Pools (קבוצות ו־Presets) וכלי הפרוגרמר. במשטח משמאל: מסך LCD רחב מעל 4 פיידרים מיוחדים בכיפות זהב (HOUSE, HAZE, ENERGY, AUTO MSTR) ו־10 אקזקיוטרים עם מקשים. מימין: מקשי תכונות, 5 אנקודרים, 2 מסכי מגע קטנים (צבע ומיקום), מקלדת, GO, פיידר GM וגלגל LEVEL לעוצמת הבחירה. <b>Desk</b>: הבמה לכל הרוחב, ומתחתיה קונסולה אחת קומפקטית במרכז, כמו שולחן אמיתי. משמאל SCREEN (Pools, Auto, Sequence), באמצע PROGRAMMER ו־PLAYBACK, מימין COMMAND עם מקלדת מספרים ו־MASTER. הבורר שליד Layout מגדיל או מקטין את הקונסולה (Auto מתאים אותה לרוחב המסך). <b>Classic</b> מחזיר לפריסה הקודמת.</td></tr>
+  <tr><td>שולחן (למטה)</td><td>שורת פקודה ומקשים (STORE, CLEAR…), 10 אקזקיוטרים עם פיידרים, ובצד ימין של השולחן: GO הגדול, GO−, PAUSE, B.O., TAP, OFF ופיידר GM. זה נכון בכל שלוש הפריסות.</td></tr></table>
   <h3>שליטה במצלמה</h3><ul><li>גרירה עם הכפתור השמאלי: סיבוב סביב הבמה.</li><li>גרירה עם הכפתור הימני: הזזה.</li><li>גלגלת: זום.</li><li>כפתורי זווית למעלה מחזירים לנקודות קבועות.</li></ul>` },
  { t: 'בחירת גופים', h: () => `
   <h3>בבמה</h3><ul><li>לחיצה על גוף: בוחר רק אותו. ${K('Shift')}+לחיצה: מוסיף או מוריד מהבחירה.</li><li>${K('Shift')}+גרירה: בחירה מלבנית, מוסיפה את כל הגופים שבתוך המלבן.</li><li>מעבר עם העכבר מעל גוף מציג את המספר והסוג שלו.</li><li>הכפתור <b>Fixture IDs</b> מציג מספר מעל כל גוף.</li></ul>
@@ -2447,7 +2611,7 @@ function openGuide(i) { if (i != null) gIdx = i; renderGuide(); $('#guide').clas
 function closeGuide() { $('#guide').classList.remove('show'); try { localStorage.setItem('lumadesk-guide-seen', '1'); } catch (e) { } }
 $('#gClose').onclick = closeGuide; $('#gPrev').onclick = () => { gIdx--; renderGuide(); }; $('#gNext').onclick = () => { gIdx++; renderGuide(); };
 $('#guide').onclick = ev => { if (ev.target.id === 'guide') closeGuide(); };
-const sideTo = t => $(`#sideTabs [data-t=${t}]`).click(), featTo = f => $(`#featTabs [data-f=${f}]`).click();
+const sideTo = t => { if (t !== 'pools' || deskMode !== 'ma') $(`#sideTabs [data-t=${t}]`).click(); }, featTo = f => $(`#featTabs [data-f=${f}]`).click();
 const TOUR = [
   ['#viewer', 'הבמה', 'תצוגת התלת־ממד של בריכת הסולטן. לחיצה על גוף בוחרת אותו, Shift+גרירה בוחרת במלבן. גרירה מסובבת את המצלמה, גלגלת עושה זום.'],
   ['#top .tbg', 'זוויות מצלמה', 'נקודות מבט מוכנות: FOH, Front, On Stage, Top, Band, Orchestra, Ring, Wide, Audience, Drums, Old City.'],
@@ -2457,7 +2621,7 @@ const TOUR = [
   ['#presetPool', 'Presets', 'בוחרים סוג (Dimmer, Position, Gobo, Color, Beam) ולוחצים על Preset כדי להחיל אותו על הבחירה. Position Presets מחושבים לכל גוף.', () => sideTo('pools')],
   ['#featTabs', 'טאבי תכונות', 'בוחרים מה מכוונים: Dimmer, Position, Gobo, Color, Beam או Phaser. נקודה אדומה = יש ערכים בפרוגרמר.', () => featTo('pos')],
   ['#encoders', 'אנקודרים', 'גוררים למעלה או למטה לשינוי ערך (Shift = עדין), או דאבל־קליק על המספר כדי להקליד. אדום = ערך בפרוגרמר.'],
-  ['#encExtra', 'כלים לכל טאב', 'כאן, ב־Position, יש Focus pad: לוחצים על מפת הבמה וכל הבחירה מכוונת לשם. בטאב Color יש בוחר צבע, ובטאב Phaser יש אפקטים.'],
+  ['#encExtra', 'כלים לכל טאב', 'כאן, ב־Position, יש Focus pad: לוחצים על מפת הבמה וכל הבחירה מכוונת לשם. בטאב Color יש בוחר צבע, ובטאב Phaser יש אפקטים. ב־Console (MA) ה־Focus pad ובוחר הצבע נמצאים בשני מסכי המגע הקטנים שמתחת לאנקודרים.'],
   ['.cmdrow', 'שורת פקודה', 'פקודות בסגנון MA: Group 2 At Full, Store Cue 5, Goto Cue 3. מספיק להתחיל להקליד מכל מקום.'],
   ['#kStore', 'STORE', 'הקלטה: לוחצים STORE ואז על שם אקזקיוטר (Cue חדש), על Cue ב־Sequence (עדכון) או על משבצת ריקה ב־Pools.'],
   ['#kClear', 'CLEAR', 'לחיצה ראשונה מנקה בחירה, שנייה מנקה את הפרוגרמר, דאבל־קליק מנקה הכול.'],
@@ -2472,7 +2636,13 @@ function startTour() { tIdx = 0; showTour(); }
 function endTour() { tIdx = -1; $('#tourHole').style.display = $('#tourTip').style.display = 'none'; }
 function showTour() {
   const [sel, title, text, before] = TOUR[tIdx]; if (before) before();
-  requestAnimationFrame(() => { const e = $(sel); if (!e) { endTour(); return; } const r = e.getBoundingClientRect(), pad = 6, H = $('#tourHole'), T = $('#tourTip');
+  requestAnimationFrame(() => { const e = $(sel); if (!e) { endTour(); return; } let r = e.getBoundingClientRect(); const pad = 6, H = $('#tourHole'), T = $('#tourTip');
+    // a target inside a scrolling pane (the pools on MA screen 2) is scrolled into the pane; the hole keeps to the visible part
+    const sp = e.parentElement.closest('.pane');
+    if (sp && sp.scrollHeight > sp.clientHeight) { let s = sp.getBoundingClientRect();
+      if (r.top < s.top || r.bottom > s.bottom) { sp.scrollTop += (r.top - s.top) * sp.offsetHeight / s.height - 4; r = e.getBoundingClientRect(); s = sp.getBoundingClientRect(); }
+      const L = Math.max(r.left, s.left), Tp = Math.max(r.top, s.top), R = Math.min(r.right, s.right), B = Math.min(r.bottom, s.bottom);
+      r = { left: L, top: Tp, right: R, bottom: B, width: R - L, height: B - Tp }; }
     Object.assign(H.style, { display: 'block', left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + pad * 2 + 'px', height: r.height + pad * 2 + 'px' });
     $('#tTitle').textContent = title; $('#tText').textContent = text; $('#tCount').textContent = `${tIdx + 1} / ${TOUR.length}`;
     $('#tPrev').style.visibility = tIdx ? 'visible' : 'hidden'; $('#tNext').style.display = tIdx < TOUR.length - 1 ? '' : 'none';
@@ -2533,25 +2703,31 @@ function kpPress(t) {
   if (/^[0-9.]$/.test(t)) { cmd.value = (/[0-9.]$/.test(v) ? v : (v && !v.endsWith(' ') ? v + ' ' : v)) + t; return; }
   cmd.value = (v && !v.endsWith(' ') ? v + ' ' : v) + t + ' ';
 }
-let deskMode = 'ma', deskZoom = 'auto';
+const MA_SIZE = .47;
+let deskMode = 'ma', deskZoom = 'auto', maForcedTab = null, maSize = MA_SIZE, maGeo = null;
+const saveLayout = () => { try { localStorage.setItem('lumadesk-layout2', JSON.stringify({ deskMode, deskZoom, maSize })); } catch (e) { } };
 const PARTS = { featTabs: $('#featTabs'), encBody: $('#encBody'), encoders: $('#encoders'), encExtra: $('#encExtra'), cmdFb: $('#cmdFb'), cmdrow: $('.cmdrow'), keys: $('.keys') };
 function restoreParts() {
   const P = PARTS; P.encBody.append(P.encoders, P.encExtra); $('#enc').append(P.featTabs, P.encBody);
   $('#cmdArea').prepend(P.cmdFb, P.cmdrow, P.keys);
+  $('#sideTabs').after($('#pane-pools'));
 }
 function applyLayout() {
+  const wasMa = document.body.classList.contains('ma');
   restoreParts();
   const desk = deskMode === 'desk', ma = deskMode === 'ma';
   document.body.classList.toggle('desk', desk); document.body.classList.toggle('ma', ma);
   if (ma) {
     if (!keypad) buildKeypad();
     $('#d1s').appendChild($('#side'));
-    $('#d2s').appendChild(PARTS.encExtra);
-    $('#d3s').prepend(PARTS.cmdFb, PARTS.cmdrow);
+    $('#d2s').append($('#pane-pools'), PARTS.encExtra);
+    $('#d3s').append(PARTS.cmdFb, PARTS.cmdrow);
     $('#pbSlot').appendChild($('#execs')); $('#execs').style.flex = '1';
     $('#ftSlot').appendChild(PARTS.featTabs); $('#ecSlot').appendChild(PARTS.encoders);
-    $('#kySlot').append(PARTS.keys, keypad);
+    $('#kySlot').appendChild(PARTS.keys); $('#kpSlot').appendChild(keypad);
     $('#msSlot').appendChild($('#master'));
+    // Pools is always on screen 2 here, so screen 1 needs one of the remaining tabs; leaving MA gives Pools back
+    if (sideTab === 'pools') { sideTo('sheet'); maForcedTab = 'sheet'; }
   } else if (desk) {
     $('#cwScreen').appendChild($('#side'));
     $('#encSlot').appendChild($('#enc'));
@@ -2565,18 +2741,91 @@ function applyLayout() {
     $('#desk').insertBefore($('#execs'), $('#master') && $('#master').parentNode === $('#desk') ? $('#master') : null); $('#execs').style.flex = '';
     $('#desk').appendChild($('#master'));
   }
-  fitDesk(); resize();
-  try { localStorage.setItem('lumadesk-layout2', JSON.stringify({ deskMode, deskZoom })); } catch (e) { }
+  if (!ma && maForcedTab) { if (sideTab === maForcedTab) sideTo('pools'); maForcedTab = null; }
+  maGeo = null; renderEncoders(); fitDesk(); resize();
+  if (curView === 'foh' && wasMa !== ma) setView('foh', true);
+  saveLayout();
 }
 function fitDesk() {
   const z = deskZoom === 'auto' ? clamp((innerWidth - 24) / 1880, .66, 1.05) : +deskZoom;
   $('#cbody').style.setProperty('--dz', z.toFixed(3));
-  const zm = deskZoom === 'auto' ? clamp((innerWidth - 24) / 1920, .55, 1.05) : +deskZoom;
-  $('#maBody').style.setProperty('--mz', zm.toFixed(3));
+  const mb = $('#maBody');
+  if (deskMode !== 'ma') { maConH = 0; mb.style.setProperty('--mz', (deskZoom === 'auto' ? clamp((innerWidth - 24) / 1920, .55, 1.05) : +deskZoom).toFixed(3)); return; }
+  // the projected console (union of its planes) is measured once per layout at zoom 1; it does not depend on the window
+  if (!maGeo || !maGeo.W) {
+    for (const [k, v] of [['--mz', '1'], ['--mt', '0px'], ['--mb', '0px']]) mb.style.setProperty(k, v);
+    const D = mb.getBoundingClientRect(); let L = 1e9, T = 1e9, R = -1e9, B = -1e9;
+    for (const e of mb.querySelectorAll('.maScreens,.maDeck,.maFront,.maCheek')) { const r = e.getBoundingClientRect(); L = Math.min(L, r.left); T = Math.min(T, r.top); R = Math.max(R, r.right); B = Math.max(B, r.bottom); }
+    maGeo = { W: R - L, H: B - T, mt: D.top - T, mb: B - D.bottom };
+  }
+  // fit by projected width and by the chosen share of the height under the top bar; a fixed zoom is only an upper limit
+  const zm = clamp(Math.min(deskZoom === 'auto' ? 1.1 : +deskZoom, (innerWidth - 24) / maGeo.W, maSize * (innerHeight - 40) / maGeo.H), .2, 1.5);
+  mb.style.setProperty('--mt', maGeo.mt.toFixed(1) + 'px'); mb.style.setProperty('--mb', maGeo.mb.toFixed(1) + 'px');
+  mb.style.setProperty('--mz', zm.toFixed(3));
+  maConH = maGeo.H * zm; const C = $('#maConsole').style; C.setProperty('--ch', maConH.toFixed(0) + 'px'); $('#viewer').style.setProperty('--ch', maConH.toFixed(0) + 'px');
+}
+/* MA console hardware: special master faders, touch screens and level wheel */
+const SPECS = [['house', 'HOUSE'], ['haze', 'HAZE'], ['aEnergy', 'ENERGY'], ['aMaster', 'AUTO']];
+SPECS.forEach(([id, name], i) => {
+  const inp = $('#' + id), lo = +inp.min, hi = +inp.max;
+  const d = el('div', 'spc', `<span class="sk">S${i + 1}</span><span class="sn">${name}</span><span class="sv"></span><span class="sl"></span><div class="fader"><div class="ff"></div><div class="cap"></div></div>`);
+  $('#maSpecs').appendChild(d);
+  const fd = d.querySelector('.fader');
+  faderDrag(fd, () => (inp.value - lo) / (hi - lo), v => { inp.value = lo + v * (hi - lo); inp.dispatchEvent(new Event('input')); });
+  // the original sliders also act on 'change' (Energy starts a new auto look on release): send it only for a real change
+  let v0 = inp.value, vc = inp.value; const send = () => { vc = inp.value; inp.dispatchEvent(new Event('change')); };
+  d.addEventListener('pointerdown', () => v0 = inp.value, true);
+  fd.addEventListener('lostpointercapture', () => { if (inp.value !== v0) send(); });
+  fd.addEventListener('dblclick', () => { if (inp.value !== vc) send(); });
+});
+colorPad($('#tsCol'));
+const tsPosDraw = focusPad($('#tsPos'));
+let tsPosKey = null;
+const curVal = (f, a) => prog.vals[f.id]?.[a] ?? f.base[a];
+function updateMaUI() {
+  $$('#maSpecs .spc').forEach((d, i) => { const inp = $('#' + SPECS[i][0]), k = (inp.value - inp.min) / (inp.max - inp.min);
+    d.style.setProperty('--lv', k); d.querySelector('.sv').textContent = inp.value;
+    d.querySelector('.ff').style.height = k * 100 + '%'; d.querySelector('.cap').style.bottom = k * 100 + '%'; });
+  const fs = sel.map(id => FX[id]), fc = fs.find(f => has(f, 'r')), mk = $('#tsColMk');
+  if (fc) { const r = curVal(fc, 'r'), g = curVal(fc, 'g'), b = curVal(fc, 'b'), mx = Math.max(r, g, b), dl = mx - Math.min(r, g, b);
+    const h = !dl ? 0 : mx === r ? ((g - b) / dl + 6) % 6 : mx === g ? (b - r) / dl + 2 : (r - g) / dl + 4;
+    Object.assign(mk.style, { display: 'block', left: h / 6 * 100 + '%', top: (1 - (mx ? dl / mx : 0)) * 100 + '%', background: `rgb(${r * 2.55},${g * 2.55},${b * 2.55})` });
+    $('#tsColInfo').textContent = `R${Math.round(r)} G${Math.round(g)} B${Math.round(b)}`; }
+  else { mk.style.display = 'none'; $('#tsColInfo').textContent = ''; }
+  $('#tsColNone').style.display = fc ? 'none' : '';
+  $('#tsColNone').textContent = sel.length ? 'NO COLOR IN SELECTION' : 'NO SELECTION · PICKS GO TO LIT FIXTURES';
+  const k = sel.join(); if (k !== tsPosKey) { tsPosKey = k; tsPosDraw(); }
+  const fp = fs.find(f => has(f, 'pan'));
+  $('#tsPosInfo').textContent = fp ? `PAN ${Math.round(curVal(fp, 'pan'))}° TILT ${Math.round(curVal(fp, 'tilt'))}°` : '';
+  $('#tsPosNone').style.display = sel.length ? 'none' : '';
+  const fd = fs.find(f => has(f, 'dim')); $('#lvlVal').textContent = fd ? Math.round(curVal(fd, 'dim')) : '—';
+}
+{
+  const w = $('#lvlWheel'); let lastY = 0, acc = 0, map = null;
+  const turn = (d, fine) => { acc -= d; w.style.backgroundPositionY = acc + 'px'; encDelta('dim', d * 100 / 320 * (fine ? .1 : 1)); };
+  w.onpointerdown = ev => { w.setPointerCapture(ev.pointerId); map = boxMap(w); lastY = map(ev)[1] * map.h; ev.preventDefault(); };
+  w.onpointermove = ev => { if (!w.hasPointerCapture(ev.pointerId)) return; const y = map(ev)[1] * map.h, dy = lastY - y; lastY = y; turn(dy, ev.shiftKey); };
+  w.onwheel = ev => { ev.preventDefault(); turn(-Math.sign(ev.deltaY) * 3.2, ev.shiftKey); };
 }
 $('#layoutSel').onchange = ev => { deskMode = ev.target.value; applyLayout(); };
-$('#deskZoom').onchange = ev => { deskZoom = ev.target.value; fitDesk(); resize(); try { localStorage.setItem('lumadesk-layout2', JSON.stringify({ deskMode, deskZoom })); } catch (e) { } };
+$('#deskZoom').onchange = ev => { deskZoom = ev.target.value; fitDesk(); resize(); saveLayout(); };
+{
+  const g = $('#maGrip'); let raf = 0;
+  const apply = () => { raf = 0; fitDesk(); resize(); };
+  g.onpointerdown = ev => { g.setPointerCapture(ev.pointerId); g.classList.add('on'); ev.preventDefault(); ev.stopPropagation(); };
+  g.onpointermove = ev => { if (!g.hasPointerCapture(ev.pointerId)) return; maSize = clamp((innerHeight - ev.clientY) / (innerHeight - 40), .3, .7); if (!raf) raf = requestAnimationFrame(apply); };
+  g.onlostpointercapture = () => { g.classList.remove('on'); saveLayout(); };
+  g.ondblclick = () => { maSize = MA_SIZE; fitDesk(); resize(); saveLayout(); };
+}
 addEventListener('resize', () => { if (deskMode !== 'classic') fitDesk(); });
+// the panes on the console screens are scrolled here: Chromium does not scroll them by wheel inside the 3D console;
+// whole 20px steps keep the Fixture Sheet's row snapping moving forward with fine (touchpad) deltas
+{ let acc = 0;
+  $('#maBody').addEventListener('wheel', ev => {
+    const p = ev.defaultPrevented ? null : ev.target.closest('.pane,#encExtra'); if (!p || p.scrollHeight <= p.clientHeight) return;
+    ev.preventDefault(); acc += ev.deltaMode ? ev.deltaY * 20 : ev.deltaY; const n = Math.trunc(acc / 20);
+    if (n) { acc -= n * 20; p.scrollBy({ top: n * 20 }); }
+  }, { passive: false }); }
 // clear key clears a half-typed command line first (like MA); STORE pre-types "Store"
 { const kc = $('#kClear'); const old = kc.onclick; kc.onclick = () => { if (cmd.value.trim()) { cmd.value = ''; return; } old(); }; }
 setInterval(() => {
@@ -2584,16 +2833,13 @@ setInterval(() => {
     const e = execs[selExec], F = FEATS.find(f => f[0] === feat);
     $('#d1info').textContent = (sideTab || '').toUpperCase(); $('#d2info').textContent = `${F ? F[1].toUpperCase() : ''} · ${sel.length} SEL`;
     $('#d3info').textContent = `EXEC ${selExec + 1} ${e.name || ''}`;
-    const ms = $('#miniSeq'); let h = `<div class="r h"><span>CUE</span><span>NAME</span><span>FADE</span></div>`;
-    if (!e.cues.length) h += `<div class="r"><span></span><span>no cues</span><span></span></div>`;
-    const st = Math.max(0, e.cur - 1); e.cues.slice(st, st + 6).forEach((c, k) => { const i = st + k; h += `<div class="r ${i === e.cur ? 'cur' : (e.on && i === (e.cur + 1) % e.cues.length) ? 'nx' : ''}"><span>${c.num}</span><span>${c.name}</span><span>${c.fade}s</span></div>`; });
-    ms.innerHTML = h; return;
+    return;
   }
   if (deskMode !== 'desk') return;
   const e = execs[selExec]; $('#cwPbInfo').textContent = `EXEC ${selExec + 1} · ${e.name || 'empty'}`;
   $('#cwProgInfo').textContent = `${sel.length} SELECTED`; $('#cwScreenInfo').textContent = (sideTab || '').toUpperCase();
 }, 250);
-try { const L = JSON.parse(localStorage.getItem('lumadesk-layout2') || 'null'); if (L) { deskMode = L.deskMode || 'ma'; deskZoom = L.deskZoom || 'auto'; } } catch (e) { }
+try { const L = JSON.parse(localStorage.getItem('lumadesk-layout2') || 'null'); if (L) { deskMode = L.deskMode || 'ma'; deskZoom = L.deskZoom || 'auto'; maSize = clamp(+L.maSize || MA_SIZE, .3, .7); } } catch (e) { }
 $('#layoutSel').value = deskMode; $('#deskZoom').value = deskZoom;
 applyLayout();
 
