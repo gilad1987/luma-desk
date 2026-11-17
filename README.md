@@ -125,13 +125,29 @@ Rendering includes volumetric beams in moving haze, gobo projections in the beam
 
 ## Run locally
 
-It's a static site, but ES modules need an HTTP server:
+Node 26 (see `.nvmrc`) and npm:
 
 ```bash
 git clone https://github.com/gilad1987/luma-desk
 cd luma-desk
-python3 -m http.server 8000   # → http://localhost:8000
+npm ci            # install the pinned tools from the lockfile
+npm run dev       # dev server with hot reload (no service worker)
+npm run build     # production build into dist/
+npm run preview   # serve dist/ as GitHub Pages would
 ```
+
+Checks (CI runs all except Playwright):
+
+```bash
+npm run typecheck   # tsc over the app, tests, configs and the service worker
+npm test            # Vitest unit and parity tests
+npm run lint        # ESLint, the 100-line check and Prettier --check
+npm run format      # Prettier --write over the tree
+npx playwright install chromium   # once
+npx playwright test               # browser parity suite against the production preview
+```
+
+The Playwright screenshot baselines are recorded on macOS; on another OS the screenshot spec reports differences.
 
 ## Performance
 
@@ -139,10 +155,17 @@ LUMA DESK is GPU-heavy, so use Chrome or Edge on a machine with a dedicated grap
 
 ## Tech
 
-- One self-contained `index.html` (vanilla JS, ES modules).
-- [three.js](https://threejs.org) r160, vendored in `vendor/` (MIT), with UnrealBloom post-processing.
-- Custom shaders for volumetric beams with procedural haze, gobos and the LED wall.
-- `sw.js` is the Service Worker that caches the app for offline use, and `manifest.webmanifest` makes it installable.
+- TypeScript 5.9 (strict) built with Vite 8. The code is split into one-way layers under `src/`; see
+  [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and the decision records in [docs/adr/](docs/adr/).
+- [three.js](https://threejs.org) 0.160 from npm (MIT), with UnrealBloom post-processing.
+- Custom GLSL shaders for volumetric beams with procedural haze, gobos and the LED wall.
+- Styles in SCSS, compiled by Vite with `sass-embedded`.
+- Tests: Vitest for unit and parity tests, Playwright (Chromium with SwiftShader WebGL) for golden outputs,
+  screenshots, old saved shows and offline use.
+- ESLint 9 with typescript-eslint, and Prettier 3.
+- A hand-written service worker (`sw.ts`) caches the app for offline use; the build writes in its file list and
+  cache name. `manifest.webmanifest` makes the app installable.
+- Odd behaviour kept on purpose during the refactor is listed in [docs/known-quirks.md](docs/known-quirks.md).
 
 ---
 
