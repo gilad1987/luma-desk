@@ -30,15 +30,22 @@ export interface KeyLightCandidate {
   readonly direction: Vector3;
 }
 
-const emptySum = (): RgbSum => ({ r: 0, g: 0, b: 0 });
+const createEmptySum = (): RgbSum => ({ r: 0, g: 0, b: 0 });
+
+/** The audience zone a beam landing at world x lights: left of -13, right of 13, else centre. */
+function zoneIndexAt(x: number): ZoneIndex {
+  if (x < -13) return 0;
+  if (x > 13) return 2;
+  return 1;
+}
 
 /**
  * What the beams contributed to the shared scene lights this frame. The fixture sync fills it per fixture and the
  * scene and key lights read it once, so the aggregate maths has one owner.
  */
 export class LightFrame {
-  readonly stage: RgbSum = emptySum();
-  readonly zones: readonly [RgbSum, RgbSum, RgbSum] = [emptySum(), emptySum(), emptySum()];
+  readonly stage: RgbSum = createEmptySum();
+  readonly zones: readonly [RgbSum, RgbSum, RgbSum] = [createEmptySum(), createEmptySum(), createEmptySum()];
   /** Sum of blinder intensities; they light the whole audience. */
   blinders = 0;
   readonly keyCandidates: KeyLightCandidate[] = [];
@@ -61,9 +68,9 @@ export class LightFrame {
     this.stage.b += color[2] * intensity * power;
   }
 
-  /** Adds an audience hit at world x to its zone: left of -13, right of 13, else centre. */
+  /** Adds an audience hit at world x to its zone. */
   addAudience(x: number, color: RgbTriple, weight: number): void {
-    const zone = this.zones[x < -13 ? 0 : x > 13 ? 2 : 1];
+    const zone = this.zones[zoneIndexAt(x)];
     zone.r += color[0] * weight;
     zone.g += color[1] * weight;
     zone.b += color[2] * weight;

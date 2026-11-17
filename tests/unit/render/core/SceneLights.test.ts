@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
+/**
+ * Scene light creation order (decision 24) and the per-frame aggregate maths against the legacy formulas. How
+ * the lit scene looks is owned by the screenshot suite.
+ */
 import { DirectionalLight, HemisphereLight, Object3D, PointLight, Scene, SpotLight } from 'three';
+import { describe, expect, it } from 'vitest';
 import { SceneLights } from '../../../../src/render/SceneLights';
 import { addEnvironmentLights } from '../../../../src/render/SceneLightsEnvironment';
 import { LightFrame } from '../../../../src/render/SceneLightsFrame';

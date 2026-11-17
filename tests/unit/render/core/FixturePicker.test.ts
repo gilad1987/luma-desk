@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
+/**
+ * Picking maths: client to NDC, world to screen projection and raycast hits on registered objects. The pointer
+ * handlers and box-select rectangle are UI code and not covered here.
+ */
 import { BoxGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector2, Vector3 } from 'three';
+import { describe, expect, it } from 'vitest';
 import { Fixture } from '../../../../src/domain/Fixture';
 import { projectToScreen } from '../../../../src/render/CameraViewsProjection';
 import { clientToNdc, FixturePicker } from '../../../../src/render/FixturePicker';

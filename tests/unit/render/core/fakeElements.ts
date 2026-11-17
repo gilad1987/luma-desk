@@ -1,3 +1,4 @@
+/** Node stand-ins for the DOM pieces the render core touches (canvas, viewer, requestAnimationFrame). */
 import { vi } from 'vitest';
 
 /** Node has no DOM: a canvas stand-in with the fields OrbitControls and the picker touch. */

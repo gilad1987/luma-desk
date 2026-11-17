@@ -1,5 +1,9 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+/**
+ * The fixture id overlay: culling, label position, colours and the backing-store ratio. Font rendering is not
+ * checked.
+ */
 import { PerspectiveCamera, Vector3 } from 'three';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FixtureIdOverlay } from '../../../../src/render/StageRendererOverlay';
 
 function overlay(fixtures = [{ id: 7, pos: new Vector3(0, 0, -10) }]) {
@@ -23,7 +27,7 @@ describe('FixtureIdOverlay', () => {
 
   it('labels on-screen fixtures 10 css px above their point, scaled by the canvas ratio', () => {
     const { ids, context, camera } = overlay();
-    ids.visible = true;
+    ids.isVisible = true;
     ids.draw(camera);
     expect(context.font).toBe('20px JetBrains Mono');
     expect(context.textAlign).toBe('center');
@@ -37,7 +41,7 @@ describe('FixtureIdOverlay', () => {
       { id: 2, pos: new Vector3(500, 0, -10) },
       { id: 3, pos: new Vector3(0, 0, -10) },
     ]);
-    ids.visible = true;
+    ids.isVisible = true;
     ids.draw(camera);
     expect(context.fillText).toHaveBeenCalledTimes(1);
     expect(context.fillStyle).toBe('#ffffff99');

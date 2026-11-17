@@ -13,7 +13,7 @@ const SHADOW_COUNT = 4;
  */
 export class KeyLights {
   private readonly lights: SpotLight[] = [];
-  private enabled = true;
+  private isEnabled = true;
 
   constructor(scene: Scene) {
     for (let i = 0; i < KEY_COUNT; i++) {
@@ -33,8 +33,8 @@ export class KeyLights {
   }
 
   /** The UI "lights" toggle; off keeps every key light dark. */
-  setEnabled(on: boolean): void {
-    this.enabled = on;
+  setEnabled(isOn: boolean): void {
+    this.isEnabled = isOn;
   }
 
   /** Sorts the frame's candidates by score (in place, stable) and aims one light at each of the best. */
@@ -43,7 +43,7 @@ export class KeyLights {
     candidates.sort((a, b) => b.score - a.score);
     this.lights.forEach((light, i) => {
       const candidate = candidates[i];
-      if (!candidate || !this.enabled) {
+      if (!candidate || !this.isEnabled) {
         light.intensity = 0;
         return;
       }

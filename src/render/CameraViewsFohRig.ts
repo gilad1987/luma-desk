@@ -19,7 +19,7 @@ export class FohRig {
   }
 
   /** Shows or hides every registered object. */
-  setVisible(visible: boolean): void {
-    for (const member of this.members) member.visible = visible;
+  setVisible(isVisible: boolean): void {
+    for (const member of this.members) member.visible = isVisible;
   }
 }

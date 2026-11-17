@@ -14,7 +14,8 @@ export interface CameraViewsOptions {
 
 /**
  * The stage camera, its orbit controls and the named views. It owns the FOH rig handle because only a view change
- * decides whether that rig is visible.
+ * decides whether that rig is visible. Gets the stage canvas and the layout callbacks from main.ts; venue builders
+ * register their FOH meshes through `fohRig`.
  */
 export class CameraViews {
   readonly camera = new PerspectiveCamera(46, 1, 0.1, 1600);
@@ -46,7 +47,7 @@ export class CameraViews {
    * Moves to a named view, at once or with a 700 ms tween. An unknown name does nothing. Only the animated path
    * reports the change, as in the legacy code where the instant path returned before the button update.
    */
-  setView(view: string, instant = false): void {
+  setView(view: string, isInstant = false): void {
     const ma = view === 'foh' && this.options.isMaLayout();
     const next = VIEWS[ma ? 'fohMa' : view];
     if (!next) return;
@@ -56,7 +57,7 @@ export class CameraViews {
     this.camera.updateProjectionMatrix();
     const from = { position: this.camera.position.clone(), target: this.controls.target.clone() };
     const to = { position: new Vector3(...next.position), target: new Vector3(...next.target) };
-    if (instant) {
+    if (isInstant) {
       this.camera.position.copy(to.position);
       this.controls.target.copy(to.target);
       this.controls.update();

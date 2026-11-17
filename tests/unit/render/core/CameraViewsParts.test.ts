@@ -1,5 +1,8 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+/**
+ * The view tween timing and easing, and the FOH rig visibility handle. The DOM button state is the UI's job.
+ */
 import { Object3D, PerspectiveCamera, Vector3 } from 'three';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FohRig } from '../../../../src/render/CameraViewsFohRig';
 import { smoothstep01, tweenCamera } from '../../../../src/render/CameraViewsTween';
 import { queuedAnimationFrames } from './fakeElements';
