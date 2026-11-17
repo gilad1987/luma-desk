@@ -1,6 +1,6 @@
+import type { Camera } from 'three';
 import type { Fixture } from '../../../domain/Fixture';
-import type { FixturePicker } from '../../../render/FixturePicker';
-import type { ScreenRect } from '../../../render/CameraViewsProjection';
+import { projectToScreen, type ScreenPoint, type ScreenRect } from '../../../render/shared';
 
 /** A rectangle in client pixels, edges included. */
 export interface ClientBox {
@@ -16,18 +16,19 @@ export function boxBetween(ax: number, ay: number, bx: number, by: number): Clie
 }
 
 /**
- * The fixtures whose position projects inside `box`, sorted by id. `rect` is the canvas's client rect; a fixture with
+ * The fixtures whose position projects through `camera` inside `box`, sorted by id. `rect` is the canvas's client rect; a fixture with
  * a depth above 1 (behind the camera or past the far plane) never counts.
  */
 export function fixturesInBox(
   fixtures: readonly Fixture[],
-  picker: Pick<FixturePicker, 'projectToScreen'>,
+  camera: Camera,
   rect: ScreenRect,
   box: ClientBox,
 ): Fixture[] {
   const hits: Fixture[] = [];
+  const p: ScreenPoint = { x: 0, y: 0, ndcX: 0, ndcY: 0, depth: 0 };
   for (const f of fixtures) {
-    const p = picker.projectToScreen(f.pos, rect);
+    projectToScreen(camera, f.pos, rect, p);
     if (p.depth > 1) continue;
     if (p.x >= box.x0 && p.x <= box.x1 && p.y >= box.y0 && p.y <= box.y1) hits.push(f);
   }

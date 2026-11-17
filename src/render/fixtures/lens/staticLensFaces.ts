@@ -10,7 +10,7 @@ export const STATIC_LENS_FACES = {
       const a = (k / 6) * Math.PI * 2;
       pts.push([Math.cos(a) * 34, Math.sin(a) * 34]);
     }
-    for (const [px, py] of pts) fillLensDisc(x, 64 + px, 64 + py, 16);
+    for (const [px, py] of pts) fillLensDisc(x, [64 + px, 64 + py], 16);
   },
   // Chauvet STRIKE 4: one warm cup (the model maps it on each of its 4 cups): faceted reflector behind a wire grid
   strike4: (x) => {

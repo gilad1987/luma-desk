@@ -5,13 +5,14 @@
 import { Object3D } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DECK } from '../../../../src/domain/venue';
-import { CameraViews } from '../../../../src/render/CameraViews';
-import { VIEWS } from '../../../../src/render/CameraViewsTable';
-import { fakeStageCanvas, queuedAnimationFrames } from './fakeElements';
+import { CameraViews } from '../../../../src/render/camera/CameraViews';
+import { VIEWS } from '../../../../src/render/camera/viewTable';
+import { fakeCanvas } from '../fakeCanvas';
+import { queuedAnimationFrames } from './queuedAnimationFrames';
 
 function views(ma = false): { views: CameraViews; changed: string[] } {
   const changed: string[] = [];
-  const cameraViews = new CameraViews(fakeStageCanvas(), {
+  const cameraViews = new CameraViews(fakeCanvas(), {
     isMaLayout: () => ma,
     onViewChanged: (view) => changed.push(view),
   });
@@ -59,14 +60,6 @@ describe('CameraViews', () => {
     expect(desk.visible).toBe(false);
     v.setView('side', true);
     expect([v.camera.fov, desk.visible]).toEqual([46, true]);
-  });
-
-  it('ignores an unknown view name', () => {
-    const { views: v, changed } = views();
-    v.setView('top', true);
-    v.setView('nope');
-    expect(v.currentView).toBe('top');
-    expect(changed).toEqual([]);
   });
 
   it('animates over 700 ms on its own frame chain and reports the view', () => {

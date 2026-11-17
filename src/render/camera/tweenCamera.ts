@@ -1,5 +1,5 @@
 import type { Camera, Vector3 } from 'three';
-import { clamp } from '../core';
+import { clamp } from '../../core';
 
 /** The length of an animated view change. */
 const TWEEN_MS = 700;

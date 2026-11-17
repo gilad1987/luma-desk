@@ -1,5 +1,5 @@
 import { BoxGeometry, CircleGeometry, MeshBasicMaterial, PlaneGeometry, type Object3D } from 'three';
-import { terrH } from '../../domain/audienceTerrain';
+import { terrainHeight } from '../../domain/audienceTerrain';
 import { addMesh } from '../shared';
 import type { CrenelPlacement } from './crenellation';
 import type { JerusalemStone } from './JerusalemStone';
@@ -25,7 +25,7 @@ const GATE_MERLONS: readonly (readonly [dx: number, dz: number])[] = [
  * returns the gatehouse merlon placements.
  */
 export function buildJaffaGate(scene: Object3D, stone: JerusalemStone): CrenelPlacement[] {
-  const gb = terrH(GATE_X, GATE_Z) - 3,
+  const gb = terrainHeight(GATE_X, GATE_Z) - 3,
     H = GATE_HEIGHT;
   addMesh(scene, new BoxGeometry(11, H, 13), stone.floodlit(11, H), { position: [GATE_X, gb + H / 2, GATE_Z] });
   const arch = addMesh(scene, new PlaneGeometry(4.2, 7), new MeshBasicMaterial({ color: 0x0b0806 }), {

@@ -1,4 +1,4 @@
-import { DECK } from '../domain/venue';
+import { DECK } from '../../domain/venue';
 
 /** A named camera position: eye position, look-at target and an optional lens (default 46 degrees). */
 export interface CameraView {
@@ -11,7 +11,7 @@ export interface CameraView {
  * The view buttons' camera positions. `fohMa` is not a button: FOH resolves to it in the MA layout, where the eye is
  * the operator standing behind the console overlay and the wider lens keeps the whole roof in view.
  */
-export const VIEWS: Readonly<Record<string, CameraView>> = {
+export const VIEWS = {
   foh: { position: [0, 16, 74], target: [0, 9, -8] },
   fohMa: { position: [0, 3.2, 49.5], target: [0, 9.5, -8], fov: 60 },
   front: { position: [0, 6, 28], target: [0, 10, -10] },
@@ -27,4 +27,10 @@ export const VIEWS: Readonly<Record<string, CameraView>> = {
   drums: { position: [2.2, DECK + 3.2, -5.5], target: [0, DECK + 1, -12.4] },
   valley: { position: [55, 34, 98], target: [-30, 8, -10] },
   orch: { position: [0, 9, 2], target: [-15.5, 2.4, -12] },
-};
+} as const satisfies Readonly<Record<string, CameraView>>;
+
+/**
+ * A view the camera knows. A typed name replaces the legacy unknown-name check: the UI parses a button's `data-view`
+ * into it once, at the DOM edge, so a typo fails the typecheck instead of being ignored at run time.
+ */
+export type ViewName = keyof typeof VIEWS;

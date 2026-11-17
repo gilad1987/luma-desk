@@ -7,18 +7,18 @@ import { DOWN } from './syncPose';
  * intensity (narrow beams look denser) and gobo. Returns the gobo slot, which the pool shows too.
  */
 export function syncBeam(frame: BeamFrame): number {
-  const { visual: v, o, I, col, dir, origin, zoom, tz, hit, L } = frame;
+  const { visual: v, o, intensity, col, dir, origin, zoom, tz, hit, length } = frame;
   const f = v.fixture,
-    T = f.T,
+    spec = f.T,
     bm = v.beam,
     bu = v.uniforms;
   bm.position.copy(origin);
   bm.quaternion.setFromUnitVectors(DOWN, dir);
-  const rr = Math.max(L * tz, 0.02);
-  bm.scale.set(rr, L, rr);
+  const rr = Math.max(length * tz, 0.02);
+  bm.scale.set(rr, length, rr);
   bu.uColor.value.setRGB(col[0], col[1], col[2]);
-  bu.uInt.value = I * T.power * (T.beamK ?? 1) * 0.38 * clamp(Math.pow(14 / (zoom + 4), 0.8), 0.06, 2.2);
-  bu.uLen.value = L;
+  bu.uInt.value = intensity * spec.power * (spec.beamK ?? 1) * 0.38 * clamp(Math.pow(14 / (zoom + 4), 0.8), 0.06, 2.2);
+  bu.uLen.value = length;
   bu.uEnd.value = hit ? 0 : 1;
   const gob = f.has('gobo') ? Math.round(outputValue(o, 'gobo')) : 0;
   bu.uGobo.value = gob;

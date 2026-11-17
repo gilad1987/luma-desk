@@ -1,10 +1,10 @@
 import { BufferAttribute, MeshStandardMaterial, PlaneGeometry, type Object3D } from 'three';
-import { terrH, VEN } from '../../domain/audienceTerrain';
+import { terrainHeight, AUDIENCE_TERRAIN } from '../../domain/audienceTerrain';
 import { STAGE } from '../../domain/venue';
 import { addMesh } from '../shared';
 
 /**
- * Builds the Hinnom valley hills around the pool: a 460 m grid shaped by `terrH`, sunk under the bowl, with random
+ * Builds the Hinnom valley hills around the pool: a 460 m grid shaped by `terrainHeight`, sunk under the bowl, with random
  * earth and olive-grove vertex colours (`Math.random` twice per vertex).
  */
 export function buildHills(scene: Object3D): void {
@@ -16,8 +16,11 @@ export function buildHills(scene: Object3D): void {
   for (let i = 0; i < position.count; i++) {
     const x = position.getX(i),
       z = position.getZ(i),
-      h = terrH(x, z),
-      inside = Math.abs(x) < VEN.X + 2 && z > STAGE.z0 - 12 && z < VEN.Z1 + VEN.STEPS * VEN.RUN;
+      h = terrainHeight(x, z),
+      inside =
+        Math.abs(x) < AUDIENCE_TERRAIN.X + 2 &&
+        z > STAGE.z0 - 12 &&
+        z < AUDIENCE_TERRAIN.Z1 + AUDIENCE_TERRAIN.STEPS * AUDIENCE_TERRAIN.RUN;
     position.setY(i, inside ? -0.5 : h);
     const r = Math.random() * 0.03,
       olive = Math.random() < 0.25;

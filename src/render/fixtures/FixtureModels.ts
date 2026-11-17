@@ -27,10 +27,7 @@ export function createFixtureModels(kit: ModelKit): FixtureModelTable {
   const robeBase = once(() => robeBaseGeometry(kit.prims));
   const robe = (head: RobeHead, fs: boolean): ModelBuilder => {
     const geometry = once(() => ({ ...head.geometry(kit.prims, fs), ...robeYokeGeometry(kit.prims, head.ax) }));
-    return (c) => {
-      const G = geometry();
-      return buildRobeMover(kit, head, G, robeBase(), c);
-    };
+    return (c) => buildRobeMover(kit, c, { model: head, geometry: geometry(), base: robeBase() });
   };
   const product = <G extends object>(model: FixtureModel<G>): ModelBuilder => {
     const geometry = once(() => model.geometry(kit.prims));

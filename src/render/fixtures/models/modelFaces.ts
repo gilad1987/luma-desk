@@ -4,17 +4,30 @@ import type { ModelContext, ModelKit } from './ModelContext';
 
 const FACE_DOWN = [Math.PI / 2, 0, 0] as const;
 
-/** A round lens facing -Y at height y, radius r (lens texture tinted by the fixture colour). */
-export function addRoundLens(kit: ModelKit, c: ModelContext, parent: Object3D, y: number, r: number): Mesh {
-  const lens = addMesh(parent, kit.prims.circleGeo, c.lensMat, { rotation: FACE_DOWN, position: [0, y, 0] });
-  lens.scale.setScalar(r);
+/** Where a round lens sits: its height on the -Y axis and its radius. */
+export interface RoundLensFace {
+  readonly y: number;
+  readonly radius: number;
+}
+
+/** Where a flat lens sits: its height on the -Y axis and its size. */
+export interface FlatLensFace {
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/** A round lens facing -Y (lens texture tinted by the fixture colour). */
+export function addRoundLens(kit: ModelKit, c: ModelContext, parent: Object3D, face: RoundLensFace): Mesh {
+  const lens = addMesh(parent, kit.prims.circleGeo, c.lensMat, { rotation: FACE_DOWN, position: [0, face.y, 0] });
+  lens.scale.setScalar(face.radius);
   return lens;
 }
 
-/** A flat w x h lens facing -Y at height y (WTF!, Tetra2). */
-export function addFlatLens(kit: ModelKit, c: ModelContext, parent: Object3D, y: number, w: number, h: number): Mesh {
-  const lens = addMesh(parent, kit.prims.planeGeo, c.lensMat, { rotation: FACE_DOWN, position: [0, y, 0] });
-  lens.scale.set(w, h, 1);
+/** A flat rectangular lens facing -Y (WTF!, Tetra2). */
+export function addFlatLens(kit: ModelKit, c: ModelContext, parent: Object3D, face: FlatLensFace): Mesh {
+  const lens = addMesh(parent, kit.prims.planeGeo, c.lensMat, { rotation: FACE_DOWN, position: [0, face.y, 0] });
+  lens.scale.set(face.width, face.height, 1);
   return lens;
 }
 

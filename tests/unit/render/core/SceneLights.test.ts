@@ -4,9 +4,9 @@
  */
 import { DirectionalLight, HemisphereLight, Object3D, PointLight, Scene, SpotLight } from 'three';
 import { describe, expect, it } from 'vitest';
-import { SceneLights } from '../../../../src/render/SceneLights';
-import { addEnvironmentLights } from '../../../../src/render/SceneLightsEnvironment';
-import { LightFrame } from '../../../../src/render/SceneLightsFrame';
+import { SceneLights } from '../../../../src/render/lights/SceneLights';
+import { addEnvironmentLights } from '../../../../src/render/lights/addEnvironmentLights';
+import { LightFrame } from '../../../../src/render/lights/LightFrame';
 
 const kinds = (scene: Scene): string[] => scene.children.map((child) => child.type);
 
@@ -24,7 +24,7 @@ describe('addEnvironmentLights', () => {
 describe('SceneLights', () => {
   it('creates stage, audience, 3 zones, 3 house spots (each then its target) and the screen light in order', () => {
     const scene = new Scene();
-    new SceneLights(scene, null);
+    new SceneLights(scene, new PointLight());
     const house = ['SpotLight', 'Object3D'];
     expect(kinds(scene)).toEqual([
       ...['PointLight', 'PointLight', 'PointLight', 'PointLight', 'PointLight'],
@@ -40,7 +40,7 @@ describe('SceneLights', () => {
 
   it('turns the stage bounce and zones to the normalised beam colour with the legacy caps', () => {
     const scene = new Scene();
-    const lights = new SceneLights(scene, null);
+    const lights = new SceneLights(scene, new PointLight());
     const frame = new LightFrame();
     frame.addStage([1, 0.5, 0], 10, 1);
     frame.addAudience(-20, [0, 0, 1], 100);
@@ -67,7 +67,7 @@ describe('SceneLights', () => {
   });
 
   it('keeps the screen light for the screen fixture to drive', () => {
-    const lights = new SceneLights(new Scene(), null);
+    const lights = new SceneLights(new Scene(), new PointLight());
     expect(lights.screenLight.position.toArray()).toEqual([0, 8, -16]);
     expect(lights.screenLight).toBeInstanceOf(Object3D);
   });

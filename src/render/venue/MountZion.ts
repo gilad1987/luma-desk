@@ -1,5 +1,5 @@
 import { BoxGeometry, ConeGeometry, CylinderGeometry, MeshBasicMaterial, SphereGeometry, type Object3D } from 'three';
-import { terrH } from '../../domain/audienceTerrain';
+import { terrainHeight } from '../../domain/audienceTerrain';
 import { addMesh } from '../shared';
 import type { JerusalemStone } from './JerusalemStone';
 
@@ -13,7 +13,7 @@ const TOWER_Z = -28;
 export function buildMountZion(scene: Object3D, stone: JerusalemStone): void {
   const tx = TOWER_X,
     tz = TOWER_Z,
-    tb = terrH(tx, tz) - 2;
+    tb = terrainHeight(tx, tz) - 2;
   const round = addMesh(scene, new CylinderGeometry(4.2, 4.6, 26, 20), stone.floodlit(8, 26), {
     position: [tx, tb + 13, tz],
   });

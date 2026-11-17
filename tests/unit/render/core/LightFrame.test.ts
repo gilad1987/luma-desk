@@ -2,7 +2,7 @@
  * The per-frame light totals: audience zone split, stage sum product order and reset.
  */
 import { describe, expect, it } from 'vitest';
-import { LightFrame } from '../../../../src/render/SceneLightsFrame';
+import { LightFrame } from '../../../../src/render/lights/LightFrame';
 
 describe('LightFrame', () => {
   it('splits audience hits into zones at x = -13 and 13 (boundaries go to the centre)', () => {

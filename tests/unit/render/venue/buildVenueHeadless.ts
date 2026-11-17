@@ -1,17 +1,8 @@
 import { Scene } from 'three';
 import { vi } from 'vitest';
 import { buildVenue, type Venue } from '../../../../src/render/venue/Venue';
-import { fakeCanvas } from '../fakeCanvas';
+import { stubCanvasDocument } from '../stubCanvasDocument';
 import { withSeededRandom } from '../seededRandom';
-
-/** A 2D context that accepts every call and property: the painters run (and draw their randoms) but draw nothing. */
-const noopContext: object = new Proxy(
-  {},
-  {
-    get: () => () => noopContext,
-    set: () => true,
-  },
-);
 
 /** A headless venue build: the scene, the venue handles and the scene children the venue added. */
 export interface HeadlessVenue {
@@ -25,7 +16,7 @@ export interface HeadlessVenue {
  * exists before seeding, as in the app (where the renderer, camera and environment lights come first).
  */
 export function buildVenueHeadless(): HeadlessVenue {
-  vi.stubGlobal('document', { createElement: () => fakeCanvas(noopContext) });
+  stubCanvasDocument();
   try {
     const scene = new Scene();
     const firstChild = scene.children.length;

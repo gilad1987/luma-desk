@@ -3,9 +3,9 @@
  * Only the types and the normal constants are adapted; the arithmetic and branch order are unchanged.
  */
 import type { Vector3 } from 'three';
-import { TIER_N, VEN } from '../../../../src/domain/audienceTerrain';
+import { TERRACE_NORMAL, AUDIENCE_TERRAIN } from '../../../../src/domain/audienceTerrain';
 import { DECK, SCREEN, STAGE, UP } from '../../../../src/domain/venue';
-import { SCREEN_NORMAL as NZ, type SurfaceHit } from '../../../../src/render/SurfaceHit';
+import { SCREEN_NORMAL as NZ, type SurfaceHit } from '../../../../src/render/surface/SurfaceHit';
 
 type Hit = { t: number; n: Readonly<Vector3> } | null;
 
@@ -13,13 +13,18 @@ type Hit = { t: number; n: Readonly<Vector3> } | null;
 export function legacyHitSurface(o: Vector3, d: Vector3): SurfaceHit | null {
   let best: Hit = null;
   {
-    const den = d.y - (VEN.RISE / VEN.RUN) * d.z;
+    const den = d.y - (AUDIENCE_TERRAIN.RISE / AUDIENCE_TERRAIN.RUN) * d.z;
     if (Math.abs(den) > 1e-4) {
-      const t = (((o.z - VEN.Z1) * VEN.RISE) / VEN.RUN - o.y) / den;
+      const t = (((o.z - AUDIENCE_TERRAIN.Z1) * AUDIENCE_TERRAIN.RISE) / AUDIENCE_TERRAIN.RUN - o.y) / den;
       if (t > 0) {
         const x = o.x + d.x * t,
           z = o.z + d.z * t;
-        if (Math.abs(x) < VEN.X && z > VEN.Z1 && z < VEN.Z1 + VEN.STEPS * VEN.RUN) best = { t, n: TIER_N };
+        if (
+          Math.abs(x) < AUDIENCE_TERRAIN.X &&
+          z > AUDIENCE_TERRAIN.Z1 &&
+          z < AUDIENCE_TERRAIN.Z1 + AUDIENCE_TERRAIN.STEPS * AUDIENCE_TERRAIN.RUN
+        )
+          best = { t, n: TERRACE_NORMAL };
       }
     }
   }
@@ -35,7 +40,8 @@ export function legacyHitSurface(o: Vector3, d: Vector3): SurfaceHit | null {
       const x = o.x + d.x * t,
         z = o.z + d.z * t;
       const inStage = x > STAGE.x0 && x < STAGE.x1 && z > STAGE.z0 && z < STAGE.z1;
-      if (t > 0 && !inStage && Math.abs(x) < VEN.X && z < VEN.Z1 && z > STAGE.z0 - 6) best = { t, n: UP };
+      if (t > 0 && !inStage && Math.abs(x) < AUDIENCE_TERRAIN.X && z < AUDIENCE_TERRAIN.Z1 && z > STAGE.z0 - 6)
+        best = { t, n: UP };
     }
   }
   if (d.z < -1e-4 && o.z > SCREEN.z) {

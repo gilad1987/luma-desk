@@ -1,5 +1,5 @@
 import { MeshStandardMaterial, PlaneGeometry, RepeatWrapping, SRGBColorSpace, type Object3D } from 'three';
-import { VEN } from '../../domain/audienceTerrain';
+import { AUDIENCE_TERRAIN } from '../../domain/audienceTerrain';
 import { STAGE } from '../../domain/venue';
 import { addMesh, createCanvasTexture, drawCanvas } from '../shared';
 
@@ -23,9 +23,9 @@ export function buildPoolFloor(scene: Object3D): void {
   });
   const floor = addMesh(
     scene,
-    new PlaneGeometry(VEN.X * 2, VEN.Z1 - STAGE.z0 + 10),
+    new PlaneGeometry(AUDIENCE_TERRAIN.X * 2, AUDIENCE_TERRAIN.Z1 - STAGE.z0 + 10),
     new MeshStandardMaterial({ color: 0x8a8070, map: paving, roughness: 0.95 }),
-    { position: [0, 0.01, (VEN.Z1 + STAGE.z0 - 10) / 2], rotation: [-Math.PI / 2, 0, 0] },
+    { position: [0, 0.01, (AUDIENCE_TERRAIN.Z1 + STAGE.z0 - 10) / 2], rotation: [-Math.PI / 2, 0, 0] },
   );
   floor.receiveShadow = true;
 }

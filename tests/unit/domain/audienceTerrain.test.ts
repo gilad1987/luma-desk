@@ -1,7 +1,7 @@
 import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { clamp } from '../../../src/core';
-import { terrH, TIER_N, VEN } from '../../../src/domain/audienceTerrain';
+import { terrainHeight, TERRACE_NORMAL, AUDIENCE_TERRAIN } from '../../../src/domain/audienceTerrain';
 
 // Verbatim copy of the legacy src/main.ts 61-75 (before Phase 4), the reference for float parity.
 const LEGACY_VEN = { X: 42, Z1: 58, STEPS: 30, RISE: 0.55, RUN: 1.15, WH: 7 };
@@ -43,20 +43,20 @@ const grid = (): (readonly [number, number])[] => {
 
 describe('domain/audienceTerrain', () => {
   it('keeps the legacy bowl dimensions', () => {
-    expect(VEN).toEqual(LEGACY_VEN);
+    expect(AUDIENCE_TERRAIN).toEqual(LEGACY_VEN);
   });
 
   it('keeps the legacy terrace normal exactly', () => {
-    expect(TIER_N.toArray()).toEqual(new Vector3(0, 1, -0.55 / 1.15).normalize().toArray());
+    expect(TERRACE_NORMAL.toArray()).toEqual(new Vector3(0, 1, -0.55 / 1.15).normalize().toArray());
   });
 
-  it('terrH equals the legacy function bit for bit on named points and a grid over the whole terrain', () => {
-    for (const [x, z] of [...SAMPLES, ...grid()]) expect(terrH(x, z)).toBe(legacyTerrH(x, z));
+  it('terrainHeight equals the legacy function bit for bit on named points and a grid over the whole terrain', () => {
+    for (const [x, z] of [...SAMPLES, ...grid()]) expect(terrainHeight(x, z)).toBe(legacyTerrH(x, z));
   });
 
   it('covers both branches: flat inside the bowl, hills outside on both sides', () => {
-    expect(terrH(0, 30)).toBe(4);
-    expect(terrH(-100, 0)).toBeGreaterThan(terrH(100, 0) - 10);
-    expect(terrH(-100, 0)).not.toBe(terrH(0, 0));
+    expect(terrainHeight(0, 30)).toBe(4);
+    expect(terrainHeight(-100, 0)).toBeGreaterThan(terrainHeight(100, 0) - 10);
+    expect(terrainHeight(-100, 0)).not.toBe(terrainHeight(0, 0));
   });
 });

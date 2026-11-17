@@ -6,8 +6,8 @@ import { Scene, SpotLight, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { clamp, D2R } from '../../../../src/core';
 import { Fixture } from '../../../../src/domain/Fixture';
-import { LightFrame, type KeyLightCandidate } from '../../../../src/render/SceneLightsFrame';
-import { KeyLights } from '../../../../src/render/SceneLightsKeys';
+import { LightFrame, type KeyLightCandidate } from '../../../../src/render/lights/LightFrame';
+import { KeyLights } from '../../../../src/render/lights/KeyLights';
 
 function candidate(score: number, type: 'wash' | 'spot' = 'spot'): KeyLightCandidate {
   const fixture = new Fixture(score, type, new Vector3(), 'hang', null);

@@ -1,3 +1,4 @@
+import { OrthographicCamera, Vector3 } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EventBus } from '../../../../../src/core';
 import type { EngineEvents, EngineMessage } from '../../../../../src/engine/events';
@@ -17,20 +18,24 @@ class Target extends FakeElement {
     for (const l of this.listeners.get(type) ?? []) l(ev);
   }
 }
-const lamp = { id: 7, T: { name: 'Spot' }, pos: { x: 50, y: 50 } };
+/** At the world origin, which the camera below puts in the middle of the 100 px canvas: client (50, 50). */
+const lamp = { id: 7, T: { name: 'Spot' }, pos: new Vector3() };
+/** Maps world x/y in -1..1 straight to NDC, so client = (ndc + 1) * 50 on the 100 px canvas rect. */
+const camera = new OrthographicCamera(-1, 1, 1, -1, -1, 1);
 
 function mount(pick: typeof lamp | null = lamp) {
   const dom = new FakeDom(),
     win = new Target(),
     canvas = new Target('canvas');
+  canvas.rect = { left: 0, top: 0, width: 100, height: 100 };
   vi.stubGlobal('window', win);
   for (const id of ['viewer', 'selRect', 'tip']) dom.add(id);
   const bus = new EventBus<EngineEvents>(),
     logs: EngineMessage[] = [];
   bus.on('message', (m) => logs.push(m));
   const fakes = { selection: { set: vi.fn() }, controls: { enabled: true }, clock: { nowMs: () => 1000 } };
-  const picker = { pickAt: () => pick, projectToScreen: (p: { x: number; y: number }) => ({ ...p, depth: 0 }) };
-  const deps = { ...fakes, canvas, picker, bus, fixtures: [lamp] } as unknown as ViewportDeps;
+  const picker = { pickAt: () => pick };
+  const deps = { ...fakes, canvas, picker, camera, bus, fixtures: [lamp] } as unknown as ViewportDeps;
   new ViewportPicking(deps);
   const at = (x: number, y: number, more: object = {}) => ({ clientX: x, clientY: y, target: canvas, ...more });
   return { dom, win, canvas, logs, at, ...fakes };

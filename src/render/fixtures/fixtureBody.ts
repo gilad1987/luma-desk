@@ -20,18 +20,18 @@ export function createFixtureBody(
   lensMap: Texture | undefined,
   scene: Object3D,
 ): FixtureBody {
-  const T = f.T,
+  const spec = f.T,
     floor = f.mount === 'floor',
     g = new Group();
   g.position.copy(f.pos);
   g.scale.setScalar(size);
   scene.add(g);
-  if (T.moving && floor) g.rotation.z = Math.PI; // floor movers stand on their base
+  if (spec.moving && floor) g.rotation.z = Math.PI; // floor movers stand on their base
   const bodyMat = new MeshStandardMaterial({ color: 0x232328, metalness: 0.55, roughness: 0.38, emissive: 0x000000 });
   const lensMat = new MeshBasicMaterial({ color: 0x050505, side: DoubleSide, toneMapped: false, map: lensMap });
   const pivot = new Group();
   g.add(pivot);
-  return { g, bodyMat, lensMat, floor, pivot, mount: T.moving ? null : createStaticMount(f, pivot, g, floor) };
+  return { g, bodyMat, lensMat, floor, pivot, mount: spec.moving ? null : createStaticMount(f, pivot, g, floor) };
 }
 
 function createStaticMount(f: Fixture, pivot: Group, g: Group, floor: boolean): StaticMount {

@@ -1,19 +1,8 @@
 import { Mesh, Object3D, Scene, type BufferGeometry, type Material, type Texture } from 'three';
-import { vi } from 'vitest';
 import type { Fixture } from '../../../../src/domain/Fixture';
 import { buildRig } from '../../../../src/domain/rig';
 import * as fx from '../../../../src/render/fixtures';
-import { KeyLights } from '../../../../src/render/SceneLightsKeys';
-
-/** A 2D context stand-in: every method is a no-op that returns a gradient-like object. */
-const fakeContext = (): object =>
-  new Proxy({}, { get: (_, key) => (key === 'roundRect' ? undefined : () => ({ addColorStop: () => undefined })) });
-
-/** Stubs `document` so drawCanvas works in Node; call `vi.unstubAllGlobals()` after. */
-export function stubCanvasDocument(): void {
-  const createElement = () => ({ width: 0, height: 0, getContext: fakeContext, toDataURL: () => 'data:' });
-  vi.stubGlobal('document', { createElement });
-}
+import { KeyLights } from '../../../../src/render/lights/KeyLights';
 
 /** What exists before the fixture boot starts; create it outside the seeded window, as the page does. */
 export interface FixtureStage {

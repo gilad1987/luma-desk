@@ -5,10 +5,11 @@
 import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { rng } from '../../../../src/core';
-import { TIER_N } from '../../../../src/domain/audienceTerrain';
+import { TERRACE_NORMAL } from '../../../../src/domain/audienceTerrain';
 import { DECK, UP } from '../../../../src/domain/venue';
-import { hitSurface, SCREEN_NORMAL } from '../../../../src/render/SurfaceHit';
-import { hitTerraces } from '../../../../src/render/SurfaceHitPlanes';
+import { hitSurface } from '../../../../src/render/surface/hitSurface';
+import { SCREEN_NORMAL } from '../../../../src/render/surface/SurfaceHit';
+import { hitTerraces } from '../../../../src/render/surface/surfacePlanes';
 import { legacyHitSurface } from './legacyHitSurface';
 
 const ray = (o: [number, number, number], d: [number, number, number]): [Vector3, Vector3] => [
@@ -17,7 +18,7 @@ const ray = (o: [number, number, number], d: [number, number, number]): [Vector3
 ];
 
 function surfaceName(normal: Readonly<Vector3> | undefined): string {
-  if (normal === TIER_N) return 'tier';
+  if (normal === TERRACE_NORMAL) return 'tier';
   if (normal === UP) return 'up';
   if (normal === SCREEN_NORMAL) return 'screen';
   return 'none';
@@ -43,7 +44,7 @@ describe('hitSurface', () => {
     const [o, d] = ray([0, 10, 100], [0, DECK - 10, -110]);
     const tier = hitTerraces(o, d);
     const hit = hitSurface(o, d);
-    expect([tier?.normal === TIER_N, hit?.normal === UP]).toStrictEqual([true, true]);
+    expect([tier?.normal === TERRACE_NORMAL, hit?.normal === UP]).toStrictEqual([true, true]);
     expect((tier?.t ?? Infinity) < (hit?.t ?? 0)).toBe(true);
     expect(hit).toStrictEqual(legacyHitSurface(o, d));
   });

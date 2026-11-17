@@ -5,9 +5,9 @@
 import { BoxGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector2, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { Fixture } from '../../../../src/domain/Fixture';
-import { projectToScreen } from '../../../../src/render/CameraViewsProjection';
-import { clientToNdc, FixturePicker } from '../../../../src/render/FixturePicker';
-import { fakeStageCanvas } from './fakeElements';
+import { projectToScreen } from '../../../../src/render/shared';
+import { clientToNdc } from '../../../../src/render/picking/clientToNdc';
+import { FixturePicker } from '../../../../src/render/picking/FixturePicker';
 
 const rect = { left: 10, top: 20, width: 200, height: 100 };
 
@@ -33,21 +33,29 @@ describe('clientToNdc', () => {
   });
 });
 
+const screenPoint = () => ({ x: 0, y: 0, ndcX: 0, ndcY: 0, depth: 0 });
+
 describe('projectToScreen', () => {
   it('puts a point straight ahead in the rect centre with depth below 1', () => {
-    const point = projectToScreen(lookingDownMinusZ(), new Vector3(0, 0, -10), rect);
+    const point = projectToScreen(lookingDownMinusZ(), new Vector3(0, 0, -10), rect, screenPoint());
     expect([point.x, point.y]).toEqual([110, 70]);
     expect(point.depth).toBeLessThan(1);
   });
 
   it('gives a point behind the camera a depth above 1', () => {
-    expect(projectToScreen(lookingDownMinusZ(), new Vector3(0, 0, 10), rect).depth).toBeGreaterThan(1);
+    expect(projectToScreen(lookingDownMinusZ(), new Vector3(0, 0, 10), rect, screenPoint()).depth).toBeGreaterThan(1);
+  });
+
+  it('overwrites and returns the caller-owned point, so a frame loop can reuse one', () => {
+    const out = screenPoint();
+    expect(projectToScreen(lookingDownMinusZ(), new Vector3(0, 0, -5), rect, out)).toBe(out);
+    expect([out.x, out.y, out.ndcX, out.ndcY]).toEqual([110, 70, 0, 0]);
   });
 });
 
 describe('FixturePicker', () => {
   it('returns the fixture of the nearest registered object under the pointer', () => {
-    const picker = new FixturePicker(fakeStageCanvas(rect), lookingDownMinusZ());
+    const picker = new FixturePicker({ getBoundingClientRect: () => rect }, lookingDownMinusZ());
     const near = new Fixture(1, 'wash', new Vector3(), 'hang', null);
     const far = new Fixture(2, 'spot', new Vector3(), 'hang', null);
     picker.register(boxAt(-20), far);
@@ -56,14 +64,8 @@ describe('FixturePicker', () => {
   });
 
   it('returns null when nothing registered is hit', () => {
-    const picker = new FixturePicker(fakeStageCanvas(rect), lookingDownMinusZ());
+    const picker = new FixturePicker({ getBoundingClientRect: () => rect }, lookingDownMinusZ());
     picker.register(boxAt(-10), new Fixture(1, 'wash', new Vector3(), 'hang', null));
     expect(picker.pickAt(15, 25)).toBeNull();
-  });
-
-  it('projects with its own camera', () => {
-    const picker = new FixturePicker(fakeStageCanvas(rect), lookingDownMinusZ());
-    const point = picker.projectToScreen(new Vector3(0, 0, -5), rect);
-    expect([point.x, point.y]).toEqual([110, 70]);
   });
 });

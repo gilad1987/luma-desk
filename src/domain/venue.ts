@@ -83,5 +83,8 @@ export const DELAYS: readonly (readonly [x: number, z: number])[] = [
 /**
  * The world up axis. One shared vector replaces the three copies in the legacy script (`UP3`, `UP` and
  * `new V3(0, 1, 0)`), so truss alignment, crenellation turns and crowd facing all rotate about the same axis.
+ *
+ * Shared identity object: never mutate it. Venue builders pass it to three.js as an axis, and the fixture sync tells a
+ * deck or floor hit by `normal === UP`; a changed value would tilt the venue and a copy would lose the stage lights.
  */
 export const UP: Readonly<Vector3> = new Vector3(0, 1, 0);

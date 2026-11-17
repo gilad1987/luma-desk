@@ -1,7 +1,7 @@
 import type { Vector3 } from 'three';
 import { clamp } from '../../../core';
 import { UP } from '../../../domain/venue';
-import type { LightFrame } from '../../SceneLightsFrame';
+import type { LightFrame } from '../../lights/LightFrame';
 import type { BeamFrame } from './BeamFrame';
 
 /**
@@ -9,23 +9,23 @@ import type { BeamFrame } from './BeamFrame';
  * the audience (z > 4) tints its zone; a short beam onto the stage floor tints the stage bounce light.
  */
 export function addPoolContributions(frame: BeamFrame, n: Readonly<Vector3>, out: LightFrame): void {
-  const { visual: v, I, col, zoom, L, dir, origin } = frame;
+  const { visual: v, intensity, col, zoom, length, dir, origin } = frame;
   const f = v.fixture,
-    T = f.T;
-  if (n === UP && L < 40 && T.shape !== 'blinder')
+    spec = f.T;
+  if (n === UP && length < 40 && spec.shape !== 'blinder')
     out.addKeyCandidate({
       fixture: f,
-      score: I * T.power * (T.moving ? 1 : 0.6),
-      intensity: I,
+      score: intensity * spec.power * (spec.moving ? 1 : 0.6),
+      intensity,
       color: col,
       zoom,
-      length: L,
+      length,
       position: origin.clone(),
       direction: dir.clone(),
     });
-  const hz = origin.z + dir.z * L;
+  const hz = origin.z + dir.z * length;
   if (hz > 4) {
-    const w = I * T.power * (T.shape === 'wash' ? 1.4 : 1) * clamp(zoom / 12, 0.35, 2.5);
-    out.addAudience(origin.x + dir.x * L, col, w);
-  } else if (n === UP && L < 30) out.addStage(col, I, T.power);
+    const w = intensity * spec.power * (spec.shape === 'wash' ? 1.4 : 1) * clamp(zoom / 12, 0.35, 2.5);
+    out.addAudience(origin.x + dir.x * length, col, w);
+  } else if (n === UP && length < 30) out.addStage(col, intensity, spec.power);
 }

@@ -1,11 +1,13 @@
-import type { Scene, WebGLRenderer } from 'three';
-import type { CameraViews } from './CameraViews';
+import type { Scene, WebGLRenderer, WebGLShadowMap } from 'three';
+import type { CameraViews } from '../camera/CameraViews';
+import type { FixtureIdOverlay } from './FixtureIdOverlay';
 import type { PostFx } from './PostFx';
-import type { FixtureIdOverlay } from './StageRendererOverlay';
 
 /** The parts the frame renderer drives; narrow types so tests can pass plain fakes. */
 export interface StageRendererParts {
-  readonly renderer: Pick<WebGLRenderer, 'setSize' | 'render' | 'shadowMap'>;
+  readonly renderer: Pick<WebGLRenderer, 'setSize' | 'render'> & {
+    readonly shadowMap: Pick<WebGLShadowMap, 'enabled'>;
+  };
   readonly scene: Scene;
   readonly views: Pick<CameraViews, 'camera' | 'updateControls'>;
   readonly postFx: Pick<PostFx, 'setSize' | 'render'>;

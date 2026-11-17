@@ -1,11 +1,14 @@
 import { SpotLight, type Scene } from 'three';
-import { clamp, D2R } from '../core';
-import type { LightFrame } from './SceneLightsFrame';
+import { clamp, D2R } from '../../core';
+import type { KeyLightCandidate, LightFrame } from './LightFrame';
 
 /** How many beams become real spot lights each frame. */
 const KEY_COUNT = 12;
 /** The first few key lights cast soft shadows; more would cost too much. */
 const SHADOW_COUNT = 4;
+
+/** Best score first; a module constant so the per-frame sort makes no closure. */
+const byScoreDescending = (a: KeyLightCandidate, b: KeyLightCandidate): number => b.score - a.score;
 
 /**
  * Real spot lights that follow the brightest beams hitting the stage, so performers and scenery are lit and shadowed
@@ -40,21 +43,27 @@ export class KeyLights {
   /** Sorts the frame's candidates by score (in place, stable) and aims one light at each of the best. */
   update(frame: LightFrame): void {
     const candidates = frame.keyCandidates;
-    candidates.sort((a, b) => b.score - a.score);
-    this.lights.forEach((light, i) => {
-      const candidate = candidates[i];
-      if (!candidate || !this.isEnabled) {
-        light.intensity = 0;
-        return;
-      }
-      const { fixture, position, zoom } = candidate;
-      light.position.copy(position);
-      light.target.position.copy(position).addScaledVector(candidate.direction, candidate.length);
-      light.target.updateMatrixWorld();
-      light.angle = Math.min((clamp(zoom, 4, 60) / 2) * D2R * 1.15, 1.2);
-      light.penumbra = fixture.type === 'wash' ? 0.85 : 0.35;
-      light.color.setRGB(candidate.color[0], candidate.color[1], candidate.color[2]);
-      light.intensity = candidate.intensity * fixture.T.power * 450 * clamp(12 / (zoom + 6), 0.25, 1.6);
-    });
+    candidates.sort(byScoreDescending);
+    // indexed loop, no closure: this runs every frame
+    for (let i = 0; i < this.lights.length; i++) {
+      const light = this.lights[i];
+      if (light) this.aim(light, candidates[i]);
+    }
+  }
+
+  /** Aims one light at a candidate beam, or darkens it when there is none or the lights are off. */
+  private aim(light: SpotLight, candidate: KeyLightCandidate | undefined): void {
+    if (!candidate || !this.isEnabled) {
+      light.intensity = 0;
+      return;
+    }
+    const { fixture, position, zoom } = candidate;
+    light.position.copy(position);
+    light.target.position.copy(position).addScaledVector(candidate.direction, candidate.length);
+    light.target.updateMatrixWorld();
+    light.angle = Math.min((clamp(zoom, 4, 60) / 2) * D2R * 1.15, 1.2);
+    light.penumbra = fixture.type === 'wash' ? 0.85 : 0.35;
+    light.color.setRGB(candidate.color[0], candidate.color[1], candidate.color[2]);
+    light.intensity = candidate.intensity * fixture.T.power * 450 * clamp(12 / (zoom + 6), 0.25, 1.6);
   }
 }

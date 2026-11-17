@@ -2,8 +2,9 @@ import { Color, PointLight, Vector3 } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clamp } from '../../../../src/core';
 import { FixtureVisualSync } from '../../../../src/render/fixtures';
-import { LightFrame } from '../../../../src/render/SceneLightsFrame';
-import { buildFixtureScene, stubCanvasDocument } from './buildFixtureScene';
+import { LightFrame } from '../../../../src/render/lights/LightFrame';
+import { buildFixtureScene } from './buildFixtureScene';
+import { stubCanvasDocument } from '../stubCanvasDocument';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -37,9 +38,9 @@ describe('FixtureVisualSync', () => {
     Object.assign(lit.fixture.out, { dim: 80, strobe: 0, pan: 0, tilt: 0, r: 100, g: 50, b: 0, zoom: 20, gobo: 0 });
     Object.assign(dark.fixture.out, { dim: 0, strobe: 0, pan: 0, tilt: 0, r: 0, g: 0, b: 0, zoom: 20, gobo: 0 });
     sync.update(1, 0.016, new Vector3(0, 5, 40));
-    const T = lit.fixture.T,
-      zoom = clamp(20, T.zr[0], T.zr[1]);
-    const expected = 0.8 * T.power * (T.beamK ?? 1) * 0.38 * clamp(Math.pow(14 / (zoom + 4), 0.8), 0.06, 2.2);
+    const spec = lit.fixture.T,
+      zoom = clamp(20, spec.zr[0], spec.zr[1]);
+    const expected = 0.8 * spec.power * (spec.beamK ?? 1) * 0.38 * clamp(Math.pow(14 / (zoom + 4), 0.8), 0.06, 2.2);
     expect(lit.uniforms.uInt.value).toBe(expected);
     expect(lit.lensMat.color.toArray()).toEqual([0.03 + 1 * 0.8 * 3, 0.03 + 0.5 * 0.8 * 3, 0.03]);
     expect(lit.beam.visible).toBe(true);

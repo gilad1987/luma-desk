@@ -1,6 +1,6 @@
 import { BoxGeometry, Vector3, type Object3D } from 'three';
 import { lerp } from '../../core';
-import { terrH } from '../../domain/audienceTerrain';
+import { terrainHeight } from '../../domain/audienceTerrain';
 import { addMesh } from '../shared';
 import type { CrenelPlacement } from './crenellation';
 import type { JerusalemStone } from './JerusalemStone';
@@ -47,7 +47,7 @@ const TOWER_HEIGHT = 20;
 export function buildRidgeWalls(scene: Object3D, stone: JerusalemStone): CrenelPlacement[] {
   const merlons: CrenelPlacement[] = [];
   for (const raw of WALLS) {
-    const pts = raw.map(([x, z]) => new Vector3(x, terrH(x, z), z));
+    const pts = raw.map(([x, z]) => new Vector3(x, terrainHeight(x, z), z));
     for (let i = 0; i < pts.length - 1; i++) {
       const A = pts[i],
         B = pts[i + 1];
@@ -61,7 +61,10 @@ export function buildRidgeWalls(scene: Object3D, stone: JerusalemStone): CrenelP
           x = lerp(A.x, B.x, (t0 + t1) / 2),
           z = lerp(A.z, B.z, (t0 + t1) / 2),
           base =
-            Math.min(terrH(lerp(A.x, B.x, t0), lerp(A.z, B.z, t0)), terrH(lerp(A.x, B.x, t1), lerp(A.z, B.z, t1))) - 3,
+            Math.min(
+              terrainHeight(lerp(A.x, B.x, t0), lerp(A.z, B.z, t0)),
+              terrainHeight(lerp(A.x, B.x, t1), lerp(A.z, B.z, t1)),
+            ) - 3,
           H = WALL_HEIGHT;
         addMesh(scene, new BoxGeometry(2.4, H, L / n + 0.05), stone.floodlit(L / n, H), {
           position: [x, base + H / 2, z],

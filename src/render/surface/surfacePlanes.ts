@@ -1,15 +1,7 @@
-import { Vector3 } from 'three';
-import { TIER_N, VEN } from '../domain/audienceTerrain';
-import { DECK, SCREEN, STAGE, UP } from '../domain/venue';
-
-/** Where a beam ray meets a surface: the ray distance `t` and the surface normal, compared by identity. */
-export interface SurfaceHit {
-  readonly t: number;
-  readonly normal: Readonly<Vector3>;
-}
-
-/** The LED screen plane faces the audience; the fixture sync tells a screen hit by this exact object. */
-export const SCREEN_NORMAL: Readonly<Vector3> = new Vector3(0, 0, 1);
+import type { Vector3 } from 'three';
+import { TERRACE_NORMAL, AUDIENCE_TERRAIN } from '../../domain/audienceTerrain';
+import { DECK, SCREEN, STAGE, UP } from '../../domain/venue';
+import { SCREEN_NORMAL, type SurfaceHit } from './SurfaceHit';
 
 /** Ray components closer to 0 than this count as parallel to the plane. */
 const PARALLEL_EPSILON = 1e-4;
@@ -21,13 +13,18 @@ function isOverStage(x: number, z: number): boolean {
 
 /** The hit on the sloped audience terraces, if the ray meets the slope inside the seating block. */
 export function hitTerraces(origin: Vector3, direction: Vector3): SurfaceHit | null {
-  const den = direction.y - (VEN.RISE / VEN.RUN) * direction.z;
+  const den = direction.y - (AUDIENCE_TERRAIN.RISE / AUDIENCE_TERRAIN.RUN) * direction.z;
   if (Math.abs(den) <= PARALLEL_EPSILON) return null;
-  const t = (((origin.z - VEN.Z1) * VEN.RISE) / VEN.RUN - origin.y) / den;
+  const t = (((origin.z - AUDIENCE_TERRAIN.Z1) * AUDIENCE_TERRAIN.RISE) / AUDIENCE_TERRAIN.RUN - origin.y) / den;
   if (!(t > 0)) return null;
   const x = origin.x + direction.x * t;
   const z = origin.z + direction.z * t;
-  if (Math.abs(x) < VEN.X && z > VEN.Z1 && z < VEN.Z1 + VEN.STEPS * VEN.RUN) return { t, normal: TIER_N };
+  if (
+    Math.abs(x) < AUDIENCE_TERRAIN.X &&
+    z > AUDIENCE_TERRAIN.Z1 &&
+    z < AUDIENCE_TERRAIN.Z1 + AUDIENCE_TERRAIN.STEPS * AUDIENCE_TERRAIN.RUN
+  )
+    return { t, normal: TERRACE_NORMAL };
   return null;
 }
 
@@ -45,7 +42,8 @@ export function hitPoolFloor(origin: Vector3, direction: Vector3): SurfaceHit | 
   const t = -origin.y / direction.y;
   const x = origin.x + direction.x * t;
   const z = origin.z + direction.z * t;
-  const isOnFloor = !isOverStage(x, z) && Math.abs(x) < VEN.X && z < VEN.Z1 && z > STAGE.z0 - 6;
+  const isOnFloor =
+    !isOverStage(x, z) && Math.abs(x) < AUDIENCE_TERRAIN.X && z < AUDIENCE_TERRAIN.Z1 && z > STAGE.z0 - 6;
   return t > 0 && isOnFloor ? { t, normal: UP } : null;
 }
 

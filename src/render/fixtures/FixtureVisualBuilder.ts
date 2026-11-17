@@ -1,6 +1,6 @@
 import type { Object3D } from 'three';
 import type { Fixture } from '../../domain/Fixture';
-import type { FixturePicker } from '../FixturePicker';
+import type { FixturePicker } from '../picking/FixturePicker';
 import { createFixtureBody } from './fixtureBody';
 import { createFixtureLightObjects, type LightObjectKit } from './fixtureLightObjects';
 import type { FixtureModelTable } from './FixtureModels';
@@ -30,15 +30,15 @@ export class FixtureVisualBuilder {
 
   build(f: Fixture): FixtureVisual {
     const deps = this.#deps,
-      T = f.T;
-    if (T.shape === 'screen') {
+      spec = f.T;
+    if (spec.shape === 'screen') {
       deps.picker.register(deps.screenMesh, f);
       return { kind: 'screen', fixture: f };
     }
-    const s = T.size;
-    const buildModel = T.model === undefined ? undefined : deps.models[T.model];
+    const s = spec.size;
+    const buildModel = spec.model === undefined ? undefined : deps.models[spec.model];
     if (s === undefined || !buildModel) throw new Error(`Fixture ${f.id}: type ${f.type} has no model or size`);
-    const body = createFixtureBody(f, s, deps.lensTextures[T.model ?? ''], deps.scene);
+    const body = createFixtureBody(f, s, deps.lensTextures[spec.model ?? ''], deps.scene);
     const b = buildModel(body);
     for (const m of b.pick) deps.picker.register(m, f);
     return {
