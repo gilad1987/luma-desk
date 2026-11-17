@@ -1,0 +1,61 @@
+/* the deck slopes toward the operator; the two large screens glow onto its top */
+.maDeck {
+  position: relative;
+  transform-style: preserve-3d;
+  transform-origin: 50% 0;
+  transform: rotateX(52deg);
+  padding: 0 34px;
+  background:
+    linear-gradient(#000c, transparent 34px), radial-gradient(30% 90px at 27% 0, #5a8cff22, transparent),
+    radial-gradient(30% 90px at 73% 0, #5a8cff22, transparent), linear-gradient(#19191c, #101012 35%, #0c0c0e);
+}
+.dhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  background: linear-gradient(#1b2433, #121925);
+  border-bottom: 1px solid #000;
+  font: 700 12.5px var(--mono);
+  letter-spacing: 0.14em;
+  color: #8fb3e6;
+  flex: 0 0 auto;
+}
+.dhead b {
+  color: var(--acc);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.dslot {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.dsplit {
+  flex-direction: row;
+}
+.dcmd {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: #03050a;
+  border-top: 1px solid #1b2433;
+  padding-bottom: 6px;
+}
+.dsub {
+  display: flex;
+  justify-content: space-between;
+  height: 19px;
+  padding: 0 8px;
+  background: #0c121c;
+  font: 700 12.5px/19px var(--mono);
+  letter-spacing: 0.14em;
+  color: #6f8db8;
+}
+.dsub b {
+  color: var(--acc);
+  letter-spacing: 0.04em;
+}

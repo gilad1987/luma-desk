@@ -1,0 +1,35 @@
+.rtl {
+  direction: rtl;
+  text-align: right;
+}
+#recBtn.on {
+  background: #5a0f0f;
+  border-color: #ff4040;
+  color: #fff;
+  animation: pulse 1s infinite;
+}
+#toast {
+  position: fixed;
+  left: 50%;
+  top: 52px;
+  transform: translateX(-50%);
+  background: #000d;
+  border: 1px solid var(--acc);
+  color: var(--acc);
+  padding: 6px 14px;
+  border-radius: 5px;
+  font-weight: 600;
+  z-index: 60;
+  display: none;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}

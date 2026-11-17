@@ -1,0 +1,99 @@
+/* ================= MA CONSOLE LAYOUT: a large hardware console under the stage ================= */
+#maConsole {
+  display: none;
+}
+.ex-sel {
+  display: none;
+}
+body.ma #app {
+  grid-template-rows: 40px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  width: 100vw;
+  min-width: 0;
+}
+body.ma #maConsole {
+  min-width: 0;
+  max-width: 100vw;
+}
+body.ma #main {
+  grid-template-columns: minmax(0, 1fr);
+}
+body.ma #viewer {
+  border-right: 0;
+}
+body.ma #desk,
+body.ma #app > #enc,
+body.ma #console {
+  display: none;
+}
+/* the console stands at the control position in front of the operator: an overlay on the bottom of the stage view;
+   only its planes take pointer events, so the stage stays usable around and above it */
+body.ma #maConsole {
+  display: block;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: none;
+  overflow: hidden;
+}
+/* the low riser the console stands on: console width (--cw, set by fitDesk) plus a margin, its edges masked so it fades into the audience */
+body.ma #maConsole::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: calc(var(--cw, 1600px) * 1.12 + 60px);
+  height: calc(var(--ch, 470px) * 0.5);
+  transform: translateX(-50%);
+  background:
+    radial-gradient(48% 75% at 50% 100%, #000 0%, #000b 65%, transparent 100%),
+    linear-gradient(#34343c 0, #18181d 3px, #0c0c0f 30%, #060607);
+  mask: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent), linear-gradient(transparent, #000 10%);
+  mask-composite: intersect;
+}
+.maScreens,
+.maDeck {
+  pointer-events: auto;
+}
+/* structural faces never take the pointer: in 3D they can lie in front of keys in hit testing */
+.maCheek,
+.maHinge,
+.maRest,
+.maFront,
+.maScreens::before {
+  pointer-events: none;
+}
+body.ma #cueHud {
+  bottom: calc(var(--ch, 0px) + 10px);
+}
+body.ma #deskZoom {
+  display: none;
+}
+body.ma #viewHint {
+  top: 8px;
+  bottom: auto;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #000b;
+  color: #ffffffa8;
+}
+#maGrip {
+  position: absolute;
+  left: 50%;
+  top: 1px;
+  width: 120px;
+  height: 9px;
+  margin-left: -60px;
+  border-radius: 0 0 5px 5px;
+  cursor: ns-resize;
+  touch-action: none;
+  background: linear-gradient(#5a5a62, #2a2a2f);
+  box-shadow: inset 0 1px 0 #ffffff40;
+}
+#maGrip:hover,
+#maGrip.on {
+  background: linear-gradient(#ffd65a, #a07800);
+}
