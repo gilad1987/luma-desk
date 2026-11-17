@@ -1,5 +1,5 @@
 import { test } from '@playwright/test';
-import { bootApp, expectGolden } from '../shared';
+import { bootApp, expectGolden } from '../shared/e2e';
 import { ALIAS_LINES } from './transcripts/aliasLines';
 import { BASE_LINES } from './transcripts/baseLines';
 import { PARTIAL_ERROR_LINES } from './transcripts/partialErrorLines';

@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { goldenPath } from './goldenPath';
-import { jsonRoundTrip } from './jsonRoundTrip';
-import { readGolden } from './readGolden';
-import { roundNumbers } from './roundNumbers';
+import { goldenPath } from '../goldenPath';
+import { jsonRoundTrip } from '../jsonRoundTrip';
+import { readGolden } from '../readGolden';
+import { roundNumbers } from '../roundNumbers';
 
 /**
  * Compares `actual` with tests/golden/<name>.json. It acts like a Playwright snapshot: a missing golden is written

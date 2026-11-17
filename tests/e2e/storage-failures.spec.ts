@@ -1,5 +1,6 @@
 import { expect, test, type JSHandle, type Page } from '@playwright/test';
-import { STORAGE_KEYS, bootApp, jsonRoundTrip, readDeskState, readStoredJson, type DeskTestApi } from '../shared';
+import { STORAGE_KEYS, jsonRoundTrip, type DeskTestApi } from '../shared';
+import { bootApp, readDeskState, readStoredJson } from '../shared/e2e';
 
 /** Waits for the save the app makes 500 ms (real timer) after the demo loads, then checks it holds the demo. */
 async function expectDemoSaved(page: Page, desk: JSHandle<DeskTestApi>): Promise<void> {
