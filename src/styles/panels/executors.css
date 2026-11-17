@@ -1,0 +1,12 @@
+#execs{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:5px;padding:8px}
+.ex{background:var(--p2);border:1px solid var(--line);border-radius:5px;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.ex.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.ex.on .ex-top{background:#103a1f}
+.ex-top{display:flex;align-items:center;gap:4px;padding:3px 5px;background:var(--p3);border-bottom:1px solid var(--line)}
+.ex-num{font:600 10px var(--mono);color:var(--acc)}
+.ex-name{flex:1;font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.ex-off{padding:0 4px;font-size:9px;line-height:14px;background:none;border-color:#444}
+.ex-cue{padding:3px 5px;font-size:10px;height:30px;line-height:12px;overflow:hidden;border-bottom:1px solid var(--line)}
+.ex-cue .c{color:var(--go);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.ex-cue .x{color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.ex-mid{flex:1;display:flex;gap:4px;padding:5px;min-height:0}

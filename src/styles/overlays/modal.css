@@ -1,0 +1,12 @@
+/* modal */
+#modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:50}
+#modal.show{display:flex}
+.mbox{background:var(--p1);border:1px solid var(--line2);border-radius:8px;width:min(720px,92vw);max-height:86vh;overflow:auto;padding:20px 22px;box-shadow:0 20px 60px #000}
+.mbox h2{font-size:16px;margin-bottom:12px}
+.mbox h3{font-size:13px;margin:14px 0 6px;color:var(--acc)}
+.mbox p,.mbox li{font-size:12.5px;line-height:1.6;color:#c8c8cf}
+.mbox ul{padding-inline-start:18px}
+.mbox code{font-family:var(--mono);background:#000;border:1px solid var(--line);padding:1px 5px;border-radius:3px;color:var(--acc);direction:ltr;unicode-bidi:embed}
+.mbox textarea{width:100%;height:160px;background:#000;color:#ddd;border:1px solid var(--line2);border-radius:4px;font:11px var(--mono);padding:8px;margin-top:8px}
+.mbox .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.mbox .close{float:right}

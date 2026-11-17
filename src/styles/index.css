@@ -1,0 +1,49 @@
+/*
+ * The cascade order of the app. Many selectors are styled in more than one file and the later rule wins at equal
+ * specificity (e.g. #top in base/top-bar.css and desk/top-bar-layout.css), so keep this order: base, panels, the desk
+ * layout, the MA layout, then the overlays.
+ */
+@import './base/app.css';
+@import './base/top-bar.css';
+@import './base/viewer.css';
+@import './base/viewer-hud.css';
+@import './panels/side-panel.css';
+@import './panels/pools.css';
+@import './panels/sequence.css';
+@import './panels/encoder-bar.css';
+@import './panels/encoders.css';
+@import './panels/encoder-extras.css';
+@import './panels/command-line.css';
+@import './panels/executors.css';
+@import './panels/faders.css';
+@import './panels/master.css';
+@import './panels/auto-show.css';
+@import './panels/auto-controls.css';
+@import './desk/console.css';
+@import './desk/centre-wing.css';
+@import './desk/right-wing.css';
+@import './desk/top-bar-layout.css';
+@import './ma/console.css';
+@import './ma/housing.css';
+@import './ma/deck.css';
+@import './ma/side-panel.css';
+@import './ma/screen-panels.css';
+@import './ma/surface.css';
+@import './ma/hardware-keys.css';
+@import './ma/fader-wing.css';
+@import './ma/executor-labels.css';
+@import './ma/executor-buttons.css';
+@import './ma/faders.css';
+@import './ma/feature-keys.css';
+@import './ma/encoders.css';
+@import './ma/touch-screens.css';
+@import './ma/touch-pads.css';
+@import './ma/master.css';
+@import './ma/chassis-front.css';
+@import './ma/auto-show.css';
+@import './overlays/guide-nav.css';
+@import './overlays/guide-body.css';
+@import './overlays/guide-boxes.css';
+@import './overlays/tour.css';
+@import './overlays/modal.css';
+@import './overlays/rec-toast-scrollbar.css';

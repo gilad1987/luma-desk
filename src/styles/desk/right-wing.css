@@ -1,0 +1,17 @@
+/* right wing: command section + master section */
+.cright{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:8px;background:none;border:0;box-shadow:none}
+.cright>.cwing{min-width:0}
+body.desk #cmdArea{border-right:0;padding:8px;gap:6px;flex:1;min-height:0}
+body.desk #cmdFb{height:30px}
+body.desk .keys{grid-template-columns:repeat(4,1fr);flex:0 0 auto;gap:4px}
+body.desk .keys button{height:30px;font-size:11px}
+.keypad{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;flex:1;min-height:0}
+.keypad button{font:700 12px var(--mono);padding:0;min-height:28px;background:linear-gradient(#2c2c31,#1b1b1f);border-color:#3c3c43;box-shadow:0 2px 0 #000,inset 0 1px 0 #ffffff12;border-radius:5px}
+.keypad button:active{transform:translateY(1px);box-shadow:0 1px 0 #000}
+.keypad .w{font:700 10.5px Inter,sans-serif;letter-spacing:.04em;color:#cfd3ff;background:linear-gradient(#262a3a,#191c28);border-color:#363c55}
+.keypad .n{font-size:15px;color:#fff;background:linear-gradient(#34343a,#222226)}
+.keypad .en{grid-column:span 3;background:linear-gradient(#2a7a46,#185a30);border-color:#36a35c;color:#eafff0;font:800 13px Inter,sans-serif;letter-spacing:.1em}
+.keypad .bk{color:#ffb4b4}
+body.desk #master{border-left:0;padding:8px;grid-template-columns:1fr 40px;gap:8px;flex:1;min-height:0}
+body.desk #goBig{font-size:26px}
+body.desk .mRow button{padding:9px 0}

@@ -1,0 +1,9 @@
+/* main */
+#main{display:grid;grid-template-columns:minmax(0,1fr) 440px;min-height:0}
+#viewer{position:relative;overflow:hidden;background:#000;border-right:1px solid var(--line)}
+#c,#ov{position:absolute;inset:0;width:100%;height:100%;display:block}
+#ov{pointer-events:none}
+#selRect{position:absolute;border:1px dashed var(--acc);background:#ffc21a12;display:none;pointer-events:none}
+#vhud{position:absolute;left:10px;top:8px;display:flex;gap:6px;pointer-events:none}
+.chip{background:#000a;border:1px solid #ffffff1a;border-radius:4px;padding:3px 7px;font-size:11px;backdrop-filter:blur(4px)}
+.chip b{color:var(--acc)}
