@@ -28,10 +28,6 @@ function ringU(f: Fixture): [ux: number, uz: number, angle: number] {
   return [dx / l, dz / l, Math.atan2(dx, dz)];
 }
 
-/**
- * The position presets by function name; show files store the name. The aim targets are venue coordinates in metres
- * and must stay exactly as they are: the saved demo show and the output goldens depend on every rounded degree.
- */
 /** The stage side (-1 left, 1 right) a fixture at `x` aims to; fixtures on the centre line alternate by index `k`. */
 function stageSide(x: number, k: number): number {
   if (x < 0) return -1;
@@ -39,6 +35,10 @@ function stageSide(x: number, k: number): number {
   return k % 2 ? 1 : -1;
 }
 
+/**
+ * The position presets by function name; show files store the name. The aim targets are venue coordinates in metres
+ * and must stay exactly as they are: the saved demo show and the output goldens depend on every rounded degree.
+ */
 const positions = {
   ringDown: (f) => (f.mount === 'floor' ? aimAt(f, f.pos.x, 40, f.pos.z) : aimAt(f, f.pos.x, DECK, f.pos.z)),
   ringCone: (f) => aimAt(f, RING.x, f.mount === 'floor' ? 34 : DECK, RING.z),

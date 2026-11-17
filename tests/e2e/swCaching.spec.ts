@@ -1,9 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { NO_STORED_PAGE, cacheContents, fetchStatus, openUnderWorker, storedPage } from '../shared';
+import { NO_STORED_PAGE, cacheContents, fetchStatus, openUnderWorker, storedPage } from '../shared/e2e';
 
 // What the service worker stores while online (docs/known-quirks.md, section I). The main config blocks service
 // workers so other tests see fresh files; this spec is about the worker itself.
 test.use({ serviceWorkers: 'allow' });
+
+/** The Google Fonts stylesheet that index.html links, without its query string. */
+const GOOGLE_FONTS_CSS = 'https://fonts.googleapis.com/css2';
 
 /** Every cached URL, whatever the cache. */
 async function cachedUrls(page: Page): Promise<string[]> {
@@ -36,7 +39,8 @@ test('a page with a query string is stored as ./index.html, not under its own UR
   });
   expect(await storedPage(page)).toBe(NO_STORED_PAGE);
 
-  await page.goto('./?from=nav');
+  // keeps test mode (see openUnderWorker), so the 3D view does not render without pause during the poll
+  await page.goto('./?test&from=nav');
 
   await expect.poll(() => storedPage(page)).not.toBe(NO_STORED_PAGE);
   expect((await cachedUrls(page)).filter((url) => url.includes('from=nav'))).toEqual([]);
@@ -48,10 +52,14 @@ test('other files are stored under their full URL, query string included', async
   await expect.poll(() => cachedUrls(page)).toContainEqual(expect.stringContaining('manifest.webmanifest?v=online'));
 });
 
-test('Google Fonts responses are cached, opaque or not (I6)', async ({ page }) => {
+test('Google Fonts responses are cached, opaque or not (I6)', async ({ page, context }) => {
+  // the test is about what the worker stores, so a stand-in answers instead of Google and the check needs no internet;
+  // index.html links the sheet without crossorigin, so the worker still gets the opaque response that I6 is about
+  await context.route(
+    (url) => url.href.startsWith(GOOGLE_FONTS_CSS),
+    (route) => route.fulfill({ contentType: 'text/css', body: '' }),
+  );
   await openUnderWorker(page);
   await page.reload();
-  await expect
-    .poll(() => cachedUrls(page))
-    .toContainEqual(expect.stringContaining('https://fonts.googleapis.com/css2'));
+  await expect.poll(() => cachedUrls(page)).toContainEqual(expect.stringContaining(GOOGLE_FONTS_CSS));
 });

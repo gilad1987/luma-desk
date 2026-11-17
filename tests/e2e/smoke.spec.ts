@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { STORAGE_KEYS, bootApp, collectErrors, readDeskState, readStoredJson, stepFrames } from '../shared';
+import { STORAGE_KEYS } from '../shared';
+import { bootApp, collectErrors, readDeskState, readStoredJson, stepFrames } from '../shared/e2e';
 
 test('boots with no console errors or page errors', async ({ page }) => {
   const errors = collectErrors(page);

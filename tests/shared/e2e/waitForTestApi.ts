@@ -1,6 +1,6 @@
 import type { JSHandle, Page } from '@playwright/test';
-import type { DeskTestApi } from './deskApi';
-import { TIMER_POLLING } from './timerPolling';
+import type { DeskTestApi } from '../deskApi';
+import { TIMER_POLLING } from '../timerPolling';
 
 /**
  * Waits until the module script has run and draws the first frame. It returns a handle to window.__desk.test, so

@@ -34,12 +34,12 @@ export interface RowOptions {
  * merge and the golden files depend on, so the builder never sorts.
  */
 export class RigBuilder {
-  private readonly fixtures: Fixture[] = [];
+  readonly #fixtures: Fixture[] = [];
 
   /** Adds one fixture at a position. */
   add({ id, type, at: [x, y, z], mount, fixed }: PlaceOptions): Fixture {
     const fixture = new Fixture({ id, type, pos: new Vector3(x, y, z), mount, fixed: fixed ?? null });
-    this.fixtures.push(fixture);
+    this.#fixtures.push(fixture);
     return fixture;
   }
 
@@ -58,6 +58,6 @@ export class RigBuilder {
 
   /** A rig of every fixture added so far, in the order they were added. Later `add` calls do not change it. */
   build(): Rig {
-    return new Rig([...this.fixtures]);
+    return new Rig([...this.#fixtures]);
   }
 }

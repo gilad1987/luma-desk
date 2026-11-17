@@ -1,5 +1,5 @@
 import { test } from '@playwright/test';
-import { bootApp, expectGolden } from '../shared';
+import { bootApp, expectGolden } from '../shared/e2e';
 
 // A diagnostic, not a behavior check: three.js generateUUID() draws from the seeded Math.random, so the order in
 // which the refactored code creates objects shifts every later random number. When the screenshots change, a changed
