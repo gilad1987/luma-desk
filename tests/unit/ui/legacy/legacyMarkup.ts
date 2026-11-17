@@ -5,5 +5,5 @@ import { readFileSync } from 'node:fs';
  * from its first `<` to its last `>`. Stored as .txt so Prettier never reformats the oracle.
  */
 export function legacyMarkup(name: string): string {
-  return readFileSync(new URL(`../legacy/${name}.txt`, import.meta.url), 'utf8');
+  return readFileSync(new URL(`./${name}.txt`, import.meta.url), 'utf8');
 }

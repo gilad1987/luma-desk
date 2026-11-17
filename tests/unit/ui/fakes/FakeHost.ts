@@ -1,4 +1,4 @@
-import { FakeElement } from '../../fakes/FakeElement';
+import { FakeElement } from './FakeElement';
 
 /** A host element panels render into: it records the markup and answers `querySelectorAll` from `found`. */
 export class FakeHost extends FakeElement {

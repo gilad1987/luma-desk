@@ -8,7 +8,7 @@ import {
   songStatHtml,
   styleCardHtml,
 } from '../../../../../src/ui/panels/autoshow/autoShowText';
-import { legacyMarkup } from '../fakes/legacyMarkup';
+import { legacyMarkup } from '../../legacy/legacyMarkup';
 
 /** The original `COL(n)` swatch maths, restated so the test does not lean on the code under test. */
 const legacyRgb = (name: string): string => {
@@ -19,7 +19,7 @@ const legacyRgb = (name: string): string => {
 describe('Auto Show text', () => {
   it('keeps the pane markup byte for byte', () => {
     // the oracle sits beside this test, in the folder this builder owns
-    expect(autoShowMarkup).toBe(legacyMarkup('../autoshow/autoShow'));
+    expect(autoShowMarkup).toBe(legacyMarkup('autoShow'));
   });
 
   it('draws a style card as the original renderAuto did', () => {

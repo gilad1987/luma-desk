@@ -9,8 +9,8 @@ import { commandLineMarkup } from '../../../../src/ui/panels/command/commandLine
 import { Modal, StoreModeGuard } from '../../../../src/ui/shared';
 import type { FakeElement } from '../fakes/FakeElement';
 import { FakeDom } from '../fakes/installFakeDom';
-import { FakeButton, FakeList } from './fakes/FakeButton';
-import { FakeHost } from './fakes/FakeHost';
+import { FakeButton, FakeList } from '../fakes/FakeButton';
+import { FakeHost } from '../fakes/FakeHost';
 
 const KEYS = ['kStore', 'kClear', 'kHigh', 'kFan', 'kAll', 'kOdd', 'kEven', 'kRev'];
 

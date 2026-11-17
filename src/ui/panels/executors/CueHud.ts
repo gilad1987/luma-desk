@@ -1,4 +1,4 @@
-import { clamp } from '../../../core';
+import { clamp, type Clock } from '../../../core';
 import type { Executor } from '../../../engine/Executor';
 import { byId } from '../../dom';
 import { autoHudText, executorHudText, type CueHudText } from './cueHudText';
@@ -6,6 +6,18 @@ import type { ExecutorsDeps } from './ExecutorsDeps';
 
 /** Beats in a bar: the bar progress counts bars of four beats. */
 const BEATS_PER_BAR = 4;
+
+/**
+ * The bar width for executor `exec`: the fade's progress (frozen at `pausedAt` while paused), else full while it is on
+ * without a fade, else '0'. Every pause sets `pausedAt`; NaN (an ignored width) is what the old code wrote if it were
+ * ever missing.
+ */
+function fadeBarWidth(exec: Executor, clock: Clock): string {
+  const fade = exec.fade;
+  if (!fade) return exec.on ? '100%' : '0';
+  const elapsed = fade.paused ? (fade.pausedAt ?? NaN) : clock.nowSeconds() - fade.t0;
+  return clamp(elapsed / (fade.dur || 1), 0, 1) * 100 + '%';
+}
 
 /**
  * The cue HUD over the viewer (`#cueHud`): the selected executor's cue, the next cue and a fade progress bar, or the
@@ -33,13 +45,7 @@ export class CueHud {
       this.#bar.style.width = ((((barsDone % bars) + bars) % bars) / bars) * 100 + '%';
       return;
     }
-    const F = e.fade;
-    // every pause sets pausedAt; NaN (an ignored width) is what the old code wrote if it were ever missing
-    this.#bar.style.width = F
-      ? clamp((F.paused ? (F.pausedAt ?? NaN) : clock.nowSeconds() - F.t0) / (F.dur || 1), 0, 1) * 100 + '%'
-      : e.on
-        ? '100%'
-        : '0';
+    this.#bar.style.width = fadeBarWidth(e, clock);
   }
 
   #write(text: CueHudText): void {

@@ -1,6 +1,6 @@
-import { clamp, hsv } from '../../../core';
-import type { Programmer } from '../../../engine/Programmer';
-import { boxMap, pointerDrag, type BoxMap } from '../../shared';
+import { clamp, hsv } from '../../core';
+import type { Programmer } from '../../engine/Programmer';
+import { boxMap, pointerDrag, type BoxMap } from '../shared';
 
 /** Paints the hue (x) by saturation (y, full at the top) field, one `fillRect` per pixel (quirk Q21). */
 function paintHueField(c: HTMLCanvasElement): void {

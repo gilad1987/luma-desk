@@ -1,6 +1,6 @@
 import { byId } from '../../../dom';
 import { createElement } from '../../../shared';
-import { focusPad } from '../../focus/FocusPad';
+import { focusPad } from '../../../components/FocusPad';
 import { buttonGrid } from './buttonGrid';
 import type { ExtraContext } from './ExtraContext';
 import { labelled, xlabel } from './labelled';

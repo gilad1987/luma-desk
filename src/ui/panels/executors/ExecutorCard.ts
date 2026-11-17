@@ -33,16 +33,15 @@ export class ExecutorCard {
 
   /** Paints selection, on state, texts and fader level (the per-executor part of the old `updateExecUI`). */
   paint(selectedIndex: number): void {
-    const e = this.#exec,
-      d = this.element;
-    d.classList.toggle('sel', this.#index === selectedIndex);
-    d.classList.toggle('on', e.on);
-    const text = executorCardText(e, this.#index);
+    const exec = this.#exec;
+    this.element.classList.toggle('sel', this.#index === selectedIndex);
+    this.element.classList.toggle('on', exec.on);
+    const text = executorCardText(exec, this.#index);
     this.#name.textContent = text.name;
     this.#cue.textContent = text.cue;
     this.#next.textContent = text.next;
-    paintFader(this.#fader, e.level);
-    this.#level.textContent = Math.round(e.level * 100) + '%';
-    d.style.setProperty('--lv', String(e.level));
+    paintFader(this.#fader, exec.level);
+    this.#level.textContent = Math.round(exec.level * 100) + '%';
+    this.element.style.setProperty('--lv', String(exec.level));
   }
 }

@@ -1,16 +1,14 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { encoderList } from '../../../../../src/ui/panels/encoders/encoderList';
 import { encodersMarkup } from '../../../../../src/ui/panels/encoders/encodersMarkup';
 import { encoderSpec, isPhaserParam } from '../../../../../src/ui/panels/encoders/encoderSpec';
 import { formatEncoderValue } from '../../../../../src/ui/panels/encoders/formatEncoderValue';
-
-// the oracle is index.html at 48a3b63, lines 606-609, from the first `<` to the last `>`
-const legacy = readFileSync(new URL('./encoders.txt', import.meta.url), 'utf8');
+import { legacyMarkup } from '../../legacy/legacyMarkup';
 
 describe('encoders markup', () => {
+  // the oracle is index.html at 48a3b63, lines 606-609
   it('equals the original page byte for byte', () => {
-    expect(encodersMarkup).toBe(legacy);
+    expect(encodersMarkup).toBe(legacyMarkup('encoders'));
   });
 });
 

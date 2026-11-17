@@ -1,5 +1,5 @@
-import type { Fixture } from '../../../domain/Fixture';
-import { BAND_PTS, RING, SCREEN, STAGE } from '../../../domain/venue';
+import type { Fixture } from '../../domain/Fixture';
+import { BAND_PTS, RING, SCREEN, STAGE } from '../../domain/venue';
 import { padScale } from './padScale';
 
 /** A pixel point on the pad: the last aim, drawn as a red crosshair. */

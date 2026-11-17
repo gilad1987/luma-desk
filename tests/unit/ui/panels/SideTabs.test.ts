@@ -6,8 +6,8 @@ import { SideTabs } from '../../../../src/ui/panels/side/SideTabs';
 import { sideTabsMarkup } from '../../../../src/ui/panels/side/sideTabsMarkup';
 import { FakeElement } from '../fakes/FakeElement';
 import { FakeDom } from '../fakes/installFakeDom';
-import { FakeButton } from './fakes/FakeButton';
-import { FakeHost } from './fakes/FakeHost';
+import { FakeButton } from '../fakes/FakeButton';
+import { FakeHost } from '../fakes/FakeHost';
 
 describe('SideTabs', () => {
   let bus: EventBus<EngineEvents>, host: FakeHost, buttons: FakeButton[], panes: FakeElement[], mode: LayoutMode;

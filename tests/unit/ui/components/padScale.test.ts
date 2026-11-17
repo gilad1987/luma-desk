@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { padScale } from '../../../../../src/ui/panels/focus/padScale';
+import { padScale } from '../../../../src/ui/components/padScale';
 
 const W = 300,
   H = 118;

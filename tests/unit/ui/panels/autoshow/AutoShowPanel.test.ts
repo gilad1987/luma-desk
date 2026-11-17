@@ -5,8 +5,8 @@ import { autoShowMarkup } from '../../../../../src/ui/panels/autoshow/autoShowMa
 import { IDLE_STATUS } from '../../../../../src/ui/panels/autoshow/autoShowText';
 import { FakeElement } from '../../fakes/FakeElement';
 import { FakeDom } from '../../fakes/installFakeDom';
-import { FakeButton } from '../fakes/FakeButton';
-import { FakeHost } from '../fakes/FakeHost';
+import { FakeButton } from '../../fakes/FakeButton';
+import { FakeHost } from '../../fakes/FakeHost';
 import { autoShowDeps } from './autoShowFakes';
 
 const IDS = ['styleGrid', 'autoBpm', 'autoSec', 'autoStatus', 'songStat', 'aEnergyV', 'aMasterV', 'aBars', 'aPulse'];

@@ -22,6 +22,7 @@ export class FakeStyle {
   cssText = '';
   display = '';
   height = '';
+  width = '';
   bottom = '';
   transform = '';
   readonly custom = new Map<string, string>();
@@ -60,6 +61,8 @@ export class FakeElement {
   onkeydown: Handler<{ readonly key: string }> = null;
   onpointerdown: Handler<FakePointerEvent> = null;
   onpointermove: Handler<FakePointerEvent> = null;
+  onpointerup: Handler<FakePointerEvent> = null;
+  onpointerleave: Handler<FakePointerEvent> = null;
   onwheel: Handler<{ readonly deltaY: number; readonly shiftKey: boolean; readonly preventDefault: () => void }> = null;
 
   constructor(tagName = 'div') {

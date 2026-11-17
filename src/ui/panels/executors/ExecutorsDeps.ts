@@ -1,4 +1,4 @@
-import type { Section } from '../../../autoshow/sections';
+import type { AutoShow } from '../../../autoshow/AutoShow';
 import type { Clock } from '../../../core';
 import type { AppState } from '../../../engine/AppState';
 import type { EngineBus } from '../../../engine/events';
@@ -8,12 +8,7 @@ import type { Tempo } from '../../../engine/Tempo';
 import type { Modal, StoreModeGuard } from '../../shared';
 
 /** The part of the Auto Show the cue HUD reports while it runs. */
-export interface HudAutoShow {
-  readonly on: boolean;
-  readonly style: { readonly name: string };
-  readonly section: Section | '';
-  barsPerLook(): number;
-}
+export type HudAutoShow = Pick<AutoShow, 'on' | 'style' | 'section' | 'barsPerLook'>;
 
 /** What the executor strip, the master section and the cue HUD play, store into and read. */
 export interface ExecutorsDeps {

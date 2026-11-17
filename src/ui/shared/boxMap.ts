@@ -7,7 +7,7 @@ type ClientPoint = Pick<MouseEvent, 'clientX' | 'clientY'>;
 export type BoxMap = ((ev: ClientPoint) => Point) & { readonly w: number; readonly h: number };
 
 /** The corners of a box in its own units, clockwise from the top left, as fractions of width and height. */
-const CORNERS: readonly Point[] = [
+const CORNERS: readonly [Point, Point, Point, Point] = [
   [0, 0],
   [1, 0],
   [1, 1],
@@ -43,14 +43,15 @@ export function boxMap(element: HTMLElement): BoxMap {
   if (!host) throw new Error('boxMap: the canvas has no offset parent to hold the probes');
   const ox = own ? -element.clientLeft : element.offsetLeft,
     oy = own ? -element.clientTop : element.offsetTop;
-  const probes = CORNERS.map(([u, v]) => probe(host, ox + u * w, oy + v * h));
-  const [p0, p1, p2, p3] = probes.map((i): Point => {
+  const at = ([u, v]: Point): HTMLElement => probe(host, ox + u * w, oy + v * h);
+  const probes = [at(CORNERS[0]), at(CORNERS[1]), at(CORNERS[2]), at(CORNERS[3])] as const;
+  const corner = (i: HTMLElement): Point => {
     const r = i.getBoundingClientRect();
     return [r.left, r.top];
-  });
+  };
+  const quad: Quad = [corner(probes[0]), corner(probes[1]), corner(probes[2]), corner(probes[3])];
   probes.forEach((i) => i.remove());
-  const quad: Quad | null = p0 && p1 && p2 && p3 ? [p0, p1, p2, p3] : null;
-  const inverse = quad && quadInverse(quad);
+  const inverse = quadInverse(quad);
   if (!inverse) return rectMap(element);
   const z = element.currentCSSZoom || 1;
   const map = (ev: ClientPoint): Point => inverse(ev.clientX, ev.clientY);

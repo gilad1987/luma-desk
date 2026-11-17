@@ -1,4 +1,4 @@
-import { FakeElement } from '../../fakes/FakeElement';
+import { FakeElement } from './FakeElement';
 
 /** A fake element whose `click()` runs its `onclick`, as a real synthetic click does. */
 export class FakeButton extends FakeElement {

@@ -3,27 +3,22 @@ import { requireChild } from '../../dom';
 import { bindFader } from '../../shared';
 import type { ExecutorsDeps } from './ExecutorsDeps';
 
-/**
- * Wires one card's controls. STORE + name (or SEL) stores and still selects; STORE + GO+ stores and selects but does
- * not GO (quirk Q13). OFF keeps executor 1's fader (quirk Q8). FLASH releases on up or leave (quirk Q14).
- */
-export function wireExecutorCard(card: HTMLElement, e: Executor, i: number, deps: ExecutorsDeps): void {
-  const { state, store, programmer, pool, modal, bus } = deps;
-  const select = (): void => state.selectExec(i);
-  const storeHere = (): void => programmer.storeCue(i, null);
-  const name = requireChild(card, '.ex-name');
-  name.onclick = requireChild(card, '.ex-sel').onclick = () => {
+/** One card, the executor it plays and its 0-based index, handed to each wiring step. */
+interface CardWiring {
+  readonly card: HTMLElement;
+  readonly exec: Executor;
+  readonly index: number;
+  readonly deps: ExecutorsDeps;
+}
+
+/** NAME, SEL, GO+ and GO-: STORE + name (or SEL) stores and still selects; STORE + GO+ selects without GO (Q13). */
+function wireSelectAndStore({ card, exec, index, deps }: CardWiring): void {
+  const { state, store, programmer, pool } = deps;
+  const select = (): void => state.selectExec(index);
+  const storeHere = (): void => programmer.storeCue(index, null);
+  requireChild(card, '.ex-name').onclick = requireChild(card, '.ex-sel').onclick = () => {
     store.intercept(storeHere);
     select();
-  };
-  name.ondblclick = () =>
-    modal.rename(`Executor ${i + 1}`, e.name, (v) => {
-      e.name = v;
-      bus.emit('showChanged', undefined);
-    });
-  requireChild(card, '.ex-off').onclick = () => {
-    e.off();
-    e.level = i === 0 ? e.level : 0;
   };
   requireChild(card, '.b-go').onclick = () => {
     if (store.intercept(storeHere)) {
@@ -31,31 +26,59 @@ export function wireExecutorCard(card: HTMLElement, e: Executor, i: number, deps
       return;
     }
     select();
-    pool.go(e, 1);
+    pool.go(exec, 1);
   };
   requireChild(card, '.b-back').onclick = () => {
     select();
-    pool.go(e, -1);
+    pool.go(exec, -1);
   };
+}
+
+/** FLASH: a press without cues does nothing; up or leave releases only a flash that is on (quirk Q14). */
+function wireFlash({ card, exec, deps }: CardWiring): void {
   const flash = requireChild(card, '.b-flash');
   flash.onpointerdown = () => {
-    if (!e.cues.length) return;
-    pool.flashPress(e);
+    if (!exec.cues.length) return;
+    deps.pool.flashPress(exec);
     flash.classList.add('on');
   };
   const release = (): void => {
-    if (!e.flash) return;
-    pool.flashRelease(e);
+    if (!exec.flash) return;
+    deps.pool.flashRelease(exec);
     flash.classList.remove('on');
   };
   flash.onpointerup = release;
   flash.onpointerleave = release;
+}
+
+/** The level fader: moving it ends a flash-only playback, so the release no longer turns the executor off. */
+function wireFader({ card, exec, deps }: CardWiring): void {
   bindFader(
     requireChild(card, '.fader'),
-    () => e.level,
+    () => exec.level,
     (v) => {
-      e.flashOnly = false;
-      pool.setLevel(e, v);
+      exec.flashOnly = false;
+      deps.pool.setLevel(exec, v);
     },
   );
+}
+
+/**
+ * Wires one card's controls: select and store, rename on a name double click, OFF (which keeps executor 1's fader,
+ * quirk Q8), FLASH and the fader.
+ */
+export function wireExecutorCard(card: HTMLElement, exec: Executor, index: number, deps: ExecutorsDeps): void {
+  const wiring: CardWiring = { card, exec, index, deps };
+  wireSelectAndStore(wiring);
+  requireChild(card, '.ex-name').ondblclick = () =>
+    deps.modal.rename(`Executor ${index + 1}`, exec.name, (v) => {
+      exec.name = v;
+      deps.bus.emit('showChanged', undefined);
+    });
+  requireChild(card, '.ex-off').onclick = () => {
+    exec.off();
+    exec.level = index === 0 ? exec.level : 0;
+  };
+  wireFlash(wiring);
+  wireFader(wiring);
 }

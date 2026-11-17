@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { STYLES } from '../../../../../src/autoshow/styles';
 import { performanceClock } from '../../../../../src/core';
 import { Executor } from '../../../../../src/engine/Executor';
 import { autoHudText, executorHudText } from '../../../../../src/ui/panels/executors/cueHudText';
@@ -47,9 +48,9 @@ describe('executorHudText', () => {
 
 describe('autoHudText', () => {
   it('shows style, section name and the look length', () => {
-    const auto = { on: true, style: { name: 'EDM Festival' }, section: 'build' as const, barsPerLook: () => 8 };
+    const auto = { on: true, style: STYLES.edm, section: 'build' as const, barsPerLook: () => 8 };
     expect(autoHudText(auto, 128, 8)).toEqual({
-      exec: 'AUTO SHOW · EDM Festival',
+      exec: 'AUTO SHOW · EDM / Festival',
       cueHtml: '<span>●</span> Build-up',
       next: '128 BPM · new look every 8 bars',
     });
