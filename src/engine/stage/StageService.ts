@@ -72,4 +72,5 @@ export class StageService implements RigSource {
   }
 
   // G8 slot: MVR adds `updateMeta(patch)` (no rig rebuild). Stage Builder does NOT define it.
+  // An emitting updateMeta must use the same RigAnnouncer guard: `checkIdle` before any state change, as `apply` does.
 }

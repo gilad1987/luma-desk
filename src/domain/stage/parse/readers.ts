@@ -1,8 +1,10 @@
 import type { Quat, Vec3 } from '../types';
 import type { Choices, FieldReader, Key, NumbersShape } from './fieldReader';
 import { describeValue, type Raw } from './rawValues';
-import type { ValueRule } from './valueRules';
-import { ARRAY, BOOLEAN, FINITE, MIN_QUAT_LENGTH, OBJECT, POSITIVE, POSITIVE_INT, STRING } from './valueRules';
+import { ARRAY, BOOLEAN, FINITE, OBJECT, POSITIVE, POSITIVE_INT, STRING, type ValueRule } from './valueRules';
+
+/** A quaternion this long or shorter has no direction, so it cannot be normalized to a rotation. */
+const MIN_QUAT_LENGTH = 1e-6;
 
 /** A stored quaternion this close to unit length is kept as it is, so a saved design reads back bit for bit. */
 const UNIT_TOLERANCE = 1e-12;

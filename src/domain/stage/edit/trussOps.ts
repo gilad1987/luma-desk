@@ -1,10 +1,10 @@
+import { parseTrusses } from '../parse/parseTruss';
 import type { StageDesign, StageFixture } from '../StageDesign';
 import type { StageTruss } from '../trussTypes';
 import type { Vec3 } from '../types';
 import { newTrussId } from './ids';
-import { checkFinite } from './inputChecks';
+import { checkFinite, checkParserAccepts } from './inputChecks';
 import { isSameData } from './sameData';
-import { checkTrussParams } from './trussParamsCheck';
 
 /** The truss kinds the builder offers as presets; `roof` comes only from templates and imports. */
 export type TrussPreset = 'straight' | 'circle' | 'goalpost' | 'tower';
@@ -54,12 +54,14 @@ export function moveTruss(d: StageDesign, trussId: string, delta: Vec3): StageDe
 
 /**
  * Sets name, role or shape of a truss. Its fixtures keep their absolute positions; the user moves them on purpose.
+ * The parser's truss reader checks the patched truss (rule P6), so a bad panel value never reaches the saved design,
+ * where the next load would drop the whole stage, or the renderer, which cannot draw a truss with a zero or NaN size.
  * A patch that changes no value returns `d` itself, so History adds no undo step.
- * @throws RangeError when the truss is missing or the params are refused by `checkTrussParams`.
+ * @throws RangeError when the truss is missing, or with every parser error of the patched truss.
  */
 export function setTrussProps(d: StageDesign, trussId: string, patch: TrussPatch): StageDesign {
   const truss = findTruss(d, trussId);
-  if (patch.params) checkTrussParams(patch.params);
+  checkParserAccepts('setTrussProps', (r) => parseTrusses(r, { trusses: [{ ...truss, ...patch }] }));
   if (isSameData({ ...truss, ...patch }, truss)) return d;
   return { ...d, trusses: d.trusses.map((t) => (t.id === trussId ? { ...t, ...patch } : t)) };
 }
