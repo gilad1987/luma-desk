@@ -24,3 +24,7 @@
 ## Owner rules (QUALITY-2, override the plan)
 19. Max 100 lines per file (all .ts, .css, .glsl, configs, tests). The 250-line targets in the extraction maps are void: split by responsibility. rigDefinition → `domain/rig/<area>.ts` data files + `domain/rig/index.ts` that joins them in today's build order (parity: array order). CSS → one file per panel/layout under `src/styles/`, imported in the same cascade order.
 20. All TypeScript: no .js/.mjs/.cjs anywhere. Configs are .ts (eslint.config.ts via jiti). `declare module '*.glsl?raw'`.
+21. Styles become SCSS in Phase 5 only (QUALITY-5), by the Phase 5 styles owner. No style edits before Phase 5.
+22. `hsv` throws a RangeError for non-finite hue (the original returned `undefined`, which crashed every caller at once). Accepted; listed in known-quirks.
+23. `window.__desk` and `__desk.test` stay behind the runtime `?test` check in all builds, so the parity suite runs against the production preview (departure from plan row 6, which said dev/test builds only).
+24. Render parity includes the order in which three.js objects are created (each consumes seeded `Math.random` via generateUUID). Only the orchestrator approves a new screenshot baseline, after a visual diff review; the PR lists every such approval.
