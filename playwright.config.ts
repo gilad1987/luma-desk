@@ -3,7 +3,9 @@ import { defineConfig } from '@playwright/test';
 // The suite runs against the production build, so it checks what ships. BASE_URL and WEB_SERVER_CMD point it at
 // another server, for example BASE_URL=http://127.0.0.1:5173/ WEB_SERVER_CMD="npm run dev -- --port 5173 --strictPort".
 const PORT = 4173;
-const baseURL = process.env.BASE_URL ?? `http://127.0.0.1:${PORT}/`;
+// page.goto('./?test') resolves against baseURL, so a BASE_URL without its trailing slash would drop the last segment
+const requestedURL = process.env.BASE_URL ?? `http://127.0.0.1:${PORT}/`;
+const baseURL = requestedURL.endsWith('/') ? requestedURL : `${requestedURL}/`;
 const buildAndPreview = `npm run build && npm run preview -- --host 127.0.0.1 --port ${PORT} --strictPort`;
 
 export default defineConfig({
@@ -12,14 +14,16 @@ export default defineConfig({
   timeout: 120_000,
   expect: {
     timeout: 30_000,
-    // 1 % of the pixels may differ, to allow for small rasterization noise of the software renderer
-    toHaveScreenshot: { maxDiffPixelRatio: 0.01 },
+    // Exact colours, and at most 0.1 % of the pixels (1,024 of 1,024,000) may differ. QA measured the run-to-run
+    // noise of the software renderer at 359 pixels or fewer, so a real change of a few hundred pixels still fails.
+    toHaveScreenshot: { threshold: 0, maxDiffPixelRatio: 0.001 },
   },
   fullyParallel: true,
   workers: 2,
   retries: 0,
   reporter: [['list']],
-  snapshotPathTemplate: '{testDir}/__screenshots__/{testFilePath}/{arg}{ext}',
+  // per platform: another OS rasterizes fonts and WebGL differently and needs its own baselines
+  snapshotPathTemplate: '{testDir}/__screenshots__/{platform}/{testFilePath}/{arg}{ext}',
   use: {
     baseURL,
     browserName: 'chromium',
