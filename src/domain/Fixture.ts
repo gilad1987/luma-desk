@@ -1,4 +1,4 @@
-import type { Vector3 } from 'three';
+import type { Quaternion, Vector3 } from 'three';
 import type { AttrName, AttrValues } from './attributes';
 import type { FixtureType, FixtureTypeId } from './FixtureType';
 import { TYPES } from './fixtureTypes';
@@ -48,6 +48,12 @@ export class Fixture {
    * fixtures without a `pix` key at all, as the original plain objects were.
    */
   declare pix?: PixelStrip;
+  /**
+   * The body orientation relative to the rest pose (hanging, beam straight down), set only on fixtures whose design
+   * gives one (G1): circle trusses, rotated trusses and MVR imports. When it is set, `aimAt` and `dirFrom` use it and
+   * ignore `mount` (G2). `declare` keeps the built-in rig without a `rotation` key, so its output stays at parity.
+   */
+  declare rotation?: Quaternion;
 
   constructor(id: number, type: FixtureTypeId, pos: Vector3, mount: Mount, fixed: PanTilt | null) {
     this.id = id;
