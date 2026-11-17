@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
-import type { ShippedFile } from './cacheName.ts';
+import type { ShippedFile } from './shippedFile.ts';
 
 /** Dotfiles such as .nojekyll configure the host; static servers often refuse them, and one 404 fails install (I9). */
 const isHostConfig = (name: string): boolean => name.split('/').some((part) => part.startsWith('.'));

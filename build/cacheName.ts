@@ -1,10 +1,5 @@
 import { createHash } from 'node:crypto';
-
-/** One file the build ships, by its path from the dist root (forward slashes) and its bytes. */
-export interface ShippedFile {
-  readonly name: string;
-  readonly content: string | Uint8Array;
-}
+import type { ShippedFile } from './shippedFile.ts';
 
 /** Hex digits kept from the SHA-256: short enough to read in DevTools, long enough that two deploys never collide. */
 const HASH_LENGTH = 10;

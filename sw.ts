@@ -19,12 +19,6 @@ const SHELL = __SW_SHELL__;
 /** The cached page every navigation falls back to offline (quirk I2: any page response is stored under it). */
 const PAGE = './index.html';
 
-/**
- * Quirk I5: offline with nothing cached the promise resolves to undefined, and respondWith turns that into a network
- * error, as the old worker did. The cast states that on purpose instead of changing the outcome.
- */
-const orNetworkError = (response: Promise<Response | undefined>): Promise<Response> => response as Promise<Response>;
-
 /** Pages: network first, so updates show up immediately; the stored page when offline. */
 function networkFirstPage(request: Request): Promise<Response> {
   const page = fetch(request).then((response) => {
@@ -33,7 +27,9 @@ function networkFirstPage(request: Request): Promise<Response> {
     void caches.open(CACHE).then((cache) => cache.put(PAGE, copy));
     return response;
   });
-  return orNetworkError(page.catch(() => caches.match(PAGE)));
+  // quirk I5: offline with no stored page this resolves to undefined, and respondWith turns that into a network
+  // error, as the old worker did; the cast keeps that outcome on purpose
+  return page.catch(() => caches.match(PAGE)) as Promise<Response>;
 }
 
 /** Everything else: the cached copy at once (query string ignored, quirk I4), refreshed from the network. */
@@ -49,7 +45,8 @@ function staleWhileRevalidate(request: Request): Promise<Response> {
       .catch(() => hit);
     return hit ?? net;
   });
-  return orNetworkError(response);
+  // quirk I5: undefined offline with nothing cached, which respondWith turns into a network error
+  return response as Promise<Response>;
 }
 
 // quirk I9: one failed file fails the whole install; quirk I8: the new worker takes over at once
