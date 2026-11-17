@@ -10,10 +10,14 @@ const SCREEN_HIT_DEPTH = 0.05;
 
 /**
  * The boxes that beams land on (G6): the deck top, each riser top and each LED wall front, in that order. The renderer
- * hit-tests them instead of the fixed venue numbers, so beams land on decks and risers of any size.
+ * hit-tests them instead of the fixed venue numbers, so beams land on decks and risers of any size. A hidden scenery
+ * part gives no boxes (the deck hides its risers too, the LED wall its fronts), so no beam spot floats on a part that
+ * is not drawn.
  */
 export function surfacesOf(d: StageDesign): SurfaceBox[] {
-  return [deckTop(d.deck), ...d.risers.map(riserTop), ...d.screens.map((s) => screenFront(s, d.deck.height))];
+  const deckBoxes = d.scenery.deck ? [deckTop(d.deck), ...d.risers.map(riserTop)] : [];
+  const screenBoxes = d.scenery.ledWall ? d.screens.map((s) => screenFront(s, d.deck.height)) : [];
+  return [...deckBoxes, ...screenBoxes];
 }
 
 function deckTop(deck: StageDeck): SurfaceBox {

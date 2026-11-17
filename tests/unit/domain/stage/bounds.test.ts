@@ -1,15 +1,16 @@
 /**
- * Owns `boundsOf` (G7): the deck alone, the built-in rings, fixtures and every truss kind, including a rotated truss,
- * must all fall inside the box the camera fits to.
+ * Owns `boundsOf` (G7): the deck alone, fixtures, every truss kind (including a rotated truss), the LED wall and the
+ * turned side screens of the built-in stage must all fall inside the box the camera fits to.
  */
 import { describe, expect, it } from 'vitest';
 import { boundsOf } from '../../../../src/domain/stage/bounds.ts';
+import { createTemplate } from '../../../../src/domain/stage/templates/index.ts';
 import type { StageTruss } from '../../../../src/domain/stage/trussTypes.ts';
-import { RING } from '../../../../src/domain/venue.ts';
-import { VENUE_DESIGN } from './venueDesign.ts';
+import { SCREEN } from '../../../../src/domain/venue.ts';
 
+const design = createTemplate('sultans-pool');
 const smallDeck = { x0: -1, x1: 1, z0: -1, z1: 1, height: 1 };
-const bare = { ...VENUE_DESIGN, deck: smallDeck, screens: [], trusses: [] };
+const bare = { ...design, deck: smallDeck, screens: [], trusses: [], fixtures: [] };
 const truss = (params: StageTruss['params'], rotation?: StageTruss['transform']['rotation']): StageTruss => ({
   id: params.kind,
   name: params.kind,
@@ -23,8 +24,24 @@ describe('boundsOf', () => {
     expect(boundsOf(bare)).toEqual({ min: [-1, 0, -1], max: [1, 1, 1] });
   });
 
-  it('covers the built-in deck and the inner ring height', () => {
-    expect(boundsOf(VENUE_DESIGN)).toEqual({ min: [-23, 0, -21], max: [23, RING.y2, 0.6] });
+  it('reaches the outer edges of the built-in side screens at x ±33.5, turned by their yaw', () => {
+    const edge = 33.5 + 6 * Math.cos(0.38);
+    const box = boundsOf(design);
+    expect(box.min[0]).toBeCloseTo(-edge, 12);
+    expect(box.max[0]).toBeCloseTo(edge, 12);
+    expect(boundsOf({ ...design, screens: [] }).max[0]).toBeLessThan(33.5);
+  });
+
+  it('joins the LED wall corners and a side screen centred on its position', () => {
+    const [wall] = design.screens;
+    if (!wall) throw new Error('the template has no LED wall');
+    expect(boundsOf({ ...bare, screens: [{ ...wall, sides: [] }] })).toEqual({
+      min: [SCREEN.x0, 0, SCREEN.z],
+      max: [SCREEN.x1, SCREEN.y1, 1],
+    });
+    const side = { at: [30, 4, 5], yaw: Math.PI / 2, width: 4, height: 6 } as const;
+    const { max } = boundsOf({ ...bare, screens: [{ ...wall, sides: [side] }] });
+    [30, SCREEN.y1, 7].forEach((v, i) => expect(max[i]).toBeCloseTo(v, 12));
   });
 
   it('joins fixture positions', () => {

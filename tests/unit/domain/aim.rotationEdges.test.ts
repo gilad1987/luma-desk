@@ -1,8 +1,8 @@
 /**
  * Owns the edge poses of the G2 rotation path in `aimAt` and `dirFrom`: half turns (the inverse quaternion is the
  * least stable there) and a floor mount that a rotation must override. Tilt-only bars are in
- * aim.tiltOnlyRotation.test.ts; the random round trip and the no-rotation goldens live in aim.test.ts. Non-unit
- * quaternions are the parser's job (it normalizes on read), so they are not covered here.
+ * aim.tiltOnlyRotation.test.ts; the random round trip lives in aim.rotation.test.ts. Non-unit quaternions are made
+ * unit before they reach a fixture (the parser and `rigFromDesign` normalize them), so they are not covered here.
  */
 import { Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';

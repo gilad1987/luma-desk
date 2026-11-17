@@ -1,7 +1,7 @@
 /**
  * Owns tilt-only bars (LED bars) with a G2 rotation: such a bar only tilts in its own Y-Z plane, so `aimAt` must find
  * the tilt in the turned plane, keep pan at 0 and ignore `mount`. Spots and washes with a rotation are covered in
- * aim.rotationEdges.test.ts and aim.test.ts.
+ * aim.rotationEdges.test.ts and aim.rotation.test.ts.
  */
 import { Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
@@ -47,10 +47,11 @@ describe('tilt-only bar with a rotation (G2)', () => {
     }
   });
 
-  it('ignores a floor mount on a rotated bar', () => {
-    const rotation = turn(new Vector3(0, 0, 1), 0.7);
-    const hang = { ...bar, rotation };
-    const floor = { ...bar, mount: 'floor' as const, rotation };
-    expect(aimAt(floor, 4, 1, 9)).toEqual(aimAt(hang, 4, 1, 9));
+  it('ignores a floor mount on a rotated bar, also on a half turn about Z', () => {
+    for (const rotation of [turn(new Vector3(0, 0, 1), 0.7), new Quaternion(0, 0, 1, 0)]) {
+      const hang = { ...bar, rotation };
+      const floor = { ...bar, mount: 'floor' as const, rotation };
+      for (const [x, y, z] of TARGETS) expect(aimAt(floor, x, y, z)).toEqual(aimAt(hang, x, y, z));
+    }
   });
 });

@@ -50,7 +50,8 @@ export class Fixture {
   declare pix?: PixelStrip;
   /**
    * The body orientation relative to the rest pose (hanging, beam straight down), set only on fixtures whose design
-   * gives one (G1): circle trusses, rotated trusses and MVR imports. When it is set, `aimAt` and `dirFrom` use it and
+   * gives one (G1): circle trusses, rotated trusses and MVR imports. It is always unit (`rigFromDesign` normalizes it),
+   * because `aimAt` inverts it by its conjugate. When it is set, `aimAt` and `dirFrom` use it and
    * ignore `mount` (G2). `declare` keeps the built-in rig without a `rotation` key, so its output stays at parity.
    */
   declare rotation?: Quaternion;
