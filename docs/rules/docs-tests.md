@@ -145,6 +145,13 @@ order'`. [lint] ESLint `no-restricted-syntax` on
   user controls; the `#id` the app owns (`byId`, decision D2) where the control has no name (canvas, sheet cells). A
   CSS class selector needs a comment saying why. [review] Source: test:637-643 (adapted; see C5).
 
+**Where suites run**
+
+- **T28. The screenshot suite is a required local check; CI runs the rest.** Its baselines are macOS only, so CI
+  (`npm run test:e2e:ci`, Linux) skips every test tagged `@screenshot`. Run `npm run test:screenshots` on macOS before
+  a change that can move a pixel (styles, render, ui, layout, fonts) and say in the PR body that it passed. A new
+  screenshot test gets the `@screenshot` tag; a test without it must pass on Linux. [review] Source: ADR 0004.
+
 ### 1.3 i18n (`src/i18n/he.ts`)
 
 - **I1. Every script Hebrew string lives in `he.ts`.** Static markup Hebrew stays in `index.html` (D3); English

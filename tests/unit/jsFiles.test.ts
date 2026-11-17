@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findJsFiles } from '../../scripts/jsFiles.ts';
+import { findJsFiles, readTrackedFiles } from '../../scripts/jsFiles.ts';
 
 // Owns the path filter of `npm run check:no-js`; reading the file list from git is left to the script itself.
 describe('findJsFiles', () => {
@@ -14,5 +14,18 @@ describe('findJsFiles', () => {
 
   it('does not match an extension that only starts like one', () => {
     expect(findJsFiles(['data.json', 'notes.jsx.md', 'types.d.ts'])).toEqual([]);
+  });
+});
+
+describe('readTrackedFiles', () => {
+  it('splits the NUL-separated ls-files output and drops the trailing empty entry', () => {
+    expect(readTrackedFiles(() => 'src/main.ts\0sw.ts\0')).toEqual(['src/main.ts', 'sw.ts']);
+  });
+
+  it('turns a git failure into one line that names the missing checkout', () => {
+    const noCheckout = (): string => {
+      throw new Error('fatal: not a git repository (or any of the parent directories): .git');
+    };
+    expect(() => readTrackedFiles(noCheckout)).toThrow(/^check:no-js needs a git checkout \(git ls-files\)$/);
   });
 });
