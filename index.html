@@ -273,13 +273,15 @@ body.ma #desk,body.ma #app>#enc,body.ma #console{display:none}
 /* the console stands at the control position in front of the operator: an overlay on the bottom of the stage view;
    only its planes take pointer events, so the stage stays usable around and above it */
 body.ma #maConsole{display:block;position:fixed;left:0;right:0;bottom:0;z-index:4;pointer-events:none;background:none;overflow:hidden}
-/* the control platform the console stands on: a dark floor in perspective with a lit front edge, plus the contact shadow */
-body.ma #maConsole::before{content:'';position:absolute;left:0;right:0;bottom:0;height:calc(var(--ch,470px) * .58);clip-path:polygon(0 100%,3% 0,97% 0,100% 100%);
-  background:radial-gradient(42% 90% at 50% 100%,#000 0%,#000c 60%,transparent 100%),linear-gradient(#3a3a42 0,#1a1a1f 3px,#0d0d10 30%,#060607)}
+/* the low riser the console stands on: console width (--cw, set by fitDesk) plus a margin, its edges masked so it fades into the audience */
+body.ma #maConsole::before{content:'';position:absolute;left:50%;bottom:0;width:calc(var(--cw,1600px) * 1.12 + 60px);height:calc(var(--ch,470px) * .5);transform:translateX(-50%);
+  background:radial-gradient(48% 75% at 50% 100%,#000 0%,#000b 65%,transparent 100%),linear-gradient(#34343c 0,#18181d 3px,#0c0c0f 30%,#060607);
+  mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent),linear-gradient(transparent,#000 10%);mask-composite:intersect}
 .maScreens,.maDeck{pointer-events:auto}
 /* structural faces never take the pointer: in 3D they can lie in front of keys in hit testing */
 .maCheek,.maHinge,.maRest,.maFront,.maScreens::before{pointer-events:none}
 body.ma #cueHud{bottom:calc(var(--ch,0px) + 10px)}
+body.ma #deskZoom{display:none}
 body.ma #viewHint{top:8px;bottom:auto;padding:4px 8px;border-radius:6px;background:#000b;color:#ffffffa8}
 #maGrip{position:absolute;left:50%;top:1px;width:120px;height:9px;margin-left:-60px;border-radius:0 0 5px 5px;cursor:ns-resize;touch-action:none;background:linear-gradient(#5a5a62,#2a2a2f);box-shadow:inset 0 1px 0 #ffffff40}
 #maGrip:hover,#maGrip.on{background:linear-gradient(#ffd65a,#a07800)}
@@ -306,12 +308,12 @@ body.ma #viewHint{top:8px;bottom:auto;padding:4px 8px;border-radius:6px;backgrou
 /* the deck slopes toward the operator; the two large screens glow onto its top */
 .maDeck{position:relative;transform-style:preserve-3d;transform-origin:50% 0;transform:rotateX(52deg);padding:0 34px;
   background:linear-gradient(#000c,transparent 34px),radial-gradient(30% 90px at 27% 0,#5a8cff22,transparent),radial-gradient(30% 90px at 73% 0,#5a8cff22,transparent),linear-gradient(#19191c,#101012 35%,#0c0c0e)}
-.dhead{display:flex;justify-content:space-between;align-items:center;height:22px;padding:0 8px;background:linear-gradient(#1b2433,#121925);border-bottom:1px solid #000;font:700 12px var(--mono);letter-spacing:.14em;color:#8fb3e6;flex:0 0 auto}
+.dhead{display:flex;justify-content:space-between;align-items:center;height:22px;padding:0 8px;background:linear-gradient(#1b2433,#121925);border-bottom:1px solid #000;font:700 12.5px var(--mono);letter-spacing:.14em;color:#8fb3e6;flex:0 0 auto}
 .dhead b{color:var(--acc);font-weight:700;letter-spacing:.06em}
 .dslot{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 .dsplit{flex-direction:row}
 .dcmd{flex:0 0 auto;display:flex;flex-direction:column;background:#03050a;border-top:1px solid #1b2433;padding-bottom:6px}
-.dsub{display:flex;justify-content:space-between;height:19px;padding:0 8px;background:#0c121c;font:700 12px/19px var(--mono);letter-spacing:.14em;color:#6f8db8}
+.dsub{display:flex;justify-content:space-between;height:19px;padding:0 8px;background:#0c121c;font:700 12.5px/19px var(--mono);letter-spacing:.14em;color:#6f8db8}
 .dsub b{color:var(--acc);letter-spacing:.04em}
 body.ma #side{flex:1;min-height:0;background:#06080c}
 body.ma .tabs{background:#0d111a}
@@ -319,33 +321,37 @@ body.ma #sideTabs [data-t=pools]{display:none}
 body.ma .tabs button{padding:3px 0;font-size:12px}
 body.ma .pane{padding:6px}
 body.ma #pane-pools{display:block;flex:1;min-width:0;overflow:auto;padding:4px 8px;background:#06080c}
-body.ma .pool{grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;margin-bottom:4px}
-body.ma .ptitle{margin:2px 2px 3px;font-size:12px}
-body.ma .ptitle button{font-size:12px}
-body.ma .slot{height:44px;padding:1px 4px;border-radius:3px;background:#111722;border-color:#1d2638}
-body.ma .slot .n{font-size:12px;line-height:13px}
-body.ma .slot .t{font-size:12px;line-height:13px;letter-spacing:-.035em}
+body.ma .pool{grid-template-columns:repeat(10,minmax(0,1fr));gap:3px;margin-bottom:4px}
+body.ma .ptitle{margin:2px 2px 3px;font-size:12.5px}
+body.ma .ptitle button{font-size:12.5px}
+/* the groups grid scrolls by itself, so the Presets header and a full preset row stay visible on screen 2 */
+body.ma #groupPool{max-height:150px;overflow-y:auto}
+body.ma .slot{height:auto;min-height:44px;padding:1px 4px;border-radius:3px;background:#111722;border-color:#1d2638}
+body.ma .slot .n{font-size:12.5px;line-height:13px}
+body.ma .slot .t{font-size:12.5px;line-height:14px;letter-spacing:-.035em;-webkit-line-clamp:3}
 body.ma .slot .sw{width:9px;height:9px;right:3px;top:3px}
 body.ma .slot .gi{width:13px;height:13px}
-body.ma #encExtra{flex:0 0 250px;width:250px;padding:8px 10px;gap:10px;overflow:auto;flex-wrap:wrap;align-content:flex-start;background:#090c12;border-left:1px solid #1b2433}
+body.ma #encExtra{flex:0 0 200px;width:200px;padding:8px 10px;gap:10px;overflow:auto;flex-wrap:wrap;align-content:flex-start;background:#090c12;border-left:1px solid #1b2433}
 body.ma .fxGrid{grid-template-columns:repeat(3,1fr)}
 body.ma .goboRow{max-width:none}
-body.ma .hint{max-width:none;font-size:12px}
-body.ma #encExtra .xlabel{font-size:12px}
+body.ma .hint{max-width:none;font-size:12.5px}
+body.ma #encExtra .xlabel{font-size:12.5px}
 body.ma #encExtra button{font-size:12.5px}
 body.ma #cmdFb{height:21px;flex:0 0 auto;padding:2px 10px 1px;font-size:13px;line-height:17px;color:#9aa0a8;overflow:hidden}
 body.ma .cmdrow{margin:0 8px;height:27px;border-color:#2a3446;background:#02040a}
 body.ma .cmdrow>*{font-size:13px}
 /* the Fixture Sheet scrolls in whole rows under its sticky header */
-body.ma #pane-sheet{padding:0 6px;scroll-snap-type:y mandatory;scroll-padding-top:21px}
-body.ma #sheet th{top:0;padding:3px 6px;font-size:12px}
-body.ma #sheet td{height:20px;padding:0 6px;line-height:19px;font-size:12.5px}
+body.ma #pane-sheet{padding:0 6px;scroll-snap-type:y mandatory;scroll-padding-top:22px}
+/* header plus exactly six rows: no half row above the command area */
+body.ma #pane-sheet.on{flex:0 0 148px}
+body.ma #sheet th{top:0;height:22px;padding:0 6px;font-size:12.5px}
+body.ma #sheet td{height:21px;padding:0 6px;line-height:20px;font-size:12.5px;border-bottom:0;box-shadow:inset 0 -1px #1b1b1f}
 body.ma #sheet tr[data-id]{scroll-snap-align:start}
 .maHinge{position:relative;height:10px;margin:0 -34px;background:linear-gradient(#f4f4f8,#b8b8c0 30%,#6a6a72 75%,#2a2a2e);box-shadow:0 4px 8px #000}
 /* control surface */
 .maSurface{display:grid;grid-template-columns:965px minmax(0,1fr) 232px;gap:10px;height:396px;padding:8px 0 0}
 .srf{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;padding:25px 8px 6px;border-radius:8px;background:#0f0f11;box-shadow:inset 0 1px 0 #ffffff14,inset 0 0 0 1px #050506,0 2px 4px #0008}
-.slab{position:absolute;left:12px;top:4px;font:700 15.5px var(--mono);letter-spacing:.2em;color:#7e7e88}
+.slab{position:absolute;left:12px;top:4px;font:700 16.5px var(--mono);letter-spacing:.2em;color:#7e7e88}
 .slab.s2{left:306px}
 /* hardware keys */
 body.ma .keys button,body.ma .keypad button,body.ma #featTabs button,body.ma .ex-btns button,body.ma .mRow button,body.ma .ex-off,body.ma .ex-sel{
@@ -356,7 +362,7 @@ body.ma .keys button.on,body.ma #featTabs button.on{color:#ffd65a;box-shadow:0 2
 body.ma .keys .store{color:#ff9a9a}
 body.ma .keys .store.on{background:linear-gradient(#6a1414,#3e0a0a);color:#fff;box-shadow:0 2px 0 #040405,inset 0 0 12px rgba(255,64,64,.7)}
 body.ma .keypad .n{background:linear-gradient(#45454b,#2e2e33);color:#fff;font-size:21px}
-body.ma .keypad .w{background:linear-gradient(#2f3445,#20242f);color:#c4ceff;font-size:13.5px;letter-spacing:-.04em}
+body.ma .keypad .w{background:linear-gradient(#2f3445,#20242f);color:#c4ceff;font-size:13.5px;letter-spacing:-.06em}
 body.ma .keypad .bk{font-size:17px}
 body.ma .keypad .en{background:linear-gradient(#2f7c49,#1b5631);color:#eafff0;font-size:16px;box-shadow:0 2px 0 #040405,inset 0 0 10px rgba(80,255,140,.35)}
 body.ma .keys{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;flex:0 0 auto}
@@ -364,35 +370,37 @@ body.ma .keys button{height:30px;font-size:13.5px;font-weight:700;letter-spacing
 body.ma .keypad{grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:1fr;gap:4px;flex:1}
 body.ma .keypad button{min-height:0}
 /* fader wing: one letterbox LCD across all columns, then keys / fader / keys per column */
-.maLcd{position:absolute;left:5px;right:5px;top:22px;height:93px;border-radius:5px;border:3px solid #030304;background:#070a10;box-shadow:0 0 0 1px #2a2a30,inset 0 0 14px #000;pointer-events:none}
+.maLcd{position:absolute;left:5px;right:5px;top:22px;height:108px;border-radius:5px;border:3px solid #030304;background:#070a10;box-shadow:0 0 0 1px #2a2a30,inset 0 0 14px #000;pointer-events:none}
 .maFaders{position:relative;z-index:1;flex:1;display:flex;gap:14px;min-height:0}
-.maSpecs{flex:0 0 calc((100% - 2px) * 4.4 / 14.4 - 6px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0 6px;min-width:0}
+.maSpecs{flex:0 0 calc((100% - 2px) * 4.4 / 14.4 - 6px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0 4px;min-width:0}
 #pbSlot{flex:1;display:flex;min-width:0;min-height:0}
-body.ma #execs{flex:1;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:0 6px;padding:0;min-height:0}
-body.ma .ex,.spc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:21px 20px 32px 16px 34px minmax(0,1fr) 30px 30px;column-gap:4px;min-width:0;min-height:0}
+body.ma #execs{flex:1;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:0 2px;padding:0;min-height:0}
+body.ma .ex,.spc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:21px 33px 34px 16px 34px minmax(0,1fr) 30px 30px;column-gap:3px;min-width:0;min-height:0}
 body.ma .ex{background:none;border:0;border-radius:0;overflow:visible}
 body.ma .ex.sel{box-shadow:none}
 body.ma .ex-top,body.ma .ex-mid,body.ma .ex-btns{display:contents}
 body.ma .ex-num,body.ma .ex-name,body.ma .ex-cue,body.ma .ex-lvl,.spc>span{grid-column:1/3;min-width:0;padding:0 4px;background:#0d141f;white-space:nowrap;overflow:hidden}
-body.ma .ex-num,.spc .sk{grid-row:1;font:600 15.5px/21px var(--mono);color:#e3c45a;border-radius:3px 3px 0 0}
-body.ma .ex-name,.spc .sn{grid-row:2;font:600 17px/20px Inter,sans-serif;letter-spacing:-.03em;color:#e6edf7;text-overflow:ellipsis}
-body.ma .ex-cue{grid-row:3;height:auto;margin:0;border:0;padding:1px 4px;font-size:14.5px;line-height:15px;background:#0d141f}
-body.ma .ex-lvl,.spc .sl{grid-row:4;font:14.5px/16px var(--mono);text-align:right;color:#8fa0b8;border-radius:0 0 3px 3px;
+body.ma .ex-num,.spc .sk{grid-row:1;font:600 16px/21px var(--mono);color:#e3c45a;border-radius:3px 3px 0 0}
+body.ma .ex-name,.spc .sn{grid-row:2;font:600 15.5px/16px Inter,sans-serif;letter-spacing:-.03em;color:#e6edf7;text-overflow:ellipsis}
+/* executor names take two lines on the LCD */
+body.ma .ex-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;padding:1px 2px 0;white-space:normal}
+body.ma .ex-cue{grid-row:3;height:auto;margin:0;border:0;padding:1px;font-size:15px;line-height:16px;letter-spacing:-.03em;background:#0d141f}
+body.ma .ex-lvl,.spc .sl{grid-row:4;font:15px/16px var(--mono);text-align:right;color:#8fa0b8;border-radius:0 0 3px 3px;
   background:linear-gradient(90deg,var(--lc,#22c55e) calc(var(--lv,0) * 100%),#1c2533 0) bottom/100% 2px no-repeat,#0d141f}
 body.ma .ex.sel .ex-num,body.ma .ex.sel .ex-name{background:#2e2505;color:#ffd65a}
 body.ma .ex.on .ex-num{box-shadow:inset 0 -1px 0 var(--go)}
-body.ma .ex-sel,body.ma .ex-off{grid-row:5;align-self:end;height:26px;padding:0;font-size:14.5px;font-weight:800;line-height:1}
+body.ma .ex-sel,body.ma .ex-off{grid-row:5;align-self:end;height:26px;padding:0;font-size:14.5px;font-weight:800;line-height:1;letter-spacing:-.04em}
 body.ma .ex-sel{display:block;grid-column:1}
 body.ma .ex-off{grid-column:2;font-size:15px}
 body.ma .ex .fader,.spc .fader{grid-row:6;grid-column:1/3;justify-self:center;margin:12px 0}
-body.ma .ex-btns button{align-self:end;height:26px;padding:0;font-size:13px;font-weight:800;letter-spacing:-.04em}
+body.ma .ex-btns button{align-self:end;height:26px;padding:0;font-size:13px;font-weight:800;letter-spacing:-.06em}
 body.ma .ex-btns .b-back{grid-row:7;grid-column:1}
 body.ma .ex-btns .b-go{grid-row:7;grid-column:2;color:#8dffb5;background:linear-gradient(#2c3a31,#1c261f);box-shadow:0 2px 0 #040405,inset 0 0 8px rgba(60,255,130,.28)}
 body.ma .ex-btns .b-flash{grid-row:8;grid-column:1/3}
 body.ma .ex.on .ex-btns .b-go{box-shadow:0 2px 0 #040405,inset 0 0 12px rgba(60,255,130,.7);color:#fff}
 body.ma .ex-btns .b-flash.on{background:#fff;color:#000}
 .spc{--lc:var(--acc)}
-.spc .sn{color:#ffd98a;padding:0 1px;font-size:15px;letter-spacing:-.04em;text-overflow:clip}
+.spc .sn{color:#ffd98a;padding:0 1px;font-size:15.5px;line-height:33px;letter-spacing:-.04em;text-overflow:clip}
 .spc .sv{grid-row:3;font:600 20px/32px var(--mono);color:#fff}
 body.ma .fader{width:30px;border:0;border-radius:3px;background:linear-gradient(90deg,#030304,#101012 50%,#030304);box-shadow:inset 0 0 0 1px #000,0 1px 0 #ffffff10}
 body.ma .fader::before{content:'';position:absolute;left:50%;top:6px;bottom:6px;width:2px;margin-left:-1px;background:#000;box-shadow:0 0 0 1px #222}
@@ -413,7 +421,7 @@ body.ma #featTabs button.has::after{right:4px;top:4px;margin:0;width:5px;height:
 body.ma #encoders{flex:1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;align-items:start}
 body.ma .encoder{width:auto;gap:6px}
 body.ma .encoder .lb,body.ma .encoder .val{width:100%;max-width:140px;text-align:center;background:#0d141f;border:2px solid #030304;box-shadow:0 0 0 1px #2a2a30}
-body.ma .encoder .lb{order:-2;margin-bottom:-6px;padding:2px 0 0;border-bottom:0;border-radius:4px 4px 0 0;font:700 14.5px var(--mono);letter-spacing:.1em;color:#8fb3e6;clip-path:inset(-2px -2px 0 -2px)}
+body.ma .encoder .lb{order:-2;margin-bottom:-6px;padding:2px 0 0;border-bottom:0;border-radius:4px 4px 0 0;font:700 15.5px var(--mono);letter-spacing:.1em;color:#8fb3e6;clip-path:inset(-2px -2px 0 -2px)}
 body.ma .encoder .val{order:-1;border-top:0;border-radius:0 0 4px 4px;color:#8ff0b0;font-size:16px;min-width:0;clip-path:inset(0 -2px -2px -2px)}
 body.ma .encoder .val.p{color:#ff6b6b;background:#140606}
 body.ma .knob{width:76px;height:76px;margin-top:6px;border:0;
@@ -431,15 +439,15 @@ body.ma .knob .ind{top:9px;height:20px;transform-origin:1px 30px;background:#ffd
 .tbody canvas{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:0}
 #tsPosNone{left:auto;bottom:auto;top:0}
 .tmk{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px #000,0 0 6px #000;pointer-events:none;display:none}
-.tnone{position:absolute;left:0;right:0;bottom:0;padding:2px 6px;background:#000c;font:700 13px var(--mono);letter-spacing:.04em;color:#ff9a9a;text-align:center;pointer-events:none}
+.tnone{position:absolute;left:0;right:0;bottom:0;padding:2px 6px;background:#000c;font:700 13.5px var(--mono);letter-spacing:.04em;color:#ff9a9a;text-align:center;pointer-events:none}
 #kpSlot{flex:1;display:flex;min-width:0;min-height:0}
 /* master: GO section, grand master and level wheel */
 .maMs{flex-direction:row;gap:8px}
 #msSlot{flex:1;display:flex;min-width:0}
 body.ma #master{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:8px;padding:0;border:0}
 body.ma .mGo{justify-content:flex-end;gap:6px;min-width:0}
-body.ma .mGo .sx{margin-bottom:auto;padding:5px 6px;border:2px solid #030304;border-radius:4px;background:#0d141f;box-shadow:0 0 0 1px #2a2a30;font:600 15px/1.35 var(--mono);color:#8fb3e6;letter-spacing:.04em;overflow:hidden}
-body.ma .mGo .sx b{display:block;color:var(--acc);font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.ma .mGo .sx{margin-bottom:auto;padding:5px 6px;border:2px solid #030304;border-radius:4px;background:#0d141f;box-shadow:0 0 0 1px #2a2a30;font:600 15.5px/1.35 var(--mono);color:#8fb3e6;letter-spacing:.04em;overflow:hidden}
+body.ma .mGo .sx b{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;color:var(--acc);font-size:16px;overflow:hidden}
 body.ma #goBig{flex:0 0 112px;border-radius:8px;font-size:30px;border:1px solid #0a0a0b;background:linear-gradient(#2b7a47,#165530);color:#e6fff0;box-shadow:0 4px 0 #040405,inset 0 0 22px rgba(80,255,140,.45),inset 0 1px 0 rgba(255,255,255,.25)}
 body.ma #goBig:active{box-shadow:0 2px 0 #040405,inset 0 0 26px rgba(80,255,140,.6)}
 body.ma .mRow{gap:4px}
@@ -457,7 +465,23 @@ body.ma .gm .lb,body.ma #gmVal{font-size:15.5px}
 .maFront{position:absolute;left:0;right:0;top:100%;height:30px;transform-origin:50% 0;transform:rotateX(calc(-1 * 52deg));
   display:flex;align-items:center;justify-content:center;border-radius:0 0 6px 6px;background:linear-gradient(#3a3a40,#16161a 10%,#0b0b0c);
   font:800 13px Inter,sans-serif;letter-spacing:.55em;color:#6a6a72}
-.maFront::after{content:'';position:absolute;left:-4%;right:-4%;top:100%;height:18px;background:radial-gradient(50% 100% at 50% 0,#000,transparent);pointer-events:none}
+.maFront::after{content:'';position:absolute;left:0;right:0;top:100%;height:18px;background:radial-gradient(50% 100% at 50% 0,#000,transparent);pointer-events:none}
+/* Auto Show on screen 1: three columns, so START, the BPM and the change rate are visible without scrolling */
+body.ma #pane-auto.on{display:grid;grid-template-columns:300px minmax(0,1fr) 250px;grid-template-areas:"top ttl btn" "ctl sty mus" "chk sty st";grid-template-rows:auto auto 1fr;gap:4px 10px;align-content:start}
+body.ma #pane-auto .autoTop{grid-area:top;margin:0}
+body.ma #pane-auto .autoGo{height:34px;font-size:13px}
+body.ma #pane-auto .beatBox{width:110px;gap:3px}
+body.ma #pane-auto>.ptitle{grid-area:ttl;align-self:end;margin:0 2px}
+body.ma #pane-auto .styles{grid-area:sty;margin:0}
+body.ma #pane-auto .style b{font-size:12.5px}
+body.ma #pane-auto .style span{font-size:12px}
+body.ma #pane-auto .ctl{grid-area:ctl;margin:0;grid-template-columns:96px 1fr 34px;gap:3px 6px;font-size:12px}
+body.ma #pane-auto .ctl output{font-size:12px}
+body.ma #pane-auto .chk{grid-area:chk;margin:0;gap:4px 10px;font-size:12px}
+body.ma #pane-auto .autoBtns{grid-area:btn;margin:0}
+body.ma #pane-auto .autoBtns button{font-size:12px}
+body.ma #pane-auto .music{grid-area:mus;margin:0;font-size:12px}
+body.ma #autoStatus{grid-area:st}
 /* guide */
 #guide{position:fixed;inset:0;background:#000d;z-index:70;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
 #guide.show{display:flex}
@@ -832,7 +856,7 @@ const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 1600);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true; controls.dampingFactor = .08; controls.maxPolarAngle = Math.PI * .495;
 const VIEWS = {
-  foh: { p: [0, 16, 74], t: [0, 9, -8] }, fohMa: { p: [0, 3.2, 49.5], t: [0, 7.5, -8] }, front: { p: [0, 6, 28], t: [0, 10, -10] }, stage: { p: [4, DECK + 1.8, -5], t: [-2, 6, 30] },
+  foh: { p: [0, 16, 74], t: [0, 9, -8] }, fohMa: { p: [0, 3.2, 49.5], t: [0, 9.5, -8], fov: 60 }, front: { p: [0, 6, 28], t: [0, 10, -10] }, stage: { p: [4, DECK + 1.8, -5], t: [-2, 6, 30] },
   top: { p: [0, 86, -9], t: [0, 0, -9.1] }, side: { p: [62, 13, -8], t: [0, 9, -8] }, crowd: { p: [-5, 2.3, 16], t: [0, 13, -10] },
   band: { p: [2.5, 5, 10], t: [0, 3, -9] }, ring: { p: [0, DECK + 1.7, 3], t: [0, 17, -9.5] }, walls: { p: [0, 30, 96], t: [0, 14, -20] }, wide: { p: [-30, 40, 120], t: [0, 6, -5] }, aud: { p: [0, 15, 1], t: [0, 2, 46] }, drums: { p: [2.2, DECK + 3.2, -5.5], t: [0, DECK + 1, -12.4] }, valley: { p: [55, 34, 98], t: [-30, 8, -10] }, orch: { p: [0, 9, 2], t: [-15.5, 2.4, -12] },
 };
@@ -842,6 +866,8 @@ let curView = 'foh', fohRig = [];
 function setView(v, instant) {
   const ma = v === 'foh' && document.body.classList.contains('ma'), V = VIEWS[ma ? 'fohMa' : v]; if (!V) return;
   curView = v; for (const m of fohRig) m.visible = !ma;
+  // the wider lens of the MA control position keeps the whole roof above the console
+  camera.fov = V.fov || 46; camera.updateProjectionMatrix();
   const from = { p: camera.position.clone(), t: controls.target.clone() }, to = { p: new V3(...V.p), t: new V3(...V.t) };
   if (instant) { camera.position.copy(to.p); controls.target.copy(to.t); controls.update(); return; }
   const t0 = performance.now();
@@ -2514,7 +2540,7 @@ const GUIDE = [
   <h3>לוק ראשון משלך</h3>
   <ol class="steps">
   <li>לחץ <b>CLEAR</b> פעמיים ברצף כדי להתחיל מפרוגרמר נקי.</li>
-  <li>בחר גופים: בטאב <b>Pools</b> בצד ימין לחץ על הקבוצה <b>24 Ring Beams</b> (הבימים בעיגול). הם יסומנו בצהוב בבמה.</li>
+  <li>בחר גופים: ב־<b>Pools</b> (ב־Classic בפאנל הימני, ב־Desk ב־SCREEN משמאל, ב־Console (MA) במסך 2) לחץ על הקבוצה <b>24 Ring Beams</b> (הבימים בעיגול). הם יסומנו בצהוב בבמה.</li>
   <li>תן להם אור: בשורת הפקודה למטה הקלד ${CD('At Full')} ו־${K('Enter')}.</li>
   <li>צבע: בטאב התחתון <b>Color</b> לחץ על ריבוע הציאן, או ב־Presets בחר את הטאב <b>4 Color</b> ולחץ על <b>Cyan</b>.</li>
   <li>מיקום: ב־Presets בחר <b>2 Position</b> ולחץ על <b>Ring Cone</b>. הבימים מתכנסים לחרוט.</li>
@@ -2528,7 +2554,7 @@ const GUIDE = [
   <tr><td>הבמה (מרכז)</td><td>תצוגת התלת־ממד. למעלה משמאל: כמה גופים נבחרים ומה יש בפרוגרמר. למטה משמאל: ה־Cue הנוכחי והבא באקזקיוטר הנבחר.</td></tr>
   <tr><td>פאנל המסכים</td><td><b>Pools</b> (קבוצות ו־Presets), <b>Auto Show</b>, <b>Sequence</b> (רשימת ה־Cues), <b>Fixture Sheet</b> (טבלת ערכים של כל הגופים). ב־Classic זה הפאנל הימני וב־Desk זה SCREEN משמאל, עם ארבעה טאבים. ב־Console (MA) ה־Pools תמיד במסך 2, והשלושה האחרים הם טאבים במסך 1.</td></tr>
   <tr><td>שורת אנקודרים</td><td>טאבים לפי תכונה: Dimmer, Position, Gobo, Color, Beam, Phaser. אנקודרים וכלים ייעודיים לכל טאב. נקודה אדומה ליד טאב = יש ערכים בפרוגרמר.</td></tr>
-  <tr><td>פריסה (Layout)</td><td>ברירת המחדל היא <b>Console (MA)</b>: קונסולה פיזית גדולה בסגנון grandMA מתחת לבמה. למעלה 2 מסכים גדולים: מסך 1 עם Fixture Sheet, Sequence ו־Auto Show ושורת הפקודה, ומסך 2 עם ה־Pools (קבוצות ו־Presets) וכלי הפרוגרמר. במשטח משמאל: מסך LCD רחב מעל 4 פיידרים מיוחדים בכיפות זהב (HOUSE, HAZE, ENERGY, AUTO MSTR) ו־10 אקזקיוטרים עם מקשים. מימין: מקשי תכונות, 5 אנקודרים, 2 מסכי מגע קטנים (צבע ומיקום), מקלדת, GO, פיידר GM וגלגל LEVEL לעוצמת הבחירה. <b>Desk</b>: הבמה לכל הרוחב, ומתחתיה קונסולה אחת קומפקטית במרכז, כמו שולחן אמיתי. משמאל SCREEN (Pools, Auto, Sequence), באמצע PROGRAMMER ו־PLAYBACK, מימין COMMAND עם מקלדת מספרים ו־MASTER. הבורר שליד Layout מגדיל או מקטין את הקונסולה (Auto מתאים אותה לרוחב המסך). <b>Classic</b> מחזיר לפריסה הקודמת.</td></tr>
+  <tr><td>פריסה (Layout)</td><td>ברירת המחדל היא <b>Console (MA)</b>: קונסולה פיזית גדולה בסגנון grandMA שעומדת לפני הבמה, בעמדת התאורה בתוך הקהל. זווית FOH מראה את הבמה מגובה העיניים של המפעיל. הידית בקצה העליון של המסגרת של המסכים משנה את גודל הקונסולה בגרירה, ודאבל־קליק מחזיר לגודל האוטומטי. למעלה 2 מסכים גדולים: מסך 1 עם Fixture Sheet, Sequence ו־Auto Show ושורת הפקודה, ומסך 2 עם ה־Pools (קבוצות ו־Presets) וכלי הפרוגרמר. במשטח משמאל: מסך LCD רחב מעל 4 פיידרים מיוחדים בכיפות זהב (HOUSE, HAZE, ENERGY, AUTO MSTR) ו־10 אקזקיוטרים עם מקשים. מימין: מקשי תכונות, 5 אנקודרים, 2 מסכי מגע קטנים (צבע ומיקום), מקלדת, GO, פיידר GM וגלגל LEVEL לעוצמת הבחירה. <b>Desk</b>: הבמה לכל הרוחב, ומתחתיה קונסולה אחת קומפקטית במרכז, כמו שולחן אמיתי. משמאל SCREEN (Pools, Auto, Sequence), באמצע PROGRAMMER ו־PLAYBACK, מימין COMMAND עם מקלדת מספרים ו־MASTER. ב־Desk הבורר שליד Layout מגדיל או מקטין את הקונסולה (Auto מתאים אותה לרוחב המסך). <b>Classic</b> מחזיר לפריסה הקודמת.</td></tr>
   <tr><td>שולחן (למטה)</td><td>שורת פקודה ומקשים (STORE, CLEAR…), 10 אקזקיוטרים עם פיידרים, ובצד ימין של השולחן: GO הגדול, GO−, PAUSE, B.O., TAP, OFF ופיידר GM. זה נכון בכל שלוש הפריסות.</td></tr></table>
   <h3>שליטה במצלמה</h3><ul><li>גרירה עם הכפתור השמאלי: סיבוב סביב הבמה.</li><li>גרירה עם הכפתור הימני: הזזה.</li><li>גלגלת: זום.</li><li>כפתורי זווית למעלה מחזירים לנקודות קבועות.</li></ul>` },
  { t: 'בחירת גופים', h: () => `
@@ -2621,7 +2647,8 @@ const TOUR = [
   ['#presetPool', 'Presets', 'בוחרים סוג (Dimmer, Position, Gobo, Color, Beam) ולוחצים על Preset כדי להחיל אותו על הבחירה. Position Presets מחושבים לכל גוף.', () => sideTo('pools')],
   ['#featTabs', 'טאבי תכונות', 'בוחרים מה מכוונים: Dimmer, Position, Gobo, Color, Beam או Phaser. נקודה אדומה = יש ערכים בפרוגרמר.', () => featTo('pos')],
   ['#encoders', 'אנקודרים', 'גוררים למעלה או למטה לשינוי ערך (Shift = עדין), או דאבל־קליק על המספר כדי להקליד. אדום = ערך בפרוגרמר.'],
-  ['#encExtra', 'כלים לכל טאב', 'כאן, ב־Position, יש Focus pad: לוחצים על מפת הבמה וכל הבחירה מכוונת לשם. בטאב Color יש בוחר צבע, ובטאב Phaser יש אפקטים. ב־Console (MA) ה־Focus pad ובוחר הצבע נמצאים בשני מסכי המגע הקטנים שמתחת לאנקודרים.'],
+  ['#encExtra', 'כלים לכל טאב', () => deskMode === 'ma' ? 'כאן הכלים של הטאב הנבחר: ב־Position יש Aim height, Home, Knockout ו־Fan, ובטאב Phaser יש אפקטים. ה־Focus pad ובוחר הצבע נמצאים בשני מסכי המגע הקטנים שמתחת לאנקודרים: לוחצים על המפה וכל הבחירה מכוונת לשם.'
+    : 'כאן, ב־Position, יש Focus pad: לוחצים על מפת הבמה וכל הבחירה מכוונת לשם. בטאב Color יש בוחר צבע, ובטאב Phaser יש אפקטים.'],
   ['.cmdrow', 'שורת פקודה', 'פקודות בסגנון MA: Group 2 At Full, Store Cue 5, Goto Cue 3. מספיק להתחיל להקליד מכל מקום.'],
   ['#kStore', 'STORE', 'הקלטה: לוחצים STORE ואז על שם אקזקיוטר (Cue חדש), על Cue ב־Sequence (עדכון) או על משבצת ריקה ב־Pools.'],
   ['#kClear', 'CLEAR', 'לחיצה ראשונה מנקה בחירה, שנייה מנקה את הפרוגרמר, דאבל־קליק מנקה הכול.'],
@@ -2629,13 +2656,13 @@ const TOUR = [
   ['#goBig', 'GO', 'ה־Cue הבא באקזקיוטר הנבחר. מקש הרווח עושה את אותו הדבר.'],
   ['#gmFader', 'Grand Master', 'עוצמה כללית לכל המערכת. ליד יש B.O. (בלאקאאוט) ו־TAP לקצב.'],
   ['#sideTabs [data-t=auto]', 'Auto Show', 'מופע אוטומטי בסגנונות (EDM, רוק, מזרחית, תזמורתי…), אפשר מסונכרן לשיר שתטען.', () => sideTo('auto')],
-  ['#helpBtn', 'המדריך', 'המדריך המלא תמיד זמין כאן. בהצלחה בהופעה!', () => sideTo('pools')],
+  ['#helpBtn', 'המדריך', 'המדריך המלא תמיד זמין כאן. בהצלחה בהופעה!', () => sideTo(deskMode === 'ma' ? 'sheet' : 'pools')],
 ];
 let tIdx = -1;
 function startTour() { tIdx = 0; showTour(); }
 function endTour() { tIdx = -1; $('#tourHole').style.display = $('#tourTip').style.display = 'none'; }
 function showTour() {
-  const [sel, title, text, before] = TOUR[tIdx]; if (before) before();
+  const [sel, title, txt, before] = TOUR[tIdx], text = typeof txt === 'function' ? txt() : txt; if (before) before();
   requestAnimationFrame(() => { const e = $(sel); if (!e) { endTour(); return; } let r = e.getBoundingClientRect(); const pad = 6, H = $('#tourHole'), T = $('#tourTip');
     // a target inside a scrolling pane (the pools on MA screen 2) is scrolled into the pane; the hole keeps to the visible part
     const sp = e.parentElement.closest('.pane');
@@ -2703,8 +2730,9 @@ function kpPress(t) {
   if (/^[0-9.]$/.test(t)) { cmd.value = (/[0-9.]$/.test(v) ? v : (v && !v.endsWith(' ') ? v + ' ' : v)) + t; return; }
   cmd.value = (v && !v.endsWith(' ') ? v + ' ' : v) + t + ' ';
 }
+// maSize: the console's share of the height, set with the grip; undefined = the adaptive default of fitDesk()
 const MA_SIZE = .47;
-let deskMode = 'ma', deskZoom = 'auto', maForcedTab = null, maSize = MA_SIZE, maGeo = null;
+let deskMode = 'ma', deskZoom = 'auto', maForcedTab = null, maSize, maGeo = null;
 const saveLayout = () => { try { localStorage.setItem('lumadesk-layout2', JSON.stringify({ deskMode, deskZoom, maSize })); } catch (e) { } };
 const PARTS = { featTabs: $('#featTabs'), encBody: $('#encBody'), encoders: $('#encoders'), encExtra: $('#encExtra'), cmdFb: $('#cmdFb'), cmdrow: $('.cmdrow'), keys: $('.keys') };
 function restoreParts() {
@@ -2758,11 +2786,13 @@ function fitDesk() {
     for (const e of mb.querySelectorAll('.maScreens,.maDeck,.maFront,.maCheek')) { const r = e.getBoundingClientRect(); L = Math.min(L, r.left); T = Math.min(T, r.top); R = Math.max(R, r.right); B = Math.max(B, r.bottom); }
     maGeo = { W: R - L, H: B - T, mt: D.top - T, mb: B - D.bottom };
   }
-  // fit by projected width and by the chosen share of the height under the top bar; a fixed zoom is only an upper limit
-  const zm = clamp(Math.min(deskZoom === 'auto' ? 1.1 : +deskZoom, (innerWidth - 24) / maGeo.W, maSize * (innerHeight - 40) / maGeo.H), .2, 1.5);
+  // fit by projected width and by a share of the height under the top bar; without a grip size the share is MA_SIZE,
+  // raised (up to .66) in small windows until the zoom reaches .6 so the legends stay readable
+  const hz = (innerHeight - 40) / maGeo.H, share = maSize ?? clamp(.6 / hz, MA_SIZE, .66);
+  const zm = clamp(Math.min(1.1, innerWidth * .98 / maGeo.W, share * hz), .2, 1.5);
   mb.style.setProperty('--mt', maGeo.mt.toFixed(1) + 'px'); mb.style.setProperty('--mb', maGeo.mb.toFixed(1) + 'px');
   mb.style.setProperty('--mz', zm.toFixed(3));
-  maConH = maGeo.H * zm; const C = $('#maConsole').style; C.setProperty('--ch', maConH.toFixed(0) + 'px'); $('#viewer').style.setProperty('--ch', maConH.toFixed(0) + 'px');
+  maConH = maGeo.H * zm; const C = $('#maConsole').style; C.setProperty('--ch', maConH.toFixed(0) + 'px'); C.setProperty('--cw', (maGeo.W * zm).toFixed(0) + 'px'); $('#viewer').style.setProperty('--ch', maConH.toFixed(0) + 'px');
 }
 /* MA console hardware: special master faders, touch screens and level wheel */
 const SPECS = [['house', 'HOUSE'], ['haze', 'HAZE'], ['aEnergy', 'ENERGY'], ['aMaster', 'AUTO']];
@@ -2815,14 +2845,17 @@ $('#deskZoom').onchange = ev => { deskZoom = ev.target.value; fitDesk(); resize(
   g.onpointerdown = ev => { g.setPointerCapture(ev.pointerId); g.classList.add('on'); ev.preventDefault(); ev.stopPropagation(); };
   g.onpointermove = ev => { if (!g.hasPointerCapture(ev.pointerId)) return; maSize = clamp((innerHeight - ev.clientY) / (innerHeight - 40), .3, .7); if (!raf) raf = requestAnimationFrame(apply); };
   g.onlostpointercapture = () => { g.classList.remove('on'); saveLayout(); };
-  g.ondblclick = () => { maSize = MA_SIZE; fitDesk(); resize(); saveLayout(); };
+  g.ondblclick = () => { maSize = undefined; fitDesk(); resize(); saveLayout(); };
 }
 addEventListener('resize', () => { if (deskMode !== 'classic') fitDesk(); });
 // the panes on the console screens are scrolled here: Chromium does not scroll them by wheel inside the 3D console;
-// whole 20px steps keep the Fixture Sheet's row snapping moving forward with fine (touchpad) deltas
+// 20px steps (just under one 21px sheet row) keep the Fixture Sheet's row snapping moving forward with fine (touchpad) deltas
 { let acc = 0;
   $('#maBody').addEventListener('wheel', ev => {
-    const p = ev.defaultPrevented ? null : ev.target.closest('.pane,#encExtra'); if (!p || p.scrollHeight <= p.clientHeight) return;
+    let p = ev.defaultPrevented ? null : ev.target.closest('#groupPool,.pane,#encExtra');
+    // at the end of the groups list the wheel goes on to the pane around it
+    if (p && p.id === 'groupPool' && (ev.deltaY > 0 ? p.scrollTop + p.clientHeight >= p.scrollHeight - 1 : p.scrollTop <= 0)) p = p.closest('.pane');
+    if (!p || p.scrollHeight <= p.clientHeight) return;
     ev.preventDefault(); acc += ev.deltaMode ? ev.deltaY * 20 : ev.deltaY; const n = Math.trunc(acc / 20);
     if (n) { acc -= n * 20; p.scrollBy({ top: n * 20 }); }
   }, { passive: false }); }
@@ -2839,7 +2872,9 @@ setInterval(() => {
   const e = execs[selExec]; $('#cwPbInfo').textContent = `EXEC ${selExec + 1} · ${e.name || 'empty'}`;
   $('#cwProgInfo').textContent = `${sel.length} SELECTED`; $('#cwScreenInfo').textContent = (sideTab || '').toUpperCase();
 }, 250);
-try { const L = JSON.parse(localStorage.getItem('lumadesk-layout2') || 'null'); if (L) { deskMode = L.deskMode || 'ma'; deskZoom = L.deskZoom || 'auto'; maSize = clamp(+L.maSize || MA_SIZE, .3, .7); } } catch (e) { }
+try { const L = JSON.parse(localStorage.getItem('lumadesk-layout2') || 'null'); if (L) { deskMode = L.deskMode || 'ma'; deskZoom = L.deskZoom || 'auto';
+  // earlier versions stored MA_SIZE without a grip drag: read it as the adaptive default
+  const s = +L.maSize; if (Number.isFinite(s) && s > 0 && s !== MA_SIZE) maSize = clamp(s, .3, .7); } } catch (e) { }
 $('#layoutSel').value = deskMode; $('#deskZoom').value = deskZoom;
 applyLayout();
 
