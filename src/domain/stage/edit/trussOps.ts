@@ -3,7 +3,7 @@ import type { StageTruss } from '../trussTypes';
 import type { Vec3 } from '../types';
 import { newTrussId } from './ids';
 import { checkFinite } from './inputChecks';
-import { isSameData } from './isKept';
+import { isSameData } from './sameData';
 
 /** The truss kinds the builder offers as presets; `roof` comes only from templates and imports. */
 export type TrussPreset = 'straight' | 'circle' | 'goalpost' | 'tower';

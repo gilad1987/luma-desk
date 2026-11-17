@@ -1,4 +1,5 @@
 import { Quaternion, Vector3 } from 'three';
+import { CENTRE_LINE_M } from './centreLine';
 import type { StageFixture } from './StageDesign';
 import type { StageTruss } from './trussTypes';
 import type { Quat, Transform, Vec3 } from './types';
@@ -7,7 +8,6 @@ import type { Quat, Transform, Vec3 } from './types';
 const LANE_SHIFT_M = 0.4;
 /** How far (metres) a tower fixture stands beside the column, so it does not sit inside it. */
 const TOWER_STEP_M = 0.4;
-const CENTRE_LINE_M = 0.01;
 const IDENTITY: Quat = [0, 0, 0, 1];
 
 /**

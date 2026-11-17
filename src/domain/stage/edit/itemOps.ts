@@ -2,7 +2,7 @@ import type { StageDesign, StageFixture } from '../StageDesign';
 import type { Vec3 } from '../types';
 import { appendCopies } from './copies';
 import { newTrussId } from './ids';
-import { isSameData } from './isKept';
+import { isSameData } from './sameData';
 import { moveTruss, shiftFixture } from './trussOps';
 
 /** The fixture fields the property panel edits; the id stays, because groups and cues point at it. */

@@ -3,7 +3,7 @@ import type { Vec3 } from '../types';
 import { type DeckSize, setSceneryPart } from './deckOps';
 import { nextIdBlock } from './ids';
 import { checkSizes } from './inputChecks';
-import { isSameLength } from './isKept';
+import { isSameLength } from './sameData';
 
 /** LED wall size in metres: `width` along x, `height` from the deck top. */
 export type WallSize = Pick<DeckSize, 'width' | 'height'>;
