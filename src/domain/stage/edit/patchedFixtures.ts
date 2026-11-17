@@ -13,7 +13,7 @@ const OP = 'setFixtureProps';
  * @throws RangeError with every parser error of the patched list, or when the patch changes the type of a 'screen'
  * fixture.
  */
-export function checkFixturePatch(
+export function patchedFixtures(
   d: StageDesign,
   fixture: StageFixture,
   patch: Partial<Omit<StageFixture, 'id'>>,
