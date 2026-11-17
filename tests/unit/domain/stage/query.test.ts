@@ -4,10 +4,10 @@
  */
 import { describe, expect, it } from 'vitest';
 import { isLight } from '../../../../src/domain/rig/Rig.ts';
+import { rigFromDesign } from '../../../../src/domain/stage/deriveRig.ts';
 import { selectIds, selectRule } from '../../../../src/domain/stage/query.ts';
 import type { StageDesign, StageFixture } from '../../../../src/domain/stage/StageDesign.ts';
 import { createTemplate } from '../../../../src/domain/stage/templates/index.ts';
-import { rigFromDesign } from '../../../../src/domain/stage/deriveRig.ts';
 import { sultansPool } from '../../../../src/domain/stage/templates/sultansPool/index.ts';
 
 const design = sultansPool();

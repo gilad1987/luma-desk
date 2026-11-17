@@ -1,3 +1,8 @@
+/**
+ * Owns the single-apply contract of StageService: boot rig without an event, one `rigChanged` per apply after the state
+ * is set, `showChanged` by cause, built-in identity, the soft-limit toast. Sequences and re-entrant or throwing
+ * listeners are in `qa/`; how a design becomes a rig is owned by the domain tests.
+ */
 import { describe, expect, it } from 'vitest';
 import { EventBus } from '../../../../src/core';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
@@ -5,15 +10,15 @@ import { createTemplate } from '../../../../src/domain/stage/templates';
 import type { EngineEvents } from '../../../../src/engine/events';
 import type { RigChangeCause } from '../../../../src/engine/stage/rigChanged';
 import { StageService } from '../../../../src/engine/stage/StageService';
-import { recordEvents } from '../state/recordEvents';
+import { recordEvents } from '../../../shared';
 
 const builtIn = createTemplate('sultans-pool');
-const options = { tooManyFixtures: (n: number): string => `too many: ${n}` };
+const tooManyFixtures = (n: number): string => `too many: ${n}`;
 
 const setup = (initial?: StageDesign) => {
   const bus = new EventBus<EngineEvents>();
   const events = recordEvents(bus);
-  return { bus, events, service: new StageService(bus, builtIn, initial, options) };
+  return { bus, events, service: new StageService(bus, { builtIn, initial, tooManyFixtures }) };
 };
 
 /** A design with `n` fixtures, copies of the theatre's first fixture under fresh ids. */

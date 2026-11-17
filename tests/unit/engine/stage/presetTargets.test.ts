@@ -1,18 +1,19 @@
+/**
+ * Owns which presets the pool offers on the built-in stage (all, for parity), the empty stage and a stage without
+ * the band. That `PRESET_TARGETS` names every preset is checked by tsc (a `Record` over `PresetFnName`); the festival
+ * and theatre stages are in `qa/presetTargets.frames.test.ts`.
+ */
 import { describe, expect, it } from 'vitest';
 import { frameOf } from '../../../../src/domain/stage/StageFrame';
 import { createTemplate } from '../../../../src/domain/stage/templates';
 import { PRESET_FNS, type PresetFnName } from '../../../../src/engine/presetFunctions';
-import { isPresetAvailable, PRESET_TARGETS } from '../../../../src/engine/stage/presetTargets';
+import { isPresetAvailable } from '../../../../src/engine/stage/presetTargets';
 
 const names = Object.keys(PRESET_FNS) as PresetFnName[];
 const available = (frame: ReturnType<typeof frameOf>): PresetFnName[] =>
   names.filter((name) => isPresetAvailable(name, frame));
 
 describe('presetTargets', () => {
-  it('maps exactly the preset functions', () => {
-    expect(Object.keys(PRESET_TARGETS).sort()).toEqual([...names].sort());
-  });
-
   it('makes every preset available on the built-in stage (parity)', () => {
     expect(available(frameOf(createTemplate('sultans-pool')))).toEqual(names);
   });

@@ -9,14 +9,14 @@ import type { StageDesign } from '../../../../../src/domain/stage/StageDesign';
 import { createTemplate } from '../../../../../src/domain/stage/templates';
 import type { EngineEvents } from '../../../../../src/engine/events';
 import { StageService } from '../../../../../src/engine/stage/StageService';
-import { recordEvents } from '../../state/recordEvents';
+import { recordEvents } from '../../../../shared';
 
 const builtIn = createTemplate('sultans-pool');
 
 const setup = (initial?: StageDesign) => {
   const bus = new EventBus<EngineEvents>();
   const events = recordEvents(bus);
-  const service = new StageService(bus, builtIn, initial, { tooManyFixtures: (n) => `too many: ${n}` });
+  const service = new StageService(bus, { builtIn, initial, tooManyFixtures: (n) => `too many: ${n}` });
   return { events, service };
 };
 

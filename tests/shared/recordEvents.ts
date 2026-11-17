@@ -1,4 +1,4 @@
-import type { EngineBus } from '../../../../src/engine/events';
+import type { EngineBus } from '../../src/engine/events';
 
 /**
  * Subscribes to every engine event and records each as one line, in delivery order, in the same form the oracles
