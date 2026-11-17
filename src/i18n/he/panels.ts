@@ -1,5 +1,5 @@
 /** The Hebrew the panels' static markup shows (tooltips and button labels), byte for byte as the original page. */
-export const hePanels = {
+export const panels = {
   layoutTitle: 'פריסת מסך',
   zoomTitle: 'גודל הקונסולה',
   recTitle: 'הקלטת וידאו של התצוגה (.webm)',

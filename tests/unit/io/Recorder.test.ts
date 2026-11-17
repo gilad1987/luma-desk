@@ -57,7 +57,7 @@ describe('Recorder', () => {
   it('refuses in a browser without canvas capture', () => {
     capture.isSupported = false;
     recorder.toggle();
-    expect([toasts, capture.opened]).toEqual([[he.rec.unsupported], []]);
+    expect([toasts, capture.opened]).toEqual([[he.topBar.rec.unsupported], []]);
   });
 
   it('starts with the preferred format, 1 s chunks, the on class and a running time', () => {
@@ -69,7 +69,7 @@ describe('Recorder', () => {
       [[1000]],
       ['on'],
       '■ 1:01',
-      [he.rec.started],
+      [he.topBar.rec.started],
     ]);
   });
 
@@ -88,13 +88,13 @@ describe('Recorder', () => {
       [...classes],
       button.textContent,
     ]).toEqual([1, 'video/webm', 'ab', expect.stringMatching(/^luma-desk-\d{8}-\d{4}\.webm$/), [], '● REC']);
-    expect(toasts).toEqual([he.rec.started, he.rec.saved]);
+    expect(toasts).toEqual([he.topBar.rec.started, he.topBar.rec.saved]);
   });
 
   it('toasts when the browser refuses the recorder and stays idle', () => {
     capture.shouldThrow = true;
     recorder.toggle();
     vi.advanceTimersByTime(500);
-    expect([toasts, [...classes], button.textContent]).toEqual([[he.rec.cannotStart], [], '● REC']);
+    expect([toasts, [...classes], button.textContent]).toEqual([[he.topBar.rec.cannotStart], [], '● REC']);
   });
 });

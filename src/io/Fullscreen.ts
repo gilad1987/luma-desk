@@ -44,7 +44,7 @@ export class Fullscreen {
     }
     void document.documentElement
       .requestFullscreen?.()
-      .catch(() => bus.emit('message', { kind: 'toast', text: he.fullscreen.unavailable }));
+      .catch(() => bus.emit('message', { kind: 'toast', text: he.topBar.fullscreen.unavailable }));
   }
 
   /**

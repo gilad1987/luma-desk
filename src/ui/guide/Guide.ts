@@ -69,11 +69,11 @@ export class Guide {
     if (!chapter) throw new RangeError(`guide chapter ${i} does not exist`);
     const nav = byId('gNav');
     nav.innerHTML =
-      `<div class="gt"><i></i>${he.guide.navTitle}</div>` +
+      `<div class="gt"><i></i>${he.guide.nav.title}</div>` +
       chapters
         .map((c, n) => `<button data-i="${n}" class="${n === i ? 'on' : ''}"><b>${n + 1}</b>${c.title}</button>`)
         .join('') +
-      `<button class="tourBtn" id="gTour">${he.guide.tourButton}</button>`;
+      `<button class="tourBtn" id="gTour">${he.guide.nav.tourButton}</button>`;
     byId('gTitle').textContent = `${i + 1}. ${chapter.title}`;
     const body = byId('gBody');
     body.innerHTML = chapter.html(this.markup);

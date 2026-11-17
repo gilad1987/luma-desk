@@ -47,7 +47,7 @@ export class Recorder {
   #start(): void {
     const { capture, button, clock } = this.#deps;
     if (!capture.isSupported) {
-      this.#toast(he.rec.unsupported);
+      this.#toast(he.topBar.rec.unsupported);
       return;
     }
     const mimeType = chooseMimeType((type) => capture.isTypeSupported(type));
@@ -56,7 +56,7 @@ export class Recorder {
     try {
       session = capture.open(mimeType, callbacks);
     } catch {
-      this.#toast(he.rec.cannotStart);
+      this.#toast(he.topBar.rec.cannotStart);
       return;
     }
     this.#session = session;
@@ -64,7 +64,7 @@ export class Recorder {
     this.#startedAtMs = clock.nowMs();
     session.start(CHUNK_MS);
     button.classList.add('on');
-    this.#toast(he.rec.started);
+    this.#toast(he.topBar.rec.started);
   }
 
   #collect(chunk: Blob): void {
@@ -78,7 +78,7 @@ export class Recorder {
     this.#session = undefined;
     button.classList.remove('on');
     button.textContent = IDLE_LABEL;
-    this.#toast(he.rec.saved);
+    this.#toast(he.topBar.rec.saved);
   }
 
   #showElapsed(): void {

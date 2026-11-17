@@ -26,7 +26,7 @@ export class ShowFileDialog {
     byId('fSave').onclick = () => {
       const json = JSON.stringify(serializer.serialize(), null, 1);
       download(`luma-show-${stamp()}.json`, json);
-      toast(he.show.downloaded);
+      toast(he.messages.show.downloaded);
     };
     byId('fCopy').onclick = () => void this.#copy(toast);
     byId('fDemo').onclick = () => {
