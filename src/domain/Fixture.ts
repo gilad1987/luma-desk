@@ -59,7 +59,7 @@ export class Fixture {
    */
   declare rotation?: Quaternion;
 
-  constructor(id: number, type: FixtureTypeId, pos: Vector3, mount: Mount, fixed: PanTilt | null) {
+  constructor({ id, type, pos, mount, fixed }: Pick<Fixture, 'id' | 'type' | 'pos' | 'mount' | 'fixed'>) {
     this.id = id;
     this.type = type;
     this.T = TYPES[type];

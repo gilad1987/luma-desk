@@ -28,7 +28,7 @@ export class Programmer {
 
   /** Sets one attribute of one fixture (see {@link actions.setValue}). */
   set(id: number, attr: AttrName, value: number): void {
-    actions.setValue(this.vals, this.#deps.rig, id, attr, value);
+    actions.setValue(this.vals, this.#deps.rig, { id, attr, value });
   }
 
   /** Knockout of one feature for `ids` (see {@link actions.removeFeature}). */
@@ -92,6 +92,6 @@ export class Programmer {
 
   /** Records the programmer into a cue (see {@link actions.storeCue}). */
   storeCue(exec: number, num: number | null, opts: StoreCueOptions = {}): void {
-    actions.storeCue(this, this.#deps, exec, num, opts);
+    actions.storeCue(this, this.#deps, { exec, num }, opts);
   }
 }

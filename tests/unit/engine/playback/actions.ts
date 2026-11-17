@@ -12,7 +12,7 @@ import type { LVals } from './oracle/legacyTypes';
 export type Action =
   | { kind: 'load'; exec: number; cues: Cue[] }
   | { kind: 'go'; exec: number; dir: 1 | -1 }
-  | { kind: 'goto'; exec: number; index: number; fade?: number }
+  | { kind: 'goto'; exec: number; index: number; fade?: number | undefined }
   | { kind: 'pause' | 'off' | 'flashPress' | 'flashRelease'; exec: number }
   | { kind: 'level'; exec: number; level: number }
   | { kind: 'editCue'; exec: number; index: number; cue: Cue }

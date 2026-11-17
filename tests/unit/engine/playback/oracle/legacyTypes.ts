@@ -1,6 +1,6 @@
 // Shapes of the untyped original (index.base.html 1529-1536). Type-only: they let the copied code compile unchanged.
 
-export type LVals = Record<string, Record<string, number>>;
+export type LVals = Record<string, Record<string, number | undefined>>;
 export interface LInst {
   type: string;
   rate: number;

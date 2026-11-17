@@ -39,6 +39,6 @@ function numberInStageOrder(rig: RigBuilder, slots: Slot[], firstId: number, typ
   slots
     .sort((a, b) => a.x - b.x || b.z - a.z)
     .forEach((o, k) => {
-      rig.add(firstId + k, type, o.x, o.y, o.z, 'hang').pix = o.pix;
+      rig.add({ id: firstId + k, type, at: [o.x, o.y, o.z], mount: 'hang' }).pix = o.pix;
     });
 }

@@ -3,12 +3,19 @@ import { ATTR, type AttrName } from '../../domain/attributes';
 import type { Rig } from '../../domain/rig';
 import type { FixtureValues } from '../CueList';
 
+/** One attribute value for one fixture, as the operator, a preset or a command sets it. */
+export interface ValueChange {
+  readonly id: number;
+  readonly attr: AttrName;
+  readonly value: number;
+}
+
 /**
  * Writes one programmer value into `vals`: clamped to the attribute's range (zoom to the fixture type's own range),
  * rounded to whole numbers for stepped attributes, then to two decimals. Unknown fixtures and attributes the fixture
  * lacks are ignored, because presets and commands apply the same values to mixed selections.
  */
-export function setValue(vals: FixtureValues, rig: Rig, id: number, attr: AttrName, value: number): void {
+export function setValue(vals: FixtureValues, rig: Rig, { id, attr, value }: ValueChange): void {
   const f = rig.get(id);
   if (!f?.has(attr)) return;
   const spec = ATTR[attr];

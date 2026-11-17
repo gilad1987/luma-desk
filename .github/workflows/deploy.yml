@@ -18,6 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # unit tests read the original page with `git show 48a3b63:index.html`, so the history must be there
+          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           # the Node version of local work (.nvmrc); it runs scripts/*.ts with built-in type stripping
