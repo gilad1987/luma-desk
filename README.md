@@ -1,28 +1,128 @@
-# LUMA DESK — Stage Lighting Console
+<div align="center">
 
-A grandMA-style lighting console with a real-time 3D stage at **Sultan's Pool, Jerusalem**, running entirely in the browser.
+<img src="icons/icon-192.png" width="96" alt="LUMA DESK icon">
 
-**▶ Open the app:** https://gilad1987.github.io/luma-desk/
+# LUMA DESK
 
-## What's inside
-- **359 fixtures**: spots, beams, washes, LED pars, blinders, strobes, a circular truss with an inner ring, six angled trusses, standing light towers, delay towers and an LED wall with IMAG screens.
-- **Console**: MA-style command line (`Group 24 At Full`, `Store Cue 5 Fade 3`, `Goto Cue 3`), programmer with feature encoders, Group and Preset pools, phasers, 10 executors with cue lists, tracking, HTP/LTP, Grand Master, Blackout and TAP tempo.
-- **Auto Show**: 9 automatic lighting styles that change looks on the bar, sync to a loaded song (BPM detection) and can be saved as cues.
-- **Venue**: Sultan's Pool with a seated crowd, terraced seating, the Old City walls and the Tower of David, an 8-piece band with a full drum kit, and a 30-piece orchestra.
-- **App**: installable PWA that works offline. Records the show to video (`● REC`), downloads and loads show files, runs full screen, and supports Web MIDI.
-- **Built-in guide** in Hebrew, with a guided on-screen tour.
+**A grandMA-style stage lighting console with a real-time 3D concert stage at Sultan's Pool, Jerusalem. It runs entirely in the browser.**
+
+### [▶ Open the app](https://gilad1987.github.io/luma-desk/)
+
+No install and no build step. Works offline once loaded, and can be installed as an app on desktop or iPad.
+
+![LUMA DESK: console and 3D stage](docs/screenshots/hero.png)
+
+</div>
+
+---
+
+## Highlights
+
+| | |
+|---|---|
+| ![Ring tornado](docs/screenshots/ring-tornado.png) | ![Drop, wide view](docs/screenshots/drop-wide.png) |
+| **Circular truss "tornado"**: 24 beams on a ring, twisted with a Circle phaser and 360° phase spread. | **The drop**: strobes, blinders, sunburst ring and fanned beams across the whole rig. |
+| ![Audience view](docs/screenshots/audience.png) | ![Sultan's Pool and the Old City walls](docs/screenshots/old-city.png) |
+| **The crowd gets lit**: every beam that lands in the audience colors the people under it. | **Sultan's Pool**: seated crowd, stone terraces, and the floodlit Old City walls with the Tower of David. |
+| ![Band and drum kit](docs/screenshots/band.png) | ![30-piece orchestra](docs/screenshots/orchestra.png) |
+| **8-piece band** with a full drum kit on the riser. | **30-piece orchestra** on three tiers of risers. |
+
+## Features
+
+### 🎛 Console (grandMA workflow)
+- **Desk layout** (the default): the stage fills the screen and one compact console sits centered beneath it, like a real desk. **SCREEN** (pools, Auto Show, sequence) is on the left, **PROGRAMMER** and **PLAYBACK** in the middle, and **COMMAND** (MA-style keypad: `Group 2 4 At Full Enter`) and **MASTER** (GO, GM, B.O., TAP) on the right. Everything is in reach, even on a 4K monitor. The console size can be scaled (Auto, or 85% to 150%), and a **Classic** layout is still available.
+- **Command line** in MA syntax: `Fixture 201 Thru 230`, `Group 24 + Group 31`, `At Full`, `Store Cue 5 Fade 3`, `Goto Cue 3`, `Preset 4.10`, `Label Cue 5 Chorus`, `Delete Cue 4`, `Off Exec 2`.
+- **Programmer** with feature tabs (Dimmer, Position, Gobo, Color, Beam, Phaser), drag encoders, and programmer values shown in red.
+- **Pools**: 36 groups and presets for Dimmer, Position, Gobo, Color and Beam. Position presets are calculated per fixture: Singer, Drums, Orchestra, Fan Audience, Ring Cone, Ring Twist, Sunburst, Crown and more.
+- **Focus pad**: click a stage map to aim the whole selection at a point.
+- **Phasers**: Circle, Pan, Tilt, Ballyhoo, Dim Wave, Dim Chase, Swipe, Random Flash, Rainbow and Color Chase, with Rate, Size and Phase controls. All sync to **TAP** tempo.
+- **10 executors** with faders, GO+, GO−, FLASH and OFF. Cue lists with **tracking** and fades, HTP dimmer and LTP for everything else, plus Grand Master, Blackout, Highlight, FAN and ODD/EVEN.
+
+![Programmer with color tab](docs/screenshots/programmer.png)
+
+### 🤖 Auto Show
+Nine automatic lighting styles: **EDM, Techno, Rock, Pop, Hip-Hop, Mizrahi/Party, Ballad, Orchestral and Cinematic**. Each style generates looks on the bar and follows a song structure (verse, chorus, build, drop). You can control energy, change rate and beat pulse. Load an MP3 and the BPM is detected automatically, so the lights and the crowd lock to the music. Any look can be saved as a cue, or turned into a full 8-cue list.
+
+![Auto Show](docs/screenshots/auto-show.png)
+
+### 💡 The rig: 377 fixtures
+| IDs | Type | Position |
+|---|---|---|
+| 101–120 | Spot | Front truss (FOH) |
+| 201–230 | Beam | Truss 2 |
+| 301–330 | Wash | Truss 3 |
+| 401–420 | Spot | Truss 4 |
+| 501–530 | Beam | Back truss |
+| 601–624 | Wash | Side ladders |
+| 701–740 | Beam | Floor, upstage |
+| 801–816 | Blinder | Front truss |
+| 901–920 | Strobe | Truss 3 |
+| 1001–1016 | Wash | Floor, downstage |
+| 1101–1120 | LED Par | Under the LED wall |
+| 1201–1224 | Beam | Circular truss (outer ring) |
+| 1301–1312 | Wash | Circular truss (inner ring) |
+| 1401–1424 | Beam | Six angled flown trusses |
+| 1501–1512 | Spot | Angled trusses (middle pair) |
+| 1601–1610 | Beam | Standing light towers (top) |
+| 1701–1710 | Wash | Standing light towers (middle) |
+| 1801–1818 | Wash | Audience light: front truss and delay towers |
+| 2001 | LED wall | 35 × 13 m LED wall and IMAG side screens, with 8 content modes |
+
+Rendering includes volumetric beams in moving haze, gobo projections in the beam and on the floor, lens glow, pixel LED strips on the ring, angled trusses and towers, real spot lights with soft shadows on the performers, and a seated crowd of about 9,000 that bounces to the beat.
+
+### 📱 App
+- **Installable PWA**: use **⬇ Install** in Chrome or Edge, or **Add to Home Screen** on iPad and iPhone. It opens in its own window and **works offline**.
+- **● REC** records the stage view to a video file (WebM), including the loaded song.
+- **Show files**: download and load `.json` shows. The current show also auto-saves in the browser.
+- **Web MIDI**: CC 1–10 control faders 1–10, CC 0 controls the Grand Master, and notes 36–45 are GO on executors 1–10.
+- **Full screen** with the `F` key.
+- **Built-in Hebrew guide** with 12 chapters and a 17-step guided tour of the screen.
+
+![Built-in guide](docs/screenshots/guide.png)
+
+## Quick start
+1. Open the app. The demo show is loaded on executor 1.
+2. Press **Space** or the big green **GO +** to step through the cues.
+3. Switch camera views from the top bar: FOH, Wide, Ring, Audience, Drums, Old City and more.
+4. Open **📖 מדריך** (the guide) for the full manual and the guided tour.
+
+## Keyboard
+| Key | Action |
+|---|---|
+| `Space` | GO+ on the selected executor |
+| Any letter or number | Type into the command line |
+| `Enter` / `↑` / `↓` | Run a command / browse command history |
+| `F` | Full screen |
+| `Esc` | Cancel STORE / close dialogs |
+| `Shift` + click or drag on stage | Add to selection / box select |
 
 ## Run locally
-It's a static site. Serve the folder over HTTP (opening the file directly won't work, because ES modules need a server):
-
+It's a static site, but ES modules need an HTTP server:
 ```bash
-python3 -m http.server 8000
-# then open http://localhost:8000
+git clone https://github.com/gilad1987/luma-desk
+cd luma-desk
+python3 -m http.server 8000   # → http://localhost:8000
 ```
 
-## Install as an app
-- **Chrome / Edge (desktop)**: click **⬇ התקן אפליקציה** in the top bar, or the install icon in the address bar.
-- **iPad / iPhone**: Share → **Add to Home Screen**.
+## Performance
+LUMA DESK is GPU-heavy, so use Chrome or Edge on a machine with a dedicated graphics card. If it stutters, turn off **Real light** and **Glow** in the top bar, or lower **Haze**.
 
 ## Tech
-A single `index.html` built with [three.js](https://threejs.org) r160 (vendored in `vendor/`, MIT license), with no build step. `sw.js` caches the app for offline use.
+- One self-contained `index.html` (vanilla JS, ES modules).
+- [three.js](https://threejs.org) r160, vendored in `vendor/` (MIT), with UnrealBloom post-processing.
+- Custom shaders for volumetric beams with procedural haze, gobos and the LED wall.
+- `sw.js` is the Service Worker that caches the app for offline use, and `manifest.webmanifest` makes it installable.
+
+---
+
+<div dir="rtl">
+
+## בעברית
+
+**LUMA DESK** היא קונסולת תאורה בסגנון grandMA עם במה וירטואלית בתלת־ממד בבריכת הסולטן בירושלים. היא כוללת 377 גופי תאורה, להקה, תזמורת של 30 נגנים וקהל יושב, והכול רץ בדפדפן.
+
+- **פתיחה:** https://gilad1987.github.io/luma-desk/
+- **התקנה כאפליקציה:** כפתור **⬇ התקן אפליקציה** בשורה העליונה (Chrome או Edge), או **הוסף למסך הבית** באייפד.
+- **מדריך מלא בעברית וסיור מודרך:** כפתור **📖 מדריך** באפליקציה.
+
+</div>

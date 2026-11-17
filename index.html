@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LUMA DESK — Stage Lighting Console</title>
-<meta name="description" content="grandMA-style stage lighting console with a 3D Sultan's Pool stage — 359 fixtures, band, orchestra and crowd. Runs in the browser.">
+<meta name="description" content="grandMA-style stage lighting console with a 3D Sultan's Pool stage — 377 fixtures, band, orchestra and crowd. Runs in the browser.">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0a0a0e">
 <link rel="icon" type="image/png" href="icons/favicon.png">
@@ -211,6 +211,56 @@ canvas.pad{border:1px solid var(--line2);border-radius:4px;cursor:crosshair;touc
 #autoStatus{font:11px var(--mono);color:var(--mut);line-height:1.6}
 #autoStatus b{color:#ff7aa8}
 
+
+/* ================= DESK LAYOUT: stage on top, one compact console below ================= */
+body.desk #app{grid-template-rows:40px minmax(0,1fr) auto}
+body.desk #main{grid-template-columns:minmax(0,1fr)}
+body.desk #viewer{border-right:0}
+body.desk #desk,body.desk #app>#enc{display:none}
+#console{display:none}
+body.desk #console{display:block;background:linear-gradient(#0c0c0e,#060607);border-top:1px solid #000;padding:8px 10px 10px;overflow:hidden}
+.cbody{zoom:var(--dz,1);margin:0 auto;max-width:1880px;height:404px;display:grid;grid-template-columns:470px minmax(560px,1fr) 600px;gap:8px;
+  background:linear-gradient(#202024,#141417);border:1px solid #2e2e34;border-radius:14px;padding:8px;box-shadow:0 -10px 40px #000a,inset 0 1px 0 #ffffff12}
+.cwing{display:flex;flex-direction:column;min-height:0;min-width:0;background:#0c0c0e;border:1px solid #000;border-radius:9px;box-shadow:inset 0 2px 8px #000c;overflow:hidden}
+.clabel{font:700 9px var(--mono);letter-spacing:.18em;color:#6b6b73;padding:5px 10px 3px;display:flex;justify-content:space-between;align-items:center;background:#111114;border-bottom:1px solid #000}
+.clabel b{color:var(--acc);font-weight:700}
+/* screen wing */
+body.desk #side{flex:1;min-height:0;background:#0f0f12}
+body.desk .pool{grid-template-columns:repeat(6,1fr)}
+/* centre wing: programmer (top) + playback (bottom) */
+.ccenter{display:grid;grid-template-rows:auto 178px auto minmax(0,1fr);gap:0}
+body.desk #enc{display:grid;grid-template-columns:1fr;grid-template-rows:30px minmax(0,1fr);border:0;background:none;height:178px}
+body.desk #featTabs{flex-direction:row;border-right:0;border-bottom:1px solid #000;background:#141417}
+body.desk #featTabs button{text-align:center;border-left:0;border-bottom:3px solid transparent;padding:0 6px;font-size:11.5px}
+body.desk #featTabs button.on{border-bottom-color:var(--acc);border-left-color:transparent}
+body.desk #featTabs button.has::after{right:6px;top:8px;margin:0}
+body.desk #encBody{padding:8px 12px;gap:14px}
+body.desk #execs{padding:6px;gap:5px;min-height:0}
+body.desk .ex-mid{padding:5px 4px}
+body.desk .fader{width:30px}
+body.desk .fader .cap{height:18px;margin-bottom:-9px;left:-4px;right:-4px}
+/* right wing: command section + master section */
+.cright{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:8px;background:none;border:0;box-shadow:none}
+.cright>.cwing{min-width:0}
+body.desk #cmdArea{border-right:0;padding:8px;gap:6px;flex:1;min-height:0}
+body.desk #cmdFb{height:30px}
+body.desk .keys{grid-template-columns:repeat(4,1fr);flex:0 0 auto;gap:4px}
+body.desk .keys button{height:30px;font-size:11px}
+.keypad{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;flex:1;min-height:0}
+.keypad button{font:700 12px var(--mono);padding:0;min-height:28px;background:linear-gradient(#2c2c31,#1b1b1f);border-color:#3c3c43;box-shadow:0 2px 0 #000,inset 0 1px 0 #ffffff12;border-radius:5px}
+.keypad button:active{transform:translateY(1px);box-shadow:0 1px 0 #000}
+.keypad .w{font:700 10.5px Inter,sans-serif;letter-spacing:.04em;color:#cfd3ff;background:linear-gradient(#262a3a,#191c28);border-color:#363c55}
+.keypad .n{font-size:15px;color:#fff;background:linear-gradient(#34343a,#222226)}
+.keypad .en{grid-column:span 3;background:linear-gradient(#2a7a46,#185a30);border-color:#36a35c;color:#eafff0;font:800 13px Inter,sans-serif;letter-spacing:.1em}
+.keypad .bk{color:#ffb4b4}
+body.desk #master{border-left:0;padding:8px;grid-template-columns:1fr 40px;gap:8px;flex:1;min-height:0}
+body.desk #goBig{font-size:26px}
+body.desk .mRow button{padding:9px 0}
+/* top-bar layout controls */
+#top{gap:10px;overflow:hidden}#top button{white-space:nowrap}#top .tbg button{padding:3px 7px}
+@media (max-width:2100px){#showName{display:none}}
+@media (max-width:1700px){#top .tbg label{display:none}}
+#layoutBox select{background:var(--p3);color:var(--txt);border:1px solid var(--line2);border-radius:4px;padding:2px 4px;font-size:11px}
 /* guide */
 #guide{position:fixed;inset:0;background:#000d;z-index:70;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
 #guide.show{display:flex}
@@ -286,6 +336,7 @@ canvas.pad{border:1px solid var(--line2);border-radius:4px;cursor:crosshair;touc
     <div class="tbg"><label>Haze</label><input type="range" id="haze" min="0" max="100" value="62" style="width:90px"></div>
     <div class="tbg"><button id="glowBtn" class="on">Glow</button><button id="idsBtn">Fixture IDs</button><button id="realBtn" class="on" title="Real spot lights & shadows on performers">Real light</button></div>
     <div class="spacer"></div>
+    <div class="tbg" id="layoutBox"><label>Layout</label><select id="layoutSel" title="פריסת מסך"><option value="desk">Desk</option><option value="classic">Classic</option></select><select id="deskZoom" title="גודל הקונסולה"><option value="auto">Auto</option><option value=".85">85%</option><option value="1">100%</option><option value="1.15">115%</option><option value="1.3">130%</option><option value="1.5">150%</option></select></div>
     <div class="tbg"><button id="recBtn" title="הקלטת וידאו של התצוגה (.webm)">● REC</button><button id="fsBtn" title="מסך מלא (F)">⛶</button><button id="installBtn" style="display:none">⬇ התקן אפליקציה</button><button id="midiBtn">MIDI</button><button id="fileBtn">Show File</button><button id="helpBtn" class="on">📖 מדריך</button></div>
     <div id="clock"></div><div id="fps"></div>
   </header>
@@ -336,6 +387,14 @@ canvas.pad{border:1px solid var(--line2);border-radius:4px;cursor:crosshair;touc
     <div id="encBody"><div id="encoders"></div><div id="encExtra"></div></div>
   </section>
 
+  <section id="console"><div class="cbody" id="cbody">
+    <div class="cwing" id="cwScreen"><div class="clabel"><span>SCREEN</span><b id="cwScreenInfo"></b></div></div>
+    <div class="cwing ccenter" id="cwCenter"><div class="clabel"><span>PROGRAMMER</span><b id="cwProgInfo"></b></div><div id="encSlot" style="min-height:0"></div><div class="clabel"><span>PLAYBACK</span><b id="cwPbInfo"></b></div><div id="execSlot" style="min-height:0;display:flex;flex-direction:column"></div></div>
+    <div class="cright">
+      <div class="cwing" id="cwCmd"><div class="clabel"><span>COMMAND</span><b>MA syntax</b></div></div>
+      <div class="cwing" id="cwMaster"><div class="clabel"><span>MASTER</span></div></div>
+    </div>
+  </div></section>
   <footer id="desk">
     <div id="cmdArea">
       <div id="cmdFb"><div>Welcome. Type commands like <span class="ok">Fixture 201 Thru 224 At Full</span></div></div>
@@ -1536,7 +1595,7 @@ function renderEncExtra() {
       x.fillStyle = '#888'; x.font = '9px Inter'; x.fillText('UPSTAGE', 4, 10); x.fillText('AUDIENCE ↓', 4, c.height - 4);
       if (pt) { x.strokeStyle = '#ff4040'; x.beginPath(); x.arc(pt[0], pt[1], 6, 0, 7); x.moveTo(pt[0] - 10, pt[1]); x.lineTo(pt[0] + 10, pt[1]); x.moveTo(pt[0], pt[1] - 10); x.lineTo(pt[0], pt[1] + 10); x.stroke(); } };
     draw();
-    const aim = ev => { const r = c.getBoundingClientRect(), px = ev.clientX - r.left, py = ev.clientY - r.top; const X3 = ix(px), Z3 = iz(py), on = X3 > STAGE.x0 && X3 < STAGE.x1 && Z3 > STAGE.z0 && Z3 < STAGE.z1;
+    const aim = ev => { const r = c.getBoundingClientRect(), px = (ev.clientX - r.left) * c.width / r.width, py = (ev.clientY - r.top) * c.height / r.height; const X3 = ix(px), Z3 = iz(py), on = X3 > STAGE.x0 && X3 < STAGE.x1 && Z3 > STAGE.z0 && Z3 < STAGE.z1;
       const Y3 = (on ? DECK : 0) + +hs.value; sel.forEach(id => { const f = FX[id]; if (!f.T.moving) return; const a = aimAt(f, X3, Y3, Z3); progSet(id, 'pan', a.pan); progSet(id, 'tilt', a.tilt); }); draw([px, py]); };
     c.onpointerdown = ev => { if (!sel.length) { toast('בחר קודם גופים (Select fixtures first)'); return; } c.setPointerCapture(ev.pointerId); aim(ev); };
     c.onpointermove = ev => { if (c.hasPointerCapture(ev.pointerId)) aim(ev); };
@@ -1554,7 +1613,7 @@ function renderEncExtra() {
     const w = el('div'); w.appendChild(el('div', 'xlabel', 'Color picker'));
     const c = el('canvas', 'pad'); c.width = 230; c.height = 112; w.appendChild(c); X.appendChild(w);
     const x = c.getContext('2d'); for (let px = 0; px < c.width; px++) for (let py = 0; py < c.height; py++) { const [r, g, b] = hsv(px / c.width, 1 - py / c.height, 1); x.fillStyle = `rgb(${r * 255},${g * 255},${b * 255})`; x.fillRect(px, py, 1, 1); }
-    const pick = ev => { const R = c.getBoundingClientRect(); const h = clamp((ev.clientX - R.left) / c.width, 0, 1), s = clamp(1 - (ev.clientY - R.top) / c.height, 0, 1); const [r, g, b] = hsv(h, s, 1); pickIds.forEach(id => { progSet(id, 'r', r * 100); progSet(id, 'g', g * 100); progSet(id, 'b', b * 100); }); };
+    const pick = ev => { const R = c.getBoundingClientRect(); const h = clamp((ev.clientX - R.left) / R.width, 0, 1), s = clamp(1 - (ev.clientY - R.top) / R.height, 0, 1); const [r, g, b] = hsv(h, s, 1); pickIds.forEach(id => { progSet(id, 'r', r * 100); progSet(id, 'g', g * 100); progSet(id, 'b', b * 100); }); };
     let pickIds = [];
     c.onpointerdown = ev => { pickIds = colorTargets(); if (!pickIds.length) return; c.setPointerCapture(ev.pointerId); pick(ev); };
     c.onpointermove = ev => { if (c.hasPointerCapture(ev.pointerId)) pick(ev); };
@@ -1592,7 +1651,7 @@ function setLevel(e, v) {
 function buildExecs() {
   const X = $('#execs'); X.innerHTML = '';
   execs.slice(0, 10).forEach((e, i) => {
-    const d = el('div', 'ex', `<div class="ex-top"><span class="ex-num">${i + 1}</span><span class="ex-name"></span><button class="ex-off" title="Off">OFF</button></div>
+    const d = el('div', 'ex', `<div class="ex-top"><span class="ex-num">${i + 1}</span><span class="ex-name"></span><button class="ex-off" title="Off">⏻</button></div>
       <div class="ex-cue"><span class="c"></span><span class="x"></span></div>
       <div class="ex-mid"><div class="fader"><div class="ff"></div><div class="cap"></div></div><div class="ex-btns"><button class="b-go">GO+</button><button class="b-back">GO−</button><button class="b-flash">FLASH</button></div></div>
       <div class="ex-lvl"></div>`);
@@ -2158,7 +2217,7 @@ const RIG_TABLE = [['101–120', 'Spot', 'טראס קדמי (FOH)'], ['201–230
   ['1601–1610', 'Beam', 'ראש עמודי התאורה על הבמה'], ['1701–1710', 'Wash', 'אמצע עמודי התאורה'], ['1801–1812', 'Wash', 'תאורת קהל, טראס קדמי'], ['1813–1818', 'Wash', 'מגדלי דיליי בקהל'], ['2001', 'LED Screen', 'מסך LED (ומסכי הצד)']];
 const GUIDE = [
  { t: 'התחלה מהירה', h: () => `
-  <p>LUMA DESK היא קונסולת תאורה בסגנון grandMA עם במה וירטואלית בתלת־ממד בבריכת הסולטן: 359 גופים, להקה, תזמורת וקהל. בעמוד הזה, תוך 5 דקות, תבנה ותקליט לוק ראשון ותריץ אותו.</p>
+  <p>LUMA DESK היא קונסולת תאורה בסגנון grandMA עם במה וירטואלית בתלת־ממד בבריכת הסולטן: 377 גופים, להקה, תזמורת וקהל. בעמוד הזה, תוך 5 דקות, תבנה ותקליט לוק ראשון ותריץ אותו.</p>
   <h3>הרצת הדמו</h3>
   <ol class="steps"><li>מופע דמו כבר טעון באקזקיוטר 1 (Main Show). לחץ ${K('רווח')} או על כפתור ה־<b>GO +</b> הירוק הגדול למטה מימין, ו־Cue אחרי Cue ירוץ.</li>
   <li>החלף זוויות מצלמה מהשורה העליונה: <b>FOH</b>, <b>Wide</b>, <b>Audience</b>, <b>Drums</b>, <b>Old City</b>…</li></ol>
@@ -2179,6 +2238,7 @@ const GUIDE = [
   <tr><td>הבמה (מרכז)</td><td>תצוגת התלת־ממד. למעלה משמאל: כמה גופים נבחרים ומה יש בפרוגרמר. למטה משמאל: ה־Cue הנוכחי והבא באקזקיוטר הנבחר.</td></tr>
   <tr><td>פאנל ימני</td><td><b>Pools</b> (קבוצות ו־Presets), <b>Auto Show</b>, <b>Sequence</b> (רשימת ה־Cues), <b>Fixture Sheet</b> (טבלת ערכים של כל הגופים).</td></tr>
   <tr><td>שורת אנקודרים</td><td>טאבים לפי תכונה: Dimmer, Position, Gobo, Color, Beam, Phaser. אנקודרים וכלים ייעודיים לכל טאב. נקודה אדומה ליד טאב = יש ערכים בפרוגרמר.</td></tr>
+  <tr><td>פריסה (Layout)</td><td>ברירת המחדל היא <b>Desk</b>: הבמה לכל הרוחב, ומתחתיה קונסולה אחת קומפקטית במרכז, כמו שולחן אמיתי. משמאל SCREEN (Pools, Auto, Sequence), באמצע PROGRAMMER ו־PLAYBACK, מימין COMMAND עם מקלדת מספרים ו־MASTER. הבורר שליד Layout מגדיל או מקטין את הקונסולה (Auto מתאים אותה לרוחב המסך). <b>Classic</b> מחזיר לפריסה הקודמת.</td></tr>
   <tr><td>שולחן (למטה)</td><td>שורת פקודה ומקשים (STORE, CLEAR…), 10 אקזקיוטרים עם פיידרים, ומצד שמאל: GO הגדול, GO−, PAUSE, B.O., TAP, OFF ופיידר GM.</td></tr></table>
   <h3>שליטה במצלמה</h3><ul><li>גרירה עם הכפתור השמאלי: סיבוב סביב הבמה.</li><li>גרירה עם הכפתור הימני: הזזה.</li><li>גלגלת: זום.</li><li>כפתורי זווית למעלה מחזירים לנקודות קבועות.</li></ul>` },
  { t: 'בחירת גופים', h: () => `
@@ -2239,7 +2299,7 @@ const GUIDE = [
   <tr><td>דאבל־קליק</td><td>על ערך: הקלדה. על Group, Preset, Cue או אקזקיוטר: שינוי שם. על פיידר: 0 או 100.</td></tr></table>
   <h3>MIDI</h3><p>לחץ <b>MIDI</b> ואשר. CC 1–10 שולטים בפיידרים 1–10, CC 0 ב־GM, ו־Notes 36–45 הם GO לאקזקיוטרים 1–10. ייתכן שהדפדפן יחסום MIDI בתוך העמוד הזה.</p>` },
  { t: 'הריג והקבוצות', h: () => `
-  <p>359 גופים בבריכת הסולטן. מספרי הגופים לפי מיקום:</p>
+  <p>377 גופים בבריכת הסולטן. מספרי הגופים לפי מיקום:</p>
   <table><tr><th>מספרים</th><th>סוג</th><th>מיקום</th></tr>${RIG_TABLE.map(r => `<tr><td><code>${r[0]}</code></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>
   <h3>קבוצות מוכנות</h3><table>${Object.entries(defaultGroups()).map(([n, g]) => `<tr><td><code>Group ${n}</code></td><td>${g.name}</td><td style="color:var(--mut)">${g.ids.length} גופים</td></tr>`).join('')}</table>` },
  { t: 'שמירה וביצועים', h: () => `
@@ -2326,6 +2386,64 @@ addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = 
 $('#installBtn').onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; $('#installBtn').style.display = 'none'; };
 addEventListener('appinstalled', () => { $('#installBtn').style.display = 'none'; toast('LUMA DESK הותקנה'); });
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => { });
+
+/* ====================================================================
+   DESK LAYOUT — moves the control sections into one compact console under the stage
+==================================================================== */
+let keypad = null;
+function buildKeypad() {
+  keypad = el('div', 'keypad');
+  const K_ = [['Fixture', 'w'], ['Group', 'w'], ['Preset', 'w'], ['Cue', 'w'], ['Exec', 'w'], ['⌫', 'bk'],
+    ['7', 'n'], ['8', 'n'], ['9', 'n'], ['Thru', 'w'], ['At', 'w'], ['Full', 'w'],
+    ['4', 'n'], ['5', 'n'], ['6', 'n'], ['+', 'w'], ['Goto', 'w'], ['Zero', 'w'],
+    ['1', 'n'], ['2', 'n'], ['3', 'n'], ['-', 'w'], ['Fade', 'w'], ['Label', 'w'],
+    ['0', 'n'], ['.', 'n'], ['Delete', 'w'], ['ENTER', 'en']];
+  for (const [t, c] of K_) { const b = el('button', c, t); b.onclick = () => kpPress(t); keypad.appendChild(b); }
+}
+function kpPress(t) {
+  const v = cmd.value;
+  if (t === 'ENTER') { if (v.trim()) { hist.unshift(v); if (/^\s*store\s*$/i.test(v)) { setStore(true); cmd.value = ''; return; } runCmd(v); } cmd.value = ''; return; }
+  if (t === '⌫') { const w = v.trimEnd(); cmd.value = /[0-9.]$/.test(w) ? w.slice(0, -1) : w.replace(/\S+$/, '').trimEnd() + (w.includes(' ') ? ' ' : ''); if (!cmd.value.trim()) cmd.value = ''; return; }
+  if (/^[0-9.]$/.test(t)) { cmd.value = (/[0-9.]$/.test(v) ? v : (v && !v.endsWith(' ') ? v + ' ' : v)) + t; return; }
+  cmd.value = (v && !v.endsWith(' ') ? v + ' ' : v) + t + ' ';
+}
+let deskMode = 'desk', deskZoom = 'auto';
+function applyLayout() {
+  const desk = deskMode === 'desk';
+  document.body.classList.toggle('desk', desk);
+  if (desk) {
+    $('#cwScreen').appendChild($('#side'));
+    $('#encSlot').appendChild($('#enc'));
+    $('#execSlot').appendChild($('#execs')); $('#execs').style.flex = '1';
+    const cw = $('#cwCmd'); cw.appendChild($('#cmdArea')); if (!keypad) buildKeypad(); $('#cmdArea').appendChild(keypad);
+    $('#cwMaster').appendChild($('#master'));
+  } else {
+    $('#main').appendChild($('#side'));
+    $('#app').insertBefore($('#enc'), $('#desk'));
+    $('#desk').insertBefore($('#cmdArea'), $('#desk').firstChild); if (keypad) keypad.remove();
+    $('#desk').insertBefore($('#execs'), $('#master') && $('#master').parentNode === $('#desk') ? $('#master') : null); $('#execs').style.flex = '';
+    $('#desk').appendChild($('#master'));
+  }
+  fitDesk(); resize();
+  try { localStorage.setItem('lumadesk-layout', JSON.stringify({ deskMode, deskZoom })); } catch (e) { }
+}
+function fitDesk() {
+  const z = deskZoom === 'auto' ? clamp((innerWidth - 24) / 1880, .66, 1.05) : +deskZoom;
+  $('#cbody').style.setProperty('--dz', z.toFixed(3));
+}
+$('#layoutSel').onchange = ev => { deskMode = ev.target.value; applyLayout(); };
+$('#deskZoom').onchange = ev => { deskZoom = ev.target.value; fitDesk(); resize(); try { localStorage.setItem('lumadesk-layout', JSON.stringify({ deskMode, deskZoom })); } catch (e) { } };
+addEventListener('resize', () => { if (deskMode === 'desk') { fitDesk(); } });
+// clear key clears a half-typed command line first (like MA); STORE pre-types "Store"
+{ const kc = $('#kClear'); const old = kc.onclick; kc.onclick = () => { if (cmd.value.trim()) { cmd.value = ''; return; } old(); }; }
+setInterval(() => {
+  if (deskMode !== 'desk') return;
+  const e = execs[selExec]; $('#cwPbInfo').textContent = `EXEC ${selExec + 1} · ${e.name || 'empty'}`;
+  $('#cwProgInfo').textContent = `${sel.length} SELECTED`; $('#cwScreenInfo').textContent = (sideTab || '').toUpperCase();
+}, 250);
+try { const L = JSON.parse(localStorage.getItem('lumadesk-layout') || 'null'); if (L) { deskMode = L.deskMode || 'desk'; deskZoom = L.deskZoom || 'auto'; } } catch (e) { }
+$('#layoutSel').value = deskMode; $('#deskZoom').value = deskZoom;
+applyLayout();
 
 /* boot */
 renderFeatTabs(); renderEncoders(); buildExecs(); renderAuto();
