@@ -1,0 +1,1 @@
+varying vec3 vP;void main(){float h=clamp(vP.y,0.,1.);vec3 c=mix(vec3(.035,.045,.09),vec3(.004,.006,.02),pow(h,.45))+vec3(.09,.05,.02)*pow(1.-h,10.);gl_FragColor=vec4(c,1.);}
