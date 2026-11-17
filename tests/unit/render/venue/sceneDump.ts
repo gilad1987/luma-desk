@@ -1,17 +1,9 @@
-import type { BufferGeometry, Material, Object3D, Texture } from 'three';
+import { BufferGeometry, Color, InstancedMesh, Light, Mesh, Points, ShaderMaterial, Sprite, Texture } from 'three';
+import type { Material, Object3D } from 'three';
+import { rounded } from './rounded';
 
-// Browser-safe on purpose (types only from three): the same dump ran inside the legacy page to record the golden.
-
-const round = (n: number): number => Math.round(n * 1e5) / 1e5;
-
-/** Rounds every number in a JSON-like value, so two engines that agree to 5 decimals give the same text. */
-const rounded = (value: unknown): unknown => {
-  if (typeof value === 'number') return round(value);
-  if (Array.isArray(value)) return value.map(rounded);
-  if (value && typeof value === 'object')
-    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, rounded(v)]));
-  return value;
-};
+// The golden was recorded by running this dump inside the legacy page; the class checks below narrow types only and
+// read the same fields in the same order, so the text (and its hash) is unchanged.
 
 const sum = (array: ArrayLike<number>): number => {
   let total = 0;
@@ -19,47 +11,45 @@ const sum = (array: ArrayLike<number>): number => {
   return Math.round(total * 1e3) / 1e3;
 };
 
-const texture = (t: Texture | null | undefined): unknown =>
-  t && {
-    uuid: t.uuid,
-    source: t.source.uuid,
-    wrap: [t.wrapS, t.wrapT],
-    repeat: rounded(t.repeat.toArray()),
-    center: t.center.toArray(),
-    anisotropy: t.anisotropy,
-    colorSpace: t.colorSpace,
-    size: [(t.image as HTMLCanvasElement | null)?.width, (t.image as HTMLCanvasElement | null)?.height],
-  };
+/** A texture as data; a missing (`undefined`) or empty (`null`) slot passes through as the recording kept it. */
+const texture = (t: unknown): unknown =>
+  t instanceof Texture
+    ? {
+        uuid: t.uuid,
+        source: t.source.uuid,
+        wrap: [t.wrapS, t.wrapT],
+        repeat: rounded(t.repeat.toArray()),
+        center: t.center.toArray(),
+        anisotropy: t.anisotropy,
+        colorSpace: t.colorSpace,
+        size: [(t.image as HTMLCanvasElement | null)?.width, (t.image as HTMLCanvasElement | null)?.height],
+      }
+    : t;
 
 const KEYS = ['color', 'roughness', 'metalness', 'flatShading', 'transparent', 'opacity', 'side', 'depthWrite'];
 const MORE_KEYS = ['fog', 'toneMapped', 'vertexColors', 'size', 'sizeAttenuation', 'vertexShader', 'fragmentShader'];
 
-const material = (m: Material): unknown => {
-  const record = m as unknown as Record<string, unknown>;
-  const fields = Object.fromEntries(
-    [...KEYS, ...MORE_KEYS]
-      .filter((k) => k in record)
-      .map((k) => {
-        const v = record[k];
-        const hex = v && typeof v === 'object' && 'getHex' in v ? (v as { getHex(): number }).getHex() : v;
-        return [k, hex];
-      }),
-  );
-  const uniforms = record.uniforms as Record<string, { value: unknown }> | undefined;
-  return {
-    uuid: m.uuid,
-    type: m.type,
-    ...(rounded(fields) as object),
-    map: texture(record.map as Texture | null),
-    uniforms: uniforms && Object.keys(uniforms),
-    patched: Object.prototype.hasOwnProperty.call(m, 'onBeforeCompile'),
-  };
+/** A material field by name; the keys differ per material class, so it is read by reflection. */
+const field = (m: Material, key: string): unknown => {
+  const value: unknown = Reflect.get(m, key);
+  return value instanceof Color ? value.getHex() : value;
 };
+
+const material = (m: Material): unknown => ({
+  uuid: m.uuid,
+  type: m.type,
+  ...(rounded(
+    Object.fromEntries([...KEYS, ...MORE_KEYS].filter((k) => k in m).map((k) => [k, field(m, k)])),
+  ) as object),
+  map: texture(field(m, 'map')),
+  uniforms: m instanceof ShaderMaterial ? Object.keys(m.uniforms) : undefined,
+  patched: Object.prototype.hasOwnProperty.call(m, 'onBeforeCompile'),
+});
 
 const geometry = (g: BufferGeometry): unknown => ({
   uuid: g.uuid,
   type: g.type,
-  parameters: rounded((g as unknown as { parameters?: unknown }).parameters),
+  parameters: rounded('parameters' in g ? g.parameters : undefined),
   attributes: Object.keys(g.attributes)
     .sort()
     .map((name) => {
@@ -68,13 +58,13 @@ const geometry = (g: BufferGeometry): unknown => ({
     }),
 });
 
+/** The scene object kinds that carry a geometry and a material. */
+const isDrawable = (o: Object3D): o is Mesh | Points | Sprite =>
+  o instanceof Mesh || o instanceof Points || o instanceof Sprite;
+
 /** One object and its subtree, with every value that the scene build sets, as plain data in traversal order. */
 export function dumpObject(o: Object3D): unknown {
-  const r = o as unknown as Record<string, unknown>;
-  const mats = r.material as Material | Material[] | undefined;
-  const im = r.instanceMatrix as { array: Float32Array } | undefined;
-  const ic = r.instanceColor as { array: Float32Array } | null | undefined;
-  const light = 'intensity' in r ? [r.intensity, r.distance, r.decay, (r.color as { getHex(): number }).getHex()] : 0;
+  const mats = isDrawable(o) ? o.material : undefined;
   return {
     type: o.type,
     uuid: o.uuid,
@@ -87,10 +77,14 @@ export function dumpObject(o: Object3D): unknown {
     ]),
     flags: [o.castShadow, o.receiveShadow, o.frustumCulled, o.visible],
     userData: o.userData,
-    geometry: r.geometry ? geometry(r.geometry as BufferGeometry) : 0,
+    geometry: isDrawable(o) && o.geometry instanceof BufferGeometry ? geometry(o.geometry) : 0,
     material: mats ? (Array.isArray(mats) ? mats.map(material) : material(mats)) : 0,
-    instances: im ? [r.count, sum(im.array), ic ? sum(ic.array) : 0] : 0,
-    light,
+    instances:
+      o instanceof InstancedMesh
+        ? [o.count, sum(o.instanceMatrix.array), o.instanceColor ? sum(o.instanceColor.array) : 0]
+        : 0,
+    light:
+      o instanceof Light ? [o.intensity, Reflect.get(o, 'distance'), Reflect.get(o, 'decay'), o.color.getHex()] : 0,
     children: o.children.map(dumpObject),
   };
 }
