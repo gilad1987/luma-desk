@@ -4,6 +4,7 @@ import { EventBus } from '../../../../../src/core';
 import type { EngineEvents, EngineMessage } from '../../../../../src/engine/events';
 import type { ViewportDeps } from '../../../../../src/ui/panels/viewport/ViewportDeps';
 import { ViewportPicking } from '../../../../../src/ui/panels/viewport/ViewportPicking';
+import { asReal } from '../../fakes/asReal';
 import { FakeElement } from '../../fakes/FakeElement';
 import { FakeDom } from '../../fakes/installFakeDom';
 
@@ -60,7 +61,7 @@ describe('ViewportPicking', () => {
     canvas.fire('pointerdown', at(80, 90, { shiftKey: true, button: 0 }));
     expect(controls.enabled).toBe(false);
     win.fire('pointermove', at(40, 30));
-    const style = dom.get('selRect').style as unknown as Record<string, string>;
+    const style = asReal<Record<string, string>>(dom.get('selRect').style);
     expect([style.display, style.left, style.top, style.width, style.height]).toEqual([
       'block',
       '40px',
@@ -85,9 +86,9 @@ describe('ViewportPicking', () => {
     const hit = mount();
     hit.canvas.fire('pointermove', hit.at(20, 30));
     const tip = hit.dom.get('tip'),
-      style = tip.style as unknown as Record<string, string>;
+      style = asReal<Record<string, string>>(tip.style);
     expect([style.display, style.left, style.top, tip.textContent]).toEqual(['block', '32px', '42px', '7 · Spot']);
-    expect((hit.canvas.style as unknown as Record<string, string>).cursor).toBe('pointer');
+    expect(asReal<Record<string, string>>(hit.canvas.style).cursor).toBe('pointer');
     vi.unstubAllGlobals();
     const miss = mount(null);
     miss.canvas.fire('pointermove', miss.at(20, 30));

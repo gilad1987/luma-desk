@@ -4,6 +4,7 @@ import type { EngineEvents } from '../../../../src/engine/events';
 import type { LayoutMode } from '../../../../src/ui/panels/layoutMode';
 import { SideTabs } from '../../../../src/ui/panels/side/SideTabs';
 import { sideTabsMarkup } from '../../../../src/ui/panels/side/sideTabsMarkup';
+import { asReal } from '../fakes/asReal';
 import { FakeElement } from '../fakes/FakeElement';
 import { FakeDom } from '../fakes/installFakeDom';
 import { FakeButton } from '../fakes/FakeButton';
@@ -21,7 +22,7 @@ describe('SideTabs', () => {
     buttons = [0, 1, 2, 3].map(() => new FakeButton('button'));
     host.found.set('#sideTabs button', buttons);
     mode = 'desk';
-    tabs = new SideTabs(host as unknown as HTMLElement, bus, () => mode);
+    tabs = new SideTabs(asReal<HTMLElement>(host), bus, () => mode);
   });
   afterEach(() => vi.unstubAllGlobals());
 

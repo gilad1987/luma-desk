@@ -7,6 +7,7 @@ import { CommandLine } from '../../../../src/ui/panels/command/CommandLine';
 import type { CommandLineDeps } from '../../../../src/ui/panels/command/CommandLineDeps';
 import { commandLineMarkup } from '../../../../src/ui/panels/command/commandLineMarkup';
 import { Modal, StoreModeGuard } from '../../../../src/ui/shared';
+import { asReal } from '../fakes/asReal';
 import type { FakeElement } from '../fakes/FakeElement';
 import { FakeDom } from '../fakes/installFakeDom';
 import { FakeButton, FakeList } from '../fakes/FakeButton';
@@ -16,6 +17,7 @@ const KEYS = ['kStore', 'kClear', 'kHigh', 'kFan', 'kAll', 'kOdd', 'kEven', 'kRe
 
 describe('CommandLine', () => {
   let dom: FakeDom, input: FakeElement, state: AppState, deps: CommandLineDeps, line: CommandLine, host: FakeHost;
+  let go: ReturnType<typeof vi.fn>;
   const key = (k: string) => {
     const preventDefault = vi.fn();
     input.onkeydown?.({ key: k, preventDefault } as { key: string });
@@ -29,7 +31,7 @@ describe('CommandLine', () => {
     for (const id of [...KEYS, 'modal', 'mbox']) dom.add(id, new FakeButton());
     const bus = new EventBus<EngineEvents>();
     state = new AppState(bus);
-    const go = vi.fn();
+    go = vi.fn();
     deps = {
       bus,
       state,
@@ -42,13 +44,13 @@ describe('CommandLine', () => {
       guideOrTourOpen: () => false,
     } as unknown as CommandLineDeps;
     host = new FakeHost();
-    line = new CommandLine(host as unknown as HTMLElement, deps);
+    line = new CommandLine(asReal<HTMLElement>(host), deps);
   });
   afterEach(() => vi.unstubAllGlobals());
 
   it('renders the command area first in its host', () => {
     host.html = '<div id="execs"></div>';
-    new CommandLine(host as unknown as HTMLElement, deps);
+    new CommandLine(asReal<HTMLElement>(host), deps);
     expect(host.html).toBe(commandLineMarkup + '<div id="execs"></div>');
   });
 
@@ -93,6 +95,6 @@ describe('CommandLine', () => {
     const preventDefault = vi.fn();
     dom.documentClicks.at(-1)?.({ target: null, code: 'Space', key: ' ', preventDefault } as { target: null });
     expect(preventDefault).toHaveBeenCalled();
-    expect((deps.pool as unknown as { go: ReturnType<typeof vi.fn> }).go).toHaveBeenCalledWith(deps.execs[0], 1);
+    expect(go).toHaveBeenCalledWith(deps.execs[0], 1);
   });
 });
