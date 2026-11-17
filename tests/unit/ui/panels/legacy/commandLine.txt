@@ -1,0 +1,8 @@
+<div id="cmdArea">
+      <div id="cmdFb"><div>Welcome. Type commands like <span class="ok">Fixture 201 Thru 224 At Full</span></div></div>
+      <div class="cmdrow"><span>[Channel]&gt;</span><input id="cmd" autocomplete="off" spellcheck="false" placeholder="Group 2 At 80"></div>
+      <div class="keys">
+        <button class="store" id="kStore">STORE</button><button id="kClear">CLEAR</button><button id="kHigh">HIGHLT</button><button id="kFan">FAN</button>
+        <button id="kAll">ALL</button><button id="kOdd">ODD</button><button id="kEven">EVEN</button><button id="kRev">REVERSE</button>
+      </div>
+    </div>

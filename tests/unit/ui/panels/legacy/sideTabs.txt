@@ -1,0 +1,1 @@
+<nav class="tabs" id="sideTabs"><button data-t="pools" class="on">Pools</button><button data-t="auto">Auto Show</button><button data-t="seq">Sequence</button><button data-t="sheet">Fixture Sheet</button></nav>
