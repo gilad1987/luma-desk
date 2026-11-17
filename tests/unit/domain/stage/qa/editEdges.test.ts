@@ -9,7 +9,7 @@ import * as items from '../../../../../src/domain/stage/edit/itemOps.ts';
 import { setLedWall } from '../../../../../src/domain/stage/edit/ledWall.ts';
 import { mirrorLeftToRight } from '../../../../../src/domain/stage/edit/mirror.ts';
 import { addPresetTruss, moveTruss, setTrussProps } from '../../../../../src/domain/stage/edit/trussOps.ts';
-import { HANG_DROP_M } from '../../../../../src/domain/stage/edit/trussPlaces.ts';
+import { HANG_DROP_M } from '../../../../../src/domain/stage/trussPlaces.ts';
 import { createTemplate } from '../../../../../src/domain/stage/templates/index.ts';
 
 const empty = createTemplate('empty');

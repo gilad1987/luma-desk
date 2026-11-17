@@ -1,6 +1,7 @@
 /**
  * Owns where `addFixturesOnTruss` and `addFloorRow` put new fixtures: even spacing, the hang drop below the truss,
- * circle angle steps from +z with a yaw to the centre, the truss rotation (G2) and the lane shift. Rendering the result is owned by the render tests.
+ * circle angle steps from +z with a yaw to the centre, the truss rotation (G2) and the lane shift. Rendering the
+ * result is owned by the render tests.
  */
 import { Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';

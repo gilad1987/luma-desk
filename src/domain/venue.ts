@@ -68,8 +68,9 @@ export const ANG: readonly AngledTruss[] = [-1, 1].flatMap((sx) =>
 );
 
 /**
- * The two audience delay towers as [x, z] in metres. The legacy scene draws them and the Sultan's Pool template
- * hangs its delay fixtures on them, so both read this one record.
+ * The two audience delay towers as [x, z] in metres. The Sultan's Pool template builds its delay towers from this
+ * record. `src/main.ts` still draws them from its own legacy copy; the wiring step removes that copy, so the scene
+ * reads this record too.
  */
 export const DELAYS: readonly (readonly [x: number, z: number])[] = [
   [-24, 33],
