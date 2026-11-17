@@ -10,16 +10,17 @@ import type { StageDesign } from '../../../../src/domain/stage/StageDesign.ts';
 import { frameOf } from '../../../../src/domain/stage/StageFrame.ts';
 import { surfacesOf } from '../../../../src/domain/stage/surfaces.ts';
 import { BAND_PTS } from '../../../../src/domain/venue.ts';
-import { VENUE_DESIGN } from './venueDesign.ts';
+import { createTemplate } from '../../../../src/domain/stage/templates/index.ts';
 
+const SULTANS_POOL = createTemplate('sultans-pool');
 const theatreDeck = { x0: -5, x1: 5, z0: -7, z1: 1, height: 1 };
 const festivalDeck = { x0: -15, x1: 15, z0: -14, z1: 2, height: 2.2 };
-const empty: StageDesign = { ...VENUE_DESIGN, deck: theatreDeck, screens: [], risers: [], trusses: [], fixtures: [] };
+const empty: StageDesign = { ...SULTANS_POOL, deck: theatreDeck, screens: [], risers: [], trusses: [], fixtures: [] };
 
 describe('frameOf on other decks', () => {
   it('fits every band mark inside a theatre and a festival deck, with finite numbers', () => {
     for (const deck of [theatreDeck, festivalDeck]) {
-      const points = frameOf({ ...VENUE_DESIGN, deck }).bandPoints;
+      const points = frameOf({ ...SULTANS_POOL, deck }).bandPoints;
       expect(isIdentityFit(deckFitOf(deck))).toBe(false);
       expect(points).toHaveLength(BAND_PTS.length);
       for (const [x, z] of points) {
@@ -30,8 +31,8 @@ describe('frameOf on other decks', () => {
   });
 
   it('gives no band marks on another deck when the band is off', () => {
-    const scenery = { ...VENUE_DESIGN.scenery, band: false };
-    expect(frameOf({ ...VENUE_DESIGN, deck: festivalDeck, scenery }).bandPoints).toEqual([]);
+    const scenery = { ...SULTANS_POOL.scenery, band: false };
+    expect(frameOf({ ...SULTANS_POOL, deck: festivalDeck, scenery }).bandPoints).toEqual([]);
   });
 
   it('takes only the edges of the first screen, without its side screens', () => {

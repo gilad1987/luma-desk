@@ -1,27 +1,22 @@
 /**
- * QA3: parseStageDesign on stored JSON. Owns the round trip of every template, inputs that are not objects and
+ * QA3: parseStageDesign on stored JSON. Owns the exact round trip of every template (JSON only turns -0 into 0), inputs that are not objects and
  * prototype keys. The single-rule rejections are owned by parse*.test.ts; random damage by parseFuzz.test.ts.
  */
 import { describe, expect, it } from 'vitest';
 import { parseStageDesign } from '../../../../../src/domain/stage/parse/parseStageDesign.ts';
 import { createTemplate, TEMPLATE_IDS } from '../../../../../src/domain/stage/templates/index.ts';
-
-/** JSON text with numbers rounded to 1e-9, so -0 and the last bit of a re-normalized quaternion compare equal. */
-function canonical(value: unknown): unknown {
-  const round = (_: string, v: unknown): unknown => (typeof v === 'number' ? Math.round(v * 1e9) / 1e9 + 0 : v);
-  return JSON.parse(JSON.stringify(value, round));
-}
+import { jsonRoundTrip } from '../../../../shared/index.ts';
 
 describe('QA3 parseStageDesign round trip', () => {
-  it.each(TEMPLATE_IDS)('parses the stored JSON of the %s template back to the same design', (id) => {
-    const template = createTemplate(id);
-    const result = parseStageDesign(JSON.parse(JSON.stringify(template)));
-    expect(result.ok ? canonical(result.design) : result.errors).toStrictEqual(canonical(template));
+  it.each(TEMPLATE_IDS)('parses the stored JSON of the %s template back to exactly the same design', (id) => {
+    const stored = jsonRoundTrip(createTemplate(id));
+    const result = parseStageDesign(stored);
+    expect(result.ok ? result.design : result.errors).toStrictEqual(stored);
   });
 
   it.each(TEMPLATE_IDS)('gives the same design when the %s template is parsed a second time', (id) => {
-    const first = parseStageDesign(JSON.parse(JSON.stringify(createTemplate(id))));
-    const second = first.ok ? parseStageDesign(JSON.parse(JSON.stringify(first.design))) : first;
+    const first = parseStageDesign(jsonRoundTrip(createTemplate(id)));
+    const second = first.ok ? parseStageDesign(jsonRoundTrip(first.design)) : first;
     expect(second).toStrictEqual(first);
   });
 });

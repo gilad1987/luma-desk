@@ -1,5 +1,5 @@
 import type { FixtureTypeId } from '../FixtureType';
-import type { Rig } from '../rig/Rig';
+import { isLight, type Rig } from '../rig/Rig';
 import type { StageDesign, StageFixture } from './StageDesign';
 import type { FixtureRole, TrussKind } from './types';
 
@@ -11,7 +11,7 @@ export interface FixtureQuery {
   readonly role?: FixtureRole;
   readonly type?: FixtureTypeId;
   readonly moving?: boolean;
-  /** Every fixture except the LED screen, as the old "all lights". */
+  /** Every light (see `isLight`), as the old "all lights". */
   readonly lights?: true;
   /** `'none'` keeps fixtures that stand on no truss; a kind keeps fixtures on a truss of that kind. */
   readonly truss?: 'none' | TrussKind;
@@ -42,7 +42,7 @@ export function selectIds(rig: Rig, d: StageDesign, q: FixtureQuery): number[] {
   const ids = rig.fixtures
     .filter((f) => q.type === undefined || f.type === q.type)
     .filter((f) => q.moving === undefined || f.T.moving === q.moving)
-    .filter((f) => !q.lights || f.type !== 'screen')
+    .filter((f) => !q.lights || isLight(f))
     .filter((f) => q.side === undefined || (q.side === 'left' ? f.pos.x < 0 : f.pos.x > 0))
     .filter((f) => q.role === undefined || placed.get(f.id)?.role === q.role)
     .filter((f) => q.truss === undefined || trussKindOf(d, placed.get(f.id)) === q.truss)

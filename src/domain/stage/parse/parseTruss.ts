@@ -1,7 +1,9 @@
 import type { StageTruss } from '../trussTypes';
 import { FIXTURE_ROLES, type Transform } from '../types';
 import { parseTrussParams } from './parseTrussParams';
-import { allDefined, describeValue, type Raw, type Reader } from './readers';
+import { allDefined, type Raw } from './rawValues';
+import type { Reader } from './readers';
+import { uniqueId } from './uniqueId';
 
 /** The parsed trusses and every truss id that was read, including ids of trusses that failed on another field. */
 export interface ParsedTrusses {
@@ -19,9 +21,7 @@ export function parseTrusses(r: Reader, raw: unknown): ParsedTrusses {
   const trusses = r.list(raw, 'trusses', (v, path) => {
     const o = r.obj(v, path);
     if (!o) return undefined;
-    const id = r.str(o.id, `${path}.id`);
-    if (id !== undefined && ids.has(id)) r.fail(`${path}.id`, `duplicate id ${describeValue(id)}`);
-    if (id !== undefined) ids.add(id);
+    const id = uniqueId(r, ids, r.str(o.id, `${path}.id`), `${path}.id`);
     return parseTruss(r, o, path, id);
   });
   return { trusses: trusses ?? [], ids };

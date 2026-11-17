@@ -33,10 +33,13 @@ describe('parseStageDesign trusses', () => {
       [{ kind: 'straight', a: [0, 0, 0], section: 1 }, 'trusses[0].params.b: expected 3 numbers, got undefined'],
       [
         { kind: 'tower', a: [0, 0, 0], b: [0, 1, 0] },
-        'trusses[0].params.section: expected a finite number, got undefined',
+        'trusses[0].params.section: expected a number greater than 0, got undefined',
       ],
-      [{ kind: 'circle', section: 1 }, 'trusses[0].params.radius: expected a finite number, got undefined'],
-      [{ kind: 'goalpost', width: 1, section: 1 }, 'trusses[0].params.height: expected a finite number, got undefined'],
+      [{ kind: 'circle', section: 1 }, 'trusses[0].params.radius: expected a number greater than 0, got undefined'],
+      [
+        { kind: 'goalpost', width: 1, section: 1 },
+        'trusses[0].params.height: expected a number greater than 0, got undefined',
+      ],
       [{ kind: 'roof' }, 'trusses[0].params.size: expected 3 numbers, got undefined'],
     ];
     for (const [params, error] of cases) expect(errorsOf(withTruss({ params }))).toEqual([error]);

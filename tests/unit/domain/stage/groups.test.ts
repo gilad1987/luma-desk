@@ -50,6 +50,13 @@ describe('defaultGroupsOf', () => {
     expect(groups[13]?.name).toBe('All Beams');
   });
 
+  it('with trussGroups false gives exactly the old defaultGroups pool and nothing in slots 38-48', () => {
+    const builtIn = defaultGroupsOf(rig, design, { trussGroups: false });
+    expect(builtIn).toStrictEqual(defaultGroups(rig));
+    expect(Object.keys(builtIn).filter((slot) => Number(slot) > 37)).toStrictEqual([]);
+    expect(defaultGroupsOf(rig, design, { trussGroups: true })).toStrictEqual(pool);
+  });
+
   it('gives an empty stage an empty pool', () => {
     const empty = createTemplate('empty');
     expect(defaultGroupsOf(rigFromDesign(empty), empty)).toEqual({});

@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { dirFrom } from '../../../../src/domain/aim.ts';
 import { rigFromDesign } from '../../../../src/domain/stage/deriveRig.ts';
 import type { StageDesign, StageFixture } from '../../../../src/domain/stage/StageDesign.ts';
-import { VENUE_DESIGN } from './venueDesign.ts';
+import { createTemplate } from '../../../../src/domain/stage/templates/index.ts';
 
 const bar: StageFixture = {
   id: 2101,
@@ -24,12 +24,12 @@ const ringBeam: StageFixture = {
   id: 1201,
   type: 'beam',
   role: 'ring',
-  trussId: 'outer-ring',
+  trussId: 'ring-outer',
   position: [9, 17, -9],
   mount: 'floor',
   rotation: [0.1, -0.2, 0.3, Math.sqrt(1 - 0.14)],
 };
-const design: StageDesign = { ...VENUE_DESIGN, fixtures: [bar, ringBeam] };
+const design: StageDesign = { ...createTemplate('sultans-pool'), fixtures: [bar, ringBeam] };
 
 describe('rigFromDesign edges', () => {
   it('copies the pixel strip of a bar into three.js vectors', () => {
