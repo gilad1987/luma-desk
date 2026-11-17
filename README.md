@@ -24,13 +24,15 @@ No install and no build step. Works offline once loaded, and can be installed as
 | **Circular truss "tornado"**: 24 beams on a ring, twisted with a Circle phaser and 360° phase spread. | **The drop**: strobes, blinders, sunburst ring and fanned beams across the whole rig. |
 | ![Audience view](docs/screenshots/audience.png) | ![Sultan's Pool and the Old City walls](docs/screenshots/old-city.png) |
 | **The crowd gets lit**: every beam that lands in the audience colors the people under it. | **Sultan's Pool**: seated crowd, stone terraces, and the floodlit Old City walls with the Tower of David. |
-| ![Band and drum kit](docs/screenshots/band.png) | ![30-piece orchestra](docs/screenshots/orchestra.png) |
-| **8-piece band** with a full drum kit on the riser. | **30-piece orchestra** on three tiers of risers. |
+| ![Old City walls on both sides](docs/screenshots/old-city-walls.png) | ![Band and drum kit](docs/screenshots/band.png) |
+| **Jerusalem's walls on both sides** of the valley, with a gate on the right and the Tower of David on the left. | **8-piece band** with a full drum kit on the riser. |
+| ![30-piece orchestra](docs/screenshots/orchestra.png) | ![30-piece orchestra](docs/screenshots/orchestra.png) | |
+| **30-piece orchestra** on three tiers of risers. | |
 
 ## Features
 
 ### 🎛 Console (grandMA workflow)
-- **Desk layout** (the default): the stage fills the screen and one compact console sits centered beneath it, like a real desk. **SCREEN** (pools, Auto Show, sequence) is on the left, **PROGRAMMER** and **PLAYBACK** in the middle, and **COMMAND** (MA-style keypad: `Group 2 4 At Full Enter`) and **MASTER** (GO, GM, B.O., TAP) on the right. Everything is in reach, even on a 4K monitor. The console size can be scaled (Auto, or 85% to 150%), and a **Classic** layout is still available.
+- **Console (MA) layout** (the default): a physical grandMA-style desk under the stage. It has a bar of three screens (1 Pools / Auto / Sequence, 2 Programmer tools, 3 Command line + cue list) above a control surface with metal-cap faders and lit executor keys, large encoder wheels with value displays, a hardware MA keypad (`Group 2 4 At Full ENTER`), and a GO/Grand Master section. It scales to any screen, so everything stays in reach even on a 4K monitor. The **Desk** (compact flat) and **Classic** layouts are also available.
 - **Command line** in MA syntax: `Fixture 201 Thru 230`, `Group 24 + Group 31`, `At Full`, `Store Cue 5 Fade 3`, `Goto Cue 3`, `Preset 4.10`, `Label Cue 5 Chorus`, `Delete Cue 4`, `Off Exec 2`.
 - **Programmer** with feature tabs (Dimmer, Position, Gobo, Color, Beam, Phaser), drag encoders, and programmer values shown in red.
 - **Pools**: 36 groups and presets for Dimmer, Position, Gobo, Color and Beam. Position presets are calculated per fixture: Singer, Drums, Orchestra, Fan Audience, Ring Cone, Ring Twist, Sunburst, Crown and more.

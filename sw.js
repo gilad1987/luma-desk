@@ -1,5 +1,5 @@
 // LUMA DESK service worker — offline app shell, stale-while-revalidate for everything else.
-const CACHE = 'luma-desk-v11';
+const CACHE = 'luma-desk-v12';
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/favicon.png',

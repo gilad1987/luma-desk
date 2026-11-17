@@ -213,7 +213,7 @@ canvas.pad{border:1px solid var(--line2);border-radius:4px;cursor:crosshair;touc
 
 
 /* ================= DESK LAYOUT: stage on top, one compact console below ================= */
-body.desk #app{grid-template-rows:40px minmax(0,1fr) auto}
+body.desk #app{grid-template-rows:40px minmax(0,1fr) auto;grid-template-columns:minmax(0,1fr);width:100vw}
 body.desk #main{grid-template-columns:minmax(0,1fr)}
 body.desk #viewer{border-right:0}
 body.desk #desk,body.desk #app>#enc{display:none}
@@ -261,6 +261,103 @@ body.desk .mRow button{padding:9px 0}
 @media (max-width:2100px){#showName{display:none}}
 @media (max-width:1700px){#top .tbg label{display:none}}
 #layoutBox select{background:var(--p3);color:var(--txt);border:1px solid var(--line2);border-radius:4px;padding:2px 4px;font-size:11px}
+
+/* ================= MA CONSOLE LAYOUT: a physical grandMA-style desk under the stage ================= */
+#maConsole{display:none}
+body.ma #app{grid-template-rows:40px minmax(0,1fr) auto;grid-template-columns:minmax(0,1fr);width:100vw}
+body.ma #maConsole{min-width:0;max-width:100vw}
+body.ma .keypad{grid-auto-rows:1fr;align-content:stretch}
+body.ma #kySlot .keys{flex:0 0 auto}
+body.ma #main{grid-template-columns:minmax(0,1fr)}
+body.ma #viewer{border-right:0}
+body.ma #desk,body.ma #app>#enc,body.ma #console{display:none}
+body.ma #maConsole{display:block;background:radial-gradient(120% 140% at 50% 0%,#0a0a0d 0%,#030304 70%);padding:10px 10px 0;overflow:hidden}
+.maDesk{zoom:var(--mz,1);width:1900px;margin:0 auto;position:relative;padding:12px 16px 0;border-radius:24px 24px 6px 6px;
+  background:linear-gradient(#2c2c31 0%,#1d1d21 38%,#151518 100%);box-shadow:0 -24px 60px #000,inset 0 1px 0 #ffffff22,inset 1px 0 0 #ffffff0d,inset -1px 0 0 #ffffff0d}
+.maDesk::before{content:'';position:absolute;left:24px;right:24px;top:4px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,#ffffff26,transparent)}
+.maScreens{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;height:224px;padding:10px 12px;border-radius:14px;
+  background:linear-gradient(#111113,#08080a);box-shadow:inset 0 3px 8px #000,0 1px 0 #ffffff12}
+.disp{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;background:#000;border:8px solid #050506;border-radius:7px;
+  box-shadow:0 0 0 1px #2c2c31,0 6px 14px #000c;overflow:hidden}
+.disp::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(118deg,rgba(255,255,255,.055) 0%,rgba(255,255,255,.015) 28%,transparent 42%)}
+.dhead{display:flex;justify-content:space-between;align-items:center;height:20px;padding:0 8px;background:linear-gradient(#1b2433,#121925);border-bottom:1px solid #000;font:700 9.5px var(--mono);letter-spacing:.14em;color:#8fb3e6;flex:0 0 auto}
+.dhead b{color:var(--acc);font-weight:700;letter-spacing:.06em}
+.dslot{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+body.ma #side{flex:1;min-height:0;background:#050507}
+body.ma .tabs{background:#0d0f14}
+body.ma .pane{padding:6px}
+body.ma .slot{height:40px}
+body.ma #encExtra{padding:10px 12px;gap:12px;overflow:auto;flex-wrap:wrap;align-content:flex-start;background:#050507;flex:1}
+body.ma #cmdFb{height:auto;flex:0 0 auto;padding:6px 10px 4px;font-size:12px;line-height:17px;color:#9aa0a8;background:#050507}
+body.ma .cmdrow{margin:0 8px;height:30px;border-color:#2a3446;background:#02040a}
+#miniSeq{flex:1;min-height:0;overflow:hidden;margin:6px 8px 8px;border:1px solid #161a22;border-radius:4px;font:11.5px var(--mono)}
+#miniSeq .r{display:grid;grid-template-columns:44px 1fr 52px;gap:6px;padding:3px 8px;border-bottom:1px solid #0f1218;color:#9aa0a8}
+#miniSeq .r.cur{background:#0f2a18;color:#8ff0b0;box-shadow:inset 3px 0 0 var(--go)}
+#miniSeq .r.nx{color:#e3c45a}
+#miniSeq .h{color:#55606e;font-size:9.5px;letter-spacing:.12em}
+.maSurface{display:grid;grid-template-columns:770px minmax(0,1fr) 470px 214px;gap:12px;height:250px;padding:14px 2px 10px}
+.srf{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;padding:16px 8px 8px;border-radius:12px;
+  background:linear-gradient(#202024,#17171a);box-shadow:inset 0 1px 0 #ffffff14,inset 0 -1px 0 #000,0 3px 6px #0009}
+.slab{position:absolute;left:12px;top:3px;font:700 8px var(--mono);letter-spacing:.28em;color:#6e6e78}
+/* hardware keys */
+body.ma .keys button,body.ma .keypad button,body.ma #featTabs button,body.ma .ex-btns button,body.ma .mRow button,body.ma .ex-off{
+  background:linear-gradient(#3c3c42,#28282d);border:1px solid #08080a;border-radius:4px;color:#d6d6dd;
+  box-shadow:0 2px 0 #040405,inset 0 1px 0 rgba(255,255,255,.15);font-family:Inter,sans-serif}
+body.ma .keys button:active,body.ma .keypad button:active,body.ma .ex-btns button:active,body.ma .mRow button:active{transform:translateY(1px);box-shadow:0 1px 0 #040405,inset 0 1px 0 rgba(255,255,255,.1)}
+body.ma .keys button.on,body.ma #featTabs button.on{color:#ffd65a;box-shadow:0 2px 0 #040405,inset 0 0 10px rgba(255,194,26,.55),inset 0 1px 0 rgba(255,255,255,.18);border-color:#5a4500}
+body.ma .keys .store{color:#ff9a9a}
+body.ma .keys .store.on{background:linear-gradient(#6a1414,#3e0a0a);color:#fff;box-shadow:0 2px 0 #040405,inset 0 0 12px rgba(255,64,64,.7)}
+body.ma .keypad .n{background:linear-gradient(#45454b,#2e2e33);color:#fff}
+body.ma .keypad .w{background:linear-gradient(#2f3445,#20242f);color:#c4ceff}
+body.ma .keypad .en{background:linear-gradient(#2f7c49,#1b5631);color:#eafff0;box-shadow:0 2px 0 #040405,inset 0 0 10px rgba(80,255,140,.35)}
+body.ma .keys{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-bottom:6px}
+body.ma .keys button{height:30px;font-size:10px;font-weight:700;letter-spacing:.04em;padding:0}
+body.ma .keypad{grid-template-columns:repeat(6,1fr);gap:5px;flex:1}
+body.ma .keypad button{min-height:0}
+/* feature keys + big encoders */
+body.ma #featTabs{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;border:0;background:none;margin-bottom:8px}
+body.ma #featTabs button{height:30px;padding:0;text-align:center;font-size:10.5px;font-weight:700;border-left:1px solid #08080a}
+body.ma #featTabs button.has::after{right:4px;top:4px;margin:0;width:5px;height:5px}
+body.ma #encoders{flex:1;display:flex;justify-content:space-around;align-items:center;gap:8px}
+body.ma .encoder{width:auto;gap:7px}
+body.ma .encoder .val{order:-1;background:#06110b;border:1px solid #18301f;color:#8ff0b0;font-size:12.5px;min-width:86px;box-shadow:inset 0 0 8px #000}
+body.ma .encoder .val.p{color:#ff6b6b;border-color:#4a1616;background:#140606}
+body.ma .encoder .lb{font:700 9px var(--mono);letter-spacing:.18em;color:#8a8a94}
+body.ma .knob{width:92px;height:92px;border:0;background:radial-gradient(circle at 50% 50%,#2a2a2f 0 46%,transparent 47%),repeating-conic-gradient(#38383e 0 5deg,#1a1a1d 5deg 10deg);
+  box-shadow:0 6px 12px #000,0 0 0 3px #0c0c0e,inset 0 2px 2px #ffffff22}
+body.ma .knob::before{inset:-9px;-webkit-mask:radial-gradient(circle,transparent 52px,#000 53px);mask:radial-gradient(circle,transparent 52px,#000 53px)}
+body.ma .knob .ind{top:10px;height:22px;transform-origin:1px 36px;background:#ffd65a;box-shadow:0 0 6px #ffc21a}
+/* executors: small displays above real faders */
+body.ma #execs{flex:1;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:7px;padding:0;min-height:0}
+body.ma .ex{background:none;border:0;border-radius:0;overflow:visible}
+body.ma .ex-top,body.ma .ex-cue{background:#000;border:0}
+body.ma .ex-top{border:3px solid #050506;border-bottom:0;border-radius:4px 4px 0 0;padding:2px 4px;background:linear-gradient(#1b2433,#121925)}
+body.ma .ex-cue{border:3px solid #050506;border-top:0;border-radius:0 0 4px 4px;margin-bottom:6px;height:32px}
+body.ma .ex.sel .ex-top{background:linear-gradient(#3a2f05,#241c02)}
+body.ma .ex.sel{box-shadow:none}
+body.ma .ex.sel .ex-num{color:#fff}
+body.ma .ex-off{padding:0 3px;line-height:13px;font-size:9px}
+body.ma .ex-mid{padding:0;gap:6px}
+body.ma .ex-btns button{font-size:9.5px;font-weight:800}
+body.ma .ex-btns .b-go{color:#8dffb5;background:linear-gradient(#2c3a31,#1c261f);box-shadow:0 2px 0 #040405,inset 0 0 8px rgba(60,255,130,.28)}
+body.ma .ex.on .ex-btns .b-go{box-shadow:0 2px 0 #040405,inset 0 0 12px rgba(60,255,130,.7);color:#fff}
+body.ma .ex-btns .b-flash.on{background:#fff;color:#000}
+body.ma .fader{width:30px;border:0;border-radius:3px;background:linear-gradient(90deg,#030304,#101012 50%,#030304);box-shadow:inset 0 0 0 1px #000,0 1px 0 #ffffff10}
+body.ma .fader::before{content:'';position:absolute;left:50%;top:6px;bottom:6px;width:2px;margin-left:-1px;background:#000;box-shadow:0 0 0 1px #222}
+body.ma .fader .ff{background:linear-gradient(#22c55e55,#22c55e10);border-radius:3px}
+body.ma .fader .cap{left:-6px;right:-6px;height:24px;margin-bottom:-12px;border-radius:3px;background:linear-gradient(#f2f2f4,#b4b4ba 45%,#7c7c84);box-shadow:0 3px 5px #000,inset 0 1px 0 #fff}
+body.ma .fader .cap::after{left:4px;right:4px;top:11px;height:2px;background:#202024;box-shadow:0 -4px 0 #9a9aa0,0 4px 0 #9a9aa0}
+body.ma .ex-lvl{color:#7c7c86}
+/* master */
+body.ma #master{flex:1;display:grid;grid-template-columns:1fr 38px;gap:8px;padding:0;border:0}
+body.ma .mGo .sx{color:#7c7c86}
+body.ma #goBig{border-radius:8px;font-size:30px;border:1px solid #0a0a0b;background:linear-gradient(#2b7a47,#165530);color:#e6fff0;box-shadow:0 4px 0 #040405,inset 0 0 22px rgba(80,255,140,.45),inset 0 1px 0 rgba(255,255,255,.25)}
+body.ma #goBig:active{transform:translateY(2px);box-shadow:0 2px 0 #040405,inset 0 0 26px rgba(80,255,140,.6)}
+body.ma .mRow button{padding:7px 0;font-weight:800}
+body.ma #boBtn.on{background:linear-gradient(#6a1414,#3e0a0a);color:#fff}
+body.ma .gm .fader{width:30px}
+.maRest{height:34px;margin:4px -16px 0;border-radius:0 0 6px 6px;background:linear-gradient(#2e2e33,#17171a 60%,#0d0d0f);box-shadow:inset 0 2px 2px #ffffff1c,0 -1px 0 #000;
+  display:flex;align-items:center;justify-content:center;font:800 9px Inter,sans-serif;letter-spacing:.5em;color:#4e4e56}
 /* guide */
 #guide{position:fixed;inset:0;background:#000d;z-index:70;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
 #guide.show{display:flex}
@@ -330,13 +427,13 @@ body.desk .mRow button{padding:9px 0}
     <div class="brand"><i></i>LUMA<b>DESK</b></div>
     <div class="showname" id="showName">Demo Show — Sultan's Pool, Jerusalem</div>
     <div class="tbg"><label>View</label>
-      <button data-view="foh" class="on">FOH</button><button data-view="front">Front</button><button data-view="stage">On Stage</button><button data-view="top">Top</button><button data-view="side">Side</button><button data-view="crowd">Crowd</button><button data-view="band">Band</button><button data-view="orch">Orchestra</button><button data-view="ring">Ring</button><button data-view="wide">Wide</button><button data-view="aud">Audience</button><button data-view="drums">Drums</button><button data-view="valley">Old City</button>
+      <button data-view="foh" class="on">FOH</button><button data-view="front">Front</button><button data-view="stage">On Stage</button><button data-view="top">Top</button><button data-view="side">Side</button><button data-view="crowd">Crowd</button><button data-view="band">Band</button><button data-view="orch">Orchestra</button><button data-view="ring">Ring</button><button data-view="wide">Wide</button><button data-view="aud">Audience</button><button data-view="drums">Drums</button><button data-view="valley">Old City</button><button data-view="walls">Walls</button>
     </div>
     <div class="tbg"><label>House</label><input type="range" id="house" min="0" max="100" value="30" style="width:70px" title="Audience house lights"></div>
     <div class="tbg"><label>Haze</label><input type="range" id="haze" min="0" max="100" value="62" style="width:90px"></div>
     <div class="tbg"><button id="glowBtn" class="on">Glow</button><button id="idsBtn">Fixture IDs</button><button id="realBtn" class="on" title="Real spot lights & shadows on performers">Real light</button></div>
     <div class="spacer"></div>
-    <div class="tbg" id="layoutBox"><label>Layout</label><select id="layoutSel" title="פריסת מסך"><option value="desk">Desk</option><option value="classic">Classic</option></select><select id="deskZoom" title="גודל הקונסולה"><option value="auto">Auto</option><option value=".85">85%</option><option value="1">100%</option><option value="1.15">115%</option><option value="1.3">130%</option><option value="1.5">150%</option></select></div>
+    <div class="tbg" id="layoutBox"><label>Layout</label><select id="layoutSel" title="פריסת מסך"><option value="ma">Console (MA)</option><option value="desk">Desk</option><option value="classic">Classic</option></select><select id="deskZoom" title="גודל הקונסולה"><option value="auto">Auto</option><option value=".85">85%</option><option value="1">100%</option><option value="1.15">115%</option><option value="1.3">130%</option><option value="1.5">150%</option></select></div>
     <div class="tbg"><button id="recBtn" title="הקלטת וידאו של התצוגה (.webm)">● REC</button><button id="fsBtn" title="מסך מלא (F)">⛶</button><button id="installBtn" style="display:none">⬇ התקן אפליקציה</button><button id="midiBtn">MIDI</button><button id="fileBtn">Show File</button><button id="helpBtn" class="on">📖 מדריך</button></div>
     <div id="clock"></div><div id="fps"></div>
   </header>
@@ -394,6 +491,20 @@ body.desk .mRow button{padding:9px 0}
       <div class="cwing" id="cwCmd"><div class="clabel"><span>COMMAND</span><b>MA syntax</b></div></div>
       <div class="cwing" id="cwMaster"><div class="clabel"><span>MASTER</span></div></div>
     </div>
+  </div></section>
+  <section id="maConsole"><div class="maDesk" id="maBody">
+    <div class="maScreens">
+      <div class="disp"><div class="dhead"><span>1 · POOLS</span><b id="d1info"></b></div><div class="dslot" id="d1s"></div></div>
+      <div class="disp"><div class="dhead"><span>2 · PROGRAMMER</span><b id="d2info"></b></div><div class="dslot" id="d2s"></div></div>
+      <div class="disp"><div class="dhead"><span>3 · COMMAND</span><b id="d3info"></b></div><div class="dslot" id="d3s"><div id="miniSeq"></div></div></div>
+    </div>
+    <div class="maSurface">
+      <div class="srf"><span class="slab">PLAYBACK</span><div id="pbSlot" style="flex:1;display:flex;min-height:0"></div></div>
+      <div class="srf"><span class="slab">ENCODERS</span><div id="ftSlot"></div><div id="ecSlot" style="flex:1;display:flex;min-height:0"></div></div>
+      <div class="srf"><span class="slab">COMMAND</span><div id="kySlot" style="flex:1;display:flex;flex-direction:column;min-height:0"></div></div>
+      <div class="srf"><span class="slab">MASTER</span><div id="msSlot" style="flex:1;display:flex;min-height:0"></div></div>
+    </div>
+    <div class="maRest">LUMA DESK · LIGHTING CONSOLE</div>
   </div></section>
   <footer id="desk">
     <div id="cmdArea">
@@ -510,7 +621,7 @@ function terrH(x, z) {
   const dx = Math.max(Math.abs(x) - VEN.X - 2, 0), dz = Math.max(z - zt, 0) + Math.max(-40 - z, 0) * .8, d = Math.hypot(dx, dz);
   if (d <= 0) return base;
   const nz = (Math.sin(x * .061) + Math.sin(z * .083 + 1.3) + Math.sin((x + z) * .047 + 2)) * 1.6 * Math.min(d / 12, 1);
-  return base + Math.min(d * .55, 24) + (x < 0 ? Math.min(dx * .22, 12) : 0) + nz;
+  return base + Math.min(d * .55, 24) + (x < 0 ? Math.min(dx * .22, 12) : Math.min(dx * .16, 8)) + nz;
 }
 const RING = { x: 0, y: 17, z: -9, R: 9, r2: 5.2, y2: 18.2 };
 for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, sa = Math.sin(a), ca = Math.cos(a);
@@ -608,7 +719,7 @@ controls.enableDamping = true; controls.dampingFactor = .08; controls.maxPolarAn
 const VIEWS = {
   foh: { p: [0, 16, 74], t: [0, 9, -8] }, front: { p: [0, 6, 28], t: [0, 10, -10] }, stage: { p: [4, DECK + 1.8, -5], t: [-2, 6, 30] },
   top: { p: [0, 86, -9], t: [0, 0, -9.1] }, side: { p: [62, 13, -8], t: [0, 9, -8] }, crowd: { p: [-5, 2.3, 16], t: [0, 13, -10] },
-  band: { p: [2.5, 5, 10], t: [0, 3, -9] }, ring: { p: [0, DECK + 1.7, 3], t: [0, 17, -9.5] }, wide: { p: [-30, 40, 120], t: [0, 6, -5] }, aud: { p: [0, 15, 1], t: [0, 2, 46] }, drums: { p: [2.2, DECK + 3.2, -5.5], t: [0, DECK + 1, -12.4] }, valley: { p: [55, 34, 98], t: [-30, 8, -10] }, orch: { p: [0, 9, 2], t: [-15.5, 2.4, -12] },
+  band: { p: [2.5, 5, 10], t: [0, 3, -9] }, ring: { p: [0, DECK + 1.7, 3], t: [0, 17, -9.5] }, walls: { p: [0, 30, 96], t: [0, 14, -20] }, wide: { p: [-30, 40, 120], t: [0, 6, -5] }, aud: { p: [0, 15, 1], t: [0, 2, 46] }, drums: { p: [2.2, DECK + 3.2, -5.5], t: [0, DECK + 1, -12.4] }, valley: { p: [55, 34, 98], t: [-30, 8, -10] }, orch: { p: [0, 9, 2], t: [-15.5, 2.4, -12] },
 };
 function setView(v, instant) {
   const V = VIEWS[v]; if (!V) return;
@@ -690,8 +801,9 @@ const box = (w, h, d, mat, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxG
     G.setAttribute('color', new THREE.BufferAttribute(col, 3)); G.computeVertexNormals();
     scene.add(new THREE.Mesh(G, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, flatShading: true }))); }
   // Old City walls along the ridge, with towers, crenellations and the Tower of David citadel — floodlit warm
-  { const pts = [[-58, -95], [-74, -50], [-82, -5], [-84, 40], [-74, 85], [-48, 118]].map(([x, z]) => new V3(x, terrH(x, z), z));
-    const crenG = new THREE.BoxGeometry(.9, 1.3, 2.3), crenM = new THREE.MeshBasicMaterial({ color: 0xc9a46c }), crenXf = [];
+  { const crenG = new THREE.BoxGeometry(.9, 1.3, 2.3), crenM = new THREE.MeshBasicMaterial({ color: 0xc9a46c }), crenXf = [];
+    const WALLS = [[[-58, -95], [-74, -50], [-82, -5], [-84, 40], [-74, 85], [-48, 118]], [[56, -95], [72, -52], [82, -8], [85, 38], [76, 84], [52, 118]]];
+    for (const raw of WALLS) { const pts = raw.map(([x, z]) => new V3(x, terrH(x, z), z));
     for (let i = 0; i < pts.length - 1; i++) { const A = pts[i], B = pts[i + 1], L = Math.hypot(B.x - A.x, B.z - A.z), ang = Math.atan2(B.x - A.x, B.z - A.z);
       const n = Math.ceil(L / 6);
       for (let k = 0; k < n; k++) { const t0 = k / n, t1 = (k + 1) / n, x = lerp(A.x, B.x, (t0 + t1) / 2), z = lerp(A.z, B.z, (t0 + t1) / 2), base = Math.min(terrH(lerp(A.x, B.x, t0), lerp(A.z, B.z, t0)), terrH(lerp(A.x, B.x, t1), lerp(A.z, B.z, t1))) - 3, H = 14;
@@ -699,6 +811,20 @@ const box = (w, h, d, mat, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxG
         for (let c = 0; c < 3; c++) { const tt = lerp(t0, t1, (c + .5) / 3); crenXf.push([lerp(A.x, B.x, tt), base + H + .65, lerp(A.z, B.z, tt), ang]); } }
       if (i > 0) { const H = 20, base = A.y - 3, m = new THREE.Mesh(new THREE.BoxGeometry(8, H, 8), stoneMat(stoneLit, 8, H, true)); m.position.set(A.x, base + H / 2, A.z); m.rotation.y = ang; scene.add(m);
         for (const [dx, dz] of [[-3.4, -3.4], [3.4, -3.4], [-3.4, 3.4], [3.4, 3.4], [0, -3.4], [0, 3.4], [-3.4, 0], [3.4, 0]]) crenXf.push([A.x + dx, base + H + .65, A.z + dz, ang]); } }
+    } // walls
+    // right side: gatehouse with an arched gate facing the venue (Jaffa Gate style)
+    { const gx = 83.5, gz = 15, gb = terrH(gx, gz) - 3, H = 22, gm = new THREE.Mesh(new THREE.BoxGeometry(11, H, 13), stoneMat(stoneLit, 11, H, true)); gm.position.set(gx, gb + H / 2, gz); scene.add(gm);
+      const arch = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 7), new THREE.MeshBasicMaterial({ color: 0x0b0806 })); arch.position.set(gx - 5.52, gb + 3 + 3.5, gz); arch.rotation.y = -Math.PI / 2; scene.add(arch);
+      const top = new THREE.Mesh(new THREE.CircleGeometry(2.1, 20, 0, Math.PI), arch.material); top.position.set(gx - 5.52, gb + 10, gz); top.rotation.y = -Math.PI / 2; scene.add(top);
+      for (const [dx, dz] of [[-5, -6], [-5, -2], [-5, 2], [-5, 6], [5, -6], [5, 6], [0, -6], [0, 6]]) crenXf.push([gx + dx, gb + H + .65, gz + dz, Math.PI / 2]); }
+    // right ridge, behind the wall: round tower with a conical roof + a dark dome (Mount Zion silhouette)
+    { const tx = 104, tz = -28, tb = terrH(tx, tz) - 2, rt = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.6, 26, 20), stoneMat(stoneLit, 8, 26, true)); rt.position.set(tx, tb + 13, tz); scene.add(rt);
+      for (let k = 0; k < 4; k++) { const tur = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 8, 10), rt.material); tur.position.set(tx + Math.cos(k * 1.57) * 4.4, tb + 22, tz + Math.sin(k * 1.57) * 4.4); scene.add(tur);
+        const cap = new THREE.Mesh(new THREE.ConeGeometry(1.25, 2.6, 10), new THREE.MeshBasicMaterial({ color: 0x2b3238 })); cap.position.set(tur.position.x, tb + 27.3, tur.position.z); scene.add(cap); }
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(4.9, 9, 20), new THREE.MeshBasicMaterial({ color: 0x323b42 })); cone.position.set(tx, tb + 30.5, tz); scene.add(cone);
+      const crossM = new THREE.MeshBasicMaterial({ color: 0xc9a46c }); const c1 = new THREE.Mesh(new THREE.BoxGeometry(.25, 2.2, .25), crossM); c1.position.set(tx, tb + 36, tz); scene.add(c1);
+      const nave = new THREE.Mesh(new THREE.BoxGeometry(22, 12, 14), stoneMat(stoneLit, 22, 12, true)); nave.position.set(tx + 12, tb + 6, tz + 9); scene.add(nave);
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(5.5, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x2a3036 })); dome.position.set(tx + 14, tb + 12, tz + 9); scene.add(dome); }
     const im = new THREE.InstancedMesh(crenG, crenM, crenXf.length), m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
     crenXf.forEach(([x, y, z, a], i) => { q.setFromAxisAngle(UP3, a); m4.compose(new V3(x, y, z), q, new V3(1, 1, 1)); im.setMatrixAt(i, m4); }); scene.add(im);
     // Tower of David (citadel + minaret)
@@ -715,7 +841,7 @@ const box = (w, h, d, mat, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxG
   // city lights on the surrounding hills
   { const N = 2600, pos = new Float32Array(N * 3), col = new Float32Array(N * 3); let n = 0;
     for (let i = 0; i < N * 6 && n < N; i++) { const x = (Math.random() - .5) * 440, z = 20 + (Math.random() - .5) * 440;
-      if (Math.abs(x) < VEN.X + 18 && z > -40 && z < VEN.Z1 + VEN.STEPS * VEN.RUN + 14) continue; if (x < -60 && x > -95 && z > -100 && z < 120) continue;
+      if (Math.abs(x) < VEN.X + 18 && z > -40 && z < VEN.Z1 + VEN.STEPS * VEN.RUN + 14) continue; if (Math.abs(x) > 55 && Math.abs(x) < 95 && z > -100 && z < 125) continue; if (x > 95 && x < 135 && z > -45 && z < 0) continue;
       const h = terrH(x, z); pos.set([x, h + 1 + Math.random() * 6, z], n * 3); const w = Math.random(); col.set(w < .7 ? [1, .72, .4] : [.85, .9, 1], n * 3); n++; }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos.slice(0, n * 3), 3)); g.setAttribute('color', new THREE.BufferAttribute(col.slice(0, n * 3), 3));
     scene.add(new THREE.Points(g, new THREE.PointsMaterial({ size: 2.2, sizeAttenuation: false, vertexColors: true, transparent: true, opacity: .85, fog: false }))); }
@@ -2238,7 +2364,7 @@ const GUIDE = [
   <tr><td>הבמה (מרכז)</td><td>תצוגת התלת־ממד. למעלה משמאל: כמה גופים נבחרים ומה יש בפרוגרמר. למטה משמאל: ה־Cue הנוכחי והבא באקזקיוטר הנבחר.</td></tr>
   <tr><td>פאנל ימני</td><td><b>Pools</b> (קבוצות ו־Presets), <b>Auto Show</b>, <b>Sequence</b> (רשימת ה־Cues), <b>Fixture Sheet</b> (טבלת ערכים של כל הגופים).</td></tr>
   <tr><td>שורת אנקודרים</td><td>טאבים לפי תכונה: Dimmer, Position, Gobo, Color, Beam, Phaser. אנקודרים וכלים ייעודיים לכל טאב. נקודה אדומה ליד טאב = יש ערכים בפרוגרמר.</td></tr>
-  <tr><td>פריסה (Layout)</td><td>ברירת המחדל היא <b>Desk</b>: הבמה לכל הרוחב, ומתחתיה קונסולה אחת קומפקטית במרכז, כמו שולחן אמיתי. משמאל SCREEN (Pools, Auto, Sequence), באמצע PROGRAMMER ו־PLAYBACK, מימין COMMAND עם מקלדת מספרים ו־MASTER. הבורר שליד Layout מגדיל או מקטין את הקונסולה (Auto מתאים אותה לרוחב המסך). <b>Classic</b> מחזיר לפריסה הקודמת.</td></tr>
+  <tr><td>פריסה (Layout)</td><td>ברירת המחדל היא <b>Console (MA)</b>: קונסולה פיזית בסגנון grandMA מתחת לבמה, עם 3 מסכים למעלה (1 Pools, 2 Programmer, 3 Command ורשימת ה־Cues), ומשטח עם פיידרים, גלגלי אנקודר גדולים, מקלדת ו־GO. <b>Desk</b>: הבמה לכל הרוחב, ומתחתיה קונסולה אחת קומפקטית במרכז, כמו שולחן אמיתי. משמאל SCREEN (Pools, Auto, Sequence), באמצע PROGRAMMER ו־PLAYBACK, מימין COMMAND עם מקלדת מספרים ו־MASTER. הבורר שליד Layout מגדיל או מקטין את הקונסולה (Auto מתאים אותה לרוחב המסך). <b>Classic</b> מחזיר לפריסה הקודמת.</td></tr>
   <tr><td>שולחן (למטה)</td><td>שורת פקודה ומקשים (STORE, CLEAR…), 10 אקזקיוטרים עם פיידרים, ומצד שמאל: GO הגדול, GO−, PAUSE, B.O., TAP, OFF ופיידר GM.</td></tr></table>
   <h3>שליטה במצלמה</h3><ul><li>גרירה עם הכפתור השמאלי: סיבוב סביב הבמה.</li><li>גרירה עם הכפתור הימני: הזזה.</li><li>גלגלת: זום.</li><li>כפתורי זווית למעלה מחזירים לנקודות קבועות.</li></ul>` },
  { t: 'בחירת גופים', h: () => `
@@ -2407,11 +2533,26 @@ function kpPress(t) {
   if (/^[0-9.]$/.test(t)) { cmd.value = (/[0-9.]$/.test(v) ? v : (v && !v.endsWith(' ') ? v + ' ' : v)) + t; return; }
   cmd.value = (v && !v.endsWith(' ') ? v + ' ' : v) + t + ' ';
 }
-let deskMode = 'desk', deskZoom = 'auto';
+let deskMode = 'ma', deskZoom = 'auto';
+const PARTS = { featTabs: $('#featTabs'), encBody: $('#encBody'), encoders: $('#encoders'), encExtra: $('#encExtra'), cmdFb: $('#cmdFb'), cmdrow: $('.cmdrow'), keys: $('.keys') };
+function restoreParts() {
+  const P = PARTS; P.encBody.append(P.encoders, P.encExtra); $('#enc').append(P.featTabs, P.encBody);
+  $('#cmdArea').prepend(P.cmdFb, P.cmdrow, P.keys);
+}
 function applyLayout() {
-  const desk = deskMode === 'desk';
-  document.body.classList.toggle('desk', desk);
-  if (desk) {
+  restoreParts();
+  const desk = deskMode === 'desk', ma = deskMode === 'ma';
+  document.body.classList.toggle('desk', desk); document.body.classList.toggle('ma', ma);
+  if (ma) {
+    if (!keypad) buildKeypad();
+    $('#d1s').appendChild($('#side'));
+    $('#d2s').appendChild(PARTS.encExtra);
+    $('#d3s').prepend(PARTS.cmdFb, PARTS.cmdrow);
+    $('#pbSlot').appendChild($('#execs')); $('#execs').style.flex = '1';
+    $('#ftSlot').appendChild(PARTS.featTabs); $('#ecSlot').appendChild(PARTS.encoders);
+    $('#kySlot').append(PARTS.keys, keypad);
+    $('#msSlot').appendChild($('#master'));
+  } else if (desk) {
     $('#cwScreen').appendChild($('#side'));
     $('#encSlot').appendChild($('#enc'));
     $('#execSlot').appendChild($('#execs')); $('#execs').style.flex = '1';
@@ -2425,23 +2566,34 @@ function applyLayout() {
     $('#desk').appendChild($('#master'));
   }
   fitDesk(); resize();
-  try { localStorage.setItem('lumadesk-layout', JSON.stringify({ deskMode, deskZoom })); } catch (e) { }
+  try { localStorage.setItem('lumadesk-layout2', JSON.stringify({ deskMode, deskZoom })); } catch (e) { }
 }
 function fitDesk() {
   const z = deskZoom === 'auto' ? clamp((innerWidth - 24) / 1880, .66, 1.05) : +deskZoom;
   $('#cbody').style.setProperty('--dz', z.toFixed(3));
+  const zm = deskZoom === 'auto' ? clamp((innerWidth - 24) / 1920, .55, 1.05) : +deskZoom;
+  $('#maBody').style.setProperty('--mz', zm.toFixed(3));
 }
 $('#layoutSel').onchange = ev => { deskMode = ev.target.value; applyLayout(); };
-$('#deskZoom').onchange = ev => { deskZoom = ev.target.value; fitDesk(); resize(); try { localStorage.setItem('lumadesk-layout', JSON.stringify({ deskMode, deskZoom })); } catch (e) { } };
-addEventListener('resize', () => { if (deskMode === 'desk') { fitDesk(); } });
+$('#deskZoom').onchange = ev => { deskZoom = ev.target.value; fitDesk(); resize(); try { localStorage.setItem('lumadesk-layout2', JSON.stringify({ deskMode, deskZoom })); } catch (e) { } };
+addEventListener('resize', () => { if (deskMode !== 'classic') fitDesk(); });
 // clear key clears a half-typed command line first (like MA); STORE pre-types "Store"
 { const kc = $('#kClear'); const old = kc.onclick; kc.onclick = () => { if (cmd.value.trim()) { cmd.value = ''; return; } old(); }; }
 setInterval(() => {
+  if (deskMode === 'ma') {
+    const e = execs[selExec], F = FEATS.find(f => f[0] === feat);
+    $('#d1info').textContent = (sideTab || '').toUpperCase(); $('#d2info').textContent = `${F ? F[1].toUpperCase() : ''} · ${sel.length} SEL`;
+    $('#d3info').textContent = `EXEC ${selExec + 1} ${e.name || ''}`;
+    const ms = $('#miniSeq'); let h = `<div class="r h"><span>CUE</span><span>NAME</span><span>FADE</span></div>`;
+    if (!e.cues.length) h += `<div class="r"><span></span><span>no cues</span><span></span></div>`;
+    const st = Math.max(0, e.cur - 1); e.cues.slice(st, st + 6).forEach((c, k) => { const i = st + k; h += `<div class="r ${i === e.cur ? 'cur' : (e.on && i === (e.cur + 1) % e.cues.length) ? 'nx' : ''}"><span>${c.num}</span><span>${c.name}</span><span>${c.fade}s</span></div>`; });
+    ms.innerHTML = h; return;
+  }
   if (deskMode !== 'desk') return;
   const e = execs[selExec]; $('#cwPbInfo').textContent = `EXEC ${selExec + 1} · ${e.name || 'empty'}`;
   $('#cwProgInfo').textContent = `${sel.length} SELECTED`; $('#cwScreenInfo').textContent = (sideTab || '').toUpperCase();
 }, 250);
-try { const L = JSON.parse(localStorage.getItem('lumadesk-layout') || 'null'); if (L) { deskMode = L.deskMode || 'desk'; deskZoom = L.deskZoom || 'auto'; } } catch (e) { }
+try { const L = JSON.parse(localStorage.getItem('lumadesk-layout2') || 'null'); if (L) { deskMode = L.deskMode || 'ma'; deskZoom = L.deskZoom || 'auto'; } } catch (e) { }
 $('#layoutSel').value = deskMode; $('#deskZoom').value = deskZoom;
 applyLayout();
 
