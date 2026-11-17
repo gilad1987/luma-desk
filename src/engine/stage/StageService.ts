@@ -1,20 +1,12 @@
 import type { Rig } from '../../domain/rig/Rig';
 import { rigFromDesign } from '../../domain/stage/deriveRig';
-import { FIXTURE_SOFT_LIMIT, type StageDesign } from '../../domain/stage/StageDesign';
+import type { StageDesign } from '../../domain/stage/StageDesign';
 import { frameOf, type StageFrame } from '../../domain/stage/StageFrame';
 import type { EngineBus } from '../events';
+import { RigAnnouncer } from './RigAnnouncer';
 import type { RigChangeCause } from './rigChanged';
 import type { RigSource } from './RigSource';
-
-/** What main.ts gives the service at boot. */
-export interface StageServiceOptions {
-  /** The stage of the original desk; `isBuiltIn` compares with this object by identity. */
-  readonly builtIn: StageDesign;
-  /** The stage saved in the show, if any; without one the service starts on `builtIn`. */
-  readonly initial?: StageDesign | undefined;
-  /** The toast text for a rig above `FIXTURE_SOFT_LIMIT`; injected because the engine holds no UI language. */
-  readonly tooManyFixtures: (n: number) => string;
-}
+import type { StageServiceOptions } from './StageServiceOptions';
 
 /**
  * The one place that replaces the rig at runtime (contract §2). It sets rig, design, frame and cause together before
@@ -27,17 +19,16 @@ export interface StageServiceOptions {
  * Selection, GroupLibrary, PresetLibrary, MissingFixtureNotice, AutoShow, the render StageScene, then the UI.
  */
 export class StageService implements RigSource {
-  readonly #bus: EngineBus;
+  readonly #announcer: RigAnnouncer;
   readonly #options: StageServiceOptions;
   #design: StageDesign;
   #rig: Rig;
   #frame: StageFrame;
   #cause: RigChangeCause = 'boot';
-  #isEmitting = false;
 
   /** Derives the first rig without an event, so nothing is built twice at boot. */
   constructor(bus: EngineBus, options: StageServiceOptions) {
-    this.#bus = bus;
+    this.#announcer = new RigAnnouncer(bus, options.tooManyFixtures);
     this.#options = options;
     this.#design = options.initial ?? options.builtIn;
     this.#rig = rigFromDesign(this.#design);
@@ -66,34 +57,18 @@ export class StageService implements RigSource {
   }
 
   /**
-   * Replaces the rig and announces it once. The show is marked changed only for edits the operator keeps (`builder`,
-   * `import`); a show load or a preview is not a change to save. The fixture warning skips previews, which the
-   * operator has not committed to.
-   *
-   * @throws Error when a listener re-enters `apply` during its emit: later listeners would get a stale design. This
-   * error also aborts the current emit, so later listeners miss that event too; fail fast, as re-entry is a code bug.
+   * Replaces the rig and announces it once; `RigAnnouncer` owns the event order, the toast policy and the guard.
+   * @throws Error when a listener re-enters `apply` during its emit (see `RigAnnouncer.checkIdle`).
    */
   apply(design: StageDesign, cause: Exclude<RigChangeCause, 'boot'>): void {
-    if (this.#isEmitting) {
-      throw new Error(`StageService.apply: a listener re-entered with ${cause} while the ${this.#cause} apply emits`);
-    }
+    this.#announcer.checkIdle(cause);
     const rig = rigFromDesign(design);
     const frame = frameOf(design);
     this.#design = design;
     this.#rig = rig;
     this.#frame = frame;
     this.#cause = cause;
-    this.#isEmitting = true;
-    try {
-      this.#bus.emit('rigChanged', { design });
-      if (cause === 'builder' || cause === 'import') this.#bus.emit('showChanged', undefined);
-      const n = rig.fixtures.length;
-      if (n > FIXTURE_SOFT_LIMIT && cause !== 'preview') {
-        this.#bus.emit('message', { kind: 'toast', text: this.#options.tooManyFixtures(n) });
-      }
-    } finally {
-      this.#isEmitting = false;
-    }
+    this.#announcer.announce(design, cause, rig.fixtures.length);
   }
 
   // G8 slot: MVR adds `updateMeta(patch)` (no rig rebuild). Stage Builder does NOT define it.
