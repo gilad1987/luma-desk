@@ -5,55 +5,23 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { clamp, cssRgb, D2R, hash, hsv, jsonClone, lerp, rng } from './core';
+import { aimAt, dirFrom } from './domain/aim';
+import { ATTR, FEAT_ATTRS, FEATS, GOBO_NAMES, SCREEN_MODES } from './domain/attributes';
+import { buildRig } from './domain/rig';
+import { ANG, BAND_PTS, DECK, RING, ROOF, SCREEN, STAGE, SXZ, TOWERS, TOWX, TOWZ, TR } from './domain/venue';
 
 /* ====================================================================
    HELPERS
 ==================================================================== */
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
-const clamp = (v, a, b) => (v < a ? a : v > b ? b : v),
-  lerp = (a, b, t) => a + (b - a) * t;
-const D2R = Math.PI / 180,
-  V3 = THREE.Vector3;
-const deep = (o) => JSON.parse(JSON.stringify(o));
+const V3 = THREE.Vector3;
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
   if (html != null) e.innerHTML = html;
   return e;
-};
-function hsv(h, s, v) {
-  const i = Math.floor(h * 6),
-    f = h * 6 - i,
-    p = v * (1 - s),
-    q = v * (1 - f * s),
-    t = v * (1 - (1 - f) * s);
-  return [
-    [v, t, p],
-    [q, v, p],
-    [p, v, t],
-    [p, q, v],
-    [t, p, v],
-    [v, p, q],
-  ][((i % 6) + 6) % 6];
-}
-function rgb2hsv(r, g, b) {
-  const mx = Math.max(r, g, b),
-    mn = Math.min(r, g, b),
-    d = mx - mn;
-  let h = 0;
-  if (d) {
-    if (mx === r) h = ((g - b) / d) % 6;
-    else if (mx === g) h = (b - r) / d + 2;
-    else h = (r - g) / d + 4;
-    h /= 6;
-    if (h < 0) h += 1;
-  }
-  return [h, mx ? d / mx : 0, mx];
-}
-const hash = (n) => {
-  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
-  return x - Math.floor(x);
 };
 let toastT;
 function toast(m) {
@@ -67,231 +35,14 @@ function toast(m) {
 /* ====================================================================
    VENUE / RIG DEFINITION
 ==================================================================== */
-const DECK = 1.8;
-const STAGE = { x0: -23, x1: 23, z0: -21, z1: 0.6 };
-const SCREEN = { z: -20.2, x0: -17.5, x1: 17.5, y0: DECK + 1, y1: DECK + 14 };
-
-const ATTR = {
-  dim: { label: 'Dimmer', min: 0, max: 100, def: 0, unit: '%', feat: 'dim' },
-  pan: { label: 'Pan', min: -270, max: 270, def: 0, unit: '°', feat: 'pos' },
-  tilt: { label: 'Tilt', min: -135, max: 135, def: 0, unit: '°', feat: 'pos' },
-  r: { label: 'Red', min: 0, max: 100, def: 100, unit: '%', feat: 'color' },
-  g: { label: 'Green', min: 0, max: 100, def: 100, unit: '%', feat: 'color' },
-  b: { label: 'Blue', min: 0, max: 100, def: 100, unit: '%', feat: 'color' },
-  gobo: { label: 'Gobo', min: 0, max: 7, def: 0, unit: '', feat: 'gobo', step: 1 },
-  grot: { label: 'Gobo Rot', min: -100, max: 100, def: 0, unit: '', feat: 'gobo' },
-  zoom: { label: 'Zoom', min: 1.5, max: 70, def: 20, unit: '°', feat: 'beam' },
-  strobe: { label: 'Shutter', min: 0, max: 100, def: 0, unit: '', feat: 'beam' },
-};
-const FEATS = [
-  ['dim', 'Dimmer'],
-  ['pos', 'Position'],
-  ['gobo', 'Gobo'],
-  ['color', 'Color'],
-  ['beam', 'Beam'],
-  ['fx', 'Phaser'],
-];
-const FEAT_ATTRS = {
-  dim: ['dim'],
-  pos: ['pan', 'tilt'],
-  gobo: ['gobo', 'grot'],
-  color: ['r', 'g', 'b'],
-  beam: ['zoom', 'strobe'],
-};
-const MOVER = ['dim', 'pan', 'tilt', 'r', 'g', 'b', 'gobo', 'grot', 'zoom', 'strobe'];
-// model: the procedural 3D builder in BUILD (each one copies a real product, see the README rig table).
-// soft: beam edge softness (higher = softer). glowK: lens-glow size factor. tiltOnly: a moving bar with tilt but no pan.
-const TYPES = {
-  spot: {
-    name: 'Spot',
-    model: 'forte',
-    attrs: MOVER,
-    zr: [7, 42],
-    z0: 16,
-    power: 1.0,
-    moving: true,
-    shape: 'mh',
-    size: 0.72,
-  },
-  beam: {
-    name: 'Beam',
-    model: 'megapointe',
-    attrs: MOVER,
-    zr: [1.5, 6],
-    z0: 2.6,
-    power: 1.2,
-    moving: true,
-    shape: 'mh',
-    size: 0.58,
-  },
-  wash: {
-    name: 'Wash',
-    model: 'spiider',
-    attrs: ['dim', 'pan', 'tilt', 'r', 'g', 'b', 'zoom', 'strobe'],
-    zr: [10, 60],
-    z0: 26,
-    power: 0.9,
-    moving: true,
-    shape: 'wash',
-    size: 0.72,
-    beamK: 0.5,
-    soft: 2.6,
-  },
-  par: {
-    name: 'LED Par',
-    model: 'parfect',
-    attrs: ['dim', 'r', 'g', 'b', 'strobe'],
-    zr: [22, 22],
-    z0: 22,
-    power: 0.75,
-    moving: false,
-    shape: 'par',
-    size: 0.5,
-    soft: 2.6,
-  },
-  blinder: {
-    name: 'Blinder 4L',
-    model: 'strike4',
-    attrs: ['dim', 'r', 'g', 'b'],
-    zr: [60, 60],
-    z0: 60,
-    power: 1.0,
-    moving: false,
-    shape: 'blinder',
-    size: 0.85,
-    defColor: [100, 62, 30],
-    beamK: 0.35,
-    soft: 3,
-    glowK: 2.2,
-  },
-  strobe: {
-    name: 'Strobe',
-    model: 'wtf',
-    attrs: ['dim', 'strobe', 'r', 'g', 'b'],
-    zr: [90, 90],
-    z0: 90,
-    power: 0.9,
-    moving: false,
-    shape: 'strobe',
-    size: 1.1,
-    defColor: [92, 95, 100],
-    beamK: 0.3,
-    soft: 3,
-    glowK: 1.8,
-  },
-  bar: {
-    name: 'LED Bar',
-    model: 'tetra2',
-    attrs: ['dim', 'tilt', 'r', 'g', 'b', 'zoom', 'strobe'],
-    zr: [4, 45],
-    z0: 20,
-    power: 0.8,
-    moving: true,
-    tiltOnly: true,
-    shape: 'bar',
-    size: 1.3,
-    beamK: 0.6,
-    soft: 2.4,
-    glowK: 1.3,
-  },
-  follow: {
-    name: 'Follow Spot',
-    model: 'forteFS',
-    attrs: MOVER,
-    zr: [5, 55],
-    z0: 9,
-    power: 1.1,
-    moving: true,
-    shape: 'mh',
-    size: 0.72,
-  },
-  profile: {
-    name: 'Profile',
-    model: 's4',
-    attrs: ['dim', 'r', 'g', 'b', 'gobo', 'grot'],
-    zr: [26, 26],
-    z0: 26,
-    power: 0.8,
-    moving: false,
-    shape: 'profile',
-    size: 0.6,
-    defColor: [100, 86, 66],
-    soft: 1.3,
-  },
-  screen: {
-    name: 'LED Screen',
-    attrs: ['dim', 'r', 'g', 'b', 'gobo', 'grot'],
-    zr: [0, 0],
-    z0: 0,
-    power: 1,
-    moving: false,
-    shape: 'screen',
-  },
-};
-const SCREEN_MODES = ['Solid', 'Gradient', 'Bars', 'Plasma', 'Pulse', 'Grid', 'Waves', 'Sparkle'];
-const GOBO_NAMES = ['Open', 'Dots', 'Breakup', 'Star', 'Bars', 'Shards', 'Rings', 'Flower'];
-
-const fixtures = [],
-  FX = {};
-function addFix(id, type, x, y, z, mount, fixed) {
-  const f = {
-    id,
-    type,
-    T: TYPES[type],
-    pos: new V3(x, y, z),
-    mount,
-    fixed: fixed || null,
-    vis: { pan: fixed ? fixed.pan : 0, tilt: fixed ? fixed.tilt : 0, gang: 0 },
-    out: {},
-    base: {},
-  };
-  fixtures.push(f);
-  FX[id] = f;
-  return f;
-}
-function row(start, n, type, x0, x1, y, z, mount, fixed) {
-  const ids = [];
-  for (let i = 0; i < n; i++)
-    ids.push(
-      addFix(
-        start + i,
-        type,
-        n === 1 ? (x0 + x1) / 2 : lerp(x0, x1, i / (n - 1)),
-        y,
-        z,
-        mount,
-        fixed ? { ...fixed } : null,
-      ).id,
-    );
-  return ids;
-}
-const TR = {
-  front: { z: 4, y: 20 },
-  t2: { z: -3.5, y: 21 },
-  t3: { z: -9, y: 21 },
-  t4: { z: -14, y: 21 },
-  back: { z: -18.6, y: 20 },
-};
-const ROOF = 25.5,
-  TOWX = 25.5,
-  TOWZ = [4.8, -20.6];
-row(101, 20, 'spot', -20, 20, TR.front.y - 0.75, TR.front.z, 'hang');
-row(801, 16, 'blinder', -22, 22, TR.front.y - 0.6, TR.front.z + 0.5, 'hang', { pan: 0, tilt: 64 });
-row(201, 30, 'beam', -21.5, 21.5, TR.t2.y - 0.7, TR.t2.z, 'hang');
-row(301, 30, 'wash', -21.5, 21.5, TR.t3.y - 0.75, TR.t3.z, 'hang');
-row(901, 20, 'strobe', -20, 20, TR.t3.y - 0.55, TR.t3.z + 0.5, 'hang', { pan: 0, tilt: 34 });
-row(401, 20, 'spot', -20, 20, TR.t4.y - 0.75, TR.t4.z, 'hang');
-row(501, 30, 'beam', -21.5, 21.5, TR.back.y - 0.7, TR.back.z, 'hang');
-{
-  let id = 601;
-  for (const sx of [-1, 1])
-    for (const z of [-3, -9, -15]) for (const y of [5, 9.5, 14, 18.5]) addFix(id++, 'wash', sx * 23.6, y, z, 'hang');
-}
-row(701, 40, 'beam', -21, 21, DECK + 0.32, -18, 'floor');
-row(1001, 16, 'wash', -19, 19, DECK + 0.32, -0.3, 'floor');
-row(1101, 20, 'par', -16.5, 16.5, DECK + 0.22, -19.7, 'floor', { pan: 0, tilt: -12 });
-addFix(2001, 'screen', 0, (SCREEN.y0 + SCREEN.y1) / 2, SCREEN.z, 'wall');
-/* circular truss (outer beams + inner washes) */
+const rig = buildRig();
+const fixtures = rig.fixtures;
+const FX = Object.fromEntries(fixtures.map((f) => [f.id, f]));
+// legacy render state, until Phase 4 moves it into the renderer: the beam starts at the rigged pan/tilt
+fixtures.forEach((f) => {
+  f.vis = { pan: f.fixed?.pan ?? 0, tilt: f.fixed?.tilt ?? 0, gang: 0 };
+});
+/* render-only venue geometry: the audience terrain and the delay towers */
 const VEN = { X: 42, Z1: 58, STEPS: 30, RISE: 0.55, RUN: 1.15, WH: 7 },
   UP3 = new V3(0, 1, 0),
   WALL_LIGHT = { l: null };
@@ -307,146 +58,14 @@ function terrH(x, z) {
     (Math.sin(x * 0.061) + Math.sin(z * 0.083 + 1.3) + Math.sin((x + z) * 0.047 + 2)) * 1.6 * Math.min(d / 12, 1);
   return base + Math.min(d * 0.55, 24) + (x < 0 ? Math.min(dx * 0.22, 12) : Math.min(dx * 0.16, 8)) + nz;
 }
-const RING = { x: 0, y: 17, z: -9, R: 9, r2: 5.2, y2: 18.2 };
-for (let i = 0; i < 24; i++) {
-  const a = (i / 24) * Math.PI * 2,
-    sa = Math.sin(a),
-    ca = Math.cos(a);
-  const f = addFix(1201 + i, 'beam', RING.x + RING.R * sa, RING.y - 0.72, RING.z + RING.R * ca, 'hang');
-  f.pix = {
-    p: new V3(RING.x + (RING.R + 0.3) * sa, RING.y - 0.05, RING.z + (RING.R + 0.3) * ca),
-    tan: new V3(ca, 0, -sa),
-    len: ((RING.R * Math.PI * 2) / 24) * 1.02,
-  };
-}
-for (let i = 0; i < 12; i++) {
-  const a = ((i + 0.5) / 12) * Math.PI * 2,
-    sa = Math.sin(a),
-    ca = Math.cos(a);
-  const f = addFix(1301 + i, 'wash', RING.x + RING.r2 * sa, RING.y2 - 0.78, RING.z + RING.r2 * ca, 'hang');
-  f.pix = {
-    p: new V3(RING.x + (RING.r2 + 0.28) * sa, RING.y2 - 0.05, RING.z + (RING.r2 + 0.28) * ca),
-    tan: new V3(ca, 0, -sa),
-    len: ((RING.r2 * Math.PI * 2) / 12) * 1.02,
-  };
-}
-/* audience lighting: 12 crowd washes on the front truss + 2 delay towers in the crowd (3 washes each) */
-row(1801, 12, 'wash', -21, 21, TR.front.y - 0.75, TR.front.z + 1.05, 'hang');
-{
-  let id = 1813;
-  for (const sx of [-1, 1]) for (const y of [5.5, 7.5, 9.5]) addFix(id++, 'wash', sx * 24, y, 33.6, 'floor');
-}
 const DELAYS = [
   [-24, 33],
   [24, 33],
 ];
-/* standing light towers on the deck: top beam + mid wash + vertical pixel strip */
-const TOWERS = [
-  ...[4.5, 11, 18].flatMap((x) => [
-    [-x, -16.8, 7.5],
-    [x, -16.8, 7.5],
-  ]),
-  ...[11, 20.5].flatMap((x) => [
-    [-x, -1.8, 5],
-    [x, -1.8, 5],
-  ]),
-].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-TOWERS.forEach(([x, z, H], i) => {
-  const b = addFix(1601 + i, 'beam', x, DECK + H + 0.55, z, 'floor');
-  b.pix = { p: new V3(x, DECK + H / 2, z + 0.28), tan: new V3(0, 1, 0), len: H * 0.96 };
-  addFix(1701 + i, 'wash', x, DECK + H * 0.55, z + 0.62, 'floor');
-});
-/* six angled trusses flown in the air (three per side, raked toward centre) */
-const ANG = [];
-for (const sx of [-1, 1])
-  for (const z of [-5.5, -12, -17.5]) ANG.push({ a: new V3(sx * 24.4, 23.6, z), b: new V3(sx * 11.8, 14.2, z), z, sx });
-{
-  const bl = [],
-    sp = [];
-  for (const t of ANG) {
-    const d = t.b.clone().sub(t.a),
-      L = d.length(),
-      u = d.clone().normalize();
-    for (let i = 0; i < 6; i++) {
-      const q = (i + 0.5) / 6,
-        p = t.a.clone().lerp(t.b, q);
-      (t.z === -12 ? sp : bl).push({
-        x: p.x,
-        y: p.y - 0.78,
-        z: p.z,
-        pix: { p: p.clone().add(new V3(0, -0.27, 0.26)), tan: u, len: (L / 6) * 0.96 },
-      });
-    }
-  }
-  const put = (list, id0, type) =>
-    list
-      .sort((a, b) => a.x - b.x || b.z - a.z)
-      .forEach((o, k) => {
-        addFix(id0 + k, type, o.x, o.y, o.z, 'hang').pix = o.pix;
-      });
-  put(bl, 1401, 'beam');
-  put(sp, 1501, 'spot');
-}
-/* follow spots (Robe FORTE FS) on the front truss, in gaps between spots 101-120 that keep 1 m clear of the blinders; a RoboSpot station prop stands at FOH */
-[2, 6, 12, 16].forEach((gap, k) =>
-  addFix(1901 + k, 'follow', -20 + (40 / 19) * (gap + 0.5), TR.front.y - 0.75, TR.front.z, 'hang'),
-);
-/* moving LED bars (Robe Tetra2) as footlights along the downstage edge; tilt only */
-row(2101, 12, 'bar', -17, 17, DECK + 0.25 * TYPES.bar.size, STAGE.z1 - 0.3, 'floor'); // tilt axis .25 units above the base bottom
-/* static profiles (ETC Source Four) on the side ladders, between the washes; each left unit has a mirror unit on the right */
-{
-  let id = 2201;
-  for (const sx of [-1, 1])
-    for (const z of [-3, -9, -15])
-      for (const y of [7.25, 11.75]) {
-        const f = addFix(id++, 'profile', sx * 23.6, y, z, 'hang', { pan: 0, tilt: 0 }),
-          a = aimAt(f, sx * 8, DECK + 1.5, z);
-        f.fixed.pan = f.vis.pan = a.pan;
-        f.fixed.tilt = f.vis.tilt = a.tilt;
-      }
-}
-
-const range = (a, b) => fixtures.filter((f) => f.id >= a && f.id <= b).map((f) => f.id);
-const idsOfType = (t) => fixtures.filter((f) => f.type === t).map((f) => f.id);
 
 /* ====================================================================
    POSITION MATH
 ==================================================================== */
-function dirFrom(f, pan, tilt, out) {
-  const p = pan * D2R,
-    t = tilt * D2R,
-    st = Math.sin(t);
-  if (f.mount === 'floor') out.set(st * Math.sin(p), Math.cos(t), st * Math.cos(p));
-  else out.set(st * Math.sin(p), -Math.cos(t), st * Math.cos(p));
-  return out;
-}
-function aimAt(f, tx, ty, tz) {
-  const d = new V3(tx, ty, tz).sub(f.pos).normalize();
-  // tilt-only bar: no pan, so it can only sweep in its own Y-Z plane (dirFrom with pan 0); aim at the target's projection on that plane
-  if (f.T.tiltOnly)
-    return { pan: 0, tilt: +clamp(Math.atan2(d.z, f.mount === 'floor' ? d.y : -d.y) / D2R, -95, 95).toFixed(1) };
-  let t = Math.acos(clamp(f.mount === 'floor' ? d.y : -d.y, -1, 1)) / D2R;
-  let p = Math.atan2(d.x, d.z) / D2R;
-  if (p > 90) {
-    p -= 180;
-    t = -t;
-  } else if (p < -90) {
-    p += 180;
-    t = -t;
-  }
-  if (t < 0.5 && t > -0.5) p = 0;
-  return { pan: +p.toFixed(1), tilt: +clamp(t, -135, 135).toFixed(1) };
-}
-const SXZ = [1.3, 1.28];
-const BAND_PTS = [
-  [0, -2.5],
-  [-5, -4.5],
-  [5, -4.5],
-  [0, -10.3, 0.5],
-  [6.5, -9.1, 0.5],
-  [-7.4, -6.2],
-  [3.2, -6.8],
-].map((p) => [p[0] * SXZ[0], p[1] * SXZ[1], p[2]]);
 const ringU = (f) => {
   const dx = f.pos.x - RING.x,
     dz = f.pos.z - RING.z,
@@ -1733,15 +1352,6 @@ scrLight.position.set(0, 8, -16);
 scene.add(scrLight);
 
 /* --- gobo + glow textures --- */
-function rng(seed) {
-  return () => {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 function drawGobo(S, i, soft = true) {
   const c = document.createElement('canvas');
   c.width = c.height = S;
@@ -2847,68 +2457,65 @@ function defaultGroups() {
   const g = {};
   let n = 1;
   const G = (name, ids) => (g[n++] = { name, ids });
-  G('FOH Spots', range(101, 199));
-  G('Beams Truss 2', range(201, 299));
-  G('Washes Truss 3', range(301, 399));
-  G('Spots Truss 4', range(401, 499));
-  G('Back Beams', range(501, 599));
-  G('Tower Washes', range(601, 699));
-  G('Floor Beams', range(701, 799));
-  G('Floor Washes', range(1001, 1099));
-  G('Screen Pars', range(1101, 1199));
-  G('Blinders', range(801, 899));
-  G('Strobes', range(901, 999));
+  G('FOH Spots', rig.range(101, 199));
+  G('Beams Truss 2', rig.range(201, 299));
+  G('Washes Truss 3', rig.range(301, 399));
+  G('Spots Truss 4', rig.range(401, 499));
+  G('Back Beams', rig.range(501, 599));
+  G('Tower Washes', rig.range(601, 699));
+  G('Floor Beams', rig.range(701, 799));
+  G('Floor Washes', rig.range(1001, 1099));
+  G('Screen Pars', rig.range(1101, 1199));
+  G('Blinders', rig.range(801, 899));
+  G('Strobes', rig.range(901, 999));
   G('LED Screen', [2001]);
   G('All Beams', [
-    ...range(201, 299),
-    ...range(501, 599),
-    ...range(701, 799),
-    ...range(1201, 1299),
-    ...range(1401, 1499),
-    ...range(1601, 1699),
+    ...rig.range(201, 299),
+    ...rig.range(501, 599),
+    ...rig.range(701, 799),
+    ...rig.range(1201, 1299),
+    ...rig.range(1401, 1499),
+    ...rig.range(1601, 1699),
   ]);
-  G('All Spots', idsOfType('spot'));
-  G('All Washes', idsOfType('wash'));
+  G('All Spots', rig.idsOfType('spot'));
+  G('All Washes', rig.idsOfType('wash'));
   G(
     'All Movers',
     fixtures.filter((f) => f.T.moving).map((f) => f.id),
   );
   G(
     'Floor Beams Odd',
-    range(701, 799).filter((_, i) => i % 2 === 0),
+    rig.range(701, 799).filter((_, i) => i % 2 === 0),
   );
   G(
     'Floor Beams Even',
-    range(701, 799).filter((_, i) => i % 2 === 1),
+    rig.range(701, 799).filter((_, i) => i % 2 === 1),
   );
-  G('Beams T2 Left', range(201, 215));
-  G('Beams T2 Right', range(216, 230));
-  G('Towers Left', range(601, 612));
-  G('Towers Right', range(613, 624));
-  G(
-    'Everything',
-    fixtures.filter((f) => f.type !== 'screen').map((f) => f.id),
-  );
-  G('Ring Beams', range(1201, 1299));
-  G('Ring Washes', range(1301, 1399));
-  G('Angled Beams', range(1401, 1499));
-  G('Angled Spots', range(1501, 1599));
+  G('Beams T2 Left', rig.range(201, 215));
+  G('Beams T2 Right', rig.range(216, 230));
+  G('Towers Left', rig.range(601, 612));
+  G('Towers Right', rig.range(613, 624));
+  G('Everything', rig.lightIds());
+  G('Ring Beams', rig.range(1201, 1299));
+  G('Ring Washes', rig.range(1301, 1399));
+  G('Angled Beams', rig.range(1401, 1499));
+  G('Angled Spots', rig.range(1501, 1599));
   G(
     'Ring Odd',
-    range(1201, 1299).filter((_, i) => i % 2 === 0),
+    rig.range(1201, 1299).filter((_, i) => i % 2 === 0),
   );
   G(
     'Ring Even',
-    range(1201, 1299).filter((_, i) => i % 2 === 1),
+    rig.range(1201, 1299).filter((_, i) => i % 2 === 1),
   );
-  G('All Angled', range(1401, 1599));
-  G('Tower Beams', range(1601, 1699));
-  G('Tower Washes', range(1701, 1799));
-  G('Audience Washes', range(1801, 1899));
-  G('Delay Towers', range(1813, 1818));
-  G('LED Bars', range(2101, 2199));
-  G('Follow Spots', range(1901, 1999));
-  G('Profiles', range(2201, 2299)); // 35-37: append only, the demo show uses group numbers
+  G('All Angled', rig.range(1401, 1599));
+  G('Tower Beams', rig.range(1601, 1699));
+  G('Tower Washes', rig.range(1701, 1799));
+  G('Audience Washes', rig.range(1801, 1899));
+  G('Delay Towers', rig.range(1813, 1818));
+  G('LED Bars', rig.range(2101, 2199));
+  G('Follow Spots', rig.range(1901, 1999));
+  G('Profiles', rig.range(2201, 2299)); // 35-37: append only, the demo show uses group numbers
   return g;
 }
 const COLORS = [
@@ -2987,14 +2594,13 @@ function presetVals(pr, f, k, n) {
   if (pr.kind === 'fn') return PFN[pr.fn](f, k, n);
   return pr.fix && pr.fix[f.id];
 }
-const has = (f, a) => f.T.attrs.includes(a);
 function colorTargets() {
   if (sel.length) {
-    const ok = sel.filter((id) => has(FX[id], 'r'));
+    const ok = sel.filter((id) => FX[id].has('r'));
     if (!ok.length) toast('לגופים שנבחרו אין שליטת צבע');
     return ok;
   }
-  const lit = fixtures.filter((f) => has(f, 'r') && f.out.dim > 1).map((f) => f.id);
+  const lit = fixtures.filter((f) => f.has('r') && f.out.dim > 1).map((f) => f.id);
   if (!lit.length) {
     toast('בחר קודם גופים (Group / לחיצה על הבמה) — אין כרגע גופים דולקים');
     return [];
@@ -3105,7 +2711,7 @@ function gotoCue(e, i, fadeOverride) {
   i = clamp(i, 0, e.cues.length - 1);
   const tr = tracked(e, i);
   const dur = fadeOverride != null ? fadeOverride : (e.cues[i].fade ?? 2);
-  e.fade = { from: deep(e.vals), to: tr.vals, t0: nowS(), dur, paused: false };
+  e.fade = { from: jsonClone(e.vals), to: tr.vals, t0: nowS(), dur, paused: false };
   e.fx = tr.fx;
   e.cur = i;
   e.on = true;
@@ -3145,7 +2751,7 @@ function invalidate(e) {
   e.cache = {};
   if (e.on && e.cur >= 0) {
     const tr = tracked(e, e.cur);
-    e.vals = deep(tr.vals);
+    e.vals = jsonClone(tr.vals);
     e.fx = tr.fx;
     e.fade = null;
   }
@@ -3159,7 +2765,7 @@ function stepFades(now) {
     const p = F.dur > 0 ? clamp((now - F.t0) / F.dur, 0, 1) : 1,
       k = p * p * (3 - 2 * p);
     if (p >= 1) {
-      e.vals = deep(F.to);
+      e.vals = jsonClone(F.to);
       e.fade = null;
       continue;
     }
@@ -3241,8 +2847,8 @@ function computeOutput(now) {
         o.pan += fxTmp.dp;
         o.tilt += fxTmp.dt;
       }
-      if (ft === 'dim' && has(f, 'dim')) o.dim = fxTmp.dim * s.lv;
-      if (ft === 'color' && has(f, 'r')) {
+      if (ft === 'dim' && f.has('dim')) o.dim = fxTmp.dim * s.lv;
+      if (ft === 'color' && f.has('r')) {
         o.r = fxTmp.r;
         o.g = fxTmp.g;
         o.b = fxTmp.b;
@@ -3383,7 +2989,7 @@ function updateVisuals(now, dt) {
     bu.uInt.value = I * T.power * (T.beamK ?? 1) * 0.38 * clamp(Math.pow(14 / (zoom + 4), 0.8), 0.06, 2.2);
     bu.uLen.value = L;
     bu.uEnd.value = hit ? 0 : 1;
-    const gob = has(f, 'gobo') ? Math.round(o.gobo) : 0;
+    const gob = f.has('gobo') ? Math.round(o.gobo) : 0;
     bu.uGobo.value = gob;
     bu.uGRot.value = v.gang;
     // pool
@@ -3498,7 +3104,7 @@ function setSel(ids, mode = 'replace') {
 }
 function progSet(id, attr, val) {
   const f = FX[id];
-  if (!f || !has(f, attr)) return;
+  if (!f || !f.has(attr)) return;
   const A = ATTR[attr];
   let mn = A.min,
     mx = A.max;
@@ -3552,7 +3158,7 @@ function applyFx(type) {
   for (const inst of prog.fxList)
     if (FXT[inst.type].feat === feat) inst.ids = inst.ids.filter((id) => !sel.includes(id));
   const ids = sel.filter((id) =>
-    feat === 'pos' ? FX[id].T.moving : feat === 'color' ? has(FX[id], 'r') : has(FX[id], 'dim'),
+    feat === 'pos' ? FX[id].T.moving : feat === 'color' ? FX[id].has('r') : FX[id].has('dim'),
   );
   if (!ids.length) {
     toast('Selected fixtures do not support this phaser');
@@ -3612,13 +3218,13 @@ function storeCue(ei, num, opts = {}) {
     e.cues.push(cue);
     e.cues.sort((a, b) => a.num - b.num);
   }
-  for (const id in prog.vals) cue.vals[id] = Object.assign(cue.vals[id] || {}, deep(prog.vals[id]));
+  for (const id in prog.vals) cue.vals[id] = Object.assign(cue.vals[id] || {}, jsonClone(prog.vals[id]));
   // cue-local phasers: remove stored fixtures from same-feature phasers in this cue, then add
   for (const inst of prog.fxList) {
     const ft = FXT[inst.type].feat;
     for (const old of cue.fx) if (FXT[old.type].feat === ft) old.ids = old.ids.filter((id) => !inst.ids.includes(id));
     cue.fx = cue.fx.filter((i) => i.ids.length);
-    cue.fx.push(deep(inst));
+    cue.fx.push(jsonClone(inst));
   }
   if (opts.fade != null) cue.fade = opts.fade;
   if (!e.name) e.name = `Seq ${ei + 1}`;
@@ -3760,7 +3366,7 @@ function runCmd(raw) {
     if (T[i] && ALIAS[T[i]] === 'thru') {
       i++;
       const b = num();
-      return range(Math.min(a, b), Math.max(a, b));
+      return rig.range(Math.min(a, b), Math.max(a, b));
     }
     return [a];
   };
@@ -3789,7 +3395,7 @@ function runCmd(raw) {
           break;
         }
         case 'all':
-          selectIds(fixtures.filter((f) => f.type !== 'screen').map((f) => f.id));
+          selectIds(rig.lightIds());
           break;
         case '+':
           mode = 'add';
@@ -4048,7 +3654,7 @@ function renderPools() {
       `<span class="n">${presetTab}.${n}</span><span class="t">${pr ? pr.name : '—'}</span>`,
     );
     if (pr && presetTab === 4 && pr.vals) {
-      const c = `rgb(${pr.vals.r * 2.55},${pr.vals.g * 2.55},${pr.vals.b * 2.55})`;
+      const c = cssRgb(pr.vals.r, pr.vals.g, pr.vals.b);
       const sw = el('i', 'sw');
       sw.style.background = c;
       sw.style.color = c;
@@ -4193,7 +3799,7 @@ function encDelta(a, d) {
   const n = sel.length;
   sel.forEach((id, k) => {
     const f = FX[id];
-    if (!has(f, a)) return;
+    if (!f.has(a)) return;
     const cur = prog.vals[id]?.[a] ?? f.base[a] ?? ATTR[a].def;
     const m = fanMode && n > 1 ? lerp(-1, 1, k / (n - 1)) : 1;
     progSet(id, a, cur + d * m);
@@ -4231,7 +3837,7 @@ function updateEncUI() {
         p = true;
       }
     } else {
-      const f = sel.map((id) => FX[id]).find((f) => has(f, a));
+      const f = sel.map((id) => FX[id]).find((f) => f.has(a));
       en = !!f;
       if (f) {
         const pv = prog.vals[f.id]?.[a];
@@ -4587,7 +4193,7 @@ function renderEncExtra() {
     COLORS.forEach(([n, r, g, b]) => {
       const d = el('div');
       d.title = n;
-      d.style.background = `rgb(${r * 2.55},${g * 2.55},${b * 2.55})`;
+      d.style.background = cssRgb(r, g, b);
       d.onclick = () =>
         colorTargets().forEach((id) => {
           progSet(id, 'r', r);
@@ -4900,21 +4506,17 @@ function renderSheet() {
     put('sel', f.sel ? 'sel' : '', (v) => (R.tr.className = v));
     const cells = [
       [2, 'dim', String(Math.round(f.out.dim))],
-      [3, 'pan', has(f, 'pan') ? String(Math.round(o.pan)) : ''],
-      [4, 'tilt', has(f, 'tilt') ? String(Math.round(o.tilt)) : ''],
-      [6, 'gobo', has(f, 'gobo') ? String(Math.round(o.gobo)) : ''],
-      [7, 'zoom', has(f, 'zoom') ? (+o.zoom).toFixed(1) : ''],
+      [3, 'pan', f.has('pan') ? String(Math.round(o.pan)) : ''],
+      [4, 'tilt', f.has('tilt') ? String(Math.round(o.tilt)) : ''],
+      [6, 'gobo', f.has('gobo') ? String(Math.round(o.gobo)) : ''],
+      [7, 'zoom', f.has('zoom') ? (+o.zoom).toFixed(1) : ''],
     ];
     for (const [n, a, txt] of cells) {
       put('t' + n, txt, (v) => (R.td[n].textContent = v));
       put('c' + n, c(a), (v) => (R.td[n].className = v));
     }
     put('c5', c('r'), (v) => (R.td[5].className = v));
-    put(
-      'sw',
-      has(f, 'r') ? `rgb(${o.r * 2.55},${o.g * 2.55},${o.b * 2.55})` : '#333',
-      (v) => (R.cs.style.background = v),
-    );
+    put('sw', f.has('r') ? cssRgb(o.r, o.g, o.b) : '#333', (v) => (R.cs.style.background = v));
   });
 }
 $('#sheet').onclick = (ev) => {
@@ -4932,7 +4534,7 @@ $('#kFan').onclick = () => {
   fanMode = !fanMode;
   if (feat === 'pos') renderEncExtra();
 };
-$('#kAll').onclick = () => setSel(fixtures.filter((f) => f.type !== 'screen').map((f) => f.id));
+$('#kAll').onclick = () => setSel(rig.lightIds());
 $('#kOdd').onclick = () => setSel(sel.filter((_, i) => i % 2 === 0));
 $('#kEven').onclick = () => setSel(sel.filter((_, i) => i % 2 === 1));
 $('#kRev').onclick = () => {
@@ -5214,7 +4816,7 @@ function buildDemo() {
         if (!f) return;
         let o = typeof v === 'function' ? v(f, k, ids.length) : typeof v === 'string' ? PFN[v](f, k, ids.length) : v;
         const out = (vals[id] = vals[id] || {});
-        for (const a in o) if (has(f, a)) out[a] = a === 'zoom' ? clamp(o[a], f.T.zr[0], f.T.zr[1]) : o[a];
+        for (const a in o) if (f.has(a)) out[a] = a === 'zoom' ? clamp(o[a], f.T.zr[0], f.T.zr[1]) : o[a];
       });
     return vals;
   };
@@ -5235,7 +4837,7 @@ function buildDemo() {
     name: 'Walk-In',
     fade: 3,
     vals: V([
-      [fixtures.filter((f) => f.type !== 'screen').map((f) => f.id), { dim: 0, gobo: 0, grot: 0, strobe: 0 }],
+      [rig.lightIds(), { dim: 0, gobo: 0, grot: 0, strobe: 0 }],
       [allMovers, (f, k, n) => ({ ...PFN.center(f, k, n), ...C('Blue') })],
       [G(3), { dim: 32, zoom: 40 }],
       [G(6), { dim: 22, ...C('Congo') }],
@@ -5587,7 +5189,7 @@ function buildDemo() {
       num: 1,
       name: 'Singer',
       fade: 2,
-      vals: V([[range(108, 113), both('singer', { dim: 100, ...C('White'), gobo: 0, zoom: 8, grot: 0 })]]),
+      vals: V([[rig.range(108, 113), both('singer', { dim: 100, ...C('White'), gobo: 0, zoom: 8, grot: 0 })]]),
       fx: [],
     },
   ]);
@@ -6102,27 +5704,27 @@ const STYLES = {
   },
 };
 const AG = {
-  audW: range(1801, 1899),
-  towB: range(1601, 1699),
-  towW: range(1701, 1799),
-  ring: range(1201, 1299),
-  rwash: range(1301, 1399),
-  angB: range(1401, 1499),
-  angS: range(1501, 1599),
-  foh: range(101, 199),
-  t2: range(201, 299),
-  t3: range(301, 399),
-  t4: range(401, 499),
-  back: range(501, 599),
-  tow: range(601, 699),
-  floor: range(701, 799),
-  fwash: range(1001, 1099),
-  pars: range(1101, 1199),
-  blind: range(801, 899),
-  strobe: range(901, 999),
-  bars: range(2101, 2199),
-  follow: range(1901, 1999),
-  prof: range(2201, 2299),
+  audW: rig.range(1801, 1899),
+  towB: rig.range(1601, 1699),
+  towW: rig.range(1701, 1799),
+  ring: rig.range(1201, 1299),
+  rwash: rig.range(1301, 1399),
+  angB: rig.range(1401, 1499),
+  angS: rig.range(1501, 1599),
+  foh: rig.range(101, 199),
+  t2: rig.range(201, 299),
+  t3: rig.range(301, 399),
+  t4: rig.range(401, 499),
+  back: rig.range(501, 599),
+  tow: rig.range(601, 699),
+  floor: rig.range(701, 799),
+  fwash: rig.range(1001, 1099),
+  pars: rig.range(1101, 1199),
+  blind: rig.range(801, 899),
+  strobe: rig.range(901, 999),
+  bars: rig.range(2101, 2199),
+  follow: rig.range(1901, 1999),
+  prof: rig.range(2201, 2299),
 };
 const auto = {
   on: false,
@@ -6148,7 +5750,7 @@ function genLook(S, sec) {
       const f = FX[id];
       const v = typeof o === 'function' ? o(f, k, ids.length) : o;
       const out = (vals[id] = vals[id] || {});
-      for (const a in v) if (has(f, a)) out[a] = a === 'zoom' ? clamp(v[a], f.T.zr[0], f.T.zr[1]) : v[a];
+      for (const a in v) if (f.has(a)) out[a] = a === 'zoom' ? clamp(v[a], f.T.zr[0], f.T.zr[1]) : v[a];
     });
   const secE = { groove: 0.75, verse: 0.65, chorus: 1, hook: 1, build: 0.8, drop: 1 }[sec] ?? 0.8;
   const E = clamp(auto.energy * secE, 0.05, 1.2),
@@ -6157,10 +5759,7 @@ function genLook(S, sec) {
     c1 = COL(n1),
     c2 = COL(n2);
   const big = sec === 'chorus' || sec === 'hook' || sec === 'drop';
-  set(
-    fixtures.filter((f) => f.type !== 'screen').map((f) => f.id),
-    { dim: 0, strobe: 0, gobo: 0, grot: 0 },
-  );
+  set(rig.lightIds(), { dim: 0, strobe: 0, gobo: 0, grot: 0 });
   const wPos = S.orch
     ? pickR(['orch', 'band', 'center'])
     : S.calm
@@ -6480,7 +6079,7 @@ function renderAuto() {
     const S = STYLES[k],
       c = S.pal[0].map((n) => {
         const x = COL(n);
-        return `rgb(${x.r * 2.55},${x.g * 2.55},${x.b * 2.55})`;
+        return cssRgb(x.r, x.g, x.b);
       });
     const d = el(
       'div',
@@ -6550,7 +6149,7 @@ $('#aSave').onclick = () => {
   }
   const e = execs[selExec],
     num = e.cues.length ? Math.floor(e.cues[e.cues.length - 1].num) + 1 : 1;
-  const c = deep(autoExec.cues[0]);
+  const c = jsonClone(autoExec.cues[0]);
   c.num = num;
   c.name = `${STYLES[auto.style].name.split(' ')[0]} ${SEC_NAMES[c.sec] || ''}`;
   delete c.sec;
@@ -7345,7 +6944,7 @@ function updateMaUI() {
     d.querySelector('.cap').style.bottom = k * 100 + '%';
   });
   const fs = sel.map((id) => FX[id]),
-    fc = fs.find((f) => has(f, 'r')),
+    fc = fs.find((f) => f.has('r')),
     mk = $('#tsColMk');
   if (fc) {
     const r = curVal(fc, 'r'),
@@ -7358,7 +6957,7 @@ function updateMaUI() {
       display: 'block',
       left: (h / 6) * 100 + '%',
       top: (1 - (mx ? dl / mx : 0)) * 100 + '%',
-      background: `rgb(${r * 2.55},${g * 2.55},${b * 2.55})`,
+      background: cssRgb(r, g, b),
     });
     $('#tsColInfo').textContent = `R${Math.round(r)} G${Math.round(g)} B${Math.round(b)}`;
   } else {
@@ -7372,12 +6971,12 @@ function updateMaUI() {
     tsPosKey = k;
     tsPosDraw();
   }
-  const fp = fs.find((f) => has(f, 'pan'));
+  const fp = fs.find((f) => f.has('pan'));
   $('#tsPosInfo').textContent = fp
     ? `PAN ${Math.round(curVal(fp, 'pan'))}° TILT ${Math.round(curVal(fp, 'tilt'))}°`
     : '';
   $('#tsPosNone').style.display = sel.length ? 'none' : '';
-  const fd = fs.find((f) => has(f, 'dim'));
+  const fd = fs.find((f) => f.has('dim'));
   $('#lvlVal').textContent = fd ? Math.round(curVal(fd, 'dim')) : '—';
 }
 {
@@ -7570,7 +7169,7 @@ if (window.__deskClock) {
   toastLog.observe($('#toast'), { childList: true, characterData: true, subtree: true });
   const state = () => {
     const show = serialize();
-    return deep({
+    return jsonClone({
       sel,
       prog: prog.vals,
       progFx: prog.fxList,
@@ -7592,7 +7191,7 @@ if (window.__deskClock) {
   window.__desk.test = {
     ...C,
     state,
-    serialize: () => deep(serialize()),
+    serialize: () => jsonClone(serialize()),
     // move to an absolute time (seconds, never backwards) and return the output of every fixture there
     outputAt: (sec) => {
       if (sec * 1000 > C.now()) C.advance(sec * 1000 - C.now());
