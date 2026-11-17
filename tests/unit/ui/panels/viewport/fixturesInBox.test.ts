@@ -9,8 +9,10 @@ import { boxBetween, fixturesInBox } from '../../../../../src/ui/panels/viewport
  */
 const camera = new OrthographicCamera(-1, 1, 1, -1, -1, 1);
 const rect = { left: 0, top: 0, width: 64, height: 64 };
-const fixture = (id: number, x: number, y: number, depth = 0) =>
-  ({ id, pos: new Vector3(x / 32 - 1, 1 - y / 32, -depth) }) as unknown as Fixture;
+const fixture = (id: number, x: number, y: number, depth = 0): Pick<Fixture, 'id' | 'pos'> => ({
+  id,
+  pos: new Vector3(x / 32 - 1, 1 - y / 32, -depth),
+});
 
 describe('fixturesInBox', () => {
   it('spans the box in either drag direction', () => {

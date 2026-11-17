@@ -55,7 +55,7 @@ describe('EncoderActions.delta', () => {
     const { actions, toasts, phasers } = setup([1]);
     actions.delta('spread', 20);
     expect(toasts).toEqual(['No phaser on selection']);
-    phasers.push({ spread: 1430 });
+    phasers.push({ type: 'circle', rate: 1, size: 1, spread: 1430, ids: [] });
     actions.delta('spread', 20);
     expect(phasers[0]?.spread).toBe(1440);
   });
@@ -69,7 +69,7 @@ describe('EncoderActions.delta', () => {
       [1, 'dim', 71],
       [2, 'dim', 51],
     ]);
-    const noBase = encodersFakes([{ ...fixture(5, {}), has: () => true }]);
+    const noBase = encodersFakes([fixture(5, {}, 'spot', true)]);
     noBase.selection.ids = [5];
     new EncoderActions(noBase.deps).delta('zoom', 1);
     expect(noBase.programmer.set).toHaveBeenCalledWith(5, 'zoom', ATTR.zoom.def + 1);

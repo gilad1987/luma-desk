@@ -5,7 +5,7 @@ import { executorsFakes } from './executorsFakes';
 
 const IDS = ['mSelName', 'pauseBtn', 'boBtn', 'bpmBox', 'gmVal', 'gmFader', 'goBig', 'goBack', 'offBtn', 'tapBtn'];
 
-// legacy: index.html at 48a3b63, lines 2243-2250 (master keys) and updateExecUI (GM readout)
+// legacy: index.html at 48a3b63, lines 2243-2250 (master keys) and loop() line 2540 (GM readout)
 describe('MasterSection', () => {
   let dom: FakeDom;
   beforeEach(() => {

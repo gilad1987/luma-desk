@@ -15,7 +15,7 @@ export interface ViewportDeps {
   readonly camera: Camera;
   /** In build order; a box select sorts its own result by id. */
   readonly fixtures: readonly Fixture[];
-  readonly selection: Selection;
+  readonly selection: Pick<Selection, 'set'>;
   readonly bus: EngineBus;
   /** The orbit controls; a box drag turns them off so the camera holds still under the rectangle. */
   readonly controls: { enabled: boolean };

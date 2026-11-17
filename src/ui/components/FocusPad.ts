@@ -13,9 +13,9 @@ import { padScale, type PadScale } from './padScale';
 /** What a focus pad aims: the selection's moving fixtures, through the programmer, at the shared aim height. */
 export interface FocusPadDeps {
   readonly bus: EngineBus;
-  readonly selection: Selection;
-  readonly programmer: Programmer;
-  readonly rig: Rig;
+  readonly selection: Pick<Selection, 'ids'>;
+  readonly programmer: Pick<Programmer, 'set'>;
+  readonly rig: Pick<Rig, 'get'>;
   readonly aimHeight: AimHeight;
 }
 

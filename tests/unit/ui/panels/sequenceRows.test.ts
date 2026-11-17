@@ -1,27 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import type { Executor } from '../../../../src/engine/Executor';
+import type { Cue } from '../../../../src/engine/CueList';
+import type { PhaserInstance } from '../../../../src/engine/shared';
 import { cueTable, execOptions } from '../../../../src/ui/panels/sequence/sequenceRows';
 
-const cue = (num: number, name: string, fade: number, nVals: number, nFx: number) => ({
+const phaser: PhaserInstance = { type: 'circle', rate: 1, size: 1, spread: 0, ids: [] };
+const cue = (num: number, name: string, fade: number, nVals: number, nFx: number): Cue => ({
   num,
   name,
   fade,
   vals: Object.fromEntries(Array.from({ length: nVals }, (_, i) => [String(i), {}])),
-  fx: Array.from({ length: nFx }, () => ({})),
+  fx: Array.from({ length: nFx }, () => ({ ...phaser })),
 });
-const exec = (over: Partial<Executor>): Executor => ({ name: '', cues: [], cur: -1, on: false, ...over }) as Executor;
+type SequenceView = Parameters<typeof cueTable>[0];
+const exec = (over: Partial<SequenceView>): SequenceView => ({ name: '', cues: [], cur: -1, on: false, ...over });
 const HEAD = '<tr><th>Cue</th><th>Name</th><th>Fade</th><th>Content</th></tr>';
 
 describe('sequence rows (same strings as the original renderSeq)', () => {
   it('lists executors with the selected one marked', () => {
-    const execs = [exec({ name: 'Intro' }), exec({ cues: [cue(1, 'a', 0, 0, 0)] as Executor['cues'] })];
+    const execs = [exec({ name: 'Intro' }), exec({ cues: [cue(1, 'a', 0, 0, 0)] })];
     expect(execOptions(execs, 1)).toBe(
       '<option value="0" >Exec 1 — Intro (0)</option><option value="1" selected>Exec 2 — empty (1)</option>',
     );
   });
 
   it('marks the current and, while running, the next cue (wrapping)', () => {
-    const cues = [cue(1, 'A', 2, 3, 0), cue(2.5, 'B', 0, 1, 2)] as Executor['cues'];
+    const cues = [cue(1, 'A', 2, 3, 0), cue(2.5, 'B', 0, 1, 2)];
     expect(cueTable(exec({ cues, cur: 1, on: true }))).toBe(
       HEAD +
         '<tr data-i="0" class="nxt"><td class="num">1</td><td class="name">A</td><td class="fade">2s</td>' +
@@ -42,6 +45,6 @@ describe('sequence rows (same strings as the original renderSeq)', () => {
   });
 
   it('keeps one implicit tbody when there are cues', () => {
-    expect(cueTable(exec({ cues: [cue(1, 'A', 2, 0, 0)] as unknown as Executor['cues'] }))).not.toContain('tbody');
+    expect(cueTable(exec({ cues: [cue(1, 'A', 2, 0, 0)] }))).not.toContain('tbody');
   });
 });

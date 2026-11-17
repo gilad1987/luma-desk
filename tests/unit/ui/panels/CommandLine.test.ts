@@ -1,23 +1,21 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { EventBus } from '../../../../src/core';
-import { AppState } from '../../../../src/engine/AppState';
-import type { EngineEvents } from '../../../../src/engine/events';
-import type { Executor } from '../../../../src/engine/Executor';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import type { AppState } from '../../../../src/engine/AppState';
+import type { ExecutorPool } from '../../../../src/engine/ExecutorPool';
 import { CommandLine } from '../../../../src/ui/panels/command/CommandLine';
 import type { CommandLineDeps } from '../../../../src/ui/panels/command/CommandLineDeps';
 import { commandLineMarkup } from '../../../../src/ui/panels/command/commandLineMarkup';
-import { Modal, StoreModeGuard } from '../../../../src/ui/shared';
 import { asReal } from '../fakes/asReal';
 import type { FakeElement } from '../fakes/FakeElement';
 import { FakeDom } from '../fakes/installFakeDom';
 import { FakeButton, FakeList } from '../fakes/FakeButton';
 import { FakeHost } from '../fakes/FakeHost';
+import { commandLineDeps } from './commandLineFakes';
 
 const KEYS = ['kStore', 'kClear', 'kHigh', 'kFan', 'kAll', 'kOdd', 'kEven', 'kRev'];
 
 describe('CommandLine', () => {
   let dom: FakeDom, input: FakeElement, state: AppState, deps: CommandLineDeps, line: CommandLine, host: FakeHost;
-  let go: ReturnType<typeof vi.fn>;
+  let go: Mock<ExecutorPool['go']>;
   const key = (k: string) => {
     const preventDefault = vi.fn();
     input.onkeydown?.({ key: k, preventDefault } as { key: string });
@@ -29,20 +27,7 @@ describe('CommandLine', () => {
     Object.assign(input, { blur: vi.fn() });
     dom.add('cmdFb', new FakeList());
     for (const id of [...KEYS, 'modal', 'mbox']) dom.add(id, new FakeButton());
-    const bus = new EventBus<EngineEvents>();
-    state = new AppState(bus);
-    go = vi.fn();
-    deps = {
-      bus,
-      state,
-      store: new StoreModeGuard(state),
-      modal: new Modal(bus),
-      runCommand: vi.fn(),
-      execs: [{} as Executor],
-      pool: { go },
-      fanToggled: vi.fn(),
-      guideOrTourOpen: () => false,
-    } as unknown as CommandLineDeps;
+    ({ deps, state, go } = commandLineDeps());
     host = new FakeHost();
     line = new CommandLine(asReal<HTMLElement>(host), deps);
   });

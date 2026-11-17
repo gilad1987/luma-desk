@@ -11,9 +11,9 @@ export interface CommandLineDeps {
   readonly bus: EngineBus;
   readonly state: AppState;
   readonly store: StoreModeGuard;
-  readonly programmer: Programmer;
-  readonly selection: Selection;
-  readonly pool: ExecutorPool;
+  readonly programmer: Pick<Programmer, 'clearPress'>;
+  readonly selection: Pick<Selection, 'ids' | 'set' | 'reverse'>;
+  readonly pool: Pick<ExecutorPool, 'go'>;
   readonly execs: readonly Executor[];
   readonly modal: Modal;
   /** Parses and runs one command line (the `CommandRunner`). */
