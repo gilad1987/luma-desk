@@ -1,5 +1,4 @@
 import { trussPoints } from '../bounds';
-import { CENTRE_LINE_M } from '../centreLine';
 import type { StageDesign, StageFixture } from '../StageDesign';
 import type { StageTruss } from '../trussTypes';
 import type { Vec3 } from '../types';
@@ -7,6 +6,9 @@ import { isSameSpot } from './addFixtures';
 import { appendCopies } from './copies';
 import { newTrussId } from './ids';
 import { mirrorFixture, mirrorPoint, mirrorTruss } from './mirrorGeometry';
+
+/** Items within 1 cm of x = 0 sit on the centre line; mirror leaves them alone. */
+const CENTRE_LINE_M = 0.01;
 
 /**
  * Copies the left side, as seen from the audience (house left, x < 0, the side the query `side: 'left'` selects),

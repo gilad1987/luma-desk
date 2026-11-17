@@ -1,7 +1,7 @@
 /**
  * Owns where `addFixturesOnTruss` puts fixtures on a tower: beside the column, 0.4 m toward the stage centre (downstage
- * for a tower less than one step from the centre line), spread from the base up with no hang drop, so none goes below the tower base. Other truss kinds are owned by
- * addFixtures.test.ts.
+ * for a tower less than one step from the centre line), spread from the base up with no hang drop, so none goes below
+ * the tower base. Other truss kinds are owned by addFixtures.test.ts.
  */
 import { describe, expect, it } from 'vitest';
 import { addFixturesOnTruss } from '../../../../../src/domain/stage/edit/addFixtures.ts';
