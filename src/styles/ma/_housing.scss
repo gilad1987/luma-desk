@@ -1,0 +1,97 @@
+/* 3D console: .maDesk is the scene (perspective + preserve-3d); the screen housing and the deck are planes hinged on one line.
+   overflow other than visible, opacity < 1, filter, clip-path and contain:paint flatten 3D children, so they stay on leaf planes only. */
+.maDesk {
+  zoom: var(--mz, 1);
+  width: 2050px;
+  margin: var(--mt, 0px) auto var(--mb, 0px);
+  position: relative;
+  perspective: 2100px;
+  perspective-origin: 50% -40px;
+  transform-style: preserve-3d;
+}
+.maScreens {
+  position: relative;
+  transform-style: preserve-3d;
+  transform-origin: 50% 100%;
+  transform: rotateX(6deg);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  height: 304px;
+  padding: 8px 34px 6px;
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(#34343a, #1c1c20 6%, #141417 70%, #26262b);
+  box-shadow:
+    inset 0 1px 0 #ffffff40,
+    inset 0 -2px 0 #000;
+}
+/* housing thickness: the top face runs back from the top edge and catches the light from above */
+.maScreens::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 0;
+  height: 56px;
+  transform-origin: 50% 0;
+  transform: rotateX(-90deg);
+  background: linear-gradient(#4a4a51, #2a2a2f 25%, #141416);
+  border-radius: 0 0 10px 10px;
+}
+/* side cheeks: perpendicular planes at both ends of the housing and of the deck, seen from inside as slim receding faces */
+.maCheek {
+  position: absolute;
+  left: 0;
+  top: -18px;
+  bottom: -2px;
+  width: 88px;
+  transform-origin: 0 0;
+  transform: translateZ(28px) rotateY(90deg);
+  border-radius: 40px 40px 0 0;
+  background: linear-gradient(90deg, #4a4a51, #26262b 6%, #151518 40%, #0b0b0c);
+  box-shadow: inset 0 2px 0 #ffffff22;
+}
+.maCheek.r {
+  left: auto;
+  right: 0;
+  transform-origin: 100% 0;
+  transform: translateZ(28px) rotateY(-90deg);
+  background: linear-gradient(-90deg, #4a4a51, #26262b 6%, #151518 40%, #0b0b0c);
+}
+.maDeck > .maCheek {
+  top: -12px;
+  bottom: 0;
+  width: 74px;
+  transform: translateZ(22px) rotateY(90deg);
+  border-radius: 0 0 0 30px;
+}
+.maDeck > .maCheek.r {
+  transform: translateZ(22px) rotateY(-90deg);
+  border-radius: 0 0 30px 0;
+}
+.disp {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border: 8px solid transparent;
+  border-bottom-width: 10px;
+  border-radius: 9px;
+  background:
+    linear-gradient(#06080c, #06080c) padding-box,
+    linear-gradient(#34343a, #0e0e10 12%, #060607 82%, #1f1f23) border-box;
+  box-shadow:
+    0 0 0 1px #000,
+    0 -1px 0 1px #5a5a62,
+    0 0 26px #4a7cff1c;
+  overflow: hidden;
+}
+.disp::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.012) 28%, transparent 42%);
+}

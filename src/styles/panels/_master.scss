@@ -1,0 +1,64 @@
+@use '../abstracts/mixins';
+
+#master {
+  border-left: 1px solid var(--line);
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 1fr 40px;
+  gap: 10px;
+}
+.mGo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mGo .sx {
+  @include mixins.caption-caps;
+}
+.mGo .sx b {
+  color: var(--acc);
+}
+#goBig {
+  flex: 1;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  background: linear-gradient(#22c55e, #15803d);
+  border-color: #4ade80;
+  color: #04150a;
+  box-shadow: 0 0 18px #22c55e40;
+}
+.mRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 5px;
+}
+.mRow button {
+  font-weight: 700;
+  font-size: 10.5px;
+  padding: 7px 0;
+}
+#boBtn.on {
+  background: #5a0f0f;
+  border-color: var(--prog);
+  color: #fff;
+}
+.gm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.gm .fader {
+  flex: 1;
+  width: 30px;
+}
+.gm .lb {
+  font-size: 9px;
+  color: var(--mut);
+  letter-spacing: 0.08em;
+}
+#bpmBox {
+  font: 600 11px var(--mono);
+  color: var(--acc);
+}
