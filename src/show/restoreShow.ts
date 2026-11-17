@@ -1,6 +1,5 @@
 import type { Executor } from '../engine/Executor';
 import type { DemoShow } from './DemoShow';
-import type { ShowFileInput } from './ShowFile';
 import type { ShowSerializer } from './ShowSerializer';
 import type { ShowStorage } from './ShowStorage';
 
@@ -10,33 +9,41 @@ export interface RestoreShowDeps {
   readonly serializer: ShowSerializer;
   readonly execs: readonly Executor[];
   readonly demo: DemoShow;
+  /**
+   * Repaints the desk after a load. It runs inside the fallback right after the saved show loads, as the original
+   * loader repainted, so a saved show the desk cannot draw also falls back to the demo.
+   */
+  readonly repaint: () => void;
 }
 
 /**
  * Boot: loads the saved show, or the demo. Kept exactly as the original rules, quirks included: a saved show with no
  * cue at all counts as nothing saved, so the demo replaces it; when executor 1 has cues it starts cue 1 at once and
- * is raised to full if it was saved at 0; a broken or unreadable save also falls back to the demo.
+ * is raised to full if it was saved at 0; a broken or unreadable save also falls back to the demo. A save that loaded
+ * with cues stays, even when starting executor 1 throws.
  */
-export function restoreShow({ storage, serializer, execs, demo }: RestoreShowDeps): void {
+export function restoreShow({ storage, serializer, execs, demo, repaint }: RestoreShowDeps): void {
   let loaded = false;
   try {
-    loaded = loadSaved(storage, serializer, execs);
+    const saved = storage.saved();
+    if (saved) {
+      serializer.load(JSON.parse(saved));
+      repaint();
+      loaded = execs.some((e) => e.cues.length);
+      if (loaded) startFirstExec(execs);
+    }
   } catch {
-    // unreadable storage or a broken save: the demo below replaces it
+    // unreadable storage or a broken save: the demo below replaces it, unless the save already counted as loaded
   }
-  if (!loaded) demo.load();
+  if (loaded) return;
+  demo.load();
+  repaint();
 }
 
-/** Loads the saved show and starts executor 1; false when nothing is saved or the save holds no cue. */
-function loadSaved(storage: ShowStorage, serializer: ShowSerializer, execs: readonly Executor[]): boolean {
-  const saved = storage.saved();
-  if (!saved) return false;
-  serializer.load(JSON.parse(saved) as ShowFileInput);
-  const loaded = execs.some((e) => e.cues.length);
+/** Starts cue 1 of executor 1 when it has cues, raising a level saved at 0 to full. */
+function startFirstExec(execs: readonly Executor[]): void {
   const first = execs[0];
-  if (loaded && first?.cues.length) {
-    first.goto(0, 0);
-    if (!first.level) first.level = 1;
-  }
-  return loaded;
+  if (!first?.cues.length) return;
+  first.goto(0, 0);
+  if (!first.level) first.level = 1;
 }

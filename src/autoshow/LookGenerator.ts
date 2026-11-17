@@ -16,15 +16,15 @@ import type { Section } from './sections';
  * depend on that (quirk E4). The build steps run in a fixed order, which is also the order of the random draws.
  */
 export class LookGenerator {
-  private readonly source: LookSource;
+  readonly #source: LookSource;
 
   constructor(rig: Rig, random: () => number = Math.random) {
-    this.source = { rig, groups: buildAutoGroups(rig), random };
+    this.#source = { rig, groups: buildAutoGroups(rig), random };
   }
 
   /** A new look for one section of a style, as cue 1 of the auto executor (with its `sec` label, quirk E7). */
   generate(style: AutoStyle, section: Section, options: LookOptions): Cue {
-    const look = new LookDraft(this.source, style, section, options);
+    const look = new LookDraft(this.#source, style, section, options);
     addWashes(look);
     addGoboSpots(look);
     addActiveGroups(look);

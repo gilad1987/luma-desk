@@ -25,14 +25,17 @@ export interface ShowFileV1 {
   haze: number;
 }
 
+/** One executor as the loader reads it: every field may be missing, and the loader fills the default. */
+export type SavedExecInput = { [K in keyof SavedExec]?: SavedExec[K] | undefined };
+
 /**
- * What the loader accepts: a v1 file from any desk version, or a partial show (a new empty show passes groups only).
- * Every field may be missing; the loader fills defaults field by field. The data is not validated.
+ * What the loader reads after narrowing: a v1 file from any desk version, or a partial show (a new empty show passes
+ * groups only). Every field may be missing; the loader fills defaults field by field.
  */
 export interface ShowFileInput {
-  groups?: GroupPool;
-  presets?: Record<string, Record<string, Preset>>;
-  execs?: Partial<SavedExec>[];
-  bpm?: number;
-  haze?: number;
+  groups?: GroupPool | undefined;
+  presets?: Record<string, Record<string, Preset>> | undefined;
+  execs?: SavedExecInput[] | undefined;
+  bpm?: number | undefined;
+  haze?: number | undefined;
 }

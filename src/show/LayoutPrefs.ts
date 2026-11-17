@@ -1,4 +1,5 @@
 import { clamp } from '../core';
+import { isRecord } from './isRecord';
 import type { KeyValueStore } from './KeyValueStore';
 import { STORAGE_KEYS } from './storageKeys';
 
@@ -8,8 +9,6 @@ export interface DeskLayout {
   deskZoom: string;
   maSize: number | undefined;
 }
-
-type StoredLayout = { deskMode?: string; deskZoom?: string; maSize?: unknown } | null;
 
 /** Saves and restores the desk layout. Storage errors are dropped, as before: a lost layout only costs a click. */
 export class LayoutPrefs {
@@ -34,17 +33,23 @@ export class LayoutPrefs {
    */
   load(adaptiveSize: number): DeskLayout | null {
     try {
-      const saved = JSON.parse(this.#store.getItem(STORAGE_KEYS.layout) || 'null') as StoredLayout;
+      const saved: unknown = JSON.parse(this.#store.getItem(STORAGE_KEYS.layout) || 'null');
       if (!saved) return null;
-      const size = Number(saved.maSize);
+      const { deskMode, deskZoom, maSize } = isRecord(saved) ? saved : {};
+      const size = Number(maSize);
       const custom = Number.isFinite(size) && size > 0 && size !== adaptiveSize;
       return {
-        deskMode: saved.deskMode || 'ma',
-        deskZoom: saved.deskZoom || 'auto',
+        deskMode: textOr(deskMode, 'ma'),
+        deskZoom: textOr(deskZoom, 'auto'),
         maSize: custom ? clamp(size, 0.3, 0.7) : undefined,
       };
     } catch {
       return null;
     }
   }
+}
+
+/** A saved mode name, or the default when it is missing, empty or not text. */
+function textOr(value: unknown, fallback: string): string {
+  return typeof value === 'string' && value ? value : fallback;
 }

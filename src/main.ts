@@ -5092,8 +5092,7 @@ renderFeatTabs();
 renderEncoders();
 buildExecs();
 renderAuto();
-restoreShow({ storage: showStorage, serializer, execs, demo });
-showLoaded();
+restoreShow({ storage: showStorage, serializer, execs, demo, repaint: showLoaded });
 if (!guideFlag.seen()) setTimeout(() => openGuide(0), 600);
 requestAnimationFrame(loop);
 window.__desk = {

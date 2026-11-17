@@ -6,9 +6,9 @@
 export class SongAnalyser {
   readonly context: AudioContext;
   readonly node: AnalyserNode;
-  private readonly bins: Uint8Array<ArrayBuffer>;
+  readonly #bins: Uint8Array<ArrayBuffer>;
   /** The loudest recent bass level; decays slowly so the pump adapts to quiet and loud songs. */
-  private peak = 0.1;
+  #peak = 0.1;
 
   constructor(element: HTMLMediaElement) {
     this.context = new AudioContext();
@@ -18,7 +18,7 @@ export class SongAnalyser {
     this.node.smoothingTimeConstant = 0.5;
     source.connect(this.node);
     this.node.connect(this.context.destination);
-    this.bins = new Uint8Array(this.node.frequencyBinCount);
+    this.#bins = new Uint8Array(this.node.frequencyBinCount);
   }
 
   /**
@@ -26,11 +26,11 @@ export class SongAnalyser {
    * the peak, so call it once per frame.
    */
   bassLevel(): number {
-    this.node.getByteFrequencyData(this.bins);
+    this.node.getByteFrequencyData(this.#bins);
     let bass = 0;
-    for (const v of this.bins.subarray(1, 7)) bass += v;
+    for (let i = 1; i < 7; i++) bass += this.#bins[i] ?? 0;
     bass /= 6 * 255;
-    this.peak = Math.max(bass, this.peak * 0.996, 0.05);
-    return bass / this.peak;
+    this.#peak = Math.max(bass, this.#peak * 0.996, 0.05);
+    return bass / this.#peak;
   }
 }

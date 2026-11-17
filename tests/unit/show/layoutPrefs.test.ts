@@ -23,6 +23,11 @@ describe('LayoutPrefs', () => {
     expect([stored(null), stored('{'), stored('null'), stored('')]).toEqual([null, null, null, null]);
   });
 
+  it('reads a saved value that is not an object as the defaults, as the original did', () => {
+    const defaults = { deskMode: 'ma', deskZoom: 'auto', maSize: undefined };
+    expect([stored('5'), stored('"desk"'), stored('[]')]).toEqual([defaults, defaults, defaults]);
+  });
+
   it('fills missing modes and clamps the size into 0.3-0.7', () => {
     expect(stored('{"maSize":0.9}')).toEqual({ deskMode: 'ma', deskZoom: 'auto', maSize: 0.7 });
     expect(stored('{"deskMode":"desk","maSize":"0.1"}')?.maSize).toBe(0.3);

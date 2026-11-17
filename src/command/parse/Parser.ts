@@ -1,4 +1,5 @@
-import { mentionsLevel, type TokenLine } from '../Lexer';
+import { aliasOf } from '../aliases';
+import type { TokenLine } from '../Lexer';
 import type { SelectionMerge, SelectionSource, Statement } from '../statements';
 import { parseCommand } from './parseCommand';
 import { TokenCursor } from './TokenCursor';
@@ -79,4 +80,15 @@ export class Parser {
     if (this.#merge === 'replace' && !this.#selected) return 'replace';
     return this.#merge === 'sub' ? 'sub' : 'add';
   }
+}
+
+/**
+ * Quirk C5: whether At, Full or Zero appears anywhere in the line, whatever its position. Such a line reports the
+ * level it set instead of "N fixtures selected".
+ */
+function mentionsLevel(line: TokenLine): boolean {
+  return line.lower.some((t) => {
+    const k = aliasOf(t);
+    return k === 'at' || k === 'full' || k === 'zero';
+  });
 }

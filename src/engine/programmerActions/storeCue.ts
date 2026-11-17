@@ -4,13 +4,13 @@ import type { Programmer } from '../Programmer';
 import { compactFx, PHASER_TYPES, stripFx } from '../shared';
 import type { ProgrammerDeps } from './ProgrammerDeps';
 
-/** How a store is recorded. `merge` (sequence click) adds to an existing cue instead of replacing its contents. */
 /** Which cue a store writes: executor `exec` (0-based), cue `num`, or after the last cue when `num` is null. */
 export interface CueTarget {
   readonly exec: number;
   readonly num: number | null;
 }
 
+/** How a store is recorded. `merge` (sequence click) adds to an existing cue instead of replacing its contents. */
 export interface StoreCueOptions {
   readonly name?: string;
   readonly fade?: number;

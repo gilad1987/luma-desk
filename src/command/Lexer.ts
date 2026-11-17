@@ -1,5 +1,3 @@
-import { aliasOf } from './aliases';
-
 /** One command line split into words: `original` keeps the typed case for labels and error text, `lower` is matched. */
 export interface TokenLine {
   readonly original: readonly string[];
@@ -23,15 +21,4 @@ export function lex(raw: string): TokenLine | undefined {
     .replace(/^-/, ' - ');
   const original = spaced.split(/\s+/).filter(Boolean);
   return { original, lower: original.map((w) => w.toLowerCase()) };
-}
-
-/**
- * Quirk C5: whether At, Full or Zero appears anywhere in the line, whatever its position. Such a line reports the
- * level it set instead of "N fixtures selected".
- */
-export function mentionsLevel(line: TokenLine): boolean {
-  return line.lower.some((t) => {
-    const k = aliasOf(t);
-    return k === 'at' || k === 'full' || k === 'zero';
-  });
 }

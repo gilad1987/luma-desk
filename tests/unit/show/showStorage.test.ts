@@ -6,7 +6,7 @@ import { readSavedShow, showWorld } from './showWorld';
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
-const restore = (world: ReturnType<typeof showWorld>): void => restoreShow(world);
+const restore = (world: ReturnType<typeof showWorld>): void => restoreShow({ ...world, repaint: () => {} });
 
 describe('ShowStorage', () => {
   it('keeps the storage keys of every earlier version', () => {
@@ -65,5 +65,32 @@ describe('restoreShow (boot)', () => {
     world.store.failReads = true;
     restore(world);
     expect(world.execs[0]?.name).toBe('Main Show');
+  });
+
+  it('keeps a save that loaded with cues even when starting executor 1 throws (no demo)', () => {
+    const world = showWorld();
+    world.store.setItem(STORAGE_KEYS.show, readSavedShow('old-show-v1.json'));
+    const first = world.execs[0];
+    if (!first) throw new Error('the world has no executor 1');
+    vi.spyOn(first, 'goto').mockImplementation(() => {
+      throw new Error('goto failed');
+    });
+    const repaint = vi.fn();
+    restoreShow({ ...world, repaint });
+    expect(world.json()).toBe(readSavedShow('old-show-v1.json').trimEnd());
+    expect(repaint).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to the demo when the desk cannot repaint the saved show, and repaints again', () => {
+    const world = showWorld();
+    world.store.setItem(STORAGE_KEYS.show, readSavedShow('old-show-v1.json'));
+    const repaint = vi.fn().mockImplementationOnce(() => {
+      throw new Error('cannot draw');
+    });
+    restoreShow({ ...world, repaint });
+    const demoWorld = showWorld();
+    demoWorld.demo.load();
+    expect(world.json()).toBe(demoWorld.json());
+    expect(repaint).toHaveBeenCalledTimes(2);
   });
 });

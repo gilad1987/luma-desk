@@ -24,3 +24,8 @@ const namesByLabel: Readonly<Partial<Record<string, string>>> = SECTION_NAMES;
 export function sectionName(label: string | undefined): string | undefined {
   return label === undefined ? undefined : namesByLabel[label];
 }
+
+/** Whether a look for this section may fire a blinder hit: only the loud sections do. */
+export function isBigSection(section: Section): boolean {
+  return section === 'chorus' || section === 'drop' || section === 'hook';
+}
