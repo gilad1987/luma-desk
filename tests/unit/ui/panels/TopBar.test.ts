@@ -35,5 +35,8 @@ describe('TopBar', () => {
     expect(bar.showIds).toBe(false);
     dom.get('idsBtn').onclick?.({ target: null });
     expect([bar.showIds, dom.get('idsBtn').classList.contains('on')]).toEqual([true, true]);
+    state.haze = 0.62;
+    bar.syncHaze();
+    expect(dom.get('haze').value).toBe('62');
   });
 });
