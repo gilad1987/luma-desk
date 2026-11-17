@@ -1,6 +1,6 @@
 /**
  * Owns the truss ops: preset shapes, the parent link on move (children move, nothing else does) and prop edits.
- * Mirroring a truss is tested through `mirrorStageLeft` in itemOps.test.ts.
+ * Mirroring a truss is tested through `mirrorLeftToRight` in mirror.test.ts.
  */
 import { describe, expect, it } from 'vitest';
 import {

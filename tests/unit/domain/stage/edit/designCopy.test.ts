@@ -8,11 +8,12 @@ import {
   addRiser,
   removeRiser,
   setDeckSize,
-  setLedWall,
   setSceneryPart,
   setVenue,
 } from '../../../../../src/domain/stage/edit/deckOps.ts';
 import * as items from '../../../../../src/domain/stage/edit/itemOps.ts';
+import { setLedWall } from '../../../../../src/domain/stage/edit/ledWall.ts';
+import { mirrorLeftToRight } from '../../../../../src/domain/stage/edit/mirror.ts';
 import { addPresetTruss, moveTruss, setTrussProps } from '../../../../../src/domain/stage/edit/trussOps.ts';
 import type { StageDesign } from '../../../../../src/domain/stage/StageDesign.ts';
 import { sampleDesign } from './sampleDesign.ts';
@@ -30,7 +31,7 @@ const OPS: readonly (readonly [string, (d: StageDesign) => StageDesign])[] = [
   ['deleteFixtures', (d) => items.deleteFixtures(d, [101])],
   ['deleteTruss', (d) => items.deleteTruss(d, 'pipe-1')],
   ['setFixtureProps', (d) => items.setFixtureProps(d, 101, { role: 'front' })],
-  ['mirrorStageLeft', (d) => items.mirrorStageLeft(d)],
+  ['mirrorLeftToRight', (d) => mirrorLeftToRight(d)],
   ['setDeckSize', (d) => setDeckSize(d, { width: 8, depth: 6, height: 1 })],
   ['setLedWall on', (d) => setLedWall(d, { width: 8, height: 4 })],
   ['setLedWall off', (d) => setLedWall(setLedWall(d, { width: 8, height: 4 }), null)],

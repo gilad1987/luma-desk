@@ -7,6 +7,12 @@ import type { Quat, Transform, Vec3 } from '../types';
 const LANE_SHIFT_M = 0.4;
 const IDENTITY: Quat = [0, 0, 0, 1];
 
+/**
+ * How far (metres) a hung fixture sits below its truss centre line, in the truss frame. Builder adds and the
+ * template rows share it, so a builder batch on a template truss lands on the template fixtures and shifts a lane.
+ */
+export const HANG_DROP_M = 0.45;
+
 /** Where a new fixture goes: world position and, when the truss turns the body, its rotation (plan §3.1 G2). */
 export type FixturePlace = Pick<StageFixture, 'position' | 'rotation'>;
 
@@ -14,12 +20,13 @@ export type FixturePlace = Pick<StageFixture, 'position' | 'rotation'>;
 type LocalPlace = { readonly at: Vec3; readonly turn?: Quat };
 
 /**
- * `count` evenly spread places on a truss, in lane `lane` (0 = on the truss line): a straight or tower from `a` to
- * `b`, a goalpost along its top beam, a roof across its width, a circle at angle steps of 2π/count with a yaw that
- * turns each body to the centre. A rotated truss passes its rotation on, so beams follow the truss.
+ * `count` evenly spread places on a truss, in lane `lane` (0 = on the truss line), `HANG_DROP_M` below it: a straight
+ * or tower from `a` to `b`, a goalpost along its top beam, a roof across its width, a circle at angle steps of
+ * 2π/count, offset by `phase` steps, with a yaw that turns each body to the centre. A rotated truss passes its
+ * rotation on, so beams follow the truss.
  */
-export function placesOnTruss(truss: StageTruss, count: number, lane: number): FixturePlace[] {
-  return localPlaces(truss, count, lane).map((p) => toWorld(truss.transform, p));
+export function placesOnTruss(truss: StageTruss, count: number, lane: number, phase = 0): FixturePlace[] {
+  return localPlaces(truss, count, lane, phase).map((p) => toWorld(truss.transform, hung(p)));
 }
 
 /**
@@ -30,7 +37,7 @@ export function placesOnLine(from: Vec3, to: Vec3, count: number, lane: number):
   return lineOf(from, to, count, lane).map((p) => ({ position: p.at }));
 }
 
-function localPlaces(truss: StageTruss, count: number, lane: number): LocalPlace[] {
+function localPlaces(truss: StageTruss, count: number, lane: number, phase: number): LocalPlace[] {
   const p = truss.params;
   switch (p.kind) {
     case 'straight':
@@ -41,7 +48,7 @@ function localPlaces(truss: StageTruss, count: number, lane: number): LocalPlace
     case 'roof':
       return lineOf([-p.size[0] / 2, 0, 0], [p.size[0] / 2, 0, 0], count, lane);
     case 'circle':
-      return ringOf(p.radius + lane * LANE_SHIFT_M, count);
+      return ringOf(p.radius + lane * LANE_SHIFT_M, count, phase);
   }
 }
 
@@ -52,14 +59,21 @@ function lineOf(a: Vec3, b: Vec3, count: number, lane: number): LocalPlace[] {
   });
 }
 
-/** At pan 0 a body faces +z, so the yaw that faces the centre from angle θ is atan2(-cos θ, -sin θ). */
-function ringOf(radius: number, count: number): LocalPlace[] {
+/**
+ * Angles count from +z toward +x (x = sin θ, z = cos θ), the legacy ring convention. At pan 0 a body faces +z, and a
+ * yaw ψ turns that front to (sin ψ, cos ψ), so the yaw that faces the centre from angle θ is atan2(-sin θ, -cos θ).
+ */
+function ringOf(radius: number, count: number, phase: number): LocalPlace[] {
   return Array.from({ length: count }, (_, i) => {
-    const angle = (i / count) * 2 * Math.PI;
-    const yaw = Math.atan2(-Math.cos(angle), -Math.sin(angle));
+    const angle = ((i + phase) / count) * 2 * Math.PI;
+    const yaw = Math.atan2(-Math.sin(angle), -Math.cos(angle));
     const turn: Quat = [0, Math.sin(yaw / 2), 0, Math.cos(yaw / 2)];
-    return { at: [radius * Math.cos(angle), 0, radius * Math.sin(angle)], turn };
+    return { at: [radius * Math.sin(angle), 0, radius * Math.cos(angle)], turn };
   });
+}
+
+function hung(p: LocalPlace): LocalPlace {
+  return { ...p, at: [p.at[0], p.at[1] - HANG_DROP_M, p.at[2]] };
 }
 
 function toWorld(t: Transform, p: LocalPlace): FixturePlace {

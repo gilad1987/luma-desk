@@ -4,6 +4,7 @@ import type { FixtureTypeId } from '../../FixtureType';
 import type { StageFixture } from '../StageDesign';
 import type { StageTruss } from '../trussTypes';
 import type { FixtureRole, Vec3 } from '../types';
+import { HANG_DROP_M } from '../edit/trussPlaces';
 
 /** The line a row of fixtures sits on, with the role, truss link and mount that every fixture of the row shares. */
 export interface RowLine {
@@ -61,6 +62,14 @@ export function trussLine(truss: StageTruss, offset: Vec3): RowLine {
   const at = truss.transform.position;
   const move = (v: Vec3): Vec3 => [at[0] + v[0] + offset[0], at[1] + v[1] + offset[1], at[2] + v[2] + offset[2]];
   return { a: move(p.a), b: move(p.b), role: truss.role, trussId: truss.id, mount: 'hang' };
+}
+
+/**
+ * The hanging line of a straight truss, `HANG_DROP_M` below its centre line: the same drop the builder uses, so a
+ * builder batch added to a template truss sees the template fixtures and moves one lane.
+ */
+export function hangLine(truss: StageTruss): RowLine {
+  return trussLine(truss, [0, -HANG_DROP_M, 0]);
 }
 
 /** The id, name and default role of a template truss. */

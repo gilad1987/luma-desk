@@ -1,10 +1,11 @@
 import { STAGE_DESIGN_VERSION, type StageDesign, type StageFixture } from '../StageDesign';
 import type { StageTruss } from '../trussTypes';
 import type { Vec3 } from '../types';
-import { fixtureRow, floorLine, span, trussLine, type RowBlock, type RowLine } from './layout';
+import { placesOnTruss } from '../edit/trussPlaces';
+import { sceneryFor } from '../venueScenery';
+import { fixtureRow, floorLine, hangLine, span, trussLine, type RowBlock } from './layout';
 
 const DECK_HEIGHT = 1.8;
-const RING_RADIUS = 6;
 /** The same rigged tilts as the Sultan's Pool blinders, strobes and screen pars. */
 const BLINDER = { pan: 0, tilt: 64 } as const;
 const STROBE = { pan: 0, tilt: 34 } as const;
@@ -19,7 +20,7 @@ const RING: StageTruss = {
   name: 'Circle truss',
   role: 'ring',
   transform: { position: [0, 9.5, -8] },
-  params: { kind: 'circle', radius: RING_RADIUS, section: 0.5, chains: { count: 6, phase: 0 } },
+  params: { kind: 'circle', radius: 6, section: 0.5, chains: { count: 6, phase: 0 } },
 };
 /** Side towers just off the deck edges, left side first, front first. */
 const TOWER_SPOTS = [-16.5, 16.5].flatMap((x) => [-2, -11].map((z): Vec3 => [x, 0, z]));
@@ -31,27 +32,25 @@ const TOWERS: readonly StageTruss[] = TOWER_SPOTS.map((position, i) => ({
   params: { kind: 'tower', a: [0, 0, 0], b: [0, 9, 0], section: 0.4 },
 }));
 
-const hang = (t: StageTruss): RowLine => trussLine(t, [0, -0.45, 0]);
-
 /**
- * Fixtures spread around the circle truss. Each gets a yaw about Y that turns its body front (+z at rest) to the
- * ring centre, the G2 rule for circle trusses; `phase` moves a second block between the first one's fixtures.
+ * Fixtures spread around the circle truss by the builder's own placement, so each gets the yaw that turns its body
+ * to the ring centre (G2); `phase` (in angle steps) moves a second block between the first one's fixtures.
  */
 function ringRow(block: RowBlock, phase: number): StageFixture[] {
-  const [cx, cy, cz] = RING.transform.position;
-  return Array.from({ length: block.count }, (_, i): StageFixture => {
-    const a = ((i + phase) / block.count) * Math.PI * 2;
-    const yaw = Math.atan2(-Math.sin(a), -Math.cos(a));
-    const position: Vec3 = [cx + Math.sin(a) * RING_RADIUS, cy - 0.45, cz + Math.cos(a) * RING_RADIUS];
-    const rotation = [0, Math.sin(yaw / 2), 0, Math.cos(yaw / 2)] as const;
-    return { id: block.first + i, type: block.type, role: 'ring', trussId: RING.id, position, mount: 'hang', rotation };
-  });
+  return placesOnTruss(RING, block.count, 0, phase).map((place, i): StageFixture => ({
+    id: block.first + i,
+    type: block.type,
+    role: 'ring',
+    trussId: RING.id,
+    mount: 'hang',
+    ...place,
+  }));
 }
 
 function festivalFixtures(): StageFixture[] {
   return [
-    ...fixtureRow(hang(FRONT), { first: 101, count: 12, type: 'spot' }),
-    ...fixtureRow(hang(FRONT), {
+    ...fixtureRow(hangLine(FRONT), { first: 101, count: 12, type: 'spot' }),
+    ...fixtureRow(hangLine(FRONT), {
       first: 113,
       count: 8,
       type: 'blinder',
@@ -59,11 +58,11 @@ function festivalFixtures(): StageFixture[] {
       fixed: BLINDER,
       lane: 0.5,
     }),
-    ...fixtureRow(hang(FRONT), { first: 121, count: 2, type: 'follow', role: 'follow', lane: -0.5 }),
-    ...fixtureRow(hang(MID_1), { first: 201, count: 16, type: 'beam' }),
-    ...fixtureRow(hang(MID_1), { first: 217, count: 8, type: 'strobe', role: 'strobe', fixed: STROBE, lane: 0.5 }),
-    ...fixtureRow(hang(MID_2), { first: 301, count: 16, type: 'wash' }),
-    ...fixtureRow(hang(BACK), { first: 401, count: 16, type: 'beam' }),
+    ...fixtureRow(hangLine(FRONT), { first: 121, count: 2, type: 'follow', role: 'follow', lane: -0.5 }),
+    ...fixtureRow(hangLine(MID_1), { first: 201, count: 16, type: 'beam' }),
+    ...fixtureRow(hangLine(MID_1), { first: 217, count: 8, type: 'strobe', role: 'strobe', fixed: STROBE, lane: 0.5 }),
+    ...fixtureRow(hangLine(MID_2), { first: 301, count: 16, type: 'wash' }),
+    ...fixtureRow(hangLine(BACK), { first: 401, count: 16, type: 'beam' }),
     ...ringRow({ first: 501, count: 16, type: 'beam' }, 0),
     ...ringRow({ first: 517, count: 8, type: 'wash' }, 0.5),
     ...TOWERS.flatMap((t, i) => {
@@ -86,7 +85,7 @@ export function festivalStage(): StageDesign {
     v: STAGE_DESIGN_VERSION,
     source: { kind: 'template', name: 'festival' },
     venue: { kind: 'open-field', gridY: 16 },
-    scenery: { deck: true, trusses: true, band: true, ledWall: true, crowd: true },
+    scenery: sceneryFor('open-field'),
     deck: { x0: -15, x1: 15, z0: -16, z1: 0, height: DECK_HEIGHT },
     screens: [{ id: 'main', fixtureId: 1001, x0: -10, x1: 10, y0: DECK_HEIGHT + 1, y1: DECK_HEIGHT + 9, z: -15.5 }],
     risers: [],
