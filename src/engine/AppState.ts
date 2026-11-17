@@ -20,8 +20,6 @@ export class AppState {
   fanMode = false;
   /** Haze density, 0..1. It lives here, not in the renderer, because the show file saves it. */
   haze = 0.62;
-  /** `performance.now()` of the last CLEAR press, so a second press within 400 ms becomes Clear All. */
-  lastClear = 0;
   #storeMode = false;
   #selExec = 0;
   readonly #bus: EngineBus;

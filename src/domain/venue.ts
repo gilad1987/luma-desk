@@ -3,10 +3,16 @@ import { Vector3 } from 'three';
 /** The stage deck height in metres; floor fixtures, the screen and performer marks all stand on it. */
 export const DECK = 1.8;
 
-/** The stage deck footprint in metres (x across, z from upstage to the downstage edge). */
+/**
+ * The stage deck footprint in metres (x across, z from upstage to the downstage edge). The rig puts the footlights on
+ * its downstage edge and the 3D venue model draws the deck from it, so it lives in the domain beside the rig.
+ */
 export const STAGE = { x0: -23, x1: 23, z0: -21, z1: 0.6 } as const;
 
-/** The LED screen wall: its plane and edges, in metres. */
+/**
+ * The LED screen wall: its plane and edges, in metres. The rig places the screen fixture on it, the screen position
+ * preset aims at it and the 3D venue model draws it, so all three read this one record.
+ */
 export const SCREEN = { z: -20.2, x0: -17.5, x1: 17.5, y0: DECK + 1, y1: DECK + 14 } as const;
 
 /** The five straight trusses across the stage, front to back, with their depth and height. */
@@ -18,13 +24,19 @@ export const TR = {
   back: { z: -18.6, y: 20 },
 } as const;
 
-/** The roof grid height, which the truss towers and the hanging chains reach. */
+/**
+ * The roof grid height, which the truss towers and the hanging chains reach. Only the 3D venue model reads it today;
+ * it stays with the truss heights in `TR` so the venue's dimensions have one source.
+ */
 export const ROOF = 25.5;
 
-/** The x of the left/right truss towers (they stand at ±TOWX). */
+/**
+ * The x of the left/right truss towers (they stand at ±TOWX). Only the 3D venue model reads it today; it stays beside
+ * `TR`, whose trusses span between these towers.
+ */
 export const TOWX = 25.5;
 
-/** The z of the front and back truss towers. */
+/** The z of the front and back truss towers; like `TOWX`, read by the 3D venue model and kept beside `TR`. */
 export const TOWZ = [4.8, -20.6] as const;
 
 /** The circular truss: centre, outer beam radius `R`, inner wash ring radius `r2` at height `y2`. */

@@ -30,10 +30,6 @@ export function hsv(h: number, s: number, v: number): Rgb01 {
 
 /**
  * RGB to HSV, with hue, saturation and value all in 0..1, so the result feeds `hsv` back unchanged.
- *
- * The colour marker in the MA panel still has an inline copy that keeps the hue in 0..6 and, for a red maximum with
- * `g < b`, wraps it as `(x + 6) % 6` where this function adds 1 after the divide. Both are equal in exact maths but can
- * differ by 1 ulp; that only reaches a CSS percentage, so switching the panel to this function is safe for screenshots.
  */
 export function rgb2hsv(r: number, g: number, b: number): readonly [h: number, s: number, v: number] {
   const max = Math.max(r, g, b),

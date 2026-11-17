@@ -5,7 +5,7 @@ import type { FixtureType } from '../FixtureType';
 const MOVER: readonly AttrName[] = ['dim', 'pan', 'tilt', 'r', 'g', 'b', 'gobo', 'grot', 'zoom', 'strobe'];
 
 /** The fixture types that have pan or tilt, so position presets, aiming and position phasers apply to them. */
-export const MOVING_TYPES: Readonly<Record<'spot' | 'beam' | 'wash' | 'bar' | 'follow', FixtureType>> = {
+export const MOVING_TYPES = {
   spot: {
     name: 'Spot',
     model: 'forte',
@@ -67,4 +67,4 @@ export const MOVING_TYPES: Readonly<Record<'spot' | 'beam' | 'wash' | 'bar' | 'f
     shape: 'mh',
     size: 0.72,
   },
-};
+} as const satisfies Record<'spot' | 'beam' | 'wash' | 'bar' | 'follow', FixtureType>;

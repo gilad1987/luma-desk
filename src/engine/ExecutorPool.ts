@@ -1,7 +1,7 @@
-import type { Clock, EventBus } from '../core';
+import type { Clock } from '../core';
 import { cueAt } from './CueList';
 import { Executor } from './Executor';
-import type { EngineEvents } from './events';
+import type { EngineBus } from './events';
 import { stepFade } from './Fade';
 
 /** How many executors the desk has, one per fader on the panel and MIDI controller. */
@@ -18,12 +18,12 @@ export class ExecutorPool {
   readonly autoExec: Executor;
   /** Every executor in output-merge order: the operator's, then the auto-show's. */
   readonly all: readonly Executor[];
-  private readonly clock: Clock;
-  private readonly bus: EventBus<EngineEvents>;
+  readonly #clock: Clock;
+  readonly #bus: EngineBus;
 
-  constructor(clock: Clock, bus: EventBus<EngineEvents>) {
-    this.clock = clock;
-    this.bus = bus;
+  constructor(clock: Clock, bus: EngineBus) {
+    this.#clock = clock;
+    this.#bus = bus;
     this.execs = Array.from({ length: EXECUTOR_COUNT }, () => new Executor(false, clock));
     this.autoExec = new Executor(true, clock);
     this.autoExec.name = 'AUTO';
@@ -36,7 +36,7 @@ export class ExecutorPool {
    */
   go(e: Executor, dir: 1 | -1 = 1): void {
     if (!e.cues.length) {
-      this.bus.emit('message', { kind: 'toast', text: 'Executor is empty — STORE a cue first' });
+      this.#bus.emit('message', { kind: 'toast', text: 'Executor is empty — STORE a cue first' });
       return;
     }
     if (e.resume()) return;
@@ -47,7 +47,7 @@ export class ExecutorPool {
     e.goto(n);
     const cue = cueAt(e.cues, n);
     // the auto executor is not in `execs` and would print "Exec 0"; no caller passes it
-    this.bus.emit('message', {
+    this.#bus.emit('message', {
       kind: 'log',
       text: `Exec ${this.execs.indexOf(e) + 1}: Cue ${cue.num} ${cue.name}`,
       level: 'ok',
@@ -76,7 +76,7 @@ export class ExecutorPool {
       e.flashOnly = true;
       e.goto(Math.max(0, e.cur), 0);
     }
-    e.lastGo = this.clock.nowSeconds();
+    e.lastGo = this.#clock.nowSeconds();
   }
 
   /** Releases the flash button of `e`; an executor the flash started, with its fader at 0, stops again. */

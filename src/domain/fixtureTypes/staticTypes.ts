@@ -1,7 +1,7 @@
 import type { FixtureType } from '../FixtureType';
 
 /** The fixture types with a fixed beam direction: their pan and tilt come from the rig, never from a cue. */
-export const STATIC_TYPES: Readonly<Record<'par' | 'blinder' | 'strobe' | 'profile' | 'screen', FixtureType>> = {
+export const STATIC_TYPES = {
   par: {
     name: 'LED Par',
     model: 'parfect',
@@ -67,4 +67,4 @@ export const STATIC_TYPES: Readonly<Record<'par' | 'blinder' | 'strobe' | 'profi
     moving: false,
     shape: 'screen',
   },
-};
+} as const satisfies Record<'par' | 'blinder' | 'strobe' | 'profile' | 'screen', FixtureType>;

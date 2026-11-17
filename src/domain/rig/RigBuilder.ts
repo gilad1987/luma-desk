@@ -4,6 +4,21 @@ import { Fixture, type Mount, type PanTilt } from '../Fixture';
 import type { FixtureTypeId } from '../FixtureType';
 import { Rig } from './Rig';
 
+/** One evenly spaced row of identical fixtures, the way the truss, deck and audience areas lay theirs out. */
+export interface RowOptions {
+  /** The id of the first fixture; the rest of the row counts up from it. */
+  readonly firstId: number;
+  readonly count: number;
+  readonly type: FixtureTypeId;
+  /** The x of the first and the last fixture; a row of one sits at the midpoint. */
+  readonly x: readonly [first: number, last: number];
+  readonly y: number;
+  readonly z: number;
+  readonly mount: Mount;
+  /** The rigged pan/tilt of a static row. */
+  readonly fixed?: PanTilt;
+}
+
 /**
  * Collects fixtures in the order the rig areas add them. That order is the rig's build order, which groups, the output
  * merge and the golden files depend on, so the builder never sorts.
@@ -19,30 +34,20 @@ export class RigBuilder {
   }
 
   /**
-   * Adds `n` fixtures with consecutive ids spread evenly from x0 to x1 (one fixture sits at the midpoint). Each fixture
-   * gets its own copy of `fixed`, because the rig aims some of them one by one.
+   * Adds a row of fixtures with consecutive ids, spread evenly along x. Each fixture gets its own copy of `fixed`, as
+   * the original build did, so no two fixtures share one object.
    */
-  row(
-    start: number,
-    n: number,
-    type: FixtureTypeId,
-    x0: number,
-    x1: number,
-    y: number,
-    z: number,
-    mount: Mount,
-    fixed?: PanTilt,
-  ): number[] {
+  row({ firstId, count, type, x: [x0, x1], y, z, mount, fixed }: RowOptions): number[] {
     const ids: number[] = [];
-    for (let i = 0; i < n; i++) {
-      const x = n === 1 ? (x0 + x1) / 2 : lerp(x0, x1, i / (n - 1));
-      ids.push(this.add(start + i, type, x, y, z, mount, fixed ? { ...fixed } : undefined).id);
+    for (let i = 0; i < count; i++) {
+      const x = count === 1 ? (x0 + x1) / 2 : lerp(x0, x1, i / (count - 1));
+      ids.push(this.add(firstId + i, type, x, y, z, mount, fixed ? { ...fixed } : undefined).id);
     }
     return ids;
   }
 
-  /** The rig of every fixture added so far, in the order they were added. */
+  /** A rig of every fixture added so far, in the order they were added. Later `add` calls do not change it. */
   build(): Rig {
-    return new Rig(this.fixtures);
+    return new Rig([...this.fixtures]);
   }
 }

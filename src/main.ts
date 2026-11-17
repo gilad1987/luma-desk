@@ -2779,7 +2779,6 @@ function runCmd(raw) {
         }
         case 'exec': {
           appState.selectExec(clamp(num() - 1, 0, 9));
-          uiDirty.all = true;
           log(`Exec ${appState.selExec + 1} selected`, 'ok');
           break;
         }
@@ -2905,7 +2904,7 @@ function runCmd(raw) {
 /* ====================================================================
    UI
 ==================================================================== */
-const uiDirty = { all: true, sel: true };
+const uiDirty = { all: true };
 // side tabs
 let sideTab = 'pools';
 $$('#sideTabs button').forEach(
@@ -3587,6 +3586,8 @@ function faderDrag(elm, get, set) {
   };
   elm.ondblclick = () => set(get() > 0.5 ? 0 : 1);
 }
+// the DOM node of each executor strip, indexed like `execs`; the engine's executors hold no DOM
+const execDom = [];
 function buildExecs() {
   const X = $('#execs');
   X.innerHTML = '';
@@ -3600,10 +3601,9 @@ function buildExecs() {
       <div class="ex-lvl"></div>`,
     );
     X.appendChild(d);
-    e.dom = d;
+    execDom[i] = d;
     const sel_ = () => {
       appState.selectExec(i);
-      uiDirty.all = true;
     };
     d.querySelector('.ex-name').onclick = d.querySelector('.ex-sel').onclick = () => {
       if (appState.storeMode) {
@@ -3660,7 +3660,7 @@ function buildExecs() {
 }
 function updateExecUI() {
   execs.forEach((e, i) => {
-    const d = e.dom;
+    const d = execDom[i];
     d.classList.toggle('sel', i === appState.selExec);
     d.classList.toggle('on', e.on);
     d.querySelector('.ex-name').textContent = e.name || (e.cues.length ? `Seq ${i + 1}` : 'empty');
@@ -3756,7 +3756,6 @@ function renderSeq() {
 }
 $('#seqSel').onchange = (ev) => {
   appState.selectExec(+ev.target.value);
-  uiDirty.all = true;
 };
 $('#seqGo').onclick = () => pool.go(execs[appState.selExec], 1);
 $('#seqBack').onclick = () => pool.go(execs[appState.selExec], -1);
@@ -4549,7 +4548,6 @@ function buildDemo() {
   renderPools();
   execs[0].goto(0, 0);
   appState.selectExec(0);
-  uiDirty.all = true;
   persist();
 }
 
@@ -5470,7 +5468,6 @@ $('#aList').onclick = () => {
   e.resetTracking();
   appState.selectExec(ei);
   persist();
-  uiDirty.all = true;
   toast(`8-cue ${S.name} list built in Exec ${ei + 1}`);
   log(`Built ${S.name} cue list → Exec ${ei + 1}`, 'ok');
 };
