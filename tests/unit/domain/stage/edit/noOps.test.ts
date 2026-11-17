@@ -18,18 +18,17 @@ const base = (): StageDesign => mirrorLeftToRight(sampleDesign());
 const WALL = { width: 6, height: 3 } as const;
 /** The base with a 6 x 3 m LED wall, on and shown. */
 const withWall = (): StageDesign => setLedWall(base(), WALL);
-/** A size whose resize around an off-centre x (-1.9 to 5.9) gives x1 - x0 = 7.800000000000001, not 7.8. */
+/** An off-centre span (-1.9 to 5.9) whose x1 - x0 is 7.800000000000001: `width` only up to float noise. */
 const OFF_CENTRE = { x0: -1.9, x1: 5.9, width: 7.8 } as const;
-/** An off-centre deck already resized to `OFF_CENTRE.width`. */
+/** The base deck moved to the off-centre span, so setting `OFF_CENTRE.width` again matches only with a tolerance. */
 const offCentreDeck = (): StageDesign => {
-  const d = { ...base(), deck: { ...base().deck, x0: OFF_CENTRE.x0, x1: OFF_CENTRE.x1 } };
-  return setDeckSize(d, { width: OFF_CENTRE.width, depth: 8, height: 1 });
+  const d = base();
+  return { ...d, deck: { ...d.deck, x0: OFF_CENTRE.x0, x1: OFF_CENTRE.x1 } };
 };
-/** An off-centre LED wall already resized to `OFF_CENTRE.width` by 3 m. */
+/** The 6 x 3 m LED wall moved to the off-centre span, so its width matches `OFF_CENTRE.width` only with a tolerance. */
 const offCentreWall = (): StageDesign => {
   const d = withWall();
-  const screens = d.screens.map((s) => ({ ...s, x0: OFF_CENTRE.x0, x1: OFF_CENTRE.x1 }));
-  return setLedWall({ ...d, screens }, { width: OFF_CENTRE.width, height: 3 });
+  return { ...d, screens: d.screens.map((s) => ({ ...s, x0: OFF_CENTRE.x0, x1: OFF_CENTRE.x1 })) };
 };
 
 type NoOp = readonly [name: string, op: (d: StageDesign) => StageDesign, start?: () => StageDesign];
