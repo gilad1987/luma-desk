@@ -28,3 +28,8 @@ export function maZoom(geo: MaGeometry, maSize: number | undefined, innerWidth: 
     share = maSize ?? clamp(0.6 / hz, MA_SIZE, 0.66);
   return clamp(Math.min(1.1, (innerWidth * 0.98) / geo.W, share * hz), 0.2, 1.5);
 }
+
+/** The console's height share for a grip at `clientY`: the space below it over the space under the top bar. */
+export function gripShare(clientY: number, innerHeight: number): number {
+  return clamp((innerHeight - clientY) / (innerHeight - 40), 0.3, 0.7);
+}
