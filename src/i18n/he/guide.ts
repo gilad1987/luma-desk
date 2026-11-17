@@ -3,9 +3,8 @@ import { guideChaptersMiddle } from './guideChaptersMiddle';
 import { guideChaptersStart } from './guideChaptersStart';
 import { rigLocations } from './rigLocations';
 
-/** The user guide: its buttons, the side-list heading, the 12 chapters in order and the rig-table locations. */
+/** The user guide (its top-bar button label is in `panels.ts`): its buttons, the side-list heading, the 12 chapters in order and the rig-table locations. */
 export const guide = {
-  button: '📖 מדריך',
   close: '✕ סגור',
   prev: '→ הקודם',
   next: 'הבא ←',

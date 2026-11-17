@@ -2,9 +2,12 @@ import { byId } from '../dom';
 import { maZoom, zoomFactor, type MaGeometry } from './fitMath';
 import { measureMaGeometry } from './measureMaGeometry';
 
-/** What the fit reads: the layout, the `#deskZoom` value and the grip size (undefined = adaptive). */
+/**
+ * What the fit reads: the layout name as stored and selected (not narrowed, so an unknown name round-trips as before),
+ * the `#deskZoom` value and the grip size (undefined = adaptive).
+ */
 export interface LayoutSettings {
-  readonly mode: 'ma' | 'desk' | 'classic';
+  readonly mode: string;
   readonly zoom: string;
   readonly maSize: number | undefined;
 }
@@ -17,7 +20,11 @@ export class DeskFit {
   /** Measured once per layout; it does not depend on the window size. */
   private geo: MaGeometry | null = null;
 
-  constructor(private readonly setConsoleHeight: (px: number) => void) {}
+  private readonly setConsoleHeight: (px: number) => void;
+
+  constructor(setConsoleHeight: (px: number) => void) {
+    this.setConsoleHeight = setConsoleHeight;
+  }
 
   /** Forgets the measured MA console, so the next fit measures it again (after a layout change). */
   invalidate(): void {
