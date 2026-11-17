@@ -26,7 +26,7 @@ export function readShowFile(data: unknown): ShowFileInput {
 
 function readGroups(value: unknown): GroupPool | undefined {
   if (!value) return undefined;
-  // the original spread a truthy non-object into no groups, so only the newer default groups fill the pool
+  // the earlier port spread a truthy non-object into no groups, so only the newer default groups fill the pool
   if (!isRecord(value)) return {};
   return value as GroupPool; // entries taken as saved (see readShowFile)
 }

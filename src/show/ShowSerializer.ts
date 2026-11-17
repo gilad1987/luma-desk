@@ -50,10 +50,10 @@ export class ShowSerializer {
   }
 
   /**
-   * Replaces the show with parsed show JSON, narrowed by `readShowFile`, keeping the original defaults rule by rule: `bpm` 0 or missing becomes 120 while
-   * `haze` 0 stays 0; shows saved before the newer default groups get them only in empty slots; missing or extra
-   * executors are ignored. It stops all executors and clears the programmer and the selection. Bad data may throw
-   * part-way, as it always did; callers catch it.
+   * Replaces the show with parsed show JSON, narrowed by `readShowFile`, keeping the original defaults rule by rule:
+   * `bpm` 0 or missing becomes 120 while `haze` 0 stays 0; shows saved before the newer default groups get them only
+   * in empty slots; missing or extra executors are ignored. It stops all executors and clears the programmer and the
+   * selection. Bad data may throw part-way, as it always did; callers catch it.
    */
   load(data: unknown): void {
     const d = readShowFile(data);

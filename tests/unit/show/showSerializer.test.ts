@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NEW_GROUPS } from '../../../src/engine/defaultGroups';
 import { readGolden, type SavedShow } from '../../shared';
-import type { ShowFileInput } from '../../../src/show';
 import { readSavedShow, showWorld } from './showWorld';
 
 const DEMO_GROUPS = (readGolden('demo-show') as SavedShow).groups;
@@ -16,7 +15,7 @@ describe.each([
 
   it('serialises back to the saved show, plus only the newer default groups in empty slots', () => {
     const world = showWorld();
-    world.serializer.load(JSON.parse(raw) as ShowFileInput);
+    world.serializer.load(JSON.parse(raw));
     const now = JSON.parse(world.json()) as SavedShow;
     const newSlots = Object.keys(now.groups).filter((slot) => !(slot in old.groups));
     expect(newSlots.map((slot) => now.groups[slot]?.name)).toEqual(addedGroups);
@@ -31,7 +30,7 @@ describe('ShowSerializer', () => {
     const world = showWorld();
     world.demo.load();
     const first = world.json();
-    world.serializer.load(JSON.parse(first) as ShowFileInput);
+    world.serializer.load(JSON.parse(first));
     expect(world.json()).toBe(first);
   });
 

@@ -15,7 +15,7 @@ const PROGRAMMER_OVERRIDES_NOTE = 'Note: programmer values override Auto — pre
  * touches the output merge: the frame loop passes its `modulation` (beat pump, blinder hit) to `OutputMerger.compute`.
  */
 export class AutoShow {
-  /** The operator's choices (style, bars, pulse, master...); the panel edits them in place, the next look reads them. */
+  /** The operator's choices (style, bars, pulse...); the panel edits them in place, the next look reads them. */
   readonly settings: AutoSettings = defaultAutoSettings();
   #running = false;
   readonly #cycle = new LookCycle();

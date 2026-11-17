@@ -13,7 +13,8 @@ function loadIntoDemo(data: unknown): ReturnType<typeof showWorld> {
   return world;
 }
 
-// The original loader read fields straight off the parsed JSON; these cases give the result it gave.
+// The earlier port read fields straight off the parsed JSON; these cases give the result it gave. Legacy (strict-mode
+// module) threw part-way on some of them, e.g. `{ groups: 7 }`; docs/known-quirks.md lists these corrupt-only changes.
 describe('ShowSerializer.load on corrupt or partial JSON', () => {
   it('throws on JSON null before anything changes', () => {
     const world = showWorld();
