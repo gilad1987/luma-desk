@@ -14,11 +14,11 @@ export class Guide {
   private index = 0;
   private readonly markup: GuideMarkup;
 
+  readonly #startTour: () => void;
+
   /** `groups` is read only when the rig chapter renders, as before; `startTour` runs from the tour button. */
-  constructor(
-    groups: () => Readonly<Record<string, GuideGroup>>,
-    private readonly startTour: () => void,
-  ) {
+  constructor(groups: () => Readonly<Record<string, GuideGroup>>, startTour: () => void) {
+    this.#startTour = startTour;
     this.markup = {
       kbd: (k) => `<kbd>${k}</kbd>`,
       code: (c) => `<code>${c}</code>`,
@@ -85,7 +85,7 @@ export class Guide {
     });
     byId('gTour').onclick = () => {
       this.close();
-      this.startTour();
+      this.#startTour();
     };
   }
 }

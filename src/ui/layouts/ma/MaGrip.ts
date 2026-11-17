@@ -15,10 +15,12 @@ export interface GripTarget {
 export class MaGrip {
   private frame = 0;
 
-  constructor(
-    private readonly target: GripTarget,
-    private readonly resize: () => void,
-  ) {
+  readonly #target: GripTarget;
+  readonly #resize: () => void;
+
+  constructor(target: GripTarget, resize: () => void) {
+    this.#target = target;
+    this.#resize = resize;
     const grip = byId('maGrip');
     grip.onpointerdown = (ev) => {
       grip.setPointerCapture(ev.pointerId);
@@ -45,7 +47,7 @@ export class MaGrip {
 
   private refit(): void {
     this.frame = 0;
-    this.target.fit();
-    this.resize();
+    this.#target.fit();
+    this.#resize();
   }
 }

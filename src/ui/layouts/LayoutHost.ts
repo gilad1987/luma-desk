@@ -1,6 +1,8 @@
+import type { SideTab } from '../panels/side/sideTabsMarkup';
+
 /** What a layout change touches outside the layouts: side tabs, keypad, encoders and the renderer. */
 export interface LayoutHost {
-  readonly sideTabs: { readonly current: string; show(tab: string): void };
+  readonly sideTabs: { readonly current: SideTab; show(tab: SideTab): void };
   /** The keypad element, built on first use. */
   keypad(): HTMLElement;
   /** Detaches the keypad if it was ever built. */

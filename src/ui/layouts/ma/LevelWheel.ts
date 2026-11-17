@@ -18,8 +18,11 @@ export class LevelWheel {
   private lastY = 0;
   private map: BoxMap | null = null;
 
+  readonly #delta: (attr: AttrName, d: number) => void;
+
   /** `delta` is `EncodersPanel.delta`: it applies a dimmer change in percent points to the selection. */
-  constructor(private readonly delta: (attr: AttrName, d: number) => void) {
+  constructor(delta: (attr: AttrName, d: number) => void) {
+    this.#delta = delta;
     const wheel = byId('lvlWheel');
     wheel.onpointerdown = (ev) => {
       wheel.setPointerCapture(ev.pointerId);
@@ -43,6 +46,6 @@ export class LevelWheel {
   private turn(wheel: HTMLElement, d: number, fine: boolean): void {
     this.travel -= d;
     wheel.style.backgroundPositionY = this.travel + 'px';
-    this.delta('dim', ((d * 100) / PX_PER_SWEEP) * (fine ? FINE : 1));
+    this.#delta('dim', ((d * 100) / PX_PER_SWEEP) * (fine ? FINE : 1));
   }
 }

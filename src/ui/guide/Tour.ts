@@ -13,7 +13,10 @@ const PAD = 6;
 export class Tour {
   private index = -1;
 
-  constructor(private readonly hooks: TourHooks) {
+  readonly #hooks: TourHooks;
+
+  constructor(hooks: TourHooks) {
+    this.#hooks = hooks;
     byId('tNext').onclick = () => this.show(this.index + 1);
     byId('tPrev').onclick = () => this.show(this.index - 1);
     byId('tEnd').onclick = () => this.end();
@@ -41,8 +44,8 @@ export class Tour {
     const target = TOUR_TARGETS[i],
       step = he.tour.steps[i];
     if (!target || !step) throw new RangeError(`tour step ${i} does not exist`);
-    const text = typeof step.text === 'string' ? step.text : this.hooks.isMa() ? step.text.ma : step.text.other;
-    target.before?.(this.hooks);
+    const text = typeof step.text === 'string' ? step.text : this.#hooks.isMa() ? step.text.ma : step.text.other;
+    target.before?.(this.#hooks);
     requestAnimationFrame(() => {
       const e = document.querySelector<HTMLElement>(target.selector);
       if (!e) {

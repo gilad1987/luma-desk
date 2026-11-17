@@ -1,6 +1,8 @@
+import type { SideTab } from '../panels/side/sideTabsMarkup';
+
 /** What a tour step may change before it measures its target: the side tab, the feature tab, the layout in use. */
 export interface TourHooks {
-  showSide(tab: string): void;
+  showSide(tab: SideTab): void;
   showFeature(feature: string): void;
   isMa(): boolean;
 }

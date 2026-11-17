@@ -1,4 +1,5 @@
 import { clamp } from '../../core';
+import type { StoredSetting } from './StoredSetting';
 
 /** The MA console's default share of the window height under the top bar; the grip can override it. */
 export const MA_SIZE = 0.47;
@@ -7,7 +8,7 @@ export const MA_SIZE = 0.47;
  * The zoom of a console for a `#deskZoom` value: a fixed factor, or with `auto` the window width over the console's
  * design width, clamped so the legends stay readable.
  */
-export function zoomFactor(zoom: string, innerWidth: number, designWidth: number, min: number): number {
+export function zoomFactor(zoom: StoredSetting, innerWidth: number, designWidth: number, min: number): number {
   return zoom === 'auto' ? clamp((innerWidth - 24) / designWidth, min, 1.05) : Number(zoom);
 }
 
