@@ -1,8 +1,9 @@
-import { Mesh, Object3D, Scene, type BufferGeometry, type Material } from 'three';
+import { Mesh, Object3D, Scene, type BufferGeometry, type Material, type Texture } from 'three';
 import { vi } from 'vitest';
 import type { Fixture } from '../../../../src/domain/Fixture';
 import { buildRig } from '../../../../src/domain/rig';
 import * as fx from '../../../../src/render/fixtures';
+import { KeyLights } from '../../../../src/render/SceneLightsKeys';
 
 /** A 2D context stand-in: every method is a no-op that returns a gradient-like object. */
 const fakeContext = (): object =>
@@ -14,33 +15,46 @@ export function stubCanvasDocument(): void {
   vi.stubGlobal('document', { createElement });
 }
 
-/** The fixture side of the boot, in the documented order, for the whole 405-fixture rig. */
-export function buildFixtureScene() {
-  const fixtures: readonly Fixture[] = buildRig().fixtures;
-  const scene = new Scene(),
-    screenMesh = new Mesh(),
-    registered: [Object3D, Fixture][] = [];
+/** What exists before the fixture boot starts; create it outside the seeded window, as the page does. */
+export interface FixtureStage {
+  readonly scene: Scene;
+  readonly screenMesh: Mesh;
+  readonly fixtures: readonly Fixture[];
+}
+
+/** A stage with the 405-fixture rig and an empty scene. */
+export const createFixtureStage = (): FixtureStage => ({
+  scene: new Scene(),
+  screenMesh: new Mesh(),
+  fixtures: buildRig().fixtures,
+});
+
+/**
+ * The fixture side of the boot in the documented order, with render core's key lights at their legacy point.
+ * `swapTrimAndLens` creates the trim material after the lens textures: a one-object reorder for the parity test.
+ */
+export function buildFixtureScene({ scene, screenMesh, fixtures }: FixtureStage = createFixtureStage(), swap = false) {
+  const picks = new Set<Object3D>();
   const gobo = fx.createGoboAtlas();
   const beam = fx.createBeamShared();
-  const trim = fx.createTrimMaterial();
+  const early = swap ? null : fx.createTrimMaterial();
   const lensTextures = fx.createLensTextures();
+  const trim = early ?? fx.createTrimMaterial();
+  new KeyLights(scene);
   const prims = new fx.ModelPrimitives();
   const kit = { prims, materials: fx.createModelMaterials(trim) };
-  const picker = { register: (o: Object3D, f: Fixture) => void registered.push([o, f]) };
-  const builder = new fx.FixtureVisualBuilder({
-    scene,
-    prims,
-    beam,
-    gobo,
-    models: fx.createFixtureModels(kit),
-    lensTextures,
-    screenMesh,
-    picker,
-  });
+  const picker = { register: (o: Object3D) => void picks.add(o) };
+  const models = fx.createFixtureModels(kit);
+  const builder = new fx.FixtureVisualBuilder({ scene, prims, beam, gobo, models, lensTextures, screenMesh, picker });
   const visuals = fixtures.map((f) => builder.build(f));
   const state = { haze: 0.5 };
   const props = new fx.Props({ scene, kit, fohRig: [], state, beamHaze: beam.haze });
-  return { fixtures, scene, screenMesh, registered, gobo, beam, visuals, props, state };
+  const { panel, vent, alu } = kit.materials;
+  const { cylinderGeo, boxGeo, circleGeo, planeGeo, poolGeo, sphereGeo, torusGeo } = prims;
+  const resources: (Texture | BufferGeometry | Material)[] = [...gobo.textures, gobo.glow, beam.geometry, trim];
+  resources.push(...Object.values(lensTextures), cylinderGeo, boxGeo, circleGeo, planeGeo, poolGeo, sphereGeo);
+  resources.push(torusGeo, panel, vent, alu);
+  return { fixtures, scene, screenMesh, picks, gobo, beam, visuals, props, state, resources };
 }
 
 const isMesh = (o: Object3D): o is Mesh<BufferGeometry, Material | Material[]> => o instanceof Mesh;

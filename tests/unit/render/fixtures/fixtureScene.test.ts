@@ -17,12 +17,12 @@ describe('fixture scene build', () => {
 
   it('builds one visual per fixture in array order; the screen fixture uses the venue screen', () => {
     stubCanvasDocument();
-    const { fixtures, visuals, registered, screenMesh } = buildFixtureScene();
+    const { fixtures, visuals, picks, screenMesh } = buildFixtureScene();
     expect(fixtures).toHaveLength(405);
     expect(visuals.map((v) => v.fixture)).toEqual(fixtures);
     const screen = visuals.filter((v) => v.kind === 'screen');
     expect(screen).toHaveLength(1);
-    expect(registered.some(([o]) => o === screenMesh)).toBe(true);
+    expect(picks.has(screenMesh)).toBe(true);
   });
 
   it('shares model geometry and the haze/time uniforms across fixtures of one model', () => {
