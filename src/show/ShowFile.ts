@@ -1,3 +1,4 @@
+import type { StageDesign } from '../domain/stage/StageDesign';
 import type { Cue } from '../engine/CueList';
 import type { GroupPool } from '../engine/GroupLibrary';
 import type { Preset } from '../engine/presetTypes';
@@ -23,6 +24,8 @@ export interface ShowFileV1 {
   execs: SavedExec[];
   bpm: number;
   haze: number;
+  /** The custom stage design, written last and only when it is not the built-in one (plan §3.4). */
+  stage?: StageDesign;
 }
 
 /** One executor as the loader reads it: every field may be missing, and the loader fills the default. */

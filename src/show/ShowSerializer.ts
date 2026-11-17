@@ -11,9 +11,14 @@ import type { Tempo } from '../engine/Tempo';
 import { savedPresets, withSavedPresets } from './savedPresets';
 import { readShowFile } from './readShowFile';
 import type { ShowFileV1 } from './ShowFile';
+import { readStage, writeStage, type StageFieldDeps } from './stageField';
 
 /** The engine state a show file captures, plus the programmer and selection that a load resets. */
 export interface ShowSerializerDeps {
+  /**
+   * Read at each load after the stage is applied, so a getter over `StageService.rig` gives the default groups of the
+   * rig the loaded show brings, not the rig of boot.
+   */
   readonly rig: Rig;
   readonly groups: GroupLibrary;
   readonly presets: PresetLibrary;
@@ -23,6 +28,8 @@ export interface ShowSerializerDeps {
   readonly state: AppState;
   readonly programmer: Programmer;
   readonly selection: Selection;
+  /** Saves and loads the `stage` key; without it the show file is exactly the one of older desks. */
+  readonly stage?: StageFieldDeps;
 }
 
 /**
@@ -38,7 +45,7 @@ export class ShowSerializer {
 
   /** The current show in format v1. It returns live engine objects, not copies; callers stringify it at once. */
   serialize(): ShowFileV1 {
-    const { groups, presets, execs, tempo, state } = this.#deps;
+    const { groups, presets, execs, tempo, state, stage } = this.#deps;
     return {
       v: 1,
       groups: groups.all,
@@ -46,6 +53,7 @@ export class ShowSerializer {
       execs: execs.map((e) => ({ name: e.name, cues: e.cues, level: e.level })),
       bpm: tempo.bpm,
       haze: state.haze,
+      ...(stage ? writeStage(stage) : {}),
     };
   }
 
@@ -53,9 +61,11 @@ export class ShowSerializer {
    * Replaces the show with parsed show JSON, narrowed by `readShowFile`, keeping the original defaults rule by rule:
    * `bpm` 0 or missing becomes 120 while `haze` 0 stays 0; shows saved before the newer default groups get them only
    * in empty slots; missing or extra executors are ignored. It stops all executors and clears the programmer and the
-   * selection. Bad data may throw part-way, as it always did; callers catch it.
+   * selection. Bad data may throw part-way, as it always did; callers catch it. The stage loads first (`readStage`), so
+   * the groups below come from its rig.
    */
   load(data: unknown): void {
+    if (this.#deps.stage) readStage(data, this.#deps.stage);
     const d = readShowFile(data);
     const { rig, groups, presets, execs, tempo, state, programmer, selection } = this.#deps;
     groups.replace(d.groups ? addNewDefaultGroups(d.groups, defaultGroups(rig)) : defaultGroups(rig));
