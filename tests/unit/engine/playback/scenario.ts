@@ -72,6 +72,11 @@ function edit(t: number): never {
   throw new Error(`randomCues returned no cue at t=${t}`);
 }
 
+/** The actions of one later frame: a random action in a quarter of the frames, none in the rest. */
+function randomActions(rnd: () => number, fixtures: readonly Fixture[], t: number): Action[] {
+  return rnd() < 0.25 ? [randomAction(rnd, fixtures, t)] : [];
+}
+
 /** A reproducible run: every executor loaded and raised, then `frames` frames of random operator actions. */
 export function randomScenario(seed: number, fixtures: readonly Fixture[], frames: number): Step[] {
   const rnd = rng(seed);
@@ -82,7 +87,7 @@ export function randomScenario(seed: number, fixtures: readonly Fixture[], frame
   const steps: Step[] = [];
   let t = 3 + rnd() * 10;
   for (let i = 0; i < frames; i++) {
-    const actions = i === 0 ? setup : rnd() < 0.25 ? [randomAction(rnd, fixtures, t)] : [];
+    const actions = i === 0 ? setup : randomActions(rnd, fixtures, t);
     steps.push({ t, clock: t + (rnd() - 0.5) * 0.05, actions });
     t += pick(rnd, [0.008, 0.016, 0.017, 0.05, 0.3]);
   }

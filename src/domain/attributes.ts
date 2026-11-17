@@ -22,8 +22,12 @@ export interface AttrSpec {
   readonly step?: number;
 }
 
-/** Attribute values for one fixture, as a cue, preset or the programmer stores them: an absent key means "not set". */
-export type AttrValues = Partial<Record<AttrName, number>>;
+/**
+ * Attribute values for one fixture, as a cue, preset or the programmer stores them: an absent key means "not set". A
+ * key may also hold `undefined`, because the original code writes it (a fade that keeps a missing value), and stored
+ * data keeps such keys.
+ */
+export type AttrValues = { [K in AttrName]?: number | undefined };
 
 /** The attribute table. Its key order is the order in which panels list the attributes. */
 export const ATTR: Readonly<Record<AttrName, AttrSpec>> = {

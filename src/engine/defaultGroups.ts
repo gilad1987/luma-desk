@@ -7,15 +7,11 @@ import type { Group, GroupPool } from './GroupLibrary';
  */
 export const NEW_GROUPS: readonly string[] = ['LED Bars', 'Follow Spots', 'Profiles'];
 
-/**
- * The factory group pool for a rig. Slot numbers are part of the show format (the demo show and saved shows refer to
- * groups by number), so groups are only ever appended, never reordered.
- */
-export function defaultGroups(rig: Rig): GroupPool {
-  const range = (from: number, to: number): number[] => rig.range(from, to);
-  const odd = (ids: number[]): number[] => ids.filter((_, i) => i % 2 === 0);
-  const even = (ids: number[]): number[] => ids.filter((_, i) => i % 2 === 1);
-  const groups: [string, number[]][] = [
+type GroupRow = [name: string, ids: number[]];
+
+/** Slots 1-12: one group per truss or fixture position, in rig id ranges. */
+function areaGroups(range: (from: number, to: number) => number[]): GroupRow[] {
+  return [
     ['FOH Spots', range(101, 199)],
     ['Beams Truss 2', range(201, 299)],
     ['Washes Truss 3', range(301, 399)],
@@ -28,6 +24,14 @@ export function defaultGroups(rig: Rig): GroupPool {
     ['Blinders', range(801, 899)],
     ['Strobes', range(901, 999)],
     ['LED Screen', [2001]],
+  ];
+}
+
+/** Slots 13-34: groups across areas, by type, side and odd/even. */
+function combinedGroups(rig: Rig, range: (from: number, to: number) => number[]): GroupRow[] {
+  const odd = (ids: number[]): number[] => ids.filter((_, i) => i % 2 === 0);
+  const even = (ids: number[]): number[] => ids.filter((_, i) => i % 2 === 1);
+  return [
     [
       'All Beams',
       [
@@ -60,6 +64,18 @@ export function defaultGroups(rig: Rig): GroupPool {
     ['Tower Washes', range(1701, 1799)],
     ['Audience Washes', range(1801, 1899)],
     ['Delay Towers', range(1813, 1818)],
+  ];
+}
+
+/**
+ * The factory group pool for a rig. Slot numbers are part of the show format (the demo show and saved shows refer to
+ * groups by number), so groups are only ever appended, never reordered.
+ */
+export function defaultGroups(rig: Rig): GroupPool {
+  const range = (from: number, to: number): number[] => rig.range(from, to);
+  const groups: GroupRow[] = [
+    ...areaGroups(range),
+    ...combinedGroups(rig, range),
     // 35-37: append only, the demo show uses group numbers
     ['LED Bars', range(2101, 2199)],
     ['Follow Spots', range(1901, 1999)],

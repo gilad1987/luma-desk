@@ -11,7 +11,12 @@ export function addRing(rig: RigBuilder): void {
     const a = (i / 24) * Math.PI * 2,
       sa = Math.sin(a),
       ca = Math.cos(a);
-    const f = rig.add(1201 + i, 'beam', RING.x + RING.R * sa, RING.y - 0.72, RING.z + RING.R * ca, 'hang');
+    const f = rig.add({
+      id: 1201 + i,
+      type: 'beam',
+      at: [RING.x + RING.R * sa, RING.y - 0.72, RING.z + RING.R * ca],
+      mount: 'hang',
+    });
     f.pix = {
       p: new Vector3(RING.x + (RING.R + 0.3) * sa, RING.y - 0.05, RING.z + (RING.R + 0.3) * ca),
       tan: new Vector3(ca, 0, -sa),
@@ -22,7 +27,12 @@ export function addRing(rig: RigBuilder): void {
     const a = ((i + 0.5) / 12) * Math.PI * 2,
       sa = Math.sin(a),
       ca = Math.cos(a);
-    const f = rig.add(1301 + i, 'wash', RING.x + RING.r2 * sa, RING.y2 - 0.78, RING.z + RING.r2 * ca, 'hang');
+    const f = rig.add({
+      id: 1301 + i,
+      type: 'wash',
+      at: [RING.x + RING.r2 * sa, RING.y2 - 0.78, RING.z + RING.r2 * ca],
+      mount: 'hang',
+    });
     f.pix = {
       p: new Vector3(RING.x + (RING.r2 + 0.28) * sa, RING.y2 - 0.05, RING.z + (RING.r2 + 0.28) * ca),
       tan: new Vector3(ca, 0, -sa),

@@ -3,7 +3,9 @@
  * unchanged instead of becoming a bound, which is the behaviour every existing caller was written against.
  */
 export function clamp(v: number, min: number, max: number): number {
-  return v < min ? min : v > max ? max : v;
+  if (v < min) return min;
+  if (v > max) return max;
+  return v;
 }
 
 /**

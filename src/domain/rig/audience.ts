@@ -13,5 +13,6 @@ export function addAudienceWashes(rig: RigBuilder): void {
     mount: 'hang',
   });
   let id = 1813;
-  for (const sx of [-1, 1]) for (const y of [5.5, 7.5, 9.5]) rig.add(id++, 'wash', sx * 24, y, 33.6, 'floor');
+  for (const sx of [-1, 1])
+    for (const y of [5.5, 7.5, 9.5]) rig.add({ id: id++, type: 'wash', at: [sx * 24, y, 33.6], mount: 'floor' });
 }
