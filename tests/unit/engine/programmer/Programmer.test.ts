@@ -81,4 +81,14 @@ describe('Programmer', () => {
     expect(e.programmer.vals[f.id]).toEqual({ gobo: 3, zoom: f.T.zr[1], dim: 33.33 });
     expect(e.programmer.vals[plain.id]).toBeUndefined();
   });
+
+  it('colours lit fixtures only above dimmer 1 when nothing is selected', () => {
+    const e = engineAt(1);
+    const [a, b] = e.rig.fixtures;
+    if (!a || !b) throw new Error('rig has no fixture for this check');
+    a.out.dim = 1;
+    b.out.dim = 1.01;
+    expect(e.programmer.colorTargets()).toEqual([b.id]);
+    expect(e.messages).toEqual(['toast:אין בחירה — הצבע הוחל על כל 1 הגופים הדולקים']);
+  });
 });
