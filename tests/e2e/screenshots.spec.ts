@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { bootApp, stepFrames } from '../shared';
+import { bootApp, stepFrames } from '../shared/e2e';
 
 const LAYOUTS = ['ma', 'desk', 'classic'] as const;
 // FOH is the default operator view (MA uses its own FOH camera); Top and Side show the whole rig from two axes. The

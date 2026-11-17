@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { NO_STORED_PAGE, cacheContents, fetchStatus, openUnderWorker, storedPage } from '../shared';
+import { NO_STORED_PAGE, cacheContents, fetchStatus, openUnderWorker, storedPage } from '../shared/e2e';
 
 // What the service worker stores while online (docs/known-quirks.md, section I). The main config blocks service
 // workers so other tests see fresh files; this spec is about the worker itself.

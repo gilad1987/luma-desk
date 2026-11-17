@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { STORAGE_KEYS } from './storageKeys';
+import { STORAGE_KEYS } from '../storageKeys';
 
 /**
  * Opens the app and waits until the service worker has installed (addAll of the shell has finished) and controls the

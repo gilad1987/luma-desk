@@ -1,7 +1,7 @@
 import type { JSHandle, Page } from '@playwright/test';
-import type { DeskTestApi, Layout } from './deskApi';
-import type { SavedShow } from './savedShow';
-import { STORAGE_KEYS } from './storageKeys';
+import type { DeskTestApi, Layout } from '../deskApi';
+import type { SavedShow } from '../savedShow';
+import { STORAGE_KEYS } from '../storageKeys';
 import { waitForTestApi } from './waitForTestApi';
 
 /** What localStorage holds before the app boots; anything not given is absent, as in a fresh browser. */

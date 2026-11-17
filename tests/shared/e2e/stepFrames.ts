@@ -1,5 +1,5 @@
 import type { JSHandle } from '@playwright/test';
-import type { DeskTestApi } from './deskApi';
+import type { DeskTestApi } from '../deskApi';
 
 /**
  * Moves the frozen clock forward `ms`, then draws one frame, `n` times. Time and frames move together, as in the

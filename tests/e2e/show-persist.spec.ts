@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { STORAGE_KEYS, TIMER_POLLING, bootApp, readDeskState, waitForTestApi, type SavedShow } from '../shared';
+import { STORAGE_KEYS, TIMER_POLLING, type SavedShow } from '../shared';
+import { bootApp, readDeskState, waitForTestApi } from '../shared/e2e';
 
 test('a stored cue survives a reload', async ({ page }) => {
   let desk = await bootApp(page);
