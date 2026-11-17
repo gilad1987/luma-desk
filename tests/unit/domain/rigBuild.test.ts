@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { buildRig } from '../../../src/domain/rig';
-import { asRecorded, RECORDED_RIG as expected } from './recordedRig';
+import { buildRig } from '../../../src/domain/rig/index.ts';
+import { jsonRoundTrip } from '../../shared/index.ts';
+import { RECORDED_RIG as expected } from './recordedRig.ts';
 
 const rig = buildRig();
 
@@ -34,8 +35,12 @@ describe('buildRig', () => {
       f.pix ? [{ id: f.id, p: f.pix.p.toArray(), tan: f.pix.tan.toArray(), len: f.pix.len }] : [],
     );
     const strips = expected.fixtures.flatMap((f) => ('pix' in f ? [{ id: f.id, ...f.pix }] : []));
-    expect(asRecorded(actual)).toEqual(strips);
+    expect(jsonRoundTrip(actual)).toEqual(strips);
     expect(actual).toHaveLength(24 + 12 + 10 + 36);
+  });
+
+  it('gives a fixture without a pixel strip no pix key, as the original objects had none', () => {
+    expect(rig.fixtures.filter((f) => Object.hasOwn(f, 'pix'))).toHaveLength(24 + 12 + 10 + 36);
   });
 
   it('gives each fixture of a row its own rigged pan/tilt object', () => {
