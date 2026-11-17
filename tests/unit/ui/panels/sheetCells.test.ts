@@ -49,4 +49,16 @@ describe('sheet cells (same values as the original renderSheet)', () => {
     expect(view.cells.map(([, text]) => text)).toEqual(['NaN', 'NaN', '', '', 'NaN']);
     expect(view.swatch).toBe('rgb(NaN,NaN,NaN)');
   });
+
+  it('shows NaN for tilt and gobo not output yet, and still marks them when the programmer holds them', () => {
+    const view = sheetRowView({ ...fixture(['tilt', 'gobo']), base: {}, out: {} }, true, { tilt: 0, gobo: 3 });
+    expect(view.cells).toEqual([
+      [2, 'NaN', ''],
+      [3, '', ''],
+      [4, 'NaN', 'p'],
+      [6, 'NaN', 'p'],
+      [7, '', ''],
+    ]);
+    expect([view.rowClass, view.swatch]).toEqual(['sel', '#333']);
+  });
 });

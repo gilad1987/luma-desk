@@ -3,6 +3,7 @@ import { STYLES } from '../../../../../src/autoshow/styles';
 import { AutoShowPanel } from '../../../../../src/ui/panels/autoshow/AutoShowPanel';
 import { autoShowMarkup } from '../../../../../src/ui/panels/autoshow/autoShowMarkup';
 import { IDLE_STATUS } from '../../../../../src/ui/panels/autoshow/autoShowText';
+import { asReal } from '../../fakes/asReal';
 import { FakeElement } from '../../fakes/FakeElement';
 import { FakeDom } from '../../fakes/installFakeDom';
 import { FakeButton } from '../../fakes/FakeButton';
@@ -23,7 +24,7 @@ function mount() {
   beatDots.found.set('i', dots);
   const host = new FakeHost(),
     fakes = autoShowDeps(),
-    panel = new AutoShowPanel(host as unknown as HTMLElement, fakes.deps);
+    panel = new AutoShowPanel(asReal<HTMLElement>(host), fakes.deps);
   const input = (id: string): Input => dom.get(id);
   return { dom, host, dots, panel, input, ...fakes };
 }
