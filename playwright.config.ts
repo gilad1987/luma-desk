@@ -36,7 +36,8 @@ export default defineConfig({
   webServer: {
     command: process.env.WEB_SERVER_CMD ?? buildAndPreview,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    // a server left running from another checkout would serve other code; always start this one
+    reuseExistingServer: false,
     timeout: 60_000,
   },
 });
