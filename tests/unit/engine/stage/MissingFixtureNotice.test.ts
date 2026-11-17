@@ -1,3 +1,8 @@
+/**
+ * Owns the MissingFixtureNotice rules: which ids count as missing, the singular and plural text, one warning per
+ * executor and cue, and the reset on a committed rig change. Odd keys, fx-only ids and every cause are in
+ * `qa/MissingFixtureNotice.edges.test.ts`; that the output merge skips the ids is owned by the playback tests.
+ */
 import { describe, expect, it } from 'vitest';
 import { EventBus } from '../../../../src/core';
 import { createTemplate } from '../../../../src/domain/stage/templates';
@@ -5,13 +10,13 @@ import type { Cue } from '../../../../src/engine/CueList';
 import type { EngineEvents } from '../../../../src/engine/events';
 import { MissingFixtureNotice } from '../../../../src/engine/stage/MissingFixtureNotice';
 import { StageService } from '../../../../src/engine/stage/StageService';
-import { recordEvents } from '../state/recordEvents';
+import { recordEvents } from '../../../shared';
 
 const builtIn = createTemplate('sultans-pool');
 
 const setup = () => {
   const bus = new EventBus<EngineEvents>();
-  const service = new StageService(bus, builtIn, undefined, { tooManyFixtures: String });
+  const service = new StageService(bus, { builtIn, tooManyFixtures: String });
   const notice = new MissingFixtureNotice(bus, service);
   const events = recordEvents(bus);
   return { service, notice, logs: () => events.filter((e) => e.startsWith('log:')) };
@@ -31,6 +36,13 @@ describe('MissingFixtureNotice', () => {
     const { notice, logs } = setup();
     notice.check(0, cue(1));
     expect(logs()).toEqual([]);
+  });
+
+  it('says "1 fixture is" when one id is missing', () => {
+    const { service, notice, logs } = setup();
+    service.apply(createTemplate('empty'), 'builder');
+    notice.check(0, { ...cue(1), vals: { 101: { dim: 1 } }, fx: [] });
+    expect(logs()).toEqual(['log:er:Exec 1 Cue 1: 1 fixture is not on this stage (skipped)']);
   });
 
   it('logs one error per cue, counting each missing id once', () => {

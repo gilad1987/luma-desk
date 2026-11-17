@@ -5,7 +5,7 @@ import type { EngineEvents } from '../../../../src/engine/events';
 import { PresetLibrary } from '../../../../src/engine/PresetLibrary';
 import type { PresetPools, PresetType } from '../../../../src/engine/presetTypes';
 import { storePresetOracle } from './oracle/storeOracle';
-import { recordEvents } from './recordEvents';
+import { recordEvents } from '../../../shared';
 
 const ATTRS = Object.keys(ATTR) as AttrName[];
 const IDS = [101, 102, 103, 201, 202, 301];

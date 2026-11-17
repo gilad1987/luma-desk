@@ -10,11 +10,11 @@ import type { Cue, FixtureValues } from '../../../../../src/engine/CueList';
 import type { EngineEvents } from '../../../../../src/engine/events';
 import { MissingFixtureNotice } from '../../../../../src/engine/stage/MissingFixtureNotice';
 import { StageService } from '../../../../../src/engine/stage/StageService';
-import { recordEvents } from '../../state/recordEvents';
+import { recordEvents } from '../../../../shared';
 
 const setup = () => {
   const bus = new EventBus<EngineEvents>();
-  const service = new StageService(bus, createTemplate('sultans-pool'), undefined, { tooManyFixtures: String });
+  const service = new StageService(bus, { builtIn: createTemplate('sultans-pool'), tooManyFixtures: String });
   const notice = new MissingFixtureNotice(bus, service);
   const events = recordEvents(bus);
   return { service, notice, logs: () => events.filter((e) => e.startsWith('log:')) };
@@ -29,7 +29,7 @@ const cueOf = (num: number, vals: FixtureValues, fxIds: number[] = []): Cue => (
 });
 
 const warn = (exec: number, num: number, n: number): string =>
-  `log:er:Exec ${exec} Cue ${num}: ${n} fixtures are not on this stage (skipped)`;
+  `log:er:Exec ${exec} Cue ${num}: ${n === 1 ? '1 fixture is' : `${n} fixtures are`} not on this stage (skipped)`;
 
 describe('MissingFixtureNotice edges (QA4)', () => {
   it('says nothing for an empty cue, even on the empty stage', () => {

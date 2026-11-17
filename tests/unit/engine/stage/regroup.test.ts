@@ -1,3 +1,8 @@
+/**
+ * Owns the regroup decision on real template pools: untouched defaults swap, user groups stay as the same objects,
+ * defaults keep their slot and are copied. Edge pools (empty, edited defaults, slots past 48) are in
+ * `qa/regroup.edges.test.ts`; how a template's default pool is built is owned by the domain group tests.
+ */
 import { describe, expect, it } from 'vitest';
 import { defaultGroupsOf } from '../../../../src/domain/stage/groupsOf';
 import { rigFromDesign } from '../../../../src/domain/stage/deriveRig';
@@ -41,10 +46,11 @@ describe('regroup', () => {
     expect(trussSlots.length).toBeGreaterThan(1);
     expect(Math.max(...trussSlots)).toBeLessThanOrEqual(48);
     const user = { name: 'Mine', ids: [1] };
-    const taken = trussSlots[0] ?? 0;
+    const [taken] = trussSlots;
+    if (taken === undefined) throw new Error('festival has no truss groups');
     const next = regroup({ [taken]: user }, defaultsOf('empty'), after);
+    expect(next).toStrictEqual({ ...after, [taken]: user });
     expect(next[taken]).toBe(user);
-    for (const slot of trussSlots.slice(1)) expect(next[slot]).toEqual(after[slot]);
   });
 
   it('copies new defaults, so a later Label cannot change the defaults kept for the next compare', () => {

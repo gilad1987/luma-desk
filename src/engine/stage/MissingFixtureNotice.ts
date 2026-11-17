@@ -1,6 +1,6 @@
 import type { Cue } from '../CueList';
 import type { EngineBus } from '../events';
-import type { RigSource } from './StageService';
+import type { RigSource } from './RigSource';
 
 /** Every fixture id a cue names, in its values and in its effects, without repeats. */
 function cueIds(cue: Readonly<Cue>): Set<number> {
@@ -13,6 +13,11 @@ function cueIds(cue: Readonly<Cue>): Set<number> {
  * Warns once when a cue names fixtures the current rig does not have (contract §2: keep the data, skip the fixtures).
  * The output merge already skips them, so the cue still plays and works again on a rig that has them. The warning
  * repeats once per committed rig; a preview does not count, as the operator has not chosen that stage yet.
+ *
+ * Listens to `rigChanged` (to reset) and emits a `message` log. Gets the `EngineBus` and the `RigSource` (the
+ * StageService) from main.ts, and the executors call `check`. It subscribes when it is constructed, so its place in
+ * the synchronous delivery order is its construction order in main.ts (plan §3.2): after PresetLibrary, before
+ * AutoShow.
  */
 export class MissingFixtureNotice {
   readonly #bus: EngineBus;
@@ -35,7 +40,8 @@ export class MissingFixtureNotice {
     const missing = [...cueIds(cue)].filter((id) => rig.get(id) === undefined).length;
     if (missing === 0) return;
     this.#warned.add(key);
-    const text = `Exec ${execIndex + 1} Cue ${cue.num}: ${missing} fixtures are not on this stage (skipped)`;
+    const count = missing === 1 ? '1 fixture is' : `${missing} fixtures are`;
+    const text = `Exec ${execIndex + 1} Cue ${cue.num}: ${count} not on this stage (skipped)`;
     this.#bus.emit('message', { kind: 'log', text, level: 'er' });
   }
 }

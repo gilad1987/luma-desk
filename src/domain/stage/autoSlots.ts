@@ -31,11 +31,14 @@ export type AutoSlot =
  * The Auto Show groups of a stage, each from the rule of its standard group slot. Every key gets its own array, also
  * when it is empty: `genLook` tells groups apart by identity (`ids === AG.ring`), so two shared empty arrays would
  * look like the same group. The slot numbers are static, so a slot with no standard group is a code bug and throws.
+ *
+ * @throws RangeError when a slot number names no standard group: a code bug, so it fails loudly at once rather than
+ * giving Auto Show an empty group that looks valid.
  */
 export function autoGroupsOf(rig: Rig, d: StageDesign): Readonly<Record<AutoSlot, number[]>> {
   const slot = (n: number): number[] => {
     const rule = STANDARD_GROUPS[n - 1];
-    if (!rule) throw new RangeError(`no standard group in slot ${n}`);
+    if (!rule) throw new RangeError(`autoGroupsOf: no standard group in slot ${n}`);
     return selectRule(rig, d, rule);
   };
   return {
