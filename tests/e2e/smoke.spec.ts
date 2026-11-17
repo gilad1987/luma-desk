@@ -64,3 +64,14 @@ test('layout switch: ma, desk, classic', async ({ page }) => {
   }
   expect(errors).toEqual([]);
 });
+
+test('STORE turns store mode on and off on the key and the page', async ({ page }) => {
+  await bootApp(page);
+  const store = page.locator('#kStore');
+  await store.click();
+  await expect(store).toHaveClass(/\bon\b/);
+  await expect(page.locator('body')).toHaveClass(/\bstoring\b/);
+  await store.click();
+  await expect(store).not.toHaveClass(/\bon\b/);
+  await expect(page.locator('body')).not.toHaveClass(/\bstoring\b/);
+});
