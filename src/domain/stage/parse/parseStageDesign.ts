@@ -4,7 +4,7 @@ import { parseDeck, parseRisers } from './parseDeck';
 import { parseFixtures } from './parseFixture';
 import { parseScreens } from './parseScreens';
 import { parseTrusses } from './parseTruss';
-import { allDefined, describeValue } from './rawValues';
+import { allDefined, type Raw } from './rawValues';
 import { Reader } from './readers';
 
 /** The result of `parseStageDesign`: the checked design, or every problem found, each naming its path and value. */
@@ -19,49 +19,55 @@ export type StageParseResult =
  */
 export function parseStageDesign(raw: unknown): StageParseResult {
   const r = new Reader();
-  const o = r.obj(raw, 'stage');
-  if (o && o['v'] !== STAGE_DESIGN_VERSION) r.fail('v', `unknown stage version ${describeValue(o['v'])}`);
+  // The design is read as the `stage` field of the show, so a design that is not an object is reported as `stage`.
+  const o = r.obj({ stage: raw }, 'stage', '');
+  if (o) r.oneOf(o, 'v', '', { options: [STAGE_DESIGN_VERSION], what: 'stage version' });
   if (!o || r.errors.length > 0) return { ok: false, errors: r.errors };
-  const { trusses, ids } = parseTrusses(r, o['trusses']);
-  const parsed = parseFixtures(r, o['fixtures'], ids);
+  const { trusses, ids } = parseTrusses(r, o);
+  const parsed = parseFixtures(r, o, ids);
   const design = {
-    source: parseSource(r, o['source']),
-    venue: parseVenue(r, o['venue']),
-    scenery: parseScenery(r, o['scenery']),
-    deck: parseDeck(r, o['deck']),
-    screens: parseScreens(r, o['screens'], parsed),
-    risers: parseRisers(r, o['risers']),
+    source: parseSource(r, o),
+    venue: parseVenue(r, o),
+    scenery: parseScenery(r, o),
+    deck: parseDeck(r, o),
+    screens: parseScreens(r, o, parsed),
+    risers: parseRisers(r, o),
   };
   if (!allDefined(design) || r.errors.length > 0) return { ok: false, errors: r.errors };
   return { ok: true, design: { v: STAGE_DESIGN_VERSION, ...design, trusses, fixtures: parsed.fixtures } };
 }
 
-function parseSource(r: Reader, raw: unknown): StageSource | undefined {
-  const o = r.obj(raw, 'source');
+function parseSource(r: Reader, stage: Raw): StageSource | undefined {
+  const at = 'source';
+  const o = r.obj(stage, at, '');
   if (!o) return undefined;
   const source = {
-    kind: r.oneOf(o['kind'], 'source.kind', SOURCE_KINDS, 'source kind'),
-    name: r.str(o['name'], 'source.name'),
+    kind: r.oneOf(o, 'kind', at, { options: SOURCE_KINDS, what: 'source kind' }),
+    name: r.str(o, 'name', at),
   };
-  const fileHash = r.optional(o['fileHash'], 'source.fileHash', r.str);
+  const fileHash = r.optional(o, 'fileHash', at, r.str);
   if (!allDefined(source)) return undefined;
   return { ...source, ...(fileHash === undefined ? {} : { fileHash }) };
 }
 
-function parseVenue(r: Reader, raw: unknown): StageDesign['venue'] | undefined {
-  const o = r.obj(raw, 'venue');
+function parseVenue(r: Reader, stage: Raw): StageDesign['venue'] | undefined {
+  const at = 'venue';
+  const o = r.obj(stage, at, '');
   if (!o) return undefined;
-  const kind = r.oneOf(o['kind'], 'venue.kind', VENUE_KINDS, 'venue');
-  const gridY = r.optional(o['gridY'], 'venue.gridY', r.num);
+  const kind = r.oneOf(o, 'kind', at, { options: VENUE_KINDS, what: 'venue' });
+  const gridY = r.optional(o, 'gridY', at, r.num);
   if (kind === undefined) return undefined;
   return { kind, ...(gridY === undefined ? {} : { gridY }) };
 }
 
-/** A bad part is recorded as an error and read as `true`; the recorded error still rejects the design. */
-function parseScenery(r: Reader, raw: unknown): StageDesign['scenery'] | undefined {
-  const o = raw === undefined ? {} : r.obj(raw, 'scenery');
-  if (!o) return undefined;
-  const part = (key: SceneryPart): boolean => r.optional(o[key], `scenery.${key}`, r.bool) ?? true;
+/**
+ * A missing `scenery` or part reads as `true`. A bad part is recorded as an error and read as `true`; the recorded
+ * error still rejects the design.
+ */
+function parseScenery(r: Reader, stage: Raw): StageDesign['scenery'] {
+  const at = 'scenery';
+  const o = r.optional(stage, at, '', r.obj) ?? {};
+  const part = (key: SceneryPart): boolean => r.optional(o, key, at, r.bool) ?? true;
   return {
     deck: part('deck'),
     trusses: part('trusses'),

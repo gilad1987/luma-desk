@@ -7,6 +7,7 @@ import { rng } from '../../../../../src/core/rng.ts';
 import { rigFromDesign } from '../../../../../src/domain/stage/deriveRig.ts';
 import { parseStageDesign } from '../../../../../src/domain/stage/parse/parseStageDesign.ts';
 import { createTemplate } from '../../../../../src/domain/stage/templates/index.ts';
+import { jsonRoundTrip } from '../../../../shared/index.ts';
 import { SAMPLE } from '../parseSample.ts';
 
 type Slot = { readonly parent: Record<string, unknown> | unknown[]; readonly key: string | number };
@@ -40,7 +41,7 @@ function slotsOf(root: unknown, out: Slot[] = []): Slot[] {
 }
 
 function damage(design: object, seed: number): unknown {
-  const raw: unknown = JSON.parse(JSON.stringify(design));
+  const raw = jsonRoundTrip(design);
   const rand = rng(seed);
   const hits = 1 + Math.floor(rand() * 3);
   for (let i = 0; i < hits; i++) {
@@ -60,7 +61,7 @@ function damage(design: object, seed: number): unknown {
 function checkResult(raw: unknown): unknown[] {
   const result = parseStageDesign(raw);
   if (!result.ok) return ['rejected', result.errors.length > 0, result.errors.every((e) => typeof e === 'string')];
-  const again = parseStageDesign(JSON.parse(JSON.stringify(result.design)));
+  const again = parseStageDesign(jsonRoundTrip(result.design));
   const rig = rigFromDesign(result.design);
   return ['accepted', again.ok, rig.fixtures.length === result.design.fixtures.length];
 }
@@ -87,7 +88,7 @@ describe('QA3 parseStageDesign fuzz', () => {
   });
 
   it('rejects a huge fixtures array of one repeated fixture by duplicate id, without throwing', () => {
-    const raw = JSON.parse(JSON.stringify(createTemplate('theatre'))) as { fixtures: unknown[] };
+    const raw = jsonRoundTrip(createTemplate('theatre')) as { fixtures: unknown[] };
     raw.fixtures = new Array<unknown>(20_000).fill(raw.fixtures[0]);
     const result = parseStageDesign(raw);
     expect([result.ok, result.ok ? 0 : result.errors.length]).toStrictEqual([false, 19_999]);

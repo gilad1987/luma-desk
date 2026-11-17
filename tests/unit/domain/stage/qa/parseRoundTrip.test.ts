@@ -1,6 +1,7 @@
 /**
- * QA3: parseStageDesign on stored JSON. Owns the exact round trip of every template (JSON only turns -0 into 0), inputs that are not objects and
- * prototype keys. The single-rule rejections are owned by parse*.test.ts; random damage by parseFuzz.test.ts.
+ * QA3: parseStageDesign on stored JSON. Owns the exact round trip of every template (JSON only turns -0 into 0),
+ * inputs that are not objects and prototype keys. The single-rule rejections are owned by parse*.test.ts; random
+ * damage by parseFuzz.test.ts.
  */
 import { describe, expect, it } from 'vitest';
 import { parseStageDesign } from '../../../../../src/domain/stage/parse/parseStageDesign.ts';
@@ -50,7 +51,7 @@ describe('QA3 parseStageDesign prototype keys', () => {
 
   it('drops __proto__ and constructor inside a fixture, a truss and the deck', () => {
     type Stored = { fixtures: object[]; trusses: object[]; deck: object };
-    const json = JSON.parse(JSON.stringify(createTemplate('theatre'))) as Stored;
+    const json = jsonRoundTrip(createTemplate('theatre')) as Stored;
     const extra: unknown = JSON.parse(POLLUTED);
     for (const o of [json.fixtures[0], json.trusses[0], json.deck]) if (o) Object.assign(o, extra);
     const result = parseStageDesign(json);
