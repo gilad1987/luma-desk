@@ -9,16 +9,16 @@ import type { FixtureTypeId } from '../FixtureType';
 export class Rig {
   /** Every fixture in build order (101.., 801.., 201.., ...). Never sort it. */
   readonly fixtures: readonly Fixture[];
-  private readonly byId: ReadonlyMap<number, Fixture>;
+  readonly #byId: ReadonlyMap<number, Fixture>;
 
   constructor(fixtures: readonly Fixture[]) {
     this.fixtures = fixtures;
-    this.byId = new Map(fixtures.map((f) => [f.id, f]));
+    this.#byId = new Map(fixtures.map((f) => [f.id, f]));
   }
 
   /** The fixture with this id, or undefined: command input and saved shows can name ids the rig does not have. */
   get(id: number): Fixture | undefined {
-    return this.byId.get(id);
+    return this.#byId.get(id);
   }
 
   /** The ids from `from` to `to` inclusive that exist, in build order; a range over a gap skips the missing ids. */

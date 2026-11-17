@@ -3,8 +3,7 @@ import type { RigBuilder } from './RigBuilder';
 
 /** The rows on the five straight trusses: spots, blinders, beams, washes and strobes, front truss first. */
 export function addTrussRows(rig: RigBuilder): void {
-  const front = TR.front.y - 0.75;
-  rig.row({ firstId: 101, count: 20, type: 'spot', x: [-20, 20], y: front, z: TR.front.z, mount: 'hang' });
+  rig.row({ firstId: 101, count: 20, type: 'spot', x: [-20, 20], y: TR.front.y - 0.75, z: TR.front.z, mount: 'hang' });
   rig.row({
     firstId: 801,
     count: 16,

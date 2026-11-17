@@ -24,12 +24,12 @@ export interface RowOptions {
  * merge and the golden files depend on, so the builder never sorts.
  */
 export class RigBuilder {
-  private readonly fixtures: Fixture[] = [];
+  readonly #fixtures: Fixture[] = [];
 
   /** Adds one fixture at a position; `fixed` is the rigged pan/tilt of a static unit. */
   add(id: number, type: FixtureTypeId, x: number, y: number, z: number, mount: Mount, fixed?: PanTilt): Fixture {
     const fixture = new Fixture(id, type, new Vector3(x, y, z), mount, fixed ?? null);
-    this.fixtures.push(fixture);
+    this.#fixtures.push(fixture);
     return fixture;
   }
 
@@ -48,6 +48,6 @@ export class RigBuilder {
 
   /** A rig of every fixture added so far, in the order they were added. Later `add` calls do not change it. */
   build(): Rig {
-    return new Rig([...this.fixtures]);
+    return new Rig([...this.#fixtures]);
   }
 }
