@@ -65,16 +65,16 @@ describe('QA5 no-op identity on a template', () => {
 });
 
 describe('QA5 no-op identity when the same size is set twice', () => {
-  // QA5 finding: deckOps.ts compares `depth === z1 - z0`, but setDeckSize stored z0 = z1 - depth, and
-  // 4 - (4 - 0.3) is 0.2999999999999998. Setting the same depth again adds an undo step. Flip to `it` when fixed.
-  it.fails('setDeckSize returns the design itself for the depth it just set', () => {
+  // setDeckSize stores z0 = z1 - depth, and 4 - (4 - 0.3) is 0.2999999999999998: only a tolerant compare sees the
+  // same depth again, so no empty undo step is added.
+  it('setDeckSize returns the design itself for the depth it just set', () => {
     const once = setDeckSize(sampleDesign(), { width: 12, depth: 0.3, height: 1 });
     expect(setDeckSize(once, { width: 12, depth: 0.3, height: 1 })).toBe(once);
   });
 
-  // QA5 finding: ledWall.ts compares `height === y1 - y0`, but addWall stored y1 = y0 + height, and on the 1.8 m
-  // festival deck 3.8 - 1.8 is 1.9999999999999998. The same wall size again adds an undo step. Flip when fixed.
-  it.fails('setLedWall returns the design itself for the wall size it just set on a 1.8 m deck', () => {
+  // addWall stores y1 = y0 + height, and on the 1.8 m festival deck 3.8 - 1.8 is 1.9999999999999998: only a
+  // tolerant compare sees the same wall size again.
+  it('setLedWall returns the design itself for the wall size it just set on a 1.8 m deck', () => {
     const once = setLedWall(setLedWall(festival(), null), { width: 6, height: 2 });
     expect(setLedWall(once, { width: 6, height: 2 })).toBe(once);
   });
