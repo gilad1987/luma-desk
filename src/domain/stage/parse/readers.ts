@@ -46,6 +46,7 @@ export class Reader {
   list = <T>(o: Raw, key: Key, at: string, item: FieldReader<T>): T[] | undefined => {
     const items = this.check(o, key, at, ARRAY);
     if (items === undefined) return undefined;
+    // An item reader takes (object, key) like a field reader; keyed by index, item i reads like field i.
     const byIndex: Raw = Object.fromEntries(items.entries());
     const path = this.path(at, key);
     return items.map((_, i) => item(byIndex, i, path)).filter((x): x is T => x !== undefined);

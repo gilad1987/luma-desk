@@ -3,6 +3,7 @@ import type { Vec3 } from '../types';
 import { type DeckSize, setSceneryPart } from './deckOps';
 import { nextIdBlock } from './ids';
 import { checkSizes } from './inputChecks';
+import { isSameLength } from './isKept';
 
 /** LED wall size in metres: `width` along x, `height` from the deck top. */
 export type WallSize = Pick<DeckSize, 'width' | 'height'>;
@@ -21,7 +22,7 @@ export function setLedWall(d: StageDesign, size: WallSize | null): StageDesign {
   const wall = d.screens[0];
   if (!size) return wall ? removeWall(d, wall) : d;
   checkSizes('setLedWall', [size.width, size.height]);
-  if (wall && size.width === wall.x1 - wall.x0 && size.height === wall.y1 - wall.y0) {
+  if (wall && isSameLength(size.width, wall.x1 - wall.x0) && isSameLength(size.height, wall.y1 - wall.y0)) {
     return setSceneryPart(d, 'ledWall', true);
   }
   const sized = wall ? resizeWall(d, wall, size) : addWall(d, size);

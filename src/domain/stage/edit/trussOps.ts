@@ -3,7 +3,7 @@ import type { StageTruss } from '../trussTypes';
 import type { Vec3 } from '../types';
 import { newTrussId } from './ids';
 import { checkFinite } from './inputChecks';
-import { isKept } from './isKept';
+import { isSameData } from './isKept';
 
 /** The truss kinds the builder offers as presets; `roof` comes only from templates and imports. */
 export type TrussPreset = 'straight' | 'circle' | 'goalpost' | 'tower';
@@ -58,8 +58,7 @@ export function moveTruss(d: StageDesign, trussId: string, delta: Vec3): StageDe
  */
 export function setTrussProps(d: StageDesign, trussId: string, patch: TrussPatch): StageDesign {
   const truss = findTruss(d, trussId);
-  const isUnchanged = isKept(patch.name, truss.name) && isKept(patch.role, truss.role);
-  if (isUnchanged && isKept(patch.params, truss.params)) return d;
+  if (isSameData({ ...truss, ...patch }, truss)) return d;
   return { ...d, trusses: d.trusses.map((t) => (t.id === trussId ? { ...t, ...patch } : t)) };
 }
 

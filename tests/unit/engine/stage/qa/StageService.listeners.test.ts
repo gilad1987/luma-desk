@@ -18,7 +18,7 @@ const setup = () => {
 };
 
 describe('StageService listeners (QA4)', () => {
-  it('refuses an apply from a rigChanged listener and keeps the outer design for every listener', () => {
+  it('throws on an apply from a rigChanged listener; the error aborts the outer emit, so later listeners miss it', () => {
     const { bus, service } = setup();
     const [theatre, festival] = [createTemplate('theatre'), createTemplate('festival')];
     bus.on('rigChanged', ({ design }) => {

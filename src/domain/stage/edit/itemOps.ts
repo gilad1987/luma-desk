@@ -2,7 +2,7 @@ import type { StageDesign, StageFixture } from '../StageDesign';
 import type { Vec3 } from '../types';
 import { appendCopies } from './copies';
 import { newTrussId } from './ids';
-import { isKept } from './isKept';
+import { isSameData } from './isKept';
 import { moveTruss, shiftFixture } from './trussOps';
 
 /** The fixture fields the property panel edits; the id stays, because groups and cues point at it. */
@@ -63,19 +63,6 @@ export function deleteTruss(d: StageDesign, trussId: string): StageDesign {
 export function setFixtureProps(d: StageDesign, id: number, patch: FixturePatch): StageDesign {
   const fixture = d.fixtures.find((f) => f.id === id);
   if (!fixture) throw new RangeError(`setFixtureProps: no fixture with id ${id}`);
-  if (isUnchanged(fixture, patch)) return d;
+  if (isSameData({ ...fixture, ...patch }, fixture)) return d;
   return { ...d, fixtures: d.fixtures.map((f) => (f.id === id ? { ...f, ...patch } : f)) };
-}
-
-function isUnchanged(f: StageFixture, patch: FixturePatch): boolean {
-  return (
-    isKept(patch.type, f.type) &&
-    isKept(patch.role, f.role) &&
-    isKept(patch.trussId, f.trussId) &&
-    isKept(patch.position, f.position) &&
-    isKept(patch.mount, f.mount) &&
-    isKept(patch.rotation, f.rotation) &&
-    isKept(patch.fixed, f.fixed) &&
-    isKept(patch.pixel, f.pixel)
-  );
 }
