@@ -1,17 +1,17 @@
 import { Quaternion, Vector3 } from 'three';
 import type { StageFixture } from './StageDesign';
+import { besideColumn } from './towerPlaces';
 import type { StageTruss } from './trussTypes';
 import type { Quat, Transform, Vec3 } from './types';
 
 /** A batch that lands on fixtures already there moves one lane (metres) upstage, or one lane out on a circle. */
 const LANE_SHIFT_M = 0.4;
-/** How far (metres) a tower fixture stands beside the column, so it does not sit inside it. */
-const TOWER_STEP_M = 0.4;
 const IDENTITY: Quat = [0, 0, 0, 1];
 
 /**
- * How far (metres) a hung fixture sits below the line of a straight, goalpost, roof or circle truss, in the truss
- * frame. Builder adds and template rows share it, so a builder batch on a template truss shifts a lane off them.
+ * How far (metres) a hung fixture sits below the centre line of a straight, goalpost, roof or circle truss, in the
+ * truss frame. Builder adds and the template rows share it, so a builder batch on a template truss lands on the
+ * template fixtures and shifts a lane. A tower gets no drop: its fixtures stand beside it (`besideColumn`).
  */
 export const HANG_DROP_M = 0.45;
 
@@ -25,7 +25,8 @@ type LocalPlace = { readonly at: Vec3; readonly turn?: Quat };
  * `count` evenly spread places on a truss, in lane `lane` (0 = on the truss line): a straight from `a` to `b`, a
  * goalpost along its top beam, a roof across its width, a circle at angle steps of 2π/count, offset by `phase` steps,
  * with a yaw that turns each body to the centre; all of them `HANG_DROP_M` below the truss. A tower spreads from `a`
- * to `b` beside the column, with no drop, so none goes below its base. A rotated truss passes its rotation on.
+ * to `b` beside the column (`besideColumn`), with no drop, so no fixture goes below its base. A rotated truss passes
+ * its rotation on, so beams follow the truss.
  */
 export function placesOnTruss(truss: StageTruss, count: number, lane: number, phase = 0): FixturePlace[] {
   const local = localPlaces(truss, count, lane, phase);
@@ -64,7 +65,8 @@ function lineOf(a: Vec3, b: Vec3, count: number, lane: number): LocalPlace[] {
 }
 
 /**
- * Angles count from +z toward +x (x = sin θ, z = cos θ), the legacy ring convention. At pan 0 a body faces +z, and a
+ * Angles count from +z toward +x (x = sin θ, z = cos θ), the convention of the legacy ring (`domain/rig/ring.ts`), so
+ * fixture i of a builder ring lands at the same angle as unit i of the legacy ring. At pan 0 a body faces +z, and a
  * yaw ψ turns that front to (sin ψ, cos ψ), so the yaw that faces the centre from angle θ is atan2(-sin θ, -cos θ).
  */
 function ringOf(radius: number, count: number, phase: number): LocalPlace[] {
@@ -78,17 +80,6 @@ function ringOf(radius: number, count: number, phase: number): LocalPlace[] {
 
 function hung(p: LocalPlace): LocalPlace {
   return { ...p, at: [p.at[0], p.at[1] - HANG_DROP_M, p.at[2]] };
-}
-
-/**
- * The places of one tower moved by one step, so all stand on one side: toward x = 0 from the tower's world centre (the
- * mean of its evenly spread places), or downstage (+z) for a tower closer to x = 0 than one step, so no fixture crosses
- * the centre line; never inside the column.
- */
-function besideColumn(places: FixturePlace[]): FixturePlace[] {
-  const x = places.reduce((sum, p) => sum + p.position[0], 0) / places.length;
-  const step: Vec3 = Math.abs(x) < TOWER_STEP_M ? [0, 0, TOWER_STEP_M] : [-Math.sign(x) * TOWER_STEP_M, 0, 0];
-  return places.map((p) => ({ ...p, position: [p.position[0] + step[0], p.position[1], p.position[2] + step[2]] }));
 }
 
 function toWorld(t: Transform, p: LocalPlace): FixturePlace {

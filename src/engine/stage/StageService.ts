@@ -70,8 +70,8 @@ export class StageService implements RigSource {
    * `import`); a show load or a preview is not a change to save. The fixture warning skips previews, which the
    * operator has not committed to.
    *
-   * @throws Error when a listener re-enters `apply` during its emit: later listeners would get a stale design. The error
-   * also aborts this apply's emit, so later listeners miss that event too; fail fast, as re-entry is a code bug.
+   * @throws Error when a listener re-enters `apply` during its emit: later listeners would get a stale design. This
+   * error also aborts the current emit, so later listeners miss that event too; fail fast, as re-entry is a code bug.
    */
   apply(design: StageDesign, cause: Exclude<RigChangeCause, 'boot'>): void {
     if (this.#isEmitting) {
