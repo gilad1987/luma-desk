@@ -6239,6 +6239,7 @@ function updateMaUI() {
       b = curVal(fc, 'b'),
       mx = Math.max(r, g, b),
       dl = mx - Math.min(r, g, b);
+    // kept inline: core rgb2hsv changes the last digits of style.left (177k of 1.03M inputs); Phase 5 decides
     const h = !dl ? 0 : mx === r ? ((g - b) / dl + 6) % 6 : mx === g ? (b - r) / dl + 2 : (r - g) / dl + 4;
     Object.assign(mk.style, {
       display: 'block',
