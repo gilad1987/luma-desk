@@ -9,18 +9,19 @@ export interface StageRendererParts {
   readonly scene: Scene;
   readonly views: Pick<CameraViews, 'camera' | 'updateControls'>;
   readonly postFx: Pick<PostFx, 'setSize' | 'render'>;
-  readonly overlay: Pick<FixtureIdOverlay, 'resize' | 'draw' | 'visible'>;
+  readonly overlay: Pick<FixtureIdOverlay, 'resize' | 'draw' | 'isVisible'>;
   /** The element whose size the stage fills (`#viewer`). */
   readonly viewer: HTMLElement;
 }
 
 /**
  * Renders the stage each frame and keeps it sized to the viewer. The UI toggles (glow, shadows, ids) and the MA
- * console height arrive through setters, so render never reads UI globals.
+ * console height arrive through setters, so render never reads UI globals. main.ts builds it last in the render
+ * boot from the stage graphics, CameraViews, PostFx, the id overlay and `#viewer`; it emits no events.
  */
 export class StageRenderer {
   private readonly parts: StageRendererParts;
-  private glow = true;
+  private isGlowOn = true;
   private consoleHeight = 0;
 
   constructor(parts: StageRendererParts) {
@@ -28,18 +29,18 @@ export class StageRenderer {
   }
 
   /** Glow on renders through the bloom pipeline; off renders the scene directly. */
-  setGlow(on: boolean): void {
-    this.glow = on;
+  setGlow(isOn: boolean): void {
+    this.isGlowOn = isOn;
   }
 
   /** The "lights" toggle also switches shadow maps; the key lights are switched by `KeyLights.setEnabled`. */
-  setShadows(on: boolean): void {
-    this.parts.renderer.shadowMap.enabled = on;
+  setShadows(isOn: boolean): void {
+    this.parts.renderer.shadowMap.enabled = isOn;
   }
 
   /** Shows or hides the fixture id labels. */
-  setShowIds(on: boolean): void {
-    this.parts.overlay.visible = on;
+  setShowIds(isOn: boolean): void {
+    this.parts.overlay.isVisible = isOn;
   }
 
   /**
@@ -76,7 +77,7 @@ export class StageRenderer {
   renderFrame(): void {
     const { renderer, scene, views, postFx, overlay } = this.parts;
     views.updateControls();
-    if (this.glow) postFx.render();
+    if (this.isGlowOn) postFx.render();
     else renderer.render(scene, views.camera);
     overlay.draw(views.camera);
   }

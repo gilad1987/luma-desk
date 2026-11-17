@@ -1,8 +1,12 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+/**
+ * CameraViews: camera and orbit settings, the view table, MA FOH mapping and the animated view change. Real
+ * WebGL output is owned by the Playwright screenshot suite.
+ */
 import { Object3D } from 'three';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { DECK } from '../../../../src/domain/venue';
 import { CameraViews } from '../../../../src/render/CameraViews';
 import { VIEWS } from '../../../../src/render/CameraViewsTable';
-import { DECK } from '../../../../src/domain/venue';
 import { fakeStageCanvas, queuedAnimationFrames } from './fakeElements';
 
 function views(ma = false): { views: CameraViews; changed: string[] } {

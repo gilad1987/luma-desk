@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
+/**
+ * Key spot light creation, candidate ranking and the legacy aim/angle/intensity maths. Shadow rendering is
+ * owned by the screenshot suite.
+ */
 import { Scene, SpotLight, Vector3 } from 'three';
+import { describe, expect, it } from 'vitest';
 import { clamp, D2R } from '../../../../src/core';
 import { Fixture } from '../../../../src/domain/Fixture';
 import { LightFrame, type KeyLightCandidate } from '../../../../src/render/SceneLightsFrame';
