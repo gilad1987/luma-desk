@@ -4,6 +4,7 @@ import type { Vec3 } from '../types';
 import { newTrussId } from './ids';
 import { checkFinite } from './inputChecks';
 import { isSameData } from './sameData';
+import { checkTrussParams } from './trussParamsCheck';
 
 /** The truss kinds the builder offers as presets; `roof` comes only from templates and imports. */
 export type TrussPreset = 'straight' | 'circle' | 'goalpost' | 'tower';
@@ -54,10 +55,11 @@ export function moveTruss(d: StageDesign, trussId: string, delta: Vec3): StageDe
 /**
  * Sets name, role or shape of a truss. Its fixtures keep their absolute positions; the user moves them on purpose.
  * A patch that changes no value returns `d` itself, so History adds no undo step.
- * @throws RangeError when the truss is missing.
+ * @throws RangeError when the truss is missing or the params are refused by `checkTrussParams`.
  */
 export function setTrussProps(d: StageDesign, trussId: string, patch: TrussPatch): StageDesign {
   const truss = findTruss(d, trussId);
+  if (patch.params) checkTrussParams(patch.params);
   if (isSameData({ ...truss, ...patch }, truss)) return d;
   return { ...d, trusses: d.trusses.map((t) => (t.id === trussId ? { ...t, ...patch } : t)) };
 }
