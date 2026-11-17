@@ -1,8 +1,8 @@
 /**
  * Owns the invariants of the four built-in stage templates: fixture counts, the internal links of each design
  * (unique ids, truss and screen references), JSON safety, the per-truss layout of theatre and festival, and the
- * circle-truss rotation rule. The Sultan's Pool
- * parity lives in sultansPoolTemplate.test.ts; rig derivation and the parser are tested elsewhere.
+ * circle-truss rotation rule. Fixture spots live in templateSpots.test.ts, the Sultan's Pool parity in
+ * sultansPoolTemplate.test.ts; rig derivation and the parser are tested elsewhere.
  */
 import { Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';

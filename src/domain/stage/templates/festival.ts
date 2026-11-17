@@ -1,9 +1,9 @@
 import { STAGE_DESIGN_VERSION, type StageDesign, type StageFixture } from '../StageDesign';
 import type { StageTruss } from '../trussTypes';
+import { placesOnTruss } from '../trussPlaces';
 import type { Vec3 } from '../types';
-import { placesOnTruss } from '../edit/trussPlaces';
 import { sceneryFor } from '../venueScenery';
-import { fixtureRow, floorLine, hangLine, span, trussLine, type RowBlock } from './layout';
+import { fixtureRow, floorLine, hangLine, span, type RowBlock } from './layout';
 
 const DECK_HEIGHT = 1.8;
 /** The same rigged tilts as the Sultan's Pool blinders, strobes and screen pars. */
@@ -33,15 +33,16 @@ const TOWERS: readonly StageTruss[] = TOWER_SPOTS.map((position, i) => ({
 }));
 
 /**
- * Fixtures spread around the circle truss by the builder's own placement, so each gets the yaw that turns its body
- * to the ring centre (G2); `phase` (in angle steps) moves a second block between the first one's fixtures.
+ * Fixtures placed on a truss by the builder's own placement, so a builder batch on the same truss sees them and moves
+ * a lane: around the circle each gets the yaw that turns its body to the ring centre (G2), and `phase` (in angle steps)
+ * moves a second block between the first one's fixtures; on a tower they stand beside the column.
  */
-function ringRow(block: RowBlock, phase: number): StageFixture[] {
-  return placesOnTruss(RING, block.count, 0, phase).map((place, i): StageFixture => ({
+function trussRow(truss: StageTruss, block: RowBlock, phase = 0): StageFixture[] {
+  return placesOnTruss(truss, block.count, 0, phase).map((place, i): StageFixture => ({
     id: block.first + i,
     type: block.type,
-    role: 'ring',
-    trussId: RING.id,
+    role: block.role ?? truss.role,
+    trussId: truss.id,
     mount: 'hang',
     ...place,
   }));
@@ -63,12 +64,10 @@ function festivalFixtures(): StageFixture[] {
     ...fixtureRow(hangLine(MID_1), { first: 217, count: 8, type: 'strobe', role: 'strobe', fixed: STROBE, lane: 0.5 }),
     ...fixtureRow(hangLine(MID_2), { first: 301, count: 16, type: 'wash' }),
     ...fixtureRow(hangLine(BACK), { first: 401, count: 16, type: 'beam' }),
-    ...ringRow({ first: 501, count: 16, type: 'beam' }, 0),
-    ...ringRow({ first: 517, count: 8, type: 'wash' }, 0.5),
-    ...TOWERS.flatMap((t, i) => {
-      const inward = -Math.sign(t.transform.position[0]) * 0.4;
-      return fixtureRow(trussLine(t, [inward, 0, 0]), { first: 601 + i * 4, count: 4, type: 'wash' });
-    }),
+    ...trussRow(RING, { first: 501, count: 16, type: 'beam' }),
+    // A quarter step of the 8 washes is half a step of the 16 beams, so each wash hangs between two beams.
+    ...trussRow(RING, { first: 517, count: 8, type: 'wash' }, 0.25),
+    ...TOWERS.flatMap((t, i) => trussRow(t, { first: 601 + i * 4, count: 4, type: 'wash' })),
     ...fixtureRow(floorLine(12, DECK_HEIGHT + 0.32, -13, 'floor'), { first: 701, count: 12, type: 'beam' }),
     ...fixtureRow(floorLine(9, DECK_HEIGHT + 0.22, -15, 'floor'), { first: 801, count: 8, type: 'par', fixed: PAR }),
     ...fixtureRow(floorLine(13, DECK_HEIGHT + 0.33, -0.3, 'footlight'), { first: 901, count: 8, type: 'bar' }),

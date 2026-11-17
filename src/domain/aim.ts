@@ -24,8 +24,9 @@ export function dirFrom(f: Pick<Fixture, 'mount' | 'rotation'>, pan: number, til
  * The pan/tilt that points a fixture at a point. It lives in the domain because the rig build aims the profiles while
  * it creates them. Results are rounded to 0.1 degree so presets store short, readable values; pan stays within ±90 by
  * flipping tilt, and pan is 0 for a near-vertical beam so presets do not spin the head. A fixture with a `rotation`
- * is aimed in its own rest pose (G2): the target direction is turned back by the inverse quaternion (the conjugate, as `rotation` is unit), then the hang
- * formula applies and `mount` is ignored, which makes the result the inverse of `dirFrom`.
+ * is aimed in its own rest pose (G2): the target direction is turned back by the inverse quaternion (the conjugate,
+ * as `rotation` is unit), then the hang formula applies and `mount` is ignored, which makes the result the inverse
+ * of `dirFrom`.
  */
 export function aimAt(
   f: Pick<Fixture, 'pos' | 'mount' | 'T' | 'rotation'>,

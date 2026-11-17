@@ -2,6 +2,7 @@ import type { StageDesign, StageFixture } from '../StageDesign';
 import type { Vec3 } from '../types';
 import { appendCopies } from './copies';
 import { newTrussId } from './ids';
+import { isKept } from './isKept';
 import { moveTruss, shiftFixture } from './trussOps';
 
 /** The fixture fields the property panel edits; the id stays, because groups and cues point at it. */
@@ -66,9 +67,15 @@ export function setFixtureProps(d: StageDesign, id: number, patch: FixturePatch)
   return { ...d, fixtures: d.fixtures.map((f) => (f.id === id ? { ...f, ...patch } : f)) };
 }
 
-/** Fixture fields are plain JSON data (numbers, strings, tuples, small records), so their JSON text compares them. */
 function isUnchanged(f: StageFixture, patch: FixturePatch): boolean {
-  return Object.entries(patch).every(
-    ([key, value]) => JSON.stringify(f[key as keyof StageFixture]) === JSON.stringify(value),
+  return (
+    isKept(patch.type, f.type) &&
+    isKept(patch.role, f.role) &&
+    isKept(patch.trussId, f.trussId) &&
+    isKept(patch.position, f.position) &&
+    isKept(patch.mount, f.mount) &&
+    isKept(patch.rotation, f.rotation) &&
+    isKept(patch.fixed, f.fixed) &&
+    isKept(patch.pixel, f.pixel)
   );
 }

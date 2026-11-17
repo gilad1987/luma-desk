@@ -13,13 +13,17 @@ const LED_WALL_ID = 'led-wall';
  * Turns the LED wall (the first screen) on at `size`, resizes it, or turns it off with `null`. The wall's screen
  * fixture is added, moved to the new centre or deleted with it, because that fixture drives the wall picture. A new
  * wall stands on the deck at its upstage edge, centred on x = 0. Turning it on also shows the LED wall scenery part,
- * so the new wall is not hidden.
+ * so the new wall is not hidden. A wall that is on at that size already returns `d` itself, so History adds no undo
+ * step.
  * @throws RangeError when a size is not a finite number > 0.
  */
 export function setLedWall(d: StageDesign, size: WallSize | null): StageDesign {
   const wall = d.screens[0];
   if (!size) return wall ? removeWall(d, wall) : d;
   checkSizes('setLedWall', [size.width, size.height]);
+  if (wall && size.width === wall.x1 - wall.x0 && size.height === wall.y1 - wall.y0) {
+    return setSceneryPart(d, 'ledWall', true);
+  }
   const sized = wall ? resizeWall(d, wall, size) : addWall(d, size);
   return setSceneryPart(sized, 'ledWall', true);
 }

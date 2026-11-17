@@ -21,8 +21,12 @@ export function boundsOf(d: StageDesign): StageBounds {
   return { min: box.min.toArray(), max: box.max.toArray() };
 }
 
-/** The world end points of a truss: its local points, turned by the transform rotation, then moved to its position. */
-function trussPoints({ transform, params }: StageTruss): Vector3[] {
+/**
+ * The world points that enclose a truss: its local points (`localPoints`), turned by the transform rotation, then
+ * moved to its position. The camera fit and the mirror's left/right test share it, so both judge a truss by the
+ * same extents.
+ */
+export function trussPoints({ transform, params }: StageTruss): Vector3[] {
   const rotation = transform.rotation ? new Quaternion(...transform.rotation) : null;
   const position = new Vector3(...transform.position);
   return localPoints(params).map((p) => {

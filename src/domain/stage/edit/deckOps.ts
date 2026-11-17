@@ -13,14 +13,16 @@ export interface DeckSize {
 
 /**
  * Resizes the deck around its centre line, keeping the downstage edge (z1) where it is, so the deck grows away from
- * the audience. Trusses, fixtures and the LED wall do not move.
+ * the audience. Trusses, fixtures and the LED wall do not move. The size the deck already has returns `d` itself, so
+ * History adds no undo step.
  * @throws RangeError when a size is not a finite number > 0: a zero deck has no top for beams to land on.
  */
 export function setDeckSize(d: StageDesign, size: DeckSize): StageDesign {
   checkSizes('setDeckSize', [size.width, size.depth, size.height]);
-  const centreX = (d.deck.x0 + d.deck.x1) / 2;
+  const { x0, x1, z0, z1 } = d.deck;
   const { width, depth, height } = size;
-  const { z1 } = d.deck;
+  if (width === x1 - x0 && depth === z1 - z0 && height === d.deck.height) return d;
+  const centreX = (x0 + x1) / 2;
   return { ...d, deck: { x0: centreX - width / 2, x1: centreX + width / 2, z0: z1 - depth, z1, height } };
 }
 
