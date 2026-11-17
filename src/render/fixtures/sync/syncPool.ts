@@ -1,6 +1,7 @@
 import { Matrix4, Vector3, type Texture } from 'three';
 import type { LightFrame } from '../../SceneLightsFrame';
-import type { BeamFrame, SurfaceHitResult, SurfaceNormals } from './BeamFrame';
+import { SCREEN_NORMAL, type SurfaceHit } from '../../SurfaceHit';
+import type { BeamFrame } from './BeamFrame';
 import { addPoolContributions } from './poolContributions';
 
 const tU = new Vector3(),
@@ -11,13 +12,7 @@ const tU = new Vector3(),
  * Lays the gobo pool flat on the hit surface, stretched by the incidence angle, with the gobo turned by the gobo
  * rotation, then adds the pool's share to the scene lights. No hit: the pool hides.
  */
-export function syncPool(
-  frame: BeamFrame,
-  gob: number,
-  goboTextures: readonly Texture[],
-  normals: SurfaceNormals,
-  out: LightFrame,
-): void {
+export function syncPool(frame: BeamFrame, gob: number, goboTextures: readonly Texture[], out: LightFrame): void {
   const { visual: v, hit } = frame;
   if (!hit) {
     v.pool.visible = false;
@@ -35,18 +30,18 @@ export function syncPool(
   const { I, col, L, tz } = frame,
     T = v.fixture.T,
     r = L * tz,
-    n = hit.n;
-  const pI = ((I * T.power * 0.3) / (1 + r * 0.1)) * (n === normals.screen ? 0.45 : L > 24 ? 0.45 : 1);
+    n = hit.normal;
+  const pI = ((I * T.power * 0.3) / (1 + r * 0.1)) * (n === SCREEN_NORMAL ? 0.45 : L > 24 ? 0.45 : 1);
   pl.material.color.setRGB(col[0] * pI, col[1] * pI, col[2] * pI);
-  addPoolContributions(frame, n, normals.up, out);
+  addPoolContributions(frame, n, out);
 }
 
 /** Places the pool at the hit, offset along the normal by a per-fixture step so overlapping pools do not z-fight. */
-function placePool(frame: BeamFrame, hit: SurfaceHitResult): void {
+function placePool(frame: BeamFrame, hit: SurfaceHit): void {
   const { visual: v, dir, origin, L, tz } = frame;
   const pl = v.pool,
     r = L * tz,
-    n = hit.n,
+    n = hit.normal,
     cosA = Math.abs(dir.dot(n));
   tU.copy(dir).addScaledVector(n, -dir.dot(n));
   if (tU.lengthSq() < 1e-6) tU.set(1, 0, 0).cross(n).normalize();

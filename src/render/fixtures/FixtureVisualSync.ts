@@ -5,20 +5,19 @@ import type { Selection } from '../../engine/Selection';
 import type { LightFrame, RgbTriple } from '../SceneLightsFrame';
 import type { SharedUniform } from './BeamMaterial';
 import type { FixtureVisual, LightVisual } from './FixtureVisual';
-import { outputValue, type SurfaceHitFn, type SurfaceNormals } from './sync/BeamFrame';
+import { hitSurface } from '../SurfaceHit';
+import { outputValue } from './sync/BeamFrame';
 import { syncBeam } from './sync/syncBeam';
 import { syncGlow } from './sync/syncGlow';
 import { syncPool } from './sync/syncPool';
 import { syncPose } from './sync/syncPose';
 import { syncScreen, type ScreenTargets } from './sync/syncScreen';
 
-/** Inputs of the frame update; the hit function, its normals and the screen targets come from venue and render core. */
+/** Inputs of the frame update; the screen targets and the light frame come from venue and render core. */
 export interface FixtureVisualSyncDeps {
   /** In fixture array order. */
   readonly visuals: readonly FixtureVisual[];
   readonly selection: Pick<Selection, 'has'>;
-  readonly hitSurface: SurfaceHitFn;
-  readonly normals: SurfaceNormals;
   readonly screen: ScreenTargets;
   /** The beams' shared haze-noise time. */
   readonly beamTime: SharedUniform;
@@ -80,11 +79,11 @@ export class FixtureVisualSync {
     const origin = this.#origin.copy(f.pos).addScaledVector(dir, v.lensOff + 0.02);
     const zoom = clamp(outputValue(o, 'zoom'), T.zr[0], T.zr[1]),
       tz = Math.tan((zoom / 2) * D2R);
-    const hit = deps.hitSurface(origin, dir),
+    const hit = hitSurface(origin, dir),
       L = hit ? hit.t : 85;
     const frame = { visual: v, o, I, col, dir, origin, zoom, tz, hit, L };
     const gob = syncBeam(frame);
-    syncPool(frame, gob, deps.goboTextures, deps.normals, deps.lights);
+    syncPool(frame, gob, deps.goboTextures, deps.lights);
     if (f.type === 'blinder') deps.lights.addBlinder(I);
     syncGlow(frame, this.#camera);
   }

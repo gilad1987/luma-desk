@@ -16,6 +16,5 @@ export type { FixtureVisualDeps } from './FixtureVisualBuilder';
 export type { FixtureVisual, LightVisual } from './FixtureVisual';
 export { FixtureVisualSync } from './FixtureVisualSync';
 export type { FixtureVisualSyncDeps } from './FixtureVisualSync';
-export type { SurfaceHitFn, SurfaceHitResult, SurfaceNormals } from './sync/BeamFrame';
 export type { ScreenTargets, ScreenUniforms } from './sync/syncScreen';
 export { Props } from './props/Props';

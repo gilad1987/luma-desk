@@ -7,9 +7,6 @@ import { buildFixtureScene, stubCanvasDocument } from './buildFixtureScene';
 
 afterEach(() => vi.unstubAllGlobals());
 
-const UP = new Vector3(0, 1, 0),
-  SCREEN_N = new Vector3(0, 0, 1);
-
 function setup() {
   stubCanvasDocument();
   const built = buildFixtureScene();
@@ -23,8 +20,6 @@ function setup() {
   const sync = new FixtureVisualSync({
     visuals: built.visuals,
     selection: { has: (id) => id === built.fixtures[0]?.id },
-    hitSurface: (o, d) => (d.y < -1e-4 ? { t: (1.8 - o.y) / d.y, n: UP } : null),
-    normals: { up: UP, screen: SCREEN_N },
     screen,
     beamTime: built.beam.time,
     goboTextures: built.gobo.textures,
