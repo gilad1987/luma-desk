@@ -8,11 +8,11 @@ export function parseDeck(r: Reader, raw: unknown): StageDeck | undefined {
   const o = r.obj(raw, 'deck');
   if (!o) return undefined;
   const deck = {
-    x0: r.num(o.x0, 'deck.x0'),
-    x1: r.num(o.x1, 'deck.x1'),
-    z0: r.num(o.z0, 'deck.z0'),
-    z1: r.num(o.z1, 'deck.z1'),
-    height: r.num(o.height, 'deck.height'),
+    x0: r.num(o['x0'], 'deck.x0'),
+    x1: r.num(o['x1'], 'deck.x1'),
+    z0: r.num(o['z0'], 'deck.z0'),
+    z1: r.num(o['z1'], 'deck.z1'),
+    height: r.num(o['height'], 'deck.height'),
   };
   if (!allDefined(deck)) return undefined;
   if (deck.x0 >= deck.x1) r.fail('deck.x1', `must be greater than x0 ${deck.x0}, got ${deck.x1}`);
@@ -31,9 +31,9 @@ export function parseRisers(r: Reader, raw: unknown): StageRiser[] | undefined {
     const o = r.obj(v, path);
     if (!o) return undefined;
     const riser = {
-      id: uniqueId(r, ids, r.str(o.id, `${path}.id`), `${path}.id`),
-      at: r.vec3(o.at, `${path}.at`),
-      size: r.size(o.size, `${path}.size`),
+      id: uniqueId(r, ids, r.str(o['id'], `${path}.id`), `${path}.id`),
+      at: r.vec3(o['at'], `${path}.at`),
+      size: r.size(o['size'], `${path}.size`),
     };
     return allDefined(riser) ? riser : undefined;
   });

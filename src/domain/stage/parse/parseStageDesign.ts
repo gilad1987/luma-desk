@@ -20,17 +20,17 @@ export type StageParseResult =
 export function parseStageDesign(raw: unknown): StageParseResult {
   const r = new Reader();
   const o = r.obj(raw, 'stage');
-  if (o && o.v !== STAGE_DESIGN_VERSION) r.fail('v', `unknown stage version ${describeValue(o.v)}`);
+  if (o && o['v'] !== STAGE_DESIGN_VERSION) r.fail('v', `unknown stage version ${describeValue(o['v'])}`);
   if (!o || r.errors.length > 0) return { ok: false, errors: r.errors };
-  const { trusses, ids } = parseTrusses(r, o.trusses);
-  const parsed = parseFixtures(r, o.fixtures, ids);
+  const { trusses, ids } = parseTrusses(r, o['trusses']);
+  const parsed = parseFixtures(r, o['fixtures'], ids);
   const design = {
-    source: parseSource(r, o.source),
-    venue: parseVenue(r, o.venue),
-    scenery: parseScenery(r, o.scenery),
-    deck: parseDeck(r, o.deck),
-    screens: parseScreens(r, o.screens, parsed),
-    risers: parseRisers(r, o.risers),
+    source: parseSource(r, o['source']),
+    venue: parseVenue(r, o['venue']),
+    scenery: parseScenery(r, o['scenery']),
+    deck: parseDeck(r, o['deck']),
+    screens: parseScreens(r, o['screens'], parsed),
+    risers: parseRisers(r, o['risers']),
   };
   if (!allDefined(design) || r.errors.length > 0) return { ok: false, errors: r.errors };
   return { ok: true, design: { v: STAGE_DESIGN_VERSION, ...design, trusses, fixtures: parsed.fixtures } };
@@ -40,10 +40,10 @@ function parseSource(r: Reader, raw: unknown): StageSource | undefined {
   const o = r.obj(raw, 'source');
   if (!o) return undefined;
   const source = {
-    kind: r.oneOf(o.kind, 'source.kind', SOURCE_KINDS, 'source kind'),
-    name: r.str(o.name, 'source.name'),
+    kind: r.oneOf(o['kind'], 'source.kind', SOURCE_KINDS, 'source kind'),
+    name: r.str(o['name'], 'source.name'),
   };
-  const fileHash = r.optional(o.fileHash, 'source.fileHash', r.str);
+  const fileHash = r.optional(o['fileHash'], 'source.fileHash', r.str);
   if (!allDefined(source)) return undefined;
   return { ...source, ...(fileHash === undefined ? {} : { fileHash }) };
 }
@@ -51,8 +51,8 @@ function parseSource(r: Reader, raw: unknown): StageSource | undefined {
 function parseVenue(r: Reader, raw: unknown): StageDesign['venue'] | undefined {
   const o = r.obj(raw, 'venue');
   if (!o) return undefined;
-  const kind = r.oneOf(o.kind, 'venue.kind', VENUE_KINDS, 'venue');
-  const gridY = r.optional(o.gridY, 'venue.gridY', r.num);
+  const kind = r.oneOf(o['kind'], 'venue.kind', VENUE_KINDS, 'venue');
+  const gridY = r.optional(o['gridY'], 'venue.gridY', r.num);
   if (kind === undefined) return undefined;
   return { kind, ...(gridY === undefined ? {} : { gridY }) };
 }

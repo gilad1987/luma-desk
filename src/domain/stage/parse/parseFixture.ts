@@ -24,7 +24,7 @@ export function parseFixtures(r: Reader, raw: unknown, trussIds: ReadonlySet<str
   const fixtures = r.list(raw, 'fixtures', (v, path) => {
     const o = r.obj(v, path);
     if (!o) return undefined;
-    const id = uniqueId(r, ids, r.positiveInt(o.id, `${path}.id`), `${path}.id`);
+    const id = uniqueId(r, ids, r.positiveInt(o['id'], `${path}.id`), `${path}.id`);
     const fields = parseFields(r, o, path, trussIds);
     return id === undefined || fields === undefined ? undefined : { id, ...fields };
   });
@@ -38,15 +38,15 @@ function parseFields(
   trussIds: ReadonlySet<string>,
 ): Omit<StageFixture, 'id'> | undefined {
   const fixture = {
-    type: isTypeId(o.type) ? o.type : r.fail(`${path}.type`, `unknown type ${describeValue(o.type)}`),
-    role: r.oneOf(o.role, `${path}.role`, FIXTURE_ROLES, 'role'),
-    trussId: parseTrussId(r, o.trussId, `${path}.trussId`, trussIds),
-    position: r.vec3(o.position, `${path}.position`),
-    mount: r.oneOf(o.mount, `${path}.mount`, MOUNTS, 'mount'),
+    type: isTypeId(o['type']) ? o['type'] : r.fail(`${path}.type`, `unknown type ${describeValue(o['type'])}`),
+    role: r.oneOf(o['role'], `${path}.role`, FIXTURE_ROLES, 'role'),
+    trussId: parseTrussId(r, o['trussId'], `${path}.trussId`, trussIds),
+    position: r.vec3(o['position'], `${path}.position`),
+    mount: r.oneOf(o['mount'], `${path}.mount`, MOUNTS, 'mount'),
   };
-  const rotation = r.optional(o.rotation, `${path}.rotation`, r.quat);
-  const fixed = r.optional(o.fixed, `${path}.fixed`, (v, p) => parseFixed(r, v, p));
-  const pixel = r.optional(o.pixel, `${path}.pixel`, (v, p) => parsePixel(r, v, p));
+  const rotation = r.optional(o['rotation'], `${path}.rotation`, r.quat);
+  const fixed = r.optional(o['fixed'], `${path}.fixed`, (v, p) => parseFixed(r, v, p));
+  const pixel = r.optional(o['pixel'], `${path}.pixel`, (v, p) => parsePixel(r, v, p));
   if (!allDefined(fixture)) return undefined;
   return {
     ...fixture,
@@ -69,13 +69,17 @@ function parseTrussId(r: Reader, v: unknown, path: string, trussIds: ReadonlySet
 function parseFixed(r: Reader, raw: unknown, path: string): PanTilt | undefined {
   const o = r.obj(raw, path);
   if (!o) return undefined;
-  const fixed = { pan: r.num(o.pan, `${path}.pan`), tilt: r.num(o.tilt, `${path}.tilt`) };
+  const fixed = { pan: r.num(o['pan'], `${path}.pan`), tilt: r.num(o['tilt'], `${path}.tilt`) };
   return allDefined(fixed) ? fixed : undefined;
 }
 
 function parsePixel(r: Reader, raw: unknown, path: string): StageFixture['pixel'] {
   const o = r.obj(raw, path);
   if (!o) return undefined;
-  const pixel = { p: r.vec3(o.p, `${path}.p`), tan: r.vec3(o.tan, `${path}.tan`), len: r.num(o.len, `${path}.len`) };
+  const pixel = {
+    p: r.vec3(o['p'], `${path}.p`),
+    tan: r.vec3(o['tan'], `${path}.tan`),
+    len: r.num(o['len'], `${path}.len`),
+  };
   return allDefined(pixel) ? pixel : undefined;
 }

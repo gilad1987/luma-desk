@@ -21,7 +21,7 @@ export function parseTrusses(r: Reader, raw: unknown): ParsedTrusses {
   const trusses = r.list(raw, 'trusses', (v, path) => {
     const o = r.obj(v, path);
     if (!o) return undefined;
-    const id = uniqueId(r, ids, r.str(o.id, `${path}.id`), `${path}.id`);
+    const id = uniqueId(r, ids, r.str(o['id'], `${path}.id`), `${path}.id`);
     return parseTruss(r, o, path, id);
   });
   return { trusses: trusses ?? [], ids };
@@ -30,10 +30,10 @@ export function parseTrusses(r: Reader, raw: unknown): ParsedTrusses {
 function parseTruss(r: Reader, o: Raw, path: string, id: string | undefined): StageTruss | undefined {
   const truss = {
     id,
-    name: r.str(o.name, `${path}.name`),
-    role: r.oneOf(o.role, `${path}.role`, FIXTURE_ROLES, 'role'),
-    transform: parseTransform(r, o.transform, `${path}.transform`),
-    params: parseTrussParams(r, o.params, `${path}.params`),
+    name: r.str(o['name'], `${path}.name`),
+    role: r.oneOf(o['role'], `${path}.role`, FIXTURE_ROLES, 'role'),
+    transform: parseTransform(r, o['transform'], `${path}.transform`),
+    params: parseTrussParams(r, o['params'], `${path}.params`),
   };
   return allDefined(truss) ? truss : undefined;
 }
@@ -41,8 +41,8 @@ function parseTruss(r: Reader, o: Raw, path: string, id: string | undefined): St
 function parseTransform(r: Reader, raw: unknown, path: string): Transform | undefined {
   const o = r.obj(raw, path);
   if (!o) return undefined;
-  const position = r.vec3(o.position, `${path}.position`);
-  const rotation = r.optional(o.rotation, `${path}.rotation`, r.quat);
+  const position = r.vec3(o['position'], `${path}.position`);
+  const rotation = r.optional(o['rotation'], `${path}.rotation`, r.quat);
   if (position === undefined) return undefined;
   return { position, ...(rotation === undefined ? {} : { rotation }) };
 }
