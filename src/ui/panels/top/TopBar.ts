@@ -30,9 +30,12 @@ function toggle(id: string, initial: boolean, apply: (on: boolean) => void): () 
  */
 export class TopBar {
   readonly #showIds: () => boolean;
+  readonly #state: AppState;
+  readonly #haze: HTMLInputElement;
 
   /** Renders the bar at the start of `host` (`#app`) and wires its own controls. */
   constructor(host: HTMLElement, state: AppState, render: TopBarRender) {
+    this.#state = state;
     host.insertAdjacentHTML('afterbegin', topBarMarkup);
     const viewButtons = host.querySelectorAll<HTMLElement>('[data-view]');
     VIEWS.forEach(([view], i) => {
@@ -43,6 +46,7 @@ export class TopBar {
       haze = byId('haze', HTMLInputElement);
     house.oninput = () => render.setHouseLevel(Number(house.value) / 100);
     haze.oninput = () => (state.haze = Number(haze.value) / 100);
+    this.#haze = haze;
     toggle('glowBtn', true, (on) => render.setGlow(on));
     toggle('realBtn', true, (on) => render.setRealLight(on));
     this.#showIds = toggle('idsBtn', false, () => undefined);
@@ -51,5 +55,13 @@ export class TopBar {
   /** Fixture IDs: the overlay draws the ids while this is on. */
   get showIds(): boolean {
     return this.#showIds();
+  }
+
+  /**
+   * Moves the Haze slider to `AppState.haze`. A show load emits no event (the loader leaves repaints to its caller),
+   * so boot, import and the demo call this right after loading and before the pools repaint, the original order.
+   */
+  syncHaze(): void {
+    this.#haze.value = String(this.#state.haze * 100);
   }
 }
