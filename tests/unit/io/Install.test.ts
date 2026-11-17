@@ -45,6 +45,6 @@ describe('Install', () => {
     const { install, button, toasts } = setup();
     install.offer(new FakeInstallPrompt());
     install.installed();
-    expect([button.style.display, toasts]).toEqual(['none', [he.install.done]]);
+    expect([button.style.display, toasts]).toEqual(['none', [he.topBar.install.done]]);
   });
 });

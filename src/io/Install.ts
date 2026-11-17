@@ -54,6 +54,6 @@ export class Install {
   /** The app is installed: the button has nothing left to offer. */
   installed(): void {
     this.#deps.button.style.display = 'none';
-    this.#deps.bus.emit('message', { kind: 'toast', text: he.install.done });
+    this.#deps.bus.emit('message', { kind: 'toast', text: he.topBar.install.done });
   }
 }

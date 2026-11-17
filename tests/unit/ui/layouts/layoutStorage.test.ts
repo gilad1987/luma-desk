@@ -3,7 +3,8 @@
  * page is DOM work that the Playwright parity suite checks.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { loadLayout, saveLayout, toLayoutMode } from '../../../../src/ui/layouts/layoutStorage';
+import { zoomFactor } from '../../../../src/ui/layouts/fitMath';
+import { loadLayout, saveLayout, selectValue, toLayoutMode } from '../../../../src/ui/layouts/layoutStorage';
 
 const KEY = 'lumadesk-layout2';
 
@@ -46,5 +47,46 @@ describe('layout storage', () => {
     const atDefault = loadLayout().maSize;
     stubStorage(JSON.stringify({ deskMode: 'ma', maSize: 0.9 }));
     expect([atDefault, loadLayout().maSize]).toEqual([undefined, 0.7]);
+  });
+
+  it('keeps a corrupt truthy value with its JSON type: classic page, numeric zoom, saved back unchanged', () => {
+    const map = stubStorage('{"deskMode":true,"deskZoom":true}');
+    const loaded = loadLayout();
+    saveLayout(loaded);
+    expect([toLayoutMode(loaded.mode), zoomFactor(loaded.zoom, 1000, 1880, 0.66), map.get(KEY)]).toEqual([
+      'classic',
+      1,
+      '{"deskMode":true,"deskZoom":true}',
+    ]);
+  });
+
+  it('keeps an object or a number as the stored layout name and saves it back with the same type', () => {
+    const objectMap = stubStorage('{"deskMode":{},"deskZoom":{}}');
+    const object = loadLayout();
+    saveLayout(object);
+    const savedObject = objectMap.get(KEY);
+    const map = stubStorage('{"deskMode":5,"deskZoom":0.85}');
+    const number = loadLayout();
+    saveLayout(number);
+    expect([toLayoutMode(object.mode), zoomFactor(object.zoom, 1000, 1880, 0.66), savedObject]).toEqual([
+      'classic',
+      NaN,
+      '{"deskMode":{},"deskZoom":{}}',
+    ]);
+    expect([toLayoutMode(number.mode), map.get(KEY)]).toEqual(['classic', '{"deskMode":5,"deskZoom":0.85}']);
+  });
+
+  it('falls back for falsy stored values of any type', () => {
+    stubStorage('{"deskMode":0,"deskZoom":false}');
+    expect(loadLayout()).toEqual({ mode: 'ma', zoom: 'auto', maSize: undefined });
+  });
+
+  it('gives the selects the text the old `select.value = value` assignment made', () => {
+    expect([selectValue(true), selectValue({}), selectValue(5), selectValue('ma')]).toEqual([
+      'true',
+      '[object Object]',
+      '5',
+      'ma',
+    ]);
   });
 });

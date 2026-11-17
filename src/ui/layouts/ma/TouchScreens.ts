@@ -12,23 +12,26 @@ export class TouchScreens {
   /** The selection the position pad was last drawn for, so it redraws only on a change. */
   private drawnFor: string | null = null;
 
-  constructor(
-    private readonly source: MaReadoutSource,
-    private readonly redrawFocus: () => void,
-  ) {}
+  readonly #source: MaReadoutSource;
+  readonly #redrawFocus: () => void;
+
+  constructor(source: MaReadoutSource, redrawFocus: () => void) {
+    this.#source = source;
+    this.#redrawFocus = redrawFocus;
+  }
 
   update(): void {
-    const ids = this.source.selectedIds(),
-      fixtures = ids.map((id) => this.source.fixture(id));
+    const ids = this.#source.selectedIds(),
+      fixtures = ids.map((id) => this.#source.fixture(id));
     this.paintColor(fixtures, ids.length);
     const key = ids.join();
     if (key !== this.drawnFor) {
       this.drawnFor = key;
-      this.redrawFocus();
+      this.#redrawFocus();
     }
     this.paintPosition(fixtures, ids.length);
     const dimmer = fixtures.find((f) => f.has('dim'));
-    byId('lvlVal').textContent = dimmer ? String(Math.round(this.source.value(dimmer, 'dim'))) : '—';
+    byId('lvlVal').textContent = dimmer ? String(Math.round(this.#source.value(dimmer, 'dim'))) : '—';
   }
 
   private paintColor(fixtures: readonly Fixture[], selected: number): void {
@@ -36,9 +39,9 @@ export class TouchScreens {
       marker = byId('tsColMk'),
       none = byId('tsColNone');
     if (f) {
-      const r = this.source.value(f, 'r'),
-        g = this.source.value(f, 'g'),
-        b = this.source.value(f, 'b');
+      const r = this.#source.value(f, 'r'),
+        g = this.#source.value(f, 'g'),
+        b = this.#source.value(f, 'b');
       const at = colorMarker(r, g, b);
       Object.assign(marker.style, {
         display: 'block',
@@ -58,7 +61,7 @@ export class TouchScreens {
   private paintPosition(fixtures: readonly Fixture[], selected: number): void {
     const f = fixtures.find((x) => x.has('pan'));
     byId('tsPosInfo').textContent = f
-      ? `PAN ${Math.round(this.source.value(f, 'pan'))}° TILT ${Math.round(this.source.value(f, 'tilt'))}°`
+      ? `PAN ${Math.round(this.#source.value(f, 'pan'))}° TILT ${Math.round(this.#source.value(f, 'tilt'))}°`
       : '';
     byId('tsPosNone').style.display = selected ? 'none' : '';
   }

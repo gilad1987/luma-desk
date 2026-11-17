@@ -1,4 +1,4 @@
-import { hePanels } from '../../../i18n/he/panels';
+import { he } from '../../../i18n/he';
 import { viewButtons } from './topBarViews';
 
 const ZOOMS = [
@@ -16,7 +16,7 @@ const LAYOUTS = options([
   ['desk', 'Desk'],
   ['classic', 'Classic'],
 ]);
-const he = hePanels;
+const text = he.panels;
 
 /**
  * The top bar, byte for byte as the original page had it. It holds controls other modules wire (layout selects,
@@ -35,11 +35,11 @@ export const topBarMarkup =
     '<div class="tbg"><button id="glowBtn" class="on">Glow</button><button id="idsBtn">Fixture IDs</button>' +
       '<button id="realBtn" class="on" title="Real spot lights & shadows on performers">Real light</button></div>',
     '<div class="spacer"></div>',
-    `<div class="tbg" id="layoutBox"><label>Layout</label><select id="layoutSel" title="${he.layoutTitle}">` +
-      `${LAYOUTS}</select><select id="deskZoom" title="${he.zoomTitle}">${options(ZOOMS)}</select></div>`,
-    `<div class="tbg"><button id="recBtn" title="${he.recTitle}">● REC</button>` +
-      `<button id="fsBtn" title="${he.fullscreenTitle}">⛶</button>` +
-      `<button id="installBtn" style="display:none">${he.install}</button><button id="midiBtn">MIDI</button>` +
-      `<button id="fileBtn">Show File</button><button id="helpBtn" class="on">${he.guide}</button></div>`,
+    `<div class="tbg" id="layoutBox"><label>Layout</label><select id="layoutSel" title="${text.layoutTitle}">` +
+      `${LAYOUTS}</select><select id="deskZoom" title="${text.zoomTitle}">${options(ZOOMS)}</select></div>`,
+    `<div class="tbg"><button id="recBtn" title="${text.recTitle}">● REC</button>` +
+      `<button id="fsBtn" title="${text.fullscreenTitle}">⛶</button>` +
+      `<button id="installBtn" style="display:none">${text.install}</button><button id="midiBtn">MIDI</button>` +
+      `<button id="fileBtn">Show File</button><button id="helpBtn" class="on">${text.guide}</button></div>`,
     '<div id="clock"></div><div id="fps"></div>',
   ].join('\n    ') + '\n  </header>';

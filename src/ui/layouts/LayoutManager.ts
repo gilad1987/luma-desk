@@ -1,9 +1,10 @@
 import { byId } from '../dom';
 import type { LayoutMode } from '../panels/layoutMode';
+import type { SideTab } from '../panels/side/sideTabsMarkup';
 import { ConsoleParts } from './ConsoleParts';
 import { DeskFit, type LayoutSettings } from './DeskFit';
 import type { LayoutHost } from './LayoutHost';
-import { loadLayout, saveLayout, toLayoutMode } from './layoutStorage';
+import { loadLayout, saveLayout, selectValue, toLayoutMode } from './layoutStorage';
 
 /**
  * Switches between the MA console, the desk console and the classic page by moving panel nodes into console slots,
@@ -12,11 +13,14 @@ import { loadLayout, saveLayout, toLayoutMode } from './layoutStorage';
 export class LayoutManager {
   private settings: LayoutSettings = { mode: 'ma', zoom: 'auto', maSize: undefined };
   /** The tab MA forced onto screen 1 because Pools sits on screen 2; leaving MA gives Pools back. */
-  private forcedTab: string | null = null;
+  private forcedTab: SideTab | null = null;
   private readonly parts = new ConsoleParts();
   private readonly deskFit: DeskFit;
 
-  constructor(private readonly host: LayoutHost) {
+  readonly #host: LayoutHost;
+
+  constructor(host: LayoutHost) {
+    this.#host = host;
     this.deskFit = new DeskFit((px) => host.setConsoleHeight(px));
     const modeSel = byId('layoutSel', HTMLSelectElement),
       zoomSel = byId('deskZoom', HTMLSelectElement);
@@ -50,13 +54,13 @@ export class LayoutManager {
   /** Boot: reads the saved layout, shows it in the selects and applies it. */
   restore(): void {
     this.settings = loadLayout();
-    byId('layoutSel', HTMLSelectElement).value = this.settings.mode;
-    byId('deskZoom', HTMLSelectElement).value = this.settings.zoom;
+    byId('layoutSel', HTMLSelectElement).value = selectValue(this.settings.mode);
+    byId('deskZoom', HTMLSelectElement).value = selectValue(this.settings.zoom);
     this.apply();
   }
 
   apply(): void {
-    const { host } = this,
+    const host = this.#host,
       body = document.body,
       wasMa = body.classList.contains('ma'),
       ma = this.settings.mode === 'ma';

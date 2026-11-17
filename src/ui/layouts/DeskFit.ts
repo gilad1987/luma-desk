@@ -1,14 +1,15 @@
 import { byId } from '../dom';
 import { maZoom, zoomFactor, type MaGeometry } from './fitMath';
 import { measureMaGeometry } from './measureMaGeometry';
+import type { StoredSetting } from './StoredSetting';
 
 /**
  * What the fit reads: the layout name as stored and selected (not narrowed, so an unknown name round-trips as before),
  * the `#deskZoom` value and the grip size (undefined = adaptive).
  */
 export interface LayoutSettings {
-  readonly mode: string;
-  readonly zoom: string;
+  readonly mode: StoredSetting;
+  readonly zoom: StoredSetting;
   readonly maSize: number | undefined;
 }
 

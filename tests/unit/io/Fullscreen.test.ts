@@ -48,7 +48,7 @@ describe('Fullscreen', () => {
     fullscreen.toggle();
     await Promise.resolve();
     await Promise.resolve();
-    expect(toasts).toEqual([he.fullscreen.unavailable]);
+    expect(toasts).toEqual([he.topBar.fullscreen.unavailable]);
   });
 
   it('does nothing on a browser without requestFullscreen', () => {

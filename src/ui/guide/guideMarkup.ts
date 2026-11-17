@@ -10,10 +10,10 @@ export const guideMarkup = (): string => `<div id="guide">
     <div class="gmain">
       <div class="ghead">
         <h2 id="gTitle"></h2>
-        <button id="gClose">${he.guide.close}</button>
+        <button id="gClose">${he.guide.frame.close}</button>
       </div>
       <div class="gbody" id="gBody"></div>
-      <div class="gfoot"><button id="gPrev">${he.guide.prev}</button><button id="gNext">${he.guide.next}</button></div>
+      <div class="gfoot"><button id="gPrev">${he.guide.frame.prev}</button><button id="gNext">${he.guide.frame.next}</button></div>
     </div>
   </div>
 </div>
