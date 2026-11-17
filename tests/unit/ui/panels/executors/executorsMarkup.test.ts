@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { cueHudMarkup } from '../../../../../src/ui/panels/executors/cueHudMarkup';
 import { executorCardMarkup } from '../../../../../src/ui/panels/executors/executorCardMarkup';
 import { masterMarkup } from '../../../../../src/ui/panels/executors/masterMarkup';
-import { legacyMarkup } from '../../legacy/legacyMarkup';
+import { legacyMarkup } from '../../../../shared/legacy';
 
 // oracles from index.html at 48a3b63: line 570 (HUD), lines 657-666 (strip + master), the buildExecs template (2151)
 

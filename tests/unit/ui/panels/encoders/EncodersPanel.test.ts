@@ -3,9 +3,7 @@ import { GOBO_NAMES, SCREEN_MODES } from '../../../../../src/domain/attributes';
 import { Encoder } from '../../../../../src/ui/components/Encoder';
 import { encoderList } from '../../../../../src/ui/panels/encoders/encoderList';
 import { EncodersPanel } from '../../../../../src/ui/panels/encoders/EncodersPanel';
-import { asReal } from '../../fakes/asReal';
-import { FakeHost } from '../../fakes/FakeHost';
-import { FakeDom } from '../../fakes/installFakeDom';
+import { asReal, FakeDom, FakeHost } from '../../../../shared/dom';
 import { encodersFakes, fixture } from './encodersFakes';
 
 // legacy: fmtVal and updateEncUI in index.html at 48a3b63, lines 2026-2034

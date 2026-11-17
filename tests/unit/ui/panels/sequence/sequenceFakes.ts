@@ -7,11 +7,7 @@ import { SequencePanel } from '../../../../../src/ui/panels/sequence/SequencePan
 import type { SequenceDeps } from '../../../../../src/ui/panels/sequence/SequenceDeps';
 import type { SideTab } from '../../../../../src/ui/panels/side/sideTabsMarkup';
 import { StoreModeGuard } from '../../../../../src/ui/shared';
-import { asReal } from '../../fakes/asReal';
-import { FakeButton } from '../../fakes/FakeButton';
-import { FakeElement } from '../../fakes/FakeElement';
-import { FakeHost } from '../../fakes/FakeHost';
-import { FakeDom } from '../../fakes/installFakeDom';
+import { asReal, FakeButton, FakeDom, FakeElement, FakeHost } from '../../../../shared/dom';
 
 /** A real executor named Wash with cues numbered `nums` and current index `cur`; it runs when `cur` is set. */
 export function exec(nums: readonly number[], cur: number): Executor {

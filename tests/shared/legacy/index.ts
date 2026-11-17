@@ -1,0 +1,1 @@
+export { legacyMarkup } from './legacyMarkup';

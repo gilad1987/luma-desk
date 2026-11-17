@@ -1,5 +1,5 @@
 import { beatPosition } from '../../../autoshow/SongStructure';
-import { STYLES, type AutoStyleId } from '../../../autoshow/styles';
+import { STYLE_IDS, STYLES } from '../../../autoshow/styles';
 import { he } from '../../../i18n/he';
 import { byId } from '../../dom';
 import { createElement } from '../../shared';
@@ -10,10 +10,6 @@ import { IDLE_STATUS, lookCountdown, runningStatus, styleCardHtml } from './auto
 import { wireAutoSettings } from './wireAutoSettings';
 import { wireLookButtons } from './wireLookButtons';
 import { wireSong } from './wireSong';
-
-const isStyleId = (id: string): id is AutoStyleId => id in STYLES;
-/** The style grid order: the key order of `STYLES`. */
-const STYLE_IDS = Object.keys(STYLES).filter(isStyleId);
 
 /**
  * The Auto Show pane. The style grid and the START button repaint on a style click and when Auto starts or stops

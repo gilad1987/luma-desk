@@ -1,4 +1,4 @@
-import { PRESET_TYPES, type PresetType } from '../../../engine/presetTypes';
+import { PRESET_TYPE_IDS, PRESET_TYPES, type PresetType } from '../../../engine/presetTypes';
 import { byId } from '../../dom';
 import { createElement } from '../../shared';
 import { groupSlot } from './groupSlot';
@@ -10,9 +10,6 @@ import { presetSlot } from './presetSlot';
 const GROUP_SLOTS = 48;
 /** Slots per preset pool. */
 const PRESET_SLOTS = 30;
-const isPresetTab = (n: number): n is PresetType => n in PRESET_TYPES;
-/** The tabs in pool-number order, as the old `for…in` over the pool names gave them. */
-const PRESET_TAB_ORDER = Object.keys(PRESET_TYPES).map(Number).filter(isPresetTab);
 
 /**
  * The group and preset pools. It repaints only when the pools change (`poolsChanged`, synchronous, so exactly where
@@ -42,7 +39,7 @@ export class PoolsPanel {
     this.#groupPool.innerHTML = '';
     for (let n = 1; n <= GROUP_SLOTS; n++) this.#groupPool.appendChild(groupSlot(n, this.#deps, repaint));
     this.#presetTabs.innerHTML = '';
-    for (const t of PRESET_TAB_ORDER) {
+    for (const t of PRESET_TYPE_IDS) {
       const b = createElement('button', t === this.#presetTab ? 'on' : '', `${t} ${PRESET_TYPES[t]}`);
       b.onclick = () => {
         this.#presetTab = t;

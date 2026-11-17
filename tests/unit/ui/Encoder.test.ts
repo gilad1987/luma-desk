@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Encoder } from '../../../src/ui/components/Encoder';
 import { EncoderTurn, type EncoderRange } from '../../../src/ui/components/EncoderTurn';
-import { pointer } from './fakes/fakePointer';
-import { FakeDom } from './fakes/installFakeDom';
+import { FakeDom, pointer } from '../../shared/dom';
 
 const DIM = { label: 'Dim', min: 0, max: 100 };
 const GOBO = { label: 'Gobo', min: 0, max: 7, step: 1 };

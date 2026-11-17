@@ -2,8 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EventBus } from '../../../src/core';
 import type { EngineEvents } from '../../../src/engine/events';
 import { Toast } from '../../../src/ui/components/Toast';
-import type { FakeElement } from './fakes/FakeElement';
-import { FakeDom } from './fakes/installFakeDom';
+import { FakeDom, type FakeElement } from '../../shared/dom';
 
 describe('Toast', () => {
   let element: FakeElement, bus: EventBus<EngineEvents>, toast: Toast;

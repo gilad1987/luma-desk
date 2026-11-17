@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { byId } from '../../../src/ui/dom';
 import { pointerDrag } from '../../../src/ui/shared';
-import { pointer } from './fakes/fakePointer';
-import { FakeDom } from './fakes/installFakeDom';
+import { FakeDom, pointer } from '../../shared/dom';
 
 describe('pointerDrag', () => {
   let dom: FakeDom;

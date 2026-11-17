@@ -7,10 +7,8 @@ import type { ShowFileV1 } from '../../../../../src/show/ShowFile';
 import { ShowFileDialog } from '../../../../../src/ui/panels/showfile/ShowFileDialog';
 import type { ShowFileDeps } from '../../../../../src/ui/panels/showfile/ShowFileDeps';
 import { showFileMarkup } from '../../../../../src/ui/panels/showfile/showFileMarkup';
-import { FakeElement } from '../../fakes/FakeElement';
-import { FakeDom } from '../../fakes/installFakeDom';
-import { FakeButton } from '../../fakes/FakeButton';
-import { legacyMarkup } from '../../legacy/legacyMarkup';
+import { FakeButton, FakeDom, FakeElement } from '../../../../shared/dom';
+import { legacyMarkup } from '../../../../shared/legacy';
 
 const rig = buildRig();
 /** The smallest whole show file: empty pools, so the JSON below stays short. */

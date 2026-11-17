@@ -4,7 +4,7 @@ import { AppState } from '../../../src/engine/AppState';
 import type { EngineEvents } from '../../../src/engine/events';
 import { showStoreMode } from '../../../src/ui/components/showStoreMode';
 import { StoreModeGuard } from '../../../src/ui/shared';
-import { FakeDom } from './fakes/installFakeDom';
+import { FakeDom } from '../../shared/dom';
 
 const setup = () => {
   const bus = new EventBus<EngineEvents>();

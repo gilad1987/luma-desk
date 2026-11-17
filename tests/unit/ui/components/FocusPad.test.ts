@@ -8,10 +8,7 @@ import type { EngineEvents } from '../../../../src/engine/events';
 import { he } from '../../../../src/i18n/he';
 import { AimHeight } from '../../../../src/ui/components/AimHeight';
 import { focusPad } from '../../../../src/ui/components/FocusPad';
-import { asReal } from '../fakes/asReal';
-import { FakeCanvas } from '../fakes/FakeElement';
-import { pointer } from '../fakes/fakePointer';
-import { FakeDom } from '../fakes/installFakeDom';
+import { asReal, FakeCanvas, FakeDom, pointer } from '../../../shared/dom';
 
 /** A 500 x 280 pad: 10 px per metre across (x + 25) and down (z + 22); its 2D context ignores every draw. */
 class MapCanvas extends FakeCanvas {

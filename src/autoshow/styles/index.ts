@@ -21,3 +21,11 @@ export const STYLES: Readonly<Record<AutoStyleId, AutoStyle>> = {
   orchestral: CALM_STYLES.orchestral,
   cinematic: CALM_STYLES.cinematic,
 };
+
+const isStyleId = (id: string): id is AutoStyleId => id in STYLES;
+
+/**
+ * Every style id in the key order of `STYLES`, the button order of the style grid. `Object.keys` returns plain
+ * strings, so the guard narrows them once here instead of in each caller.
+ */
+export const STYLE_IDS: readonly AutoStyleId[] = Object.keys(STYLES).filter(isStyleId);

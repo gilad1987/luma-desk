@@ -5,9 +5,7 @@ import { Fixture } from '../../../../../src/domain/Fixture';
 import type { EngineEvents, EngineMessage } from '../../../../../src/engine/events';
 import type { ViewportDeps } from '../../../../../src/ui/panels/viewport/ViewportDeps';
 import { ViewportPicking } from '../../../../../src/ui/panels/viewport/ViewportPicking';
-import { asReal } from '../../fakes/asReal';
-import { FakeElement } from '../../fakes/FakeElement';
-import { FakeDom } from '../../fakes/installFakeDom';
+import { asReal, FakeDom, FakeElement } from '../../../../shared/dom';
 
 type Listener = (ev: object) => void;
 /** An element or window that records listeners by event type, so the test can fire them. */

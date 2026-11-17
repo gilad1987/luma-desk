@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { asReal } from '../../fakes/asReal';
+import { asReal } from '../../../../shared/dom';
 import { mount } from './viewportFakes';
 
 /** The inline style properties the picking code writes on the fake elements. */

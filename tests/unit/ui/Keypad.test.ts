@@ -5,7 +5,7 @@ import type { EngineEvents } from '../../../src/engine/events';
 import { Keypad } from '../../../src/ui/components/Keypad';
 import { pressKey, type CommandInput } from '../../../src/ui/components/pressKey';
 import { StoreModeGuard } from '../../../src/ui/shared';
-import { FakeDom } from './fakes/installFakeDom';
+import { FakeDom } from '../../shared/dom';
 
 const setup = (value = '') => {
   const input = { value, pushHistory: vi.fn(), run: vi.fn() } satisfies CommandInput;
