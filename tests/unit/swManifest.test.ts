@@ -1,7 +1,7 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 import { cacheName } from '../../build/cacheName.ts';
 import { injectManifest } from '../../build/injectManifest.ts';
 import { readPublicFiles } from '../../build/readPublicFiles.ts';
@@ -57,6 +57,7 @@ describe('injectManifest', () => {
 describe('readPublicFiles', () => {
   it('reads nested files with URL-style names and skips host dotfiles', () => {
     const dir = mkdtempSync(join(tmpdir(), 'sw-public-'));
+    onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
     mkdirSync(join(dir, 'icons'));
     writeFileSync(join(dir, 'icons', 'icon.png'), 'png');
     writeFileSync(join(dir, 'manifest.webmanifest'), '{}');
