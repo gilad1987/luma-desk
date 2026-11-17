@@ -1,6 +1,6 @@
 /**
- * Owns the input checks of `setFixtureProps` (rules P6, P7): a patch the parser would refuse throws the parser's own
- * errors, and each refused row proves the parser refuses the same fixture. The screen fixture type rule is owned by
+ * Owns the input checks of `setFixtureProps`, made by `patchedFixtures` (rules P6, P7): a patch the parser would refuse
+ * throws the parser's own errors, and each refused row proves the parser refuses the same fixture. The screen fixture type rule is owned by
  * screenFixtureType.test.ts. Valid patches are also owned by noOps.test.ts and propsPatch.test.ts.
  */
 import { describe, expect, it } from 'vitest';
@@ -28,8 +28,8 @@ const VALID: readonly (readonly [string, FixturePatch])[] = [
 const FINITE = 'expected a finite number, got';
 
 /**
- * Fixture 101 is `fixtures[0]` of the sample, so every row has one path prefix; patchErrorIndex.test.ts covers others. The last three rows
- * carry values the type system refuses; a panel `<select>` value can still carry one at runtime.
+ * Fixture 101 is `fixtures[0]` of the sample, so every row has one path prefix; patchErrorIndex.test.ts covers others.
+ * The last three rows carry values the type system refuses; a panel `<select>` value can still carry one at runtime.
  */
 const BAD: readonly (readonly [string, FixturePatch, string])[] = [
   ['NaN position', { position: [Number.NaN, 7, 0] }, `position[0]: ${FINITE} NaN`],

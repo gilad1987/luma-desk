@@ -1,7 +1,7 @@
 /**
  * Owns the error path of `setFixtureProps` and `setTrussProps` for an item that is not first in its list: each op
  * reads the whole patched list with the parser, so its error is the parser's error with the item's real index, word
- * for word. The other refused patches are owned by fixturePatchCheck.test.ts and trussPatchCheck.test.ts.
+ * for word. The other refused patches are owned by patchedFixtures.test.ts and trussPatchCheck.test.ts.
  */
 import { describe, expect, it } from 'vitest';
 import { setFixtureProps } from '../../../../../src/domain/stage/edit/itemOps.ts';

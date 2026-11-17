@@ -38,8 +38,7 @@ describe('setFixtureProps keeps the type of a screen fixture', () => {
     const { d, wallId } = withWall();
     const run = (): StageDesign => setFixtureProps({ ...d, screens: [] }, wallId, { type: 'par' });
     expect(run).toThrow(new RangeError(`setFixtureProps: type of screen fixture ${wallId} cannot change, got par`));
-    expect(parseStageDesign(patchedFixture({ ...d, screens: [] }, wallId, { type: 'par' }))).toMatchObject({
-      ok: true,
-    });
+    const patched = patchedFixture({ ...d, screens: [] }, wallId, { type: 'par' });
+    expect(parseStageDesign(patched)).toEqual({ ok: true, design: patched });
   });
 });

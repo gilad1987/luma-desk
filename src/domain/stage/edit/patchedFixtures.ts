@@ -21,7 +21,7 @@ export function patchedFixtures(
   const trussIds = new Set(d.trusses.map((t) => t.id));
   const patched = d.fixtures.map((f) => (f.id === fixture.id ? { ...f, ...patch } : f));
   const parsed = checkParserAccepts(OP, (r) => parseFixtures(r, { fixtures: patched }, trussIds));
-  if (patch.type !== undefined && patch.type !== fixture.type && drivesScreen(fixture)) {
+  if (patch.type !== undefined && patch.type !== fixture.type && isScreenFixture(fixture)) {
     throw new RangeError(`${OP}: type of screen fixture ${fixture.id} cannot change, got ${patch.type}`);
   }
   return parsed.fixtures;
@@ -32,6 +32,6 @@ export function patchedFixtures(
  * that fixture keeps its type even before a wall points at it. The parser's screens rule already refuses the change
  * for a fixture a wall points at; the fixture reader alone cannot see the screens.
  */
-function drivesScreen(fixture: StageFixture): boolean {
+function isScreenFixture(fixture: StageFixture): boolean {
   return fixture.type === 'screen';
 }

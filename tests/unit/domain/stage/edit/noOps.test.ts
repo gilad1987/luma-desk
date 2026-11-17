@@ -31,6 +31,9 @@ const offCentreWall = (): StageDesign => {
   return { ...d, screens: d.screens.map((s) => ({ ...s, x0: OFF_CENTRE.x0, x1: OFF_CENTRE.x1 })) };
 };
 
+/** The base with fixture 101 at the unit identity rotation, so a patch that normalizes to it changes nothing. */
+const identityRotation = (): StageDesign => items.setFixtureProps(base(), 101, { rotation: [0, 0, 0, 1] });
+
 type NoOp = readonly [name: string, op: (d: StageDesign) => StageDesign, start?: () => StageDesign];
 
 const NO_OPS: readonly NoOp[] = [
@@ -48,6 +51,11 @@ const NO_OPS: readonly NoOp[] = [
     (d) => items.setFixtureProps(d, 101, { type: 'wash', position: [-2, 7, 0] }),
   ],
   ['setFixtureProps with an empty patch', (d) => items.setFixtureProps(d, 101, {})],
+  [
+    'setFixtureProps to a rotation that normalizes to the one it has',
+    (d) => items.setFixtureProps(d, 101, { rotation: [0, 0, 0, 2] }),
+    identityRotation,
+  ],
   ['setLedWall off without a wall', (d) => setLedWall(d, null)],
   ['setLedWall to the size and state it has', (d) => setLedWall(d, WALL), withWall],
   ['setTrussProps with an empty patch', (d) => setTrussProps(d, 'pipe-1', {})],

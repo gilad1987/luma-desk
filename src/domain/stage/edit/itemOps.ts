@@ -1,8 +1,8 @@
 import type { StageDesign, StageFixture } from '../StageDesign';
 import type { Vec3 } from '../types';
 import { appendCopies } from './copies';
-import { patchedFixtures } from './patchedFixtures';
 import { newTrussId } from './ids';
+import { patchedFixtures } from './patchedFixtures';
 import { isSameData } from './sameData';
 import { moveTruss, shiftFixture } from './trussOps';
 
@@ -59,12 +59,13 @@ export function deleteTruss(d: StageDesign, trussId: string): StageDesign {
 
 /**
  * Sets fields of one fixture and stores the fixture list the parser read, so the design in memory equals the design
- * after a save and load. A patch that changes no value returns `d` itself, so History adds no undo step.
+ * after a save and load. When the parsed list equals the stored one (a rotation that normalizes to the stored one
+ * included), it returns `d` itself, so History adds no undo step.
  * @throws RangeError when the fixture is missing or the patch is refused by `patchedFixtures`.
  */
 export function setFixtureProps(d: StageDesign, id: number, patch: FixturePatch): StageDesign {
   const fixture = d.fixtures.find((f) => f.id === id);
   if (!fixture) throw new RangeError(`setFixtureProps: no fixture with id ${id}`);
-  if (isSameData({ ...fixture, ...patch }, fixture)) return d;
-  return { ...d, fixtures: patchedFixtures(d, fixture, patch) };
+  const fixtures = patchedFixtures(d, fixture, patch);
+  return isSameData(fixtures, d.fixtures) ? d : { ...d, fixtures };
 }
