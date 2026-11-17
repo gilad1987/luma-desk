@@ -73,3 +73,15 @@ export const BAND_PTS: readonly (readonly [x: number, z: number, lift: number | 
     [3.2, -6.8],
   ] as const
 ).map((p) => [p[0] * SXZ[0], p[1] * SXZ[1], p[2]] as const);
+
+/** The two delay speaker towers in the audience as [x, z]; the crowd layout keeps a gap around them. */
+export const DELAYS: readonly (readonly [x: number, z: number])[] = [
+  [-24, 33],
+  [24, 33],
+];
+
+/**
+ * The world up axis. One shared vector replaces the three copies in the legacy script (`UP3`, `UP` and
+ * `new V3(0, 1, 0)`), so truss alignment, crenellation turns and crowd facing all rotate about the same axis.
+ */
+export const UP: Readonly<Vector3> = new Vector3(0, 1, 0);
