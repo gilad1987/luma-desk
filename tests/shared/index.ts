@@ -1,4 +1,13 @@
-export type { CommandResult, DeskState, ExecState, FixtureOutput, Layout, SavedCue, SavedShow } from './deskApi';
-export { bootApp, collectErrors, deskState, step, waitForTestApi, POLL, STORAGE_KEYS } from './bootApp';
-export type { BootOptions } from './bootApp';
-export { expectGolden, roundNumbers } from './goldenFile';
+export type { DeskTestApi, FixtureOutput } from './deskApi';
+export type { SavedShow } from './savedShow';
+export { STORAGE_KEYS } from './storageKeys';
+export { TIMER_POLLING } from './timerPolling';
+export { bootApp } from './bootApp';
+export { waitForTestApi } from './waitForTestApi';
+export { stepFrames } from './stepFrames';
+export { readDeskState } from './readDeskState';
+export { collectErrors } from './collectErrors';
+export { readStoredJson } from './readStoredJson';
+export { jsonRoundTrip } from './jsonRoundTrip';
+export { readGolden } from './readGolden';
+export { expectGolden } from './expectGolden';

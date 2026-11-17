@@ -26,17 +26,21 @@
       // TEST HOOK, active only with "?test" in the URL. The Playwright baselines (screenshots, golden outputs) must repeat
       // exactly, but the app reads the real clock and Math.random. Here time is frozen and moves only when the test calls
       // advance(); requestAnimationFrame callbacks run only when the test calls frames(n), so the number of frames is fixed
-      // and the slow software WebGL renderer does not run free; Math.random is a seeded PRNG (mulberry32).
+      // and the slow software WebGL renderer does not run free; Math.random is a seeded PRNG (mulberry32). randomCalls()
+      // counts its calls: three.js object ids take numbers from the same stream, so a changed count after boot explains
+      // why the screenshots moved.
       // Without "?test" this block does nothing. The test API is window.__desk.test (end of src/main.ts).
       if (/^\?test(?:[&=]|$)/.test(location.search)) {
         let T = 10000,
           seed = 0x9e3779b9,
+          randomCalls = 0,
           id = 0,
           queue = new Map();
         const EPOCH = Date.UTC(2026, 0, 1, 12),
           RealDate = Date,
           raf = requestAnimationFrame.bind(window);
         Math.random = () => {
+          randomCalls++;
           seed = (seed + 0x6d2b79f5) | 0;
           let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
           t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
@@ -71,6 +75,7 @@
           );
         window.__deskClock = {
           now: () => T,
+          randomCalls: () => randomCalls,
           advance: (ms) => (T += ms),
           frames: async (n = 1) => {
             for (let i = 0; i < n; i++) await frame();

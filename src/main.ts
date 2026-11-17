@@ -7564,10 +7564,13 @@ window.__desk = {
 // TEST HOOK (see the "?test" block in <head>): read-only views and drivers for the Playwright suite; absent without "?test"
 if (window.__deskClock) {
   const C = window.__deskClock,
-    fbLog = new MutationObserver(() => {});
+    fbLog = new MutationObserver(() => {}),
+    toastLog = new MutationObserver(() => {});
   fbLog.observe($('#cmdFb'), { childList: true });
-  const state = () =>
-    deep({
+  toastLog.observe($('#toast'), { childList: true, characterData: true, subtree: true });
+  const state = () => {
+    const show = serialize();
+    return deep({
       sel,
       prog: prog.vals,
       progFx: prog.fxList,
@@ -7582,7 +7585,10 @@ if (window.__deskClock) {
         level: e.level,
         cues: e.cues.map((c) => [c.num, c.name, c.fade]),
       })),
+      groups: show.groups,
+      presets: show.presets,
     });
+  };
   window.__desk.test = {
     ...C,
     state,
@@ -7595,12 +7601,16 @@ if (window.__deskClock) {
       computeOutput(now);
       return fixtures.map((f) => ({ id: f.id, ...f.out }));
     },
-    // run one command line and return the log lines it wrote plus the state after it
+    // run one command line and return the log lines it wrote, the toast it showed (null if none) and the state after it
     run: (line) => {
       fbLog.takeRecords();
+      toastLog.takeRecords();
       runCmd(line);
       const added = fbLog.takeRecords().flatMap((m) => [...m.addedNodes]);
-      return { line, log: added.map((n) => [n.firstChild?.className || '', n.textContent]), state: state() };
+      const toast = toastLog.takeRecords().length ? $('#toast').textContent : null;
+      return { line, log: added.map((n) => [n.firstChild?.className || '', n.textContent]), toast, state: state() };
     },
+    // start a programmer phaser on the selection, as the phaser buttons do
+    applyFx: (type) => applyFx(type),
   };
 }
