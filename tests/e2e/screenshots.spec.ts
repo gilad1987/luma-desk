@@ -2,7 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { bootApp, stepFrames } from '../shared';
 
 const LAYOUTS = ['ma', 'desk', 'classic'] as const;
-// FOH is the default operator view (MA uses its own FOH camera); Top and Side show the whole rig from two axes
+// FOH is the default operator view (MA uses its own FOH camera); Top and Side show the whole rig from two axes. The
+// truss colour reaches no pixel in a Top view, so only FOH and Side guard it; the orchestrator accepted that.
 const VIEWS = ['foh', 'top', 'side'] as const;
 // every face index.html requests from Google Fonts; text drawn before a face arrives uses the fallback font
 const WEB_FONTS = [

@@ -56,7 +56,7 @@ function layerRules(layer: Layer, forbidden: readonly Layer[]): Linter.Config {
 }
 
 export default defineConfig(
-  { ignores: ['dist/', 'test-results/', 'playwright-report/', 'vendor/', 'public/sw.js'] },
+  { ignores: ['dist/', 'test-results/', 'playwright-report/', 'vendor/'] },
   {
     files: ['**/*.ts'],
     extends: [js.configs.recommended, tseslint.configs.recommendedTypeChecked],

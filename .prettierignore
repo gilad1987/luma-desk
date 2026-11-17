@@ -12,9 +12,11 @@ docs/screenshots/
 
 package-lock.json
 
-# Third-party and legacy code that later phases delete or replace (vendor/ in Phase 6, sw.js in Phase 7)
+# Third-party code that Phase 6 deletes
 vendor/
-public/sw.js
 
 # Planning notes, kept as the explorers wrote them
 docs/plan/
+
+# Local tool state, not part of the repo
+.impeccable/

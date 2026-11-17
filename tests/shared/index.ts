@@ -11,3 +11,7 @@ export { readStoredJson } from './readStoredJson';
 export { jsonRoundTrip } from './jsonRoundTrip';
 export { readGolden } from './readGolden';
 export { expectGolden } from './expectGolden';
+export { openUnderWorker } from './openUnderWorker';
+export { cacheContents } from './cacheContents';
+export { storedPage, NO_STORED_PAGE } from './storedPage';
+export { fetchStatus, NETWORK_ERROR } from './fetchStatus';
