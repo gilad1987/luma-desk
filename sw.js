@@ -1,5 +1,5 @@
 // LUMA DESK service worker — offline app shell, stale-while-revalidate for everything else.
-const CACHE = 'luma-desk-v10';
+const CACHE = 'luma-desk-v11';
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/favicon.png',
@@ -14,6 +14,10 @@ self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c =>
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  if (e.request.mode === 'navigate') {   // pages: network first, so updates show up immediately; cache when offline
+    e.respondWith(fetch(e.request).then(r => { const c2 = r.clone(); caches.open(CACHE).then(c => c.put('./index.html', c2)); return r; }).catch(() => caches.match('./index.html')));
+    return;
+  }
   e.respondWith(caches.open(CACHE).then(async c => {
     const hit = await c.match(e.request, { ignoreSearch: true });
     const net = fetch(e.request).then(r => { if (r && (r.ok || r.type === 'opaque')) c.put(e.request, r.clone()); return r; }).catch(() => hit);
