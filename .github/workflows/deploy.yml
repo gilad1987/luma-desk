@@ -28,13 +28,14 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
-      # a pull request is only checked; the artifact is what the deploy job publishes
+      # only main is published, a pull request is only checked; keep equal to the deploy job's condition
       - if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v4
         with:
           path: dist
 
   deploy:
+    # equal to the upload step's condition in check: without that artifact there is nothing to deploy
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: check
     runs-on: ubuntu-latest
