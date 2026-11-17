@@ -1,0 +1,56 @@
+import type { Vector3 } from 'three';
+import type { AttrName, AttrValues } from './attributes';
+import type { FixtureType, FixtureTypeId } from './FixtureType';
+import { TYPES } from './fixtureTypes';
+
+/** How a fixture is rigged; floor units point up at tilt 0, hung and wall units point down. */
+export type Mount = 'hang' | 'floor' | 'wall';
+
+/** A pan/tilt pair in degrees. */
+export interface PanTilt {
+  pan: number;
+  tilt: number;
+}
+
+/** Where a fixture's LED pixel strip sits on its truss: centre, direction along the truss, and length. */
+export interface PixelStrip {
+  readonly p: Vector3;
+  readonly tan: Vector3;
+  readonly len: number;
+}
+
+/**
+ * One fixture of the rig: its identity, type and place in the venue, plus the engine's output for the current frame.
+ * Render and UI state (`vis`, `vo`, `sel`, `dom`) is not part of it; until Phases 4-5 the legacy script still adds
+ * those fields to the object at run time, so instances stay plain extensible objects.
+ */
+export class Fixture {
+  readonly id: number;
+  readonly type: FixtureTypeId;
+  /** The type record, kept on the fixture because the engine and renderer read it once per fixture per frame. */
+  readonly T: FixtureType;
+  readonly pos: Vector3;
+  readonly mount: Mount;
+  /** The rigged pan/tilt of a static fixture, or null for a moving one; the profile build aims it in place. */
+  readonly fixed: PanTilt | null;
+  /** This frame's output values. Empty until the first output merge, which then writes every attribute each frame. */
+  readonly out: AttrValues = {};
+  /** The output before phasers; the UI shows it as the value a fixture would hold without effects. */
+  readonly base: AttrValues = {};
+  /** Set only on fixtures that carry a pixel strip (ring, tower and angled-truss units). */
+  pix?: PixelStrip;
+
+  constructor(id: number, type: FixtureTypeId, pos: Vector3, mount: Mount, fixed: PanTilt | null) {
+    this.id = id;
+    this.type = type;
+    this.T = TYPES[type];
+    this.pos = pos;
+    this.mount = mount;
+    this.fixed = fixed;
+  }
+
+  /** Whether this fixture's type has the attribute, so commands and presets skip fixtures that cannot use it. */
+  has(attr: AttrName): boolean {
+    return this.T.attrs.includes(attr);
+  }
+}
