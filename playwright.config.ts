@@ -4,7 +4,7 @@ import { defineConfig } from '@playwright/test';
 // another server, for example BASE_URL=http://127.0.0.1:5173/ WEB_SERVER_CMD="npm run dev -- --port 5173 --strictPort".
 const PORT = 4173;
 // page.goto('./?test') resolves against baseURL, so a BASE_URL without its trailing slash would drop the last segment
-const requestedURL = process.env.BASE_URL ?? `http://127.0.0.1:${PORT}/`;
+const requestedURL = process.env['BASE_URL'] ?? `http://127.0.0.1:${PORT}/`;
 const baseURL = requestedURL.endsWith('/') ? requestedURL : `${requestedURL}/`;
 const buildAndPreview = `npm run build && npm run preview -- --host 127.0.0.1 --port ${PORT} --strictPort`;
 
@@ -20,6 +20,8 @@ export default defineConfig({
     // 6,000 pixels or more.
     toHaveScreenshot: { threshold: 0, maxDiffPixels: 150, stylePath: 'tests/shared/singleTextRaster.css' },
   },
+  // a `.only` left in a commit would silently skip the rest of the suite
+  forbidOnly: true,
   fullyParallel: true,
   workers: 2,
   retries: 0,
@@ -47,7 +49,7 @@ export default defineConfig({
     },
   },
   webServer: {
-    command: process.env.WEB_SERVER_CMD ?? buildAndPreview,
+    command: process.env['WEB_SERVER_CMD'] ?? buildAndPreview,
     url: baseURL,
     // a server left running from another checkout would serve other code; always start this one
     reuseExistingServer: false,

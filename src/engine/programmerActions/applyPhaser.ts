@@ -6,7 +6,9 @@ import { toastSelectFirst } from './toastSelectFirst';
 
 /** Whether `f` can run a phaser on `feat`: position needs a moving head, colour needs RGB, dimmer a dimmer. */
 function canRun(f: Fixture, feat: PhaserFeature): boolean {
-  return feat === 'pos' ? f.T.moving : feat === 'color' ? f.has('r') : f.has('dim');
+  if (feat === 'pos') return f.T.moving;
+  if (feat === 'color') return f.has('r');
+  return f.has('dim');
 }
 
 /**

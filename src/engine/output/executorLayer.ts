@@ -1,3 +1,4 @@
+import type { AttrValues } from '../../domain/attributes';
 import type { Fixture } from '../../domain/Fixture';
 import type { Executor } from '../Executor';
 import { attrEntries, fxKey } from '../shared';
@@ -14,15 +15,19 @@ export function mergeExecutors(f: Fixture, o: AttrOutput, active: readonly Execu
   for (const e of active) {
     const lv = (e.flash ? 1 : e.level) * (e.auto && (f.type === 'beam' || f.type === 'spot') ? pump : 1),
       v = e.vals[f.id];
-    if (v)
-      for (const [a, value] of attrEntries(v)) {
-        if (a === 'dim') o.dim = Math.max(o.dim, value * lv);
-        else o[a] = value;
-      }
+    if (v) mergeValues(o, v, lv);
     for (const ft of PHASER_FEATURES) {
       const r = e.fx[fxKey(f.id, ft)];
       if (r) slots[ft] = { r, lv };
     }
   }
   return slots;
+}
+
+/** Merges one executor's values into `o`: the dimmer is highest-takes-precedence at the executor's level, the rest LTP. */
+function mergeValues(o: AttrOutput, v: AttrValues, lv: number): void {
+  for (const [a, value] of attrEntries(v)) {
+    if (a === 'dim') o.dim = Math.max(o.dim, value * lv);
+    else o[a] = value;
+  }
 }
