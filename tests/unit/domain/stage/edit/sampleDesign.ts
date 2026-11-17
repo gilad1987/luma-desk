@@ -10,7 +10,7 @@ export const PIPE: StageTruss = {
   params: { kind: 'straight', a: [-5, 0, 0], b: [5, 0, 0], section: 0.3 },
 };
 
-/** A 4 m tower on stage left (x < 0). */
+/** A 4 m tower on house left (left as seen from the audience, x < 0). */
 export const LEFT_TOWER: StageTruss = {
   id: 'left-1',
   name: 'Left tower',
@@ -20,7 +20,7 @@ export const LEFT_TOWER: StageTruss = {
 };
 
 /**
- * A small hand-written design for the edit-op tests: the pipe with two washes, the stage-left tower with one rotated
+ * A small hand-written design for the edit-op tests: the pipe with two washes, the house-left tower with one rotated
  * beam, and one floor par. It is a literal on purpose, so the edit tests do not depend on the templates.
  */
 export function sampleDesign(): StageDesign {

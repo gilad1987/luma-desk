@@ -4,9 +4,12 @@
  */
 import { describe, expect, it } from 'vitest';
 import { addFixturesOnTruss, addFloorRow } from '../../../../../src/domain/stage/edit/addFixtures.ts';
-import { setDeckSize, setLedWall } from '../../../../../src/domain/stage/edit/deckOps.ts';
+import { setDeckSize } from '../../../../../src/domain/stage/edit/deckOps.ts';
 import * as items from '../../../../../src/domain/stage/edit/itemOps.ts';
+import { setLedWall } from '../../../../../src/domain/stage/edit/ledWall.ts';
+import { mirrorLeftToRight } from '../../../../../src/domain/stage/edit/mirror.ts';
 import { addPresetTruss, moveTruss, setTrussProps } from '../../../../../src/domain/stage/edit/trussOps.ts';
+import { HANG_DROP_M } from '../../../../../src/domain/stage/edit/trussPlaces.ts';
 import { createTemplate } from '../../../../../src/domain/stage/templates/index.ts';
 
 const empty = createTemplate('empty');
@@ -25,7 +28,7 @@ describe('QA2 edit ops on missing items', () => {
     expect(items.deleteTruss(empty, 'nope')).toEqual(empty);
     expect(items.deleteFixtures(withPipe, [42, 43])).toEqual(withPipe);
     expect(items.duplicateFixtures(withPipe, [42])).toEqual(withPipe);
-    expect(items.mirrorStageLeft(empty)).toEqual(empty);
+    expect(mirrorLeftToRight(empty)).toEqual(empty);
   });
 });
 
@@ -45,8 +48,8 @@ describe('QA2 fixture counts', () => {
     expect(d.fixtures[0]?.id).toBe(1);
   });
 
-  it('puts a single fixture in the middle of the truss', () => {
-    expect(addFixturesOnTruss(withPipe, batch(1)).fixtures[0]?.position).toEqual([0, 6, -4]);
+  it('hangs a single fixture in the middle of the truss, HANG_DROP_M below it', () => {
+    expect(addFixturesOnTruss(withPipe, batch(1)).fixtures[0]?.position).toEqual([0, 6 - HANG_DROP_M, -4]);
   });
 });
 

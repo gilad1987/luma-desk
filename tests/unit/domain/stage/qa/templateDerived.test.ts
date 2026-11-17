@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { boundsOf } from '../../../../../src/domain/stage/bounds.ts';
 import { rigFromDesign } from '../../../../../src/domain/stage/deriveRig.ts';
-import { mirrorStageLeft } from '../../../../../src/domain/stage/edit/itemOps.ts';
+import { mirrorLeftToRight } from '../../../../../src/domain/stage/edit/mirror.ts';
 import type { StageDesign } from '../../../../../src/domain/stage/StageDesign.ts';
 import { frameOf } from '../../../../../src/domain/stage/StageFrame.ts';
 import { surfacesOf } from '../../../../../src/domain/stage/surfaces.ts';
@@ -51,9 +51,9 @@ describe.each(TEMPLATE_IDS)('QA2 template %s through the pure stage functions', 
   });
 
   it('mirrors into a design with valid links, and a second mirror adds nothing', () => {
-    const once = mirrorStageLeft(d);
+    const once = mirrorLeftToRight(d);
     expectLinksValid(once);
-    const twice = mirrorStageLeft(once);
+    const twice = mirrorLeftToRight(once);
     expect(twice.fixtures.length).toBe(once.fixtures.length);
     expect(twice.trusses.length).toBe(once.trusses.length);
   });

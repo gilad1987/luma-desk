@@ -22,11 +22,13 @@ const TR_ROLES: Readonly<Record<keyof typeof TR, FixtureRole>> = {
   t4: 'mid',
   back: 'back',
 };
+/** The `TR` rows front to back, typed so a renamed row fails here instead of needing a cast on `Object.keys`. */
+const TR_ORDER = ['front', 't2', 't3', 't4', 'back'] as const satisfies readonly (keyof typeof TR)[];
 const TR_CHAIN_X = [-16, -5.5, 5.5, 16] as const;
 const SIDES = [-1, 1] as const;
 
 function trRows(): StageTruss[] {
-  return (Object.keys(TR) as (keyof typeof TR)[]).map((k) => ({
+  return TR_ORDER.map((k) => ({
     id: k,
     name: TR_NAMES[k],
     role: TR_ROLES[k],
