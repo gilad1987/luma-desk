@@ -1,0 +1,37 @@
+import type { Executor } from '../engine/Executor';
+import type { DemoShow } from './DemoShow';
+import type { ShowFileInput } from './ShowFile';
+import type { ShowSerializer } from './ShowSerializer';
+import type { ShowStorage } from './ShowStorage';
+
+/** What boot needs to bring back the last show. */
+export interface RestoreShowDeps {
+  readonly storage: ShowStorage;
+  readonly serializer: ShowSerializer;
+  readonly execs: readonly Executor[];
+  readonly demo: DemoShow;
+}
+
+/**
+ * Boot: loads the saved show, or the demo. Kept exactly as the original rules, quirks included: a saved show with no
+ * cue at all counts as nothing saved, so the demo replaces it; when executor 1 has cues it starts cue 1 at once and
+ * is raised to full if it was saved at 0; a broken or unreadable save also falls back to the demo.
+ */
+export function restoreShow({ storage, serializer, execs, demo }: RestoreShowDeps): void {
+  let loaded = false;
+  try {
+    const saved = storage.saved();
+    if (saved) {
+      serializer.load(JSON.parse(saved) as ShowFileInput);
+      loaded = execs.some((e) => e.cues.length);
+      const first = execs[0];
+      if (loaded && first?.cues.length) {
+        first.goto(0, 0);
+        if (!first.level) first.level = 1;
+      }
+    }
+  } catch {
+    // unreadable storage or a broken save: the demo below replaces it
+  }
+  if (!loaded) demo.load();
+}
