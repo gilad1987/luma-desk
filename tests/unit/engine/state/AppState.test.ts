@@ -12,7 +12,7 @@ const setup = () => {
 describe('AppState', () => {
   it('starts with the original defaults (index.html 1532, 1536, 1836; haze 1256)', () => {
     const { state } = setup();
-    expect(state).toMatchObject({ gm: 1, blackout: false, highlight: false, fanMode: false, haze: 0.62, lastClear: 0 });
+    expect(state).toMatchObject({ gm: 1, blackout: false, highlight: false, fanMode: false, haze: 0.62 });
     expect(state.storeMode).toBe(false);
     expect(state.selExec).toBe(0);
   });
@@ -57,14 +57,12 @@ describe('AppState', () => {
     state.highlight = !state.highlight;
     state.fanMode = !state.fanMode;
     state.haze = 0.1;
-    state.lastClear = 1234;
     expect(state).toMatchObject({
       gm: 0.5,
       blackout: true,
       highlight: true,
       fanMode: true,
       haze: 0.1,
-      lastClear: 1234,
     });
     expect(events).toEqual([]);
   });

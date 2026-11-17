@@ -17,7 +17,7 @@ export interface ProgrammerDeps {
   readonly presets: PresetLibrary;
   /** Store Cue records into these executors. */
   readonly pool: ExecutorPool;
-  /** CLEAR reads and writes the double-press time and the highlight switch here. */
+  /** CLEAR turns the highlight switch off here. */
   readonly state: AppState;
   /** Times the CLEAR double press; the original used `performance.now()`, not the frame time. */
   readonly clock: Clock;

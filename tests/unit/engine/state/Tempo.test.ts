@@ -43,4 +43,12 @@ describe('Tempo', () => {
     tempo.tap(10000);
     expect([tempo.bpm, tempo.beatOrigin]).toEqual([60, 10]);
   });
+
+  it('raises a slow tap tempo inside the window to 40 BPM', () => {
+    // the random sequences above never tap 1.5-2.5 s apart, so they never reach the lower clamp
+    const tempo = new Tempo();
+    tempo.tap(1000);
+    tempo.tap(3000);
+    expect(tempo.bpm).toBe(40);
+  });
 });

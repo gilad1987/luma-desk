@@ -6,8 +6,7 @@ import { tracked, type TrackedState } from './Tracking';
 
 /**
  * One playback: a cue sequence, a fader level and what it currently outputs. Fields stay public and mutable because the
- * show loader, the auto-show and the panels assign them directly. Instances stay plain extensible objects: until
- * Phase 5 the legacy panel code stores its DOM node on them.
+ * show loader, the auto-show and the panels assign them directly.
  */
 export class Executor {
   name = '';
@@ -29,11 +28,11 @@ export class Executor {
   cache: Record<number, TrackedState> = {};
   /** True for the auto-show executor, whose level the auto-show pump modulates on beams and spots. */
   readonly auto: boolean;
-  private readonly clock: Clock;
+  readonly #clock: Clock;
 
   constructor(auto: boolean, clock: Clock) {
     this.auto = auto;
-    this.clock = clock;
+    this.#clock = clock;
   }
 
   /** Starts a fade to cue `i` (clamped into range) over `fadeOverride` seconds, or the cue's own fade, or 2. */
@@ -42,11 +41,11 @@ export class Executor {
     i = clamp(i, 0, this.cues.length - 1);
     const tr = tracked(this, i);
     const dur = fadeOverride ?? cueAt(this.cues, i).fade ?? 2;
-    this.fade = { from: jsonClone(this.vals), to: tr.vals, t0: this.clock.nowSeconds(), dur, paused: false };
+    this.fade = { from: jsonClone(this.vals), to: tr.vals, t0: this.#clock.nowSeconds(), dur, paused: false };
     this.fx = tr.fx;
     this.cur = i;
     this.on = true;
-    this.lastGo = this.clock.nowSeconds();
+    this.lastGo = this.#clock.nowSeconds();
   }
 
   off(): void {
@@ -61,7 +60,7 @@ export class Executor {
   pause(): void {
     if (this.fade && !this.fade.paused) {
       this.fade.paused = true;
-      this.fade.pausedAt = this.clock.nowSeconds() - this.fade.t0;
+      this.fade.pausedAt = this.#clock.nowSeconds() - this.fade.t0;
     }
   }
 
@@ -71,7 +70,7 @@ export class Executor {
     if (!F?.paused) return false;
     F.paused = false;
     // pause() always sets pausedAt; NaN is what the untyped arithmetic gave for a missing value
-    F.t0 = this.clock.nowSeconds() - (F.pausedAt ?? NaN);
+    F.t0 = this.#clock.nowSeconds() - (F.pausedAt ?? NaN);
     return true;
   }
 

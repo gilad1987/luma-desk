@@ -3,7 +3,7 @@ import type { FixtureValues } from './CueList';
 import type { PresetType } from './presetTypes';
 import * as actions from './programmerActions';
 import type { ProgrammerDeps, StoreCueOptions } from './programmerActions';
-import { compactFx, indexFx, stripFx, type FxIndex, type PhaserInstance, type PhaserType } from './shared';
+import { indexFx, type FxIndex, type PhaserInstance, type PhaserType } from './shared';
 
 /**
  * The operator's working look: values and phasers that override every executor until CLEAR. The field names `vals`,
@@ -18,6 +18,8 @@ export class Programmer {
   fxList: PhaserInstance[] = [];
   /** The lookup the output merge reads; it is stale until {@link Programmer.reindexFx} runs after an `fxList` edit. */
   fx: FxIndex = {};
+  /** Clock time (ms) of the last CLEAR press, so a quick second press is Clear All (see {@link actions.clearPress}). */
+  #lastClear = 0;
   readonly #deps: ProgrammerDeps;
 
   constructor(deps: ProgrammerDeps) {
@@ -34,14 +36,9 @@ export class Programmer {
     actions.removeFeature(this, ids, feat);
   }
 
-  /**
-   * Takes `ids` out of every phaser, or only out of those that drive `feat`, then drops emptied phasers. Without
-   * `feat` it is the "Remove Phasers" button.
-   */
+  /** Takes `ids` out of the phasers, all or those that drive `feat` (see {@link actions.removePhasers}). */
   removePhasers(ids: readonly number[], feat?: Feature): void {
-    stripFx(this.fxList, ids, feat);
-    this.fxList = compactFx(this.fxList);
-    this.reindexFx();
+    actions.removePhasers(this, ids, feat);
   }
 
   /** The phasers that drive at least one selected fixture; the phaser encoders edit these in place. */
@@ -85,7 +82,7 @@ export class Programmer {
 
   /** One press of the CLEAR key (see {@link actions.clearPress}). */
   clearPress(): void {
-    actions.clearPress(this, this.#deps);
+    this.#lastClear = actions.clearPress(this, this.#deps, this.#lastClear);
   }
 
   /** Clears selection, programmer and highlight (see {@link actions.clearAll}). */
