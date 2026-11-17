@@ -33,6 +33,10 @@ describe('QA5 tower placement by side', () => {
     expect(towerXs([0, 0, -3])).toEqual([0, 0, 0]);
   });
 
+  it('keeps every fixture of a tower at x = 0.2 on its own side of x = 0', () => {
+    expect(towerXs([0.2, 0, -3]).every((x) => x > 0)).toBe(true);
+  });
+
   it('places the festival tower washes beside their columns, 0.4 m inward', () => {
     const festival = createTemplate('festival');
     const xs = new Set(festival.fixtures.filter((f) => f.trussId?.startsWith('tower-')).map((f) => f.position[0]));

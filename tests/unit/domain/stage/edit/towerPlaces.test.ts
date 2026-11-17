@@ -1,6 +1,6 @@
 /**
  * Owns where `addFixturesOnTruss` puts fixtures on a tower: beside the column, 0.4 m toward the stage centre (downstage
- * for a tower on the centre line), spread from the base up with no hang drop, so none goes below the tower base. Other truss kinds are owned by
+ * for a tower less than one step from the centre line), spread from the base up with no hang drop, so none goes below the tower base. Other truss kinds are owned by
  * addFixtures.test.ts.
  */
 import { describe, expect, it } from 'vitest';
@@ -31,5 +31,12 @@ describe('addFixturesOnTruss on a tower', () => {
     const places = onTower([0, 1, -2]);
     expect(new Set(places.map(([x, , z]) => `${x} ${z.toFixed(9)}`))).toEqual(new Set(['0 -1.600000000']));
     expect(places.every(([x, , z]) => Math.hypot(x, z + 2) > 0.2)).toBe(true);
+  });
+
+  it('steps downstage, never across x = 0, for a tower less than one step off the centre line', () => {
+    for (const x of [0.2, -0.2]) {
+      const places = onTower([x, 1, -2]);
+      expect(new Set(places.map((p) => `${p[0]} ${p[2].toFixed(9)}`))).toEqual(new Set([`${x} -1.600000000`]));
+    }
   });
 });

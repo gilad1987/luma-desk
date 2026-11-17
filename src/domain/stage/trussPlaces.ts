@@ -1,5 +1,4 @@
 import { Quaternion, Vector3 } from 'three';
-import { CENTRE_LINE_M } from './centreLine';
 import type { StageFixture } from './StageDesign';
 import type { StageTruss } from './trussTypes';
 import type { Quat, Transform, Vec3 } from './types';
@@ -83,11 +82,12 @@ function hung(p: LocalPlace): LocalPlace {
 
 /**
  * The places of one tower moved by one step, so all stand on one side: toward x = 0 from the tower's world centre (the
- * mean of its evenly spread places), or downstage (+z) for a tower on the centre line, never inside the column.
+ * mean of its evenly spread places), or downstage (+z) for a tower closer to x = 0 than one step, so no fixture crosses
+ * the centre line; never inside the column.
  */
 function besideColumn(places: FixturePlace[]): FixturePlace[] {
   const x = places.reduce((sum, p) => sum + p.position[0], 0) / places.length;
-  const step: Vec3 = Math.abs(x) < CENTRE_LINE_M ? [0, 0, TOWER_STEP_M] : [-Math.sign(x) * TOWER_STEP_M, 0, 0];
+  const step: Vec3 = Math.abs(x) < TOWER_STEP_M ? [0, 0, TOWER_STEP_M] : [-Math.sign(x) * TOWER_STEP_M, 0, 0];
   return places.map((p) => ({ ...p, position: [p.position[0] + step[0], p.position[1], p.position[2] + step[2]] }));
 }
 

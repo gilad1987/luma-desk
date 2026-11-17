@@ -1,7 +1,7 @@
 /**
  * Owns the spots template fixtures stand on: no two fixtures of a template share a spot, and a builder batch on a
  * template truss (straight, circle, tower) finds the template fixtures on its first lane and moves one lane. A wrong
- * hang drop, a tower drop or a missing ring `phase` breaks one of them. Counts and links live in templates.test.ts.
+ * hang drop, a tower drop or a ring row on the beams' lane breaks one of them. Counts and links live in templates.test.ts.
  */
 import { describe, expect, it } from 'vitest';
 import { addFixturesOnTruss, isSameSpot } from '../../../../src/domain/stage/edit/addFixtures.ts';

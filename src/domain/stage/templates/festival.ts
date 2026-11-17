@@ -34,11 +34,11 @@ const TOWERS: readonly StageTruss[] = TOWER_SPOTS.map((position, i) => ({
 
 /**
  * Fixtures placed on a truss by the builder's own placement, so a builder batch on the same truss sees them and moves
- * a lane: around the circle each gets the yaw that turns its body to the ring centre (G2), and `phase` (in angle steps)
- * moves a second block between the first one's fixtures; on a tower they stand beside the column.
+ * a lane: around the circle each gets the yaw that turns its body to the ring centre (G2), and `lane` (in lanes, not
+ * metres) moves a second block off the first one's ring; on a tower they stand beside the column.
  */
-function trussRow(truss: StageTruss, block: RowBlock, phase = 0): StageFixture[] {
-  return placesOnTruss(truss, block.count, 0, phase).map((place, i): StageFixture => ({
+function trussRow(truss: StageTruss, block: RowBlock, lane = 0): StageFixture[] {
+  return placesOnTruss(truss, block.count, lane).map((place, i): StageFixture => ({
     id: block.first + i,
     type: block.type,
     role: block.role ?? truss.role,
@@ -65,8 +65,9 @@ function festivalFixtures(): StageFixture[] {
     ...fixtureRow(hangLine(MID_2), { first: 301, count: 16, type: 'wash' }),
     ...fixtureRow(hangLine(BACK), { first: 401, count: 16, type: 'beam' }),
     ...trussRow(RING, { first: 501, count: 16, type: 'beam' }),
-    // A quarter step of the 8 washes is half a step of the 16 beams, so each wash hangs between two beams.
-    ...trussRow(RING, { first: 517, count: 8, type: 'wash' }, 0.25),
+    // The 8 washes take every second beam angle (0, 45, ... degrees), so the ring stays mirror-symmetric, and hang one
+    // lane inside the beams, so none shares a beam's spot.
+    ...trussRow(RING, { first: 517, count: 8, type: 'wash' }, -1),
     ...TOWERS.flatMap((t, i) => trussRow(t, { first: 601 + i * 4, count: 4, type: 'wash' })),
     ...fixtureRow(floorLine(12, DECK_HEIGHT + 0.32, -13, 'floor'), { first: 701, count: 12, type: 'beam' }),
     ...fixtureRow(floorLine(9, DECK_HEIGHT + 0.22, -15, 'floor'), { first: 801, count: 8, type: 'par', fixed: PAR }),

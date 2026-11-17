@@ -67,9 +67,9 @@ describe('QA5 mirror on the festival after one side is deleted', () => {
     expect(placesOn(moved, 'tower-4')).toEqual(placesOn(mirrored, 'tower-4'));
   });
 
-  // QA5 finding: festival.ts hangs the 8 ring washes at phase 0.25 (F4), angles 11.25 + 45k degrees, whose mirror
-  // image (33.75 + 45k) is a different set, so mirror on the stock festival adds 4 ring washes. Flip when decided.
-  it.fails('adds nothing on the untouched festival, like on the other templates', () => {
+  // The 8 ring washes hang at 45k degrees, one lane inside the beams, a set that is its own mirror image, so mirror on
+  // the stock festival finds a twin for every left fixture. Catches a ring row that breaks the symmetry again.
+  it('adds nothing on the untouched festival, like on the other templates', () => {
     expect(mirrorLeftToRight(festival)).toBe(festival);
   });
 });
