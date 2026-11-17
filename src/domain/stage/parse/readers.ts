@@ -2,17 +2,7 @@ import type { Quat, Vec3 } from '../types';
 import type { Choices, FieldReader, Key, NumbersShape } from './fieldReader';
 import { describeValue, type Raw } from './rawValues';
 import { ARRAY, BOOLEAN, FINITE, OBJECT, POSITIVE, POSITIVE_INT, STRING, type ValueRule } from './valueRules';
-
-/** A quaternion this long or shorter has no direction, so it cannot be normalized to a rotation. */
-const MIN_QUAT_LENGTH = 1e-6;
-
-/** A stored quaternion this close to unit length is kept as it is, so a saved design reads back bit for bit. */
-const UNIT_TOLERANCE = 1e-12;
-
-function toVec3(read: readonly number[] | undefined): Vec3 | undefined {
-  const [x, y, z] = read ?? [];
-  return x === undefined || y === undefined || z === undefined ? undefined : [x, y, z];
-}
+import { toUnitQuat, toVec3 } from './vectors';
 
 /**
  * Typed field readers for a stored stage design. Each takes the parent object, the key and the parent's path, so a
@@ -69,19 +59,11 @@ export class Reader {
   size = (o: Raw, key: Key, at: string): Vec3 | undefined =>
     toVec3(this.numbers(o, key, at, { size: 3, item: this.positive }));
 
-  /**
-   * Normalizes on read, so every stored rotation is a unit quaternion even after rounding in the JSON. A quaternion
-   * that is already unit within `UNIT_TOLERANCE` is returned unchanged, so a design survives a save and load exactly.
-   */
-  quat = (o: Raw, key: Key, at: string): Quat | undefined => {
-    const [x, y, z, w] = this.numbers(o, key, at, { size: 4, item: this.num }) ?? [];
-    if (x === undefined || y === undefined || z === undefined || w === undefined) return undefined;
-    const length = Math.hypot(x, y, z, w);
-    const path = this.path(at, key);
-    if (length <= MIN_QUAT_LENGTH) return this.fail(path, `zero-length quaternion [${x}, ${y}, ${z}, ${w}]`);
-    if (Math.abs(length - 1) <= UNIT_TOLERANCE) return [x, y, z, w];
-    return [x / length, y / length, z / length, w / length];
-  };
+  /** Normalizes on read with `toUnitQuat`, so every stored rotation is a unit quaternion. */
+  quat = (o: Raw, key: Key, at: string): Quat | undefined =>
+    toUnitQuat(this.numbers(o, key, at, { size: 4, item: this.num }), (problem) =>
+      this.fail(this.path(at, key), problem),
+    );
 
   private check<T>(o: Raw, key: Key, at: string, rule: ValueRule<T>): T | undefined {
     const v = o[key];
