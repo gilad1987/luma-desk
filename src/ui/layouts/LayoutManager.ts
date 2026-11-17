@@ -1,4 +1,5 @@
 import { byId } from '../dom';
+import type { LayoutMode } from '../panels/layoutMode';
 import { ConsoleParts } from './ConsoleParts';
 import { DeskFit, type LayoutSettings } from './DeskFit';
 import type { LayoutHost } from './LayoutHost';
@@ -20,7 +21,7 @@ export class LayoutManager {
     const modeSel = byId('layoutSel', HTMLSelectElement),
       zoomSel = byId('deskZoom', HTMLSelectElement);
     modeSel.onchange = () => {
-      this.settings = { ...this.settings, mode: toLayoutMode(modeSel.value) };
+      this.settings = { ...this.settings, mode: modeSel.value };
       this.apply();
     };
     zoomSel.onchange = () => {
@@ -29,10 +30,13 @@ export class LayoutManager {
       host.resize();
       this.save();
     };
+    addEventListener('resize', () => {
+      if (this.settings.mode !== 'classic') this.fit();
+    });
   }
 
-  get mode(): LayoutSettings['mode'] {
-    return this.settings.mode;
+  get mode(): LayoutMode {
+    return toLayoutMode(this.settings.mode);
   }
 
   /** The grip's share of the window height; undefined = adaptive. The grip refits and saves itself. */

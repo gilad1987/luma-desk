@@ -16,12 +16,12 @@ export function measureMaGeometry(body: HTMLElement): MaGeometry {
     top = 1e9,
     right = -1e9,
     bottom = -1e9;
-  for (const e of body.querySelectorAll('.maScreens,.maDeck,.maFront,.maCheek')) {
+  body.querySelectorAll('.maScreens,.maDeck,.maFront,.maCheek').forEach((e) => {
     const r = e.getBoundingClientRect();
     left = Math.min(left, r.left);
     top = Math.min(top, r.top);
     right = Math.max(right, r.right);
     bottom = Math.max(bottom, r.bottom);
-  }
+  });
   return { W: right - left, H: bottom - top, mt: d.top - top, mb: bottom - d.bottom };
 }
