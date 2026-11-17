@@ -1,44 +1,50 @@
-# Deploys every push to main to GitHub Pages (ADR 0004). A failed check stops the deploy. The Playwright suite does
-# not run here: its screenshot baselines are recorded on macOS and would not match the Linux runner.
+# Checks every pull request and every push to main, and deploys main to GitHub Pages (ADR 0004). A failed check stops
+# the deploy. The Playwright suite does not run here: its screenshot baselines are recorded on macOS and would not
+# match the Linux runner.
 name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
+# least privilege: only the deploy job may write to Pages
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-# one deploy at a time; a running deploy is never cut off
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          # Node 24 LTS: runs scripts/*.ts with built-in type stripping
-          node-version: 24
+          # the Node version of local work (.nvmrc); it runs scripts/*.ts with built-in type stripping
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
       - run: npm run build
-      - uses: actions/upload-pages-artifact@v4
+      # a pull request is only checked; the artifact is what the deploy job publishes
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v4
         with:
           path: dist
 
   deploy:
-    needs: build
+    if: github.event_name != 'pull_request'
+    needs: check
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    # one deploy at a time; a running deploy is never cut off
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
