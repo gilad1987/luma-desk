@@ -1,5 +1,9 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+/**
+ * Frame and resize orchestration of StageRenderer with fakes: call order, MA view offset and toggles. The WebGL
+ * renderer itself is not built in Node.
+ */
 import { PerspectiveCamera, Scene } from 'three';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { StageRenderer, type StageRendererParts } from '../../../../src/render/StageRenderer';
 import { fakeViewer } from './fakeElements';
 
@@ -15,7 +19,7 @@ function stage(): { renderer: StageRenderer; parts: StageRendererParts; calls: s
     views: { camera: new PerspectiveCamera(), updateControls: vi.fn(() => calls.push('controls')) },
     postFx: { setSize: vi.fn(() => calls.push('postFx.setSize')), render: vi.fn(() => calls.push('postFx.render')) },
     overlay: {
-      visible: false,
+      isVisible: false,
       resize: vi.fn(() => calls.push('overlay.resize')),
       draw: vi.fn(() => calls.push('overlay')),
     },
@@ -61,7 +65,7 @@ describe('StageRenderer', () => {
     const { renderer, parts } = stage();
     renderer.setShadows(false);
     renderer.setShowIds(true);
-    expect([parts.renderer.shadowMap.enabled, parts.overlay.visible]).toEqual([false, true]);
+    expect([parts.renderer.shadowMap.enabled, parts.overlay.isVisible]).toEqual([false, true]);
   });
 
   it('observes the viewer and resizes at once', () => {

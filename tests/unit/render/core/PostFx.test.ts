@@ -1,7 +1,10 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+/**
+ * PostFx sizing and render forwarding with a fake renderer. The bloom look is owned by the screenshot suite.
+ */
 import { PerspectiveCamera, Scene, Vector2, type WebGLRenderer } from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PostFx } from '../../../../src/render/PostFx';
 
 const fakeRenderer = {

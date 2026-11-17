@@ -1,3 +1,6 @@
+/**
+ * The per-frame light totals: audience zone split, stage sum product order and reset.
+ */
 import { describe, expect, it } from 'vitest';
 import { LightFrame } from '../../../../src/render/SceneLightsFrame';
 

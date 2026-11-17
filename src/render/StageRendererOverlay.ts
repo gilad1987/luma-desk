@@ -7,11 +7,14 @@ export type LabelledFixture = Pick<Fixture, 'id' | 'pos'>;
 
 /**
  * Draws fixture ids on the 2D canvas over the stage. A 2D canvas keeps the labels sharp and adds no scene objects,
- * so turning ids on cannot change the three.js scene.
+ * so turning ids on cannot change the three.js scene. Gets the overlay canvas (`#ov`), the rig fixtures and
+ * `Selection.has` from main.ts.
+ *
+ * @throws Error when the canvas has no 2D context; the overlay cannot draw without one.
  */
 export class FixtureIdOverlay {
   /** Whether ids are drawn; the UI "IDs" toggle sets it. */
-  visible = false;
+  isVisible = false;
   private readonly canvas: HTMLCanvasElement;
   private readonly context: CanvasRenderingContext2D;
   private readonly fixtures: readonly LabelledFixture[];
@@ -19,7 +22,7 @@ export class FixtureIdOverlay {
 
   constructor(canvas: HTMLCanvasElement, fixtures: readonly LabelledFixture[], isSelected: (id: number) => boolean) {
     const context = canvas.getContext('2d');
-    if (!context) throw new Error('The overlay canvas has no 2D context.');
+    if (!context) throw new Error(`FixtureIdOverlay: canvas #${canvas.id} has no 2D context`);
     this.canvas = canvas;
     this.context = context;
     this.fixtures = fixtures;
@@ -38,7 +41,7 @@ export class FixtureIdOverlay {
     const { width, height } = this.canvas;
     const context = this.context;
     context.clearRect(0, 0, width, height);
-    if (!this.visible) return;
+    if (!this.isVisible) return;
     const ratio = width / this.canvas.clientWidth;
     context.font = `${10 * ratio}px JetBrains Mono`;
     context.textAlign = 'center';
