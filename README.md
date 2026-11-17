@@ -35,7 +35,7 @@ No install and no build step. Works offline once loaded, and can be installed as
 - **Console (MA) layout** (the default): a physical lighting desk drawn in 3D perspective, standing on the front-of-house control platform in the audience. The FOH view is the operator's eye behind the console, so you see the crowd and the stage over its screens. The screen housing stands up with side cheeks, the control surface slopes toward you, and every control stays live. Drag the grip on top of the screens to make the console larger or smaller (double-click resets it). It has two large screens (1 Fixture Sheet / Sequence / Auto Show + command line, 2 Pools + Programmer tools) above a control surface. The fader wing has one wide LCD over 4 gold-cap special masters (House, Haze, Energy, Auto master) and 10 executors with select, off, GO and flash keys. The programmer side has lit feature keys, five live encoders with value displays, two small touch screens (color picker and focus pad), a hardware MA keypad (`Group 2 4 At Full ENTER`), and a GO / Grand Master section with a level wheel. It fits any window, so everything stays in reach even on a 4K monitor. The **Desk** (compact flat) and **Classic** layouts are also available.
 - **Command line** in MA syntax: `Fixture 201 Thru 230`, `Group 24 + Group 31`, `At Full`, `Store Cue 5 Fade 3`, `Goto Cue 3`, `Preset 4.10`, `Label Cue 5 Chorus`, `Delete Cue 4`, `Off Exec 2`.
 - **Programmer** with feature tabs (Dimmer, Position, Gobo, Color, Beam, Phaser), drag encoders, and programmer values shown in red.
-- **Pools**: 36 groups and presets for Dimmer, Position, Gobo, Color and Beam. Position presets are calculated per fixture: Singer, Drums, Orchestra, Fan Audience, Ring Cone, Ring Twist, Sunburst, Crown and more.
+- **Pools**: 48 group slots, and presets for Dimmer, Position, Gobo, Color and Beam. Position presets are calculated per fixture: Singer, Drums, Orchestra, Fan Audience, Ring Cone, Ring Twist, Sunburst, Crown and more.
 - **Focus pad**: click a stage map to aim the whole selection at a point.
 - **Phasers**: Circle, Pan, Tilt, Ballyhoo, Dim Wave, Dim Chase, Swipe, Random Flash, Rainbow and Color Chase, with Rate, Size and Phase controls. All sync to **TAP** tempo.
 - **10 executors** with faders, GO+, GO−, FLASH and OFF. Cue lists with **tracking** and fades, HTP dimmer and LTP for everything else, plus Grand Master, Blackout, Highlight, FAN and ODD/EVEN.
@@ -47,7 +47,21 @@ Nine automatic lighting styles: **EDM, Techno, Rock, Pop, Hip-Hop, Mizrahi/Party
 
 ![Auto Show](docs/screenshots/auto-show.png)
 
-### 💡 The rig: 377 fixtures
+### 💡 The rig: 405 fixtures
+Every fixture is a 3D model of a real product:
+
+| Type | Model |
+|---|---|
+| Spot | Robe FORTE |
+| Beam | Robe MegaPointe |
+| Wash | Robe Spiider |
+| Strobe | Robe WTF! |
+| Blinder | Chauvet STRIKE 4 |
+| LED Par | Robe ParFect 150 |
+| LED Bar | Robe Tetra2 (tilt only) |
+| Follow Spot | Robe FORTE FS, with a RoboSpot station at FOH |
+| Profile | ETC Source Four (static) |
+
 | IDs | Type | Position |
 |---|---|---|
 | 101–120 | Spot | Front truss (FOH) |
@@ -68,7 +82,12 @@ Nine automatic lighting styles: **EDM, Techno, Rock, Pop, Hip-Hop, Mizrahi/Party
 | 1601–1610 | Beam | Standing light towers (top) |
 | 1701–1710 | Wash | Standing light towers (middle) |
 | 1801–1818 | Wash | Audience light: front truss and delay towers |
+| 1901–1904 | Follow Spot | Front truss, between the FOH spots |
+| 2101–2112 | LED Bar | Floor, downstage edge |
+| 2201–2212 | Profile | Side ladders |
 | 2001 | LED wall | 35 × 13 m LED wall and IMAG side screens, with 8 content modes |
+
+Four Antari HZ-500 hazers stand upstage. Their haze puff follows the **Haze** master.
 
 Rendering includes volumetric beams in moving haze, gobo projections in the beam and on the floor, lens glow, pixel LED strips on the ring, angled trusses and towers, real spot lights with soft shadows on the performers, and a seated crowd of about 9,000 that bounces to the beat.
 
@@ -121,7 +140,7 @@ LUMA DESK is GPU-heavy, so use Chrome or Edge on a machine with a dedicated grap
 
 ## בעברית
 
-**LUMA DESK** היא קונסולת תאורה בסגנון grandMA עם במה וירטואלית בתלת־ממד בבריכת הסולטן בירושלים. היא כוללת 377 גופי תאורה, להקה, תזמורת של 30 נגנים וקהל יושב, והכול רץ בדפדפן.
+**LUMA DESK** היא קונסולת תאורה בסגנון grandMA עם במה וירטואלית בתלת־ממד בבריכת הסולטן בירושלים. היא כוללת 405 גופי תאורה, להקה, תזמורת של 30 נגנים וקהל יושב, והכול רץ בדפדפן.
 
 - **פתיחה:** https://gilad1987.github.io/luma-desk/
 - **התקנה כאפליקציה:** כפתור **⬇ התקן אפליקציה** בשורה העליונה (Chrome או Edge), או **הוסף למסך הבית** באייפד.
