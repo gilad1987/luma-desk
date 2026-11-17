@@ -1,16 +1,17 @@
-import type { Rig } from './Rig';
-export type { Rig } from './Rig';
-import { addAngledTrusses } from './angledTrusses';
-import { addAudienceWashes } from './audience';
+import { addTrussRows } from './trusses';
+import { addLadderWashes } from './sideLadders';
 import { addDeckFixtures } from './deck';
+import { addRing } from './ring';
+import { addAudienceWashes } from './audience';
+import { addTowers } from './towers';
+import { addAngledTrusses } from './angledTrusses';
 import { addFollowSpots } from './followSpots';
 import { addFootlights } from './footlights';
 import { addProfiles } from './profiles';
-import { addRing } from './ring';
-import { addTowers } from './towers';
-import { addTrussRows } from './trusses';
-import { addLadderWashes } from './sideLadders';
+import type { Rig } from './Rig';
 import { RigBuilder } from './RigBuilder';
+
+export type { Rig } from './Rig';
 
 /**
  * Builds the LUMA DESK rig: 405 fixtures. The areas run in the order the rig grew, which is the build order every id

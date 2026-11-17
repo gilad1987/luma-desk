@@ -1,6 +1,7 @@
 /**
- * Wall-clock source for cue timing, tap tempo and clears. It is a boundary so tests can freeze time; the render loop's
- * rAF timestamp is a separate time source and does not go through it.
+ * Monotonic time source for cue timing, tap tempo and clears. It is not wall-clock time: intervals must not jump when
+ * the system clock changes. It is a boundary so tests can freeze time; the render loop's rAF timestamp is a separate
+ * time source and does not go through it.
  */
 export interface Clock {
   /** Milliseconds on a monotonic clock, for intervals such as tap tempo. */

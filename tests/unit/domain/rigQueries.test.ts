@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { FEAT_ATTRS, ATTR } from '../../../src/domain/attributes';
-import { TYPES } from '../../../src/domain/fixtureTypes';
-import { buildRig } from '../../../src/domain/rig';
+import { FEAT_ATTRS, ATTR } from '../../../src/domain/attributes.ts';
+import { TYPES } from '../../../src/domain/fixtureTypes/index.ts';
+import { buildRig } from '../../../src/domain/rig/index.ts';
 
 const rig = buildRig();
 
@@ -45,7 +45,16 @@ describe('Fixture.has', () => {
 describe('type and attribute tables', () => {
   it('keep the original type order and shared mover channel list', () => {
     expect(Object.keys(TYPES)).toEqual([
-      ...['spot', 'beam', 'wash', 'par', 'blinder', 'strobe', 'bar', 'follow', 'profile', 'screen'],
+      'spot',
+      'beam',
+      'wash',
+      'par',
+      'blinder',
+      'strobe',
+      'bar',
+      'follow',
+      'profile',
+      'screen',
     ]);
     expect(TYPES.spot.attrs).toBe(TYPES.follow.attrs);
   });
