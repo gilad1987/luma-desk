@@ -5,8 +5,10 @@
  */
 import { describe, expect, it } from 'vitest';
 import { frameOf } from '../../../../src/domain/stage/StageFrame.ts';
+import { createTemplate } from '../../../../src/domain/stage/templates/index.ts';
 import { BAND_PTS, DECK, RING, SCREEN, STAGE } from '../../../../src/domain/venue.ts';
-import { VENUE_DESIGN } from './venueDesign.ts';
+
+const VENUE_DESIGN = createTemplate('sultans-pool');
 
 describe('frameOf', () => {
   it('equals STAGE, DECK, SCREEN, RING and BAND_PTS for the built-in stage', () => {
@@ -30,14 +32,9 @@ describe('frameOf', () => {
   });
 
   it('takes the ring from the first circle truss, after other kinds', () => {
-    const post = {
-      id: 'post',
-      name: 'Post',
-      role: 'side',
-      transform: { position: [1, 2, 3] },
-      params: { kind: 'goalpost', width: 8, height: 6, section: 0.4 },
-    } as const;
-    const ring = frameOf({ ...VENUE_DESIGN, trusses: [post, ...VENUE_DESIGN.trusses.slice(1)] }).ring;
+    const trusses = VENUE_DESIGN.trusses.filter((t) => t.id !== 'ring-outer');
+    expect(trusses[0]?.params.kind).not.toBe('circle');
+    const ring = frameOf({ ...VENUE_DESIGN, trusses }).ring;
     expect(ring).toEqual({ x: RING.x, y: RING.y2, z: RING.z, R: RING.r2 });
   });
 

@@ -13,11 +13,11 @@ export type Quat = readonly [x: number, y: number, z: number, w: number];
 /** The venue scenery to draw around the stage; each kind has its own static scene in the renderer. */
 export type VenueKind = 'sultans-pool' | 'black-box' | 'open-field';
 
-/** A scenery group that the user can show or hide; a hidden group skips its per-frame work (G3). */
-export type SceneryPart = 'deck' | 'trusses' | 'band' | 'ledWall' | 'crowd';
-
 /** Every scenery part in UI order, so toggles and defaults list all parts without a second hand-written list. */
-export const SCENERY_PARTS: readonly SceneryPart[] = ['deck', 'trusses', 'band', 'ledWall', 'crowd'];
+export const SCENERY_PARTS = ['deck', 'trusses', 'band', 'ledWall', 'crowd'] as const;
+
+/** A scenery group that the user can show or hide; a hidden group skips its per-frame work (G3). */
+export type SceneryPart = (typeof SCENERY_PARTS)[number];
 
 /** An axis-aligned box around the whole design; the camera fits its views to it (G7). */
 export interface StageBounds {
