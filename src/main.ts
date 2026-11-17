@@ -11,20 +11,29 @@ import { ATTR, FEAT_ATTRS, FEATS, GOBO_NAMES, SCREEN_MODES } from './domain/attr
 import { buildRig } from './domain/rig';
 import { ANG, BAND_PTS, DECK, RING, ROOF, SCREEN, STAGE, SXZ, TOWERS, TOWX, TOWZ, TR } from './domain/venue';
 import { AppState } from './engine/AppState';
-import { addNewDefaultGroups, defaultGroups } from './engine/defaultGroups';
-import { defaultPresets } from './engine/defaultPresets';
+import { defaultGroups } from './engine/defaultGroups';
 import type { EngineEvents } from './engine/events';
 import { ExecutorPool } from './engine/ExecutorPool';
 import { GroupLibrary } from './engine/GroupLibrary';
 import { OutputMerger } from './engine/OutputMerger';
 import { COLORS } from './engine/presetColors';
-import { PRESET_FNS } from './engine/presetFunctions';
 import { PresetLibrary } from './engine/PresetLibrary';
 import { PRESET_TYPES } from './engine/presetTypes';
 import { Programmer } from './engine/Programmer';
 import { Selection } from './engine/Selection';
 import { PHASER_TYPES } from './engine/shared';
 import { Tempo } from './engine/Tempo';
+import { colorByName } from './engine/colorByName';
+import { CommandRunner } from './command/CommandRunner';
+import { DemoShow, GuideFlag, LayoutPrefs, restoreShow, ShowSerializer, ShowStorage } from './show';
+import { AutoShow } from './autoshow/AutoShow';
+import { buildLookList } from './autoshow/buildLookList';
+import { LookGenerator } from './autoshow/LookGenerator';
+import { savedLookCue } from './autoshow/savedLookCue';
+import { sectionName } from './autoshow/sections';
+import { STYLES } from './autoshow/styles';
+import { SongPlayer } from './audio/SongPlayer';
+import { he } from './i18n/he';
 
 /* ====================================================================
    HELPERS
@@ -2374,6 +2383,16 @@ const pool = new ExecutorPool(clock, bus);
 const { execs, autoExec } = pool;
 const programmer = new Programmer({ rig, selection, presets: presetLibrary, pool, state: appState, clock, bus });
 const merger = new OutputMerger({ rig, pool, programmer, master: appState, selection, tempo });
+const runner = new CommandRunner({
+  rig,
+  selection,
+  programmer,
+  pool,
+  state: appState,
+  groups: groupLibrary,
+  presets: presetLibrary,
+  bus,
+});
 
 /* ====================================================================
    VISUAL UPDATE
@@ -2599,306 +2618,12 @@ function updateVisuals(now, dt) {
 /* ====================================================================
    COMMAND LINE
 ==================================================================== */
-const ALIAS = {
-  f: 'fixture',
-  fi: 'fixture',
-  fix: 'fixture',
-  fixture: 'fixture',
-  ch: 'fixture',
-  channel: 'fixture',
-  g: 'group',
-  gr: 'group',
-  group: 'group',
-  t: 'thru',
-  thru: 'thru',
-  through: 'thru',
-  at: 'at',
-  full: 'full',
-  zero: 'zero',
-  st: 'store',
-  store: 'store',
-  q: 'cue',
-  cue: 'cue',
-  seq: 'exec',
-  sequence: 'exec',
-  exec: 'exec',
-  executor: 'exec',
-  ex: 'exec',
-  e: 'exec',
-  c: 'clear',
-  clear: 'clear',
-  ca: 'clearall',
-  clearall: 'clearall',
-  del: 'delete',
-  delete: 'delete',
-  p: 'preset',
-  pr: 'preset',
-  preset: 'preset',
-  hl: 'highlight',
-  highlight: 'highlight',
-  bo: 'blackout',
-  blackout: 'blackout',
-  go: 'go',
-  goplus: 'go',
-  gominus: 'goback',
-  goback: 'goback',
-  goto: 'goto',
-  pause: 'pause',
-  label: 'label',
-  fade: 'fade',
-  off: 'off',
-  '+': '+',
-  '-': '-',
-  all: 'all',
-};
 function log(msg, cls = '') {
   const fb = $('#cmdFb');
   const d = el('div', '', '');
   d.innerHTML = `<span class="${cls}">${msg}</span>`;
   fb.appendChild(d);
   while (fb.children.length > 2) fb.firstChild.remove();
-}
-function runCmd(raw) {
-  let s = raw.trim();
-  if (!s) return;
-  s = s
-    .replace(/go\s*\+/gi, 'goplus ')
-    .replace(/go\s*-/gi, 'gominus ')
-    .replace(/@/g, ' at ')
-    .replace(/\+/g, ' + ')
-    .replace(/\s-\s?/g, ' - ')
-    .replace(/^-/, ' - ');
-  const orig = s.split(/\s+/).filter(Boolean),
-    T = orig.map((w) => w.toLowerCase());
-  let i = 0,
-    mode = 'replace',
-    selected = false;
-  const word = () => ALIAS[T[i]] || (isNaN(parseFloat(T[i])) ? T[i] : '#');
-  const num = () => {
-    const v = parseFloat(T[i]);
-    if (isNaN(v)) throw `Expected a number after "${T[i - 1] || ''}"`;
-    i++;
-    return v;
-  };
-  const ids = () => {
-    const a = num();
-    if (T[i] && ALIAS[T[i]] === 'thru') {
-      i++;
-      const b = num();
-      return rig.range(Math.min(a, b), Math.max(a, b));
-    }
-    return [a];
-  };
-  const selectIds = (list) => {
-    if (!list.length) throw 'No fixtures match';
-    selection.set(list, mode === 'replace' && !selected ? 'replace' : mode === 'sub' ? 'sub' : 'add');
-    selected = true;
-    mode = 'replace';
-  };
-  try {
-    while (i < T.length) {
-      const w = word();
-      if (w === '#') {
-        selectIds(ids());
-        continue;
-      }
-      i++;
-      switch (w) {
-        case 'fixture':
-          selectIds(ids());
-          break;
-        case 'group': {
-          const n = num();
-          if (!groupLibrary.all[n]) throw `Group ${n} is empty`;
-          selectIds([...groupLibrary.all[n].ids]);
-          break;
-        }
-        case 'all':
-          selectIds(rig.lightIds());
-          break;
-        case '+':
-          mode = 'add';
-          selected = true;
-          break;
-        case '-':
-          mode = 'sub';
-          selected = true;
-          break;
-        case 'at':
-        case 'full':
-        case 'zero': {
-          let v;
-          if (w === 'full') v = 100;
-          else if (w === 'zero') v = 0;
-          else {
-            const nx = ALIAS[T[i]];
-            if (nx === 'full') {
-              v = 100;
-              i++;
-            } else if (nx === 'zero') {
-              v = 0;
-              i++;
-            } else v = num();
-          }
-          if (!selection.ids.length) throw 'No selection';
-          selection.ids.forEach((id) => programmer.set(id, 'dim', v));
-          log(`${selection.ids.length} fixtures At ${v}`, 'ok');
-          break;
-        }
-        case 'store': {
-          const k = word();
-          if (k === 'group') {
-            i++;
-            groupLibrary.store(num(), selection.ids);
-          } else if (k === 'preset') {
-            i++;
-            const [a, b] = String(T[i++]).split('.').map(Number);
-            if (!presetLibrary.all[a] || !b) throw 'Use Store Preset 4.12';
-            presetLibrary.storeFromProgrammer(a, b, selection.ids, programmer.vals);
-          } else {
-            if (k === 'cue') i++;
-            let n = null,
-              fade,
-              ex = appState.selExec;
-            if (word() === '#') n = num();
-            while (i < T.length) {
-              const kk = word();
-              if (kk === 'fade') {
-                i++;
-                fade = num();
-              } else if (kk === 'exec') {
-                i++;
-                ex = num() - 1;
-              } else break;
-            }
-            if (!execs[ex]) throw 'No such executor';
-            programmer.storeCue(ex, n, { fade });
-          }
-          appState.setStoreMode(false);
-          break;
-        }
-        case 'exec': {
-          appState.selectExec(clamp(num() - 1, 0, 9));
-          log(`Exec ${appState.selExec + 1} selected`, 'ok');
-          break;
-        }
-        case 'go': {
-          let ex = appState.selExec;
-          if (word() === 'exec') {
-            i++;
-            ex = num() - 1;
-          }
-          pool.go(execs[ex], 1);
-          break;
-        }
-        case 'goback': {
-          let ex = appState.selExec;
-          if (word() === 'exec') {
-            i++;
-            ex = num() - 1;
-          }
-          pool.go(execs[ex], -1);
-          break;
-        }
-        case 'goto': {
-          if (word() === 'cue') i++;
-          const n = num();
-          const e = execs[appState.selExec];
-          const idx = e.cues.findIndex((c) => c.num === n);
-          if (idx < 0) throw `Cue ${n} not found`;
-          if (!e.on && e.level === 0) e.level = 1;
-          e.goto(idx);
-          log(`Goto Cue ${n}`, 'ok');
-          break;
-        }
-        case 'pause':
-          execs[appState.selExec].pause();
-          break;
-        case 'off': {
-          let ex = appState.selExec;
-          if (word() === 'exec') {
-            i++;
-            ex = num() - 1;
-          }
-          const e = execs[ex];
-          // quirk C2: an unknown executor must fail on this write, as the old execOff did, so the log
-          // shows the same browser TypeError text
-          e.on = false;
-          e.off();
-          log(`Exec ${ex + 1} Off`, 'ok');
-          break;
-        }
-        case 'clear':
-          programmer.clearPress();
-          break;
-        case 'clearall':
-          programmer.clearAll();
-          break;
-        case 'preset': {
-          const [a, b] = String(T[i++]).split('.').map(Number);
-          if (!presetLibrary.all[a] || !presetLibrary.all[a][b]) throw 'Preset not found';
-          programmer.applyPreset(a, b);
-          break;
-        }
-        case 'delete': {
-          if (word() === 'cue') i++;
-          const n = num();
-          const e = execs[appState.selExec];
-          const idx = e.cues.findIndex((c) => c.num === n);
-          if (idx < 0) throw `Cue ${n} not found`;
-          e.cues.splice(idx, 1);
-          e.invalidate();
-          if (e.cur >= e.cues.length) e.cur = e.cues.length - 1;
-          log(`Deleted Cue ${n}`, 'ok');
-          persist();
-          break;
-        }
-        case 'label': {
-          const k = word();
-          i++;
-          const n = num();
-          const name = orig.slice(i).join(' ').replace(/^"|"$/g, '');
-          i = T.length;
-          if (k === 'cue') {
-            const c = execs[appState.selExec].cues.find((c) => c.num === n);
-            if (!c) throw 'Cue not found';
-            c.name = name;
-          } else if (k === 'group') {
-            if (!groupLibrary.all[n]) throw 'Group empty';
-            groupLibrary.all[n].name = name;
-            renderPools();
-          } else if (k === 'exec') {
-            execs[n - 1].name = name;
-          } else throw 'Label Cue|Group|Exec n Name';
-          log(`Labelled ${k} ${n}: ${name}`, 'ok');
-          persist();
-          break;
-        }
-        case 'highlight':
-          appState.highlight = !appState.highlight;
-          break;
-        case 'blackout':
-          appState.blackout = !appState.blackout;
-          break;
-        case 'fade': {
-          const n = num();
-          const e = execs[appState.selExec];
-          if (e.cur >= 0) {
-            e.cues[e.cur].fade = n;
-            log(`Cue fade = ${n}s`, 'ok');
-          }
-          break;
-        }
-        default:
-          throw `Unknown keyword "${orig[i - 1]}"`;
-      }
-    }
-    if (selected && !T.some((t) => ['at', 'full', 'zero'].includes(ALIAS[t])))
-      log(`${selection.ids.length} fixtures selected`, 'ok');
-  } catch (err) {
-    log(String(err), 'er');
-  }
-  uiDirty.all = true;
 }
 
 /* ====================================================================
@@ -2947,7 +2672,7 @@ function renderPools() {
       openRename(`Group ${n}`, g.name, (v) => {
         g.name = v;
         renderPools();
-        persist();
+        showStorage.persist();
       });
     };
     gp.appendChild(d);
@@ -2996,7 +2721,7 @@ function renderPools() {
       openRename(`Preset ${presetTab}.${n}`, pr.name, (v) => {
         pr.name = v;
         renderPools();
-        persist();
+        showStorage.persist();
       });
     };
     pp.appendChild(d);
@@ -3615,7 +3340,7 @@ function buildExecs() {
     d.querySelector('.ex-name').ondblclick = () =>
       openRename(`Executor ${i + 1}`, e.name, (v) => {
         e.name = v;
-        persist();
+        showStorage.persist();
       });
     d.querySelector('.ex-off').onclick = () => {
       e.off();
@@ -3680,10 +3405,10 @@ function updateExecUI() {
   $('#hudCue').innerHTML = c ? `<span>${c.num}</span> ${c.name}` : e.cues.length ? 'Off — press GO' : 'No cues';
   const nx = e.cues.length > 1 ? e.cues[(e.cur + 1) % e.cues.length] : null;
   $('#hudNext').textContent = nx ? `Next: ${nx.num} ${nx.name}  (fade ${nx.fade}s)` : '';
-  if (auto.on) {
-    $('#hudExec').textContent = 'AUTO SHOW · ' + STYLES[auto.style].name;
-    $('#hudCue').innerHTML = `<span>●</span> ${SEC_NAMES[auto.sec] || ''}`;
-    const nb = autoBars(),
+  if (autoShow.on) {
+    $('#hudExec').textContent = 'AUTO SHOW · ' + autoShow.style.name;
+    $('#hudCue').innerHTML = `<span>●</span> ${sectionName(autoShow.section) || ''}`;
+    const nb = autoShow.barsPerLook(),
       bf = ((clock.nowSeconds() - tempo.beatOrigin) * tempo.bpm) / 240;
     $('#hudNext').textContent = `${tempo.bpm} BPM · new look every ${nb} bars`;
     $('#hudBar').style.width = ((((bf % nb) + nb) % nb) / nb) * 100 + '%';
@@ -3744,13 +3469,13 @@ function renderSeq() {
       openRename(`Cue ${c.num}`, c.name, (v) => {
         c.name = v;
         uiDirty.all = true;
-        persist();
+        showStorage.persist();
       });
     tr.querySelector('.fade').ondblclick = () =>
       openNumber(`Fade time for cue ${c.num} (s)`, (v) => {
         c.fade = Math.max(0, v);
         uiDirty.all = true;
-        persist();
+        showStorage.persist();
       });
   });
 }
@@ -3765,7 +3490,7 @@ $('#seqDel').onclick = () => {
     toast('Goto the cue you want to delete first');
     return;
   }
-  runCmd(`Delete Cue ${e.cues[e.cur].num}`);
+  runner.run(`Delete Cue ${e.cues[e.cur].num}`);
 };
 
 /* fixture sheet */
@@ -3880,7 +3605,7 @@ cmd.onkeydown = (ev) => {
       cmd.value = '';
       return;
     }
-    runCmd(v);
+    runner.run(v);
     cmd.value = '';
     ev.preventDefault();
   } else if (ev.key === 'Escape') {
@@ -3978,52 +3703,33 @@ document.addEventListener('click', (ev) => {
 /* ====================================================================
    SHOW FILE (save / load)
 ==================================================================== */
-const LS = 'lumadesk-show-v6';
-function serialize() {
-  return {
-    v: 1,
-    groups: groupLibrary.all,
-    presets: Object.fromEntries(
-      Object.entries(presetLibrary.all).map(([t, m]) => [
-        t,
-        Object.fromEntries(Object.entries(m).filter(([, p]) => p.kind !== 'fn')),
-      ]),
-    ),
-    execs: execs.map((e) => ({ name: e.name, cues: e.cues, level: e.level })),
-    bpm: tempo.bpm,
-    haze: appState.haze,
-  };
-}
-function loadShow(d) {
-  const presets = defaultPresets();
-  // shows saved before the LED Bars / Follow Spots / Profiles groups existed: add them, but only into slots that are still empty
-  groupLibrary.replace(d.groups ? addNewDefaultGroups(d.groups, defaultGroups(rig)) : defaultGroups(rig));
-  for (const t in d.presets || {}) for (const s in d.presets[t]) presets[t][s] = d.presets[t][s];
-  presetLibrary.replace(presets);
-  execs.forEach((e, i) => {
-    e.off();
-    const x = (d.execs || [])[i] || {};
-    e.name = x.name || '';
-    e.cues = x.cues || [];
-    e.level = x.level ?? 0;
-    e.resetTracking();
-  });
-  tempo.setBpm(d.bpm || 120);
-  appState.haze = d.haze ?? 0.62;
+const store = {
+  getItem: (key) => localStorage.getItem(key),
+  setItem: (key, value) => localStorage.setItem(key, value),
+};
+const serializer = new ShowSerializer({
+  rig,
+  groups: groupLibrary,
+  presets: presetLibrary,
+  execs,
+  tempo,
+  state: appState,
+  programmer,
+  selection,
+});
+const showStorage = new ShowStorage(store, () => serializer.serialize());
+const demo = new DemoShow({ rig, serializer, execs, state: appState, bus });
+const layoutPrefs = new LayoutPrefs(store);
+const guideFlag = new GuideFlag(store);
+// after any show load: the haze slider, then the pools, then a full repaint
+function showLoaded() {
   $('#haze').value = appState.haze * 100;
-  programmer.clear();
-  selection.set([]);
   renderPools();
   uiDirty.all = true;
 }
-let persistT;
-function persist() {
-  clearTimeout(persistT);
-  persistT = setTimeout(() => {
-    try {
-      localStorage.setItem(LS, JSON.stringify(serialize()));
-    } catch (e) {}
-  }, 500);
+function loadShowFile(d) {
+  serializer.load(d);
+  showLoaded();
 }
 $('#fileBtn').onclick = () => {
   openModal(`<button class="close" id="hClose">✕</button><h2>Show File</h2>
@@ -4033,13 +3739,13 @@ $('#fileBtn').onclick = () => {
   <div class="row"><button id="fImp" class="on">Load pasted show</button><label style="display:flex;align-items:center;gap:6px;color:var(--mut)">or file: <input type="file" id="fFile" accept=".json,application/json"></label></div>`);
   $('#fSave').onclick = () => {
     downloadBlob(
-      new Blob([JSON.stringify(serialize(), null, 1)], { type: 'application/json' }),
+      new Blob([JSON.stringify(serializer.serialize(), null, 1)], { type: 'application/json' }),
       `luma-show-${stamp()}.json`,
     );
     toast('קובץ המופע ירד');
   };
   $('#fCopy').onclick = async () => {
-    const s = JSON.stringify(serialize());
+    const s = JSON.stringify(serializer.serialize());
     try {
       await navigator.clipboard.writeText(s);
       toast('Show copied to clipboard');
@@ -4050,20 +3756,21 @@ $('#fileBtn').onclick = () => {
     }
   };
   $('#fDemo').onclick = () => {
-    buildDemo();
+    demo.load();
+    showLoaded();
     closeModal();
     toast('Demo show loaded');
   };
   $('#fNew').onclick = () => {
-    loadShow({ groups: defaultGroups(rig) });
-    persist();
+    loadShowFile({ groups: defaultGroups(rig) });
+    showStorage.persist();
     closeModal();
     toast('New show');
   };
   $('#fImp').onclick = () => {
     try {
-      loadShow(JSON.parse($('#fTxt').value));
-      persist();
+      loadShowFile(JSON.parse($('#fTxt').value));
+      showStorage.persist();
       closeModal();
       toast('Show loaded');
     } catch (e) {
@@ -4075,8 +3782,8 @@ $('#fileBtn').onclick = () => {
     if (!f) return;
     f.text().then((t) => {
       try {
-        loadShow(JSON.parse(t));
-        persist();
+        loadShowFile(JSON.parse(t));
+        showStorage.persist();
         closeModal();
         toast('Show loaded');
       } catch (e) {
@@ -4085,471 +3792,6 @@ $('#fileBtn').onclick = () => {
     });
   };
 };
-
-/* ====================================================================
-   DEMO SHOW
-==================================================================== */
-function buildDemo() {
-  groupLibrary.replace(defaultGroups(rig));
-  presetLibrary.replace(defaultPresets());
-  const V = (spec) => {
-    const vals = {};
-    for (const [ids, v] of spec)
-      ids.forEach((id, k) => {
-        const f = FX[id];
-        if (!f) return;
-        let o =
-          typeof v === 'function' ? v(f, k, ids.length) : typeof v === 'string' ? PRESET_FNS[v](f, k, ids.length) : v;
-        const out = (vals[id] = vals[id] || {});
-        for (const a in o) if (f.has(a)) out[a] = a === 'zoom' ? clamp(o[a], f.T.zr[0], f.T.zr[1]) : o[a];
-      });
-    return vals;
-  };
-  const M = (...objs) => Object.assign({}, ...objs.map((o) => (typeof o === 'string' ? {} : o)));
-  const P = (name) => (f, k, n) => PRESET_FNS[name](f, k, n);
-  const C = (n) => {
-    const c = COLORS.find((x) => x[0] === n);
-    return { r: c[1], g: c[2], b: c[3] };
-  };
-  const both = (pos, extra) => (f, k, n) => ({ ...PRESET_FNS[pos](f, k, n), ...extra });
-  const G = (n) => groupLibrary.all[n].ids;
-  const FXI = (type, ids, o = {}) => ({ type, rate: 1, size: PHASER_TYPES[type].size, spread: 360, ids, ...o });
-  const allMovers = fixtures.filter((f) => f.T.moving).map((f) => f.id);
-  const SCR = [2001];
-  const cues = [];
-  cues.push({
-    num: 1,
-    name: 'Walk-In',
-    fade: 3,
-    vals: V([
-      [rig.lightIds(), { dim: 0, gobo: 0, grot: 0, strobe: 0 }],
-      [allMovers, (f, k, n) => ({ ...PRESET_FNS.center(f, k, n), ...C('Blue') })],
-      [G(3), { dim: 32, zoom: 40 }],
-      [G(6), { dim: 22, ...C('Congo') }],
-      [G(9), { dim: 70, ...C('Congo') }],
-      [G(7), (f) => ({ pan: 0, tilt: 0, zoom: 2 })],
-      [G(2), 'straight'],
-      [G(5), 'straight'],
-      [SCR, { dim: 40, r: 10, g: 20, b: 100, gobo: 1, grot: 0 }],
-    ]),
-    fx: [],
-  });
-  cues.push({
-    num: 2,
-    name: 'Intro',
-    fade: 4,
-    vals: V([
-      [G(1), both('singer', { dim: 70, ...C('Warm'), gobo: 2, zoom: 12, grot: 6 })],
-      [G(5), both('skyFan', { dim: 85, ...C('White'), zoom: 2 })],
-      [G(3), { dim: 38, ...C('Congo') }],
-      [SCR, { dim: 55, r: 45, g: 0, b: 100, gobo: 3, grot: 10 }],
-    ]),
-    fx: [FXI('tilt', G(5), { size: 10, rate: 0.5 })],
-  });
-  cues.push({
-    num: 3,
-    name: 'Verse',
-    fade: 2.5,
-    vals: V([
-      [G(3), { dim: 70, ...C('Amber'), zoom: 30 }],
-      [G(6), both('band', { dim: 60, ...C('Magenta') })],
-      [G(9), { dim: 85, ...C('Magenta') }],
-      [G(4), both('cross', { dim: 65, ...C('Lavender'), gobo: 1, zoom: 18, grot: -10 })],
-      [G(7), both('straight', { dim: 45, ...C('Orange'), gobo: 0 })],
-      [G(5), { dim: 0 }],
-      [G(1), { dim: 60, ...C('Warm') }],
-      [SCR, { dim: 50, r: 100, g: 45, b: 0, gobo: 6, grot: 5 }],
-    ]),
-    fx: [FXI('dimSine', G(7), { size: 70, rate: 0.5, spread: 720 })],
-  });
-  cues.push({
-    num: 4,
-    name: 'Pre-Chorus',
-    fade: 1.5,
-    vals: V([
-      [G(7), both('skyFan', { dim: 80, ...C('Cyan'), zoom: 2 })],
-      [G(2), both('fanAud', { dim: 75, ...C('White'), zoom: 2 })],
-      [G(3), { dim: 55, ...C('Cyan') }],
-      [G(9), { ...C('Blue') }],
-      [G(4), { dim: 0 }],
-      [SCR, { dim: 70, r: 0, g: 80, b: 100, gobo: 2, grot: 30 }],
-    ]),
-    fx: [FXI('tilt', G(2), { size: 18, rate: 1, spread: 360 })],
-  });
-  cues.push({
-    num: 5,
-    name: 'Chorus',
-    fade: 0.3,
-    vals: V([
-      [G(2), { dim: 100, ...C('White') }],
-      [G(5), both('fanAud', { dim: 100, ...C('White'), zoom: 2 })],
-      [G(7), { dim: 100, ...C('White') }],
-      [G(3), { dim: 95, ...C('Red'), zoom: 22 }],
-      [G(6), { dim: 90, ...C('Red') }],
-      [G(9), { dim: 100, ...C('Red') }],
-      [G(1), both('audience', { dim: 85, ...C('White'), gobo: 3, zoom: 14, grot: 35 })],
-      [G(8), both('vOut', { dim: 80, ...C('Red'), zoom: 18 })],
-      [SCR, { dim: 90, r: 100, g: 0, b: 0, gobo: 2, grot: 60 }],
-    ]),
-    fx: [
-      FXI('bally', G(2), { size: 30, rate: 1 }),
-      FXI('circle', G(5), { size: 16, rate: 1, spread: 360 }),
-      FXI('tilt', G(7), { size: 22, rate: 2, spread: 360 }),
-    ],
-  });
-  cues.push({
-    num: 6,
-    name: 'Rainbow Bridge',
-    fade: 1,
-    vals: V([
-      [SCR, { dim: 80, r: 100, g: 100, b: 100, gobo: 3, grot: 40 }],
-      [G(1), { dim: 0 }],
-    ]),
-    fx: [
-      FXI('rainbow', [...G(2), ...G(5)], { rate: 0.5, spread: 360 }),
-      FXI('rainbow', [...G(7)], { rate: 0.5, spread: 720 }),
-      FXI('rainbow', [...G(3), ...G(6)], { rate: 0.25, spread: 360 }),
-      FXI('circle', G(7), { size: 18, rate: 0.5, spread: 720 }),
-    ],
-  });
-  cues.push({
-    num: 7,
-    name: 'Breakdown',
-    fade: 3,
-    vals: V([
-      [[...G(2), ...G(5), ...G(1), ...G(4), ...G(8)], { dim: 0 }],
-      [G(3), both('center', { dim: 35, ...C('Blue') })],
-      [G(6), { dim: 25, ...C('Blue') }],
-      [G(9), { dim: 45, ...C('Blue') }],
-      [G(7), both('skyFan', { dim: 60, ...C('Lt Blue') })],
-      [SCR, { dim: 20, r: 0, g: 20, b: 100, gobo: 4, grot: 0 }],
-    ]),
-    fx: [FXI('dimChase', G(7), { rate: 1, spread: 360 })],
-  });
-  cues.push({
-    num: 8,
-    name: 'DROP!',
-    fade: 0,
-    vals: V([
-      [G(11), { dim: 100, strobe: 88 }],
-      [G(10), { dim: 55 }],
-      [[...G(2), ...G(5), ...G(7)], { dim: 100, ...C('White'), zoom: 2 }],
-      [G(2), 'fanAud'],
-      [G(5), 'audience'],
-      [G(7), 'skyFan'],
-      [G(3), { dim: 100, ...C('White'), zoom: 50, strobe: 45 }],
-      [G(6), { dim: 100, ...C('White') }],
-      [SCR, { dim: 100, r: 100, g: 100, b: 100, gobo: 7, grot: 80 }],
-    ]),
-    fx: [FXI('bally', [...G(2), ...G(5)], { size: 40, rate: 2 }), FXI('flash', G(7), { rate: 1 })],
-  });
-  cues.push({
-    num: 9,
-    name: 'Outro',
-    fade: 5,
-    vals: V([
-      [[...G(11), ...G(10), ...G(2), ...G(5), ...G(7), ...G(6), ...G(9)], { dim: 0, strobe: 0 }],
-      [G(3), both('center', { dim: 45, ...C('CTO'), strobe: 0 })],
-      [G(1), both('singer', { dim: 75, ...C('Warm'), gobo: 0, zoom: 9, grot: 0 })],
-      [SCR, { dim: 30, r: 100, g: 50, b: 10, gobo: 1, grot: 0 }],
-    ]),
-    fx: [],
-  });
-  const RB = G(24),
-    RW = G(25),
-    AB = G(26),
-    AS = G(27);
-  const addTo = (num, spec, fx = []) => {
-    const c = cues.find((c) => c.num === num),
-      v = V(spec);
-    for (const id in v) c.vals[id] = Object.assign(c.vals[id] || {}, v[id]);
-    c.fx.push(...fx);
-  };
-  addTo(
-    1,
-    [
-      [RB, both('ringDown', { dim: 22, ...C('Congo'), zoom: 2 })],
-      [RW, both('ringCone', { dim: 25, ...C('Blue'), zoom: 30 })],
-      [[...AB, ...AS], { dim: 0 }],
-    ],
-    [FXI('dimSine', RB, { size: 60, rate: 0.25, spread: 360 })],
-  );
-  addTo(
-    2,
-    [
-      [RB, both('ringDown', { dim: 90, ...C('White'), zoom: 2 })],
-      [RW, { dim: 40, ...C('Congo') }],
-      [AB, both('ringCrown', { dim: 45, ...C('Lt Blue'), zoom: 2 })],
-    ],
-    [FXI('circle', RB, { size: 6, rate: 0.5, spread: 360 })],
-  );
-  addTo(3, [
-    [RB, { dim: 0 }],
-    [RW, both('band', { dim: 65, ...C('Amber'), zoom: 26 })],
-    [AS, both('cross', { dim: 70, ...C('Lavender'), gobo: 3, zoom: 15, grot: 14 })],
-    [AB, { dim: 0 }],
-  ]);
-  addTo(
-    4,
-    [
-      [RB, both('ringCone', { dim: 95, ...C('Cyan'), zoom: 2 })],
-      [AB, both('wingFan', { dim: 70, ...C('White'), zoom: 2 })],
-      [AS, { dim: 0 }],
-    ],
-    [FXI('dimChase', RB, { rate: 1, spread: 360 })],
-  );
-  addTo(
-    5,
-    [
-      [RB, both('ringSun', { dim: 100, ...C('White'), zoom: 2 })],
-      [RW, both('center', { dim: 90, ...C('Red'), zoom: 30 })],
-      [AB, both('converge', { dim: 100, ...C('Red'), zoom: 2 })],
-      [AS, both('audience', { dim: 80, ...C('White'), gobo: 7, zoom: 12, grot: 40 })],
-    ],
-    [FXI('tilt', RB, { size: 14, rate: 1, spread: 360 }), FXI('circle', AB, { size: 10, rate: 1, spread: 360 })],
-  );
-  addTo(
-    6,
-    [
-      [RB, both('ringTwist', { dim: 100, zoom: 2 })],
-      [AB, both('ringCrown', { dim: 90, zoom: 2 })],
-      [RW, { dim: 70 }],
-      [AS, { dim: 0 }],
-    ],
-    [
-      FXI('rainbow', RB, { rate: 0.5, spread: 360 }),
-      FXI('circle', RB, { size: 8, rate: 0.5, spread: 360 }),
-      FXI('rainbow', [...AB, ...RW], { rate: 0.25, spread: 720 }),
-    ],
-  );
-  addTo(
-    7,
-    [
-      [RB, both('ringCrown', { dim: 70, ...C('Lt Blue'), zoom: 2 })],
-      [RW, { dim: 20, ...C('Blue') }],
-      [AB, { dim: 0 }],
-    ],
-    [FXI('dimSine', RB, { size: 80, rate: 0.5, spread: 720 })],
-  );
-  addTo(
-    8,
-    [
-      [RB, both('ringSun', { dim: 100, ...C('White'), zoom: 2 })],
-      [AB, both('wingFan', { dim: 100, ...C('White'), zoom: 2 })],
-      [AS, both('audience', { dim: 100, ...C('White'), gobo: 3, zoom: 14, grot: 60 })],
-      [RW, { dim: 100, ...C('White'), strobe: 60 }],
-    ],
-    [FXI('flash', RB, { rate: 1 }), FXI('bally', AB, { size: 36, rate: 2 })],
-  );
-  addTo(9, [
-    [[...RB, ...AB, ...AS], { dim: 0 }],
-    [RW, both('singer', { dim: 50, ...C('CTO'), zoom: 18, strobe: 0 })],
-  ]);
-  const TB = G(31),
-    TW = G(32);
-  addTo(1, [
-    [TB, both('straight', { dim: 0, zoom: 2 })],
-    [TW, both('band', { dim: 30, ...C('Congo'), zoom: 30 })],
-  ]);
-  addTo(
-    2,
-    [
-      [TB, both('skyFan', { dim: 70, ...C('Lt Blue'), zoom: 2 })],
-      [TW, { dim: 20 }],
-    ],
-    [FXI('pan', TB, { size: 15, rate: 0.25, spread: 360 })],
-  );
-  addTo(3, [
-    [TB, { dim: 0 }],
-    [TW, both('band', { dim: 60, ...C('Amber'), zoom: 24 })],
-  ]);
-  addTo(
-    4,
-    [
-      [TB, both('ringCone', { dim: 90, ...C('Cyan'), zoom: 2 })],
-      [TW, { dim: 50, ...C('Blue') }],
-    ],
-    [FXI('dimChase', TB, { rate: 2, spread: 360 })],
-  );
-  addTo(
-    5,
-    [
-      [TB, both('audience', { dim: 100, ...C('White'), zoom: 2 })],
-      [TW, both('audience', { dim: 90, ...C('Red'), zoom: 40 })],
-    ],
-    [FXI('bally', TB, { size: 25, rate: 1, spread: 180 })],
-  );
-  addTo(
-    6,
-    [
-      [TB, both('skyFan', { dim: 100, zoom: 2 })],
-      [TW, { dim: 70 }],
-    ],
-    [
-      FXI('rainbow', [...TB, ...TW], { rate: 0.5, spread: 360 }),
-      FXI('circle', TB, { size: 14, rate: 0.5, spread: 360 }),
-    ],
-  );
-  addTo(7, [
-    [TB, { dim: 0 }],
-    [TW, { dim: 25, ...C('Blue') }],
-  ]);
-  addTo(
-    8,
-    [
-      [TB, both('vOut', { dim: 100, ...C('White'), zoom: 2 })],
-      [TW, { dim: 100, ...C('White'), strobe: 70 }],
-    ],
-    [FXI('flash', TB, { rate: 1 })],
-  );
-  addTo(9, [[[...TB, ...TW], { dim: 0, strobe: 0 }]]);
-  const AW = G(33);
-  addTo(1, [[AW, both('crowd', { dim: 40, ...C('CTO'), zoom: 50 })]]);
-  addTo(2, [[AW, { dim: 22, ...C('Blue') }]]);
-  addTo(3, [[AW, { dim: 30, ...C('Amber') }]]);
-  addTo(4, [[AW, { dim: 55, ...C('Cyan') }]], [FXI('dimSine', AW, { size: 70, rate: 0.5, spread: 360 })]);
-  addTo(5, [[AW, { dim: 100, ...C('White'), zoom: 50 }]]);
-  addTo(6, [[AW, { dim: 85 }]], [FXI('rainbow', AW, { rate: 0.5, spread: 360 })]);
-  addTo(7, [[AW, { dim: 12, ...C('Blue') }]]);
-  addTo(8, [[AW, { dim: 100, ...C('White'), strobe: 55 }]]);
-  addTo(9, [[AW, { dim: 45, ...C('CTO'), strobe: 0 }]]);
-  cues.splice(5, 0, {
-    num: 5.5,
-    name: 'Ring Tornado',
-    fade: 0.8,
-    vals: V([
-      [RB, both('ringTwist', { dim: 100, ...C('Magenta'), zoom: 2 })],
-      [RW, both('ringCone', { dim: 80, ...C('Cyan'), zoom: 18 })],
-      [AB, both('converge', { dim: 85, ...C('Cyan'), zoom: 2 })],
-      [G(31), both('ringCone', { dim: 100, ...C('White'), zoom: 2 })],
-      [G(32), { dim: 60, ...C('Magenta') }],
-      [G(33), { dim: 70, ...C('Magenta') }],
-      [[...G(2), ...G(5), ...G(7), ...G(1), ...G(8), ...G(4)], { dim: 0 }],
-      [G(3), { dim: 35, ...C('Congo') }],
-      [SCR, { dim: 45, r: 100, g: 0, b: 100, gobo: 4, grot: 50 }],
-    ]),
-    fx: [FXI('circle', RB, { size: 16, rate: 1, spread: 360 }), FXI('dimChase', AB, { rate: 2, spread: 360 })],
-  });
-  const ex = (i, name, cs, level = 0) => {
-    const e = execs[i];
-    e.off();
-    e.name = name;
-    e.cues = cs;
-    e.level = level;
-    e.resetTracking();
-  };
-  execs.forEach((e) => {
-    e.off();
-    e.name = '';
-    e.cues = [];
-    e.level = 0;
-    e.resetTracking();
-  });
-  ex(0, 'Main Show', cues, 1);
-  ex(1, 'Blinders', [{ num: 1, name: 'Hit', fade: 0, vals: V([[G(10), { dim: 100 }]]), fx: [] }]);
-  ex(2, 'Strobes', [{ num: 1, name: 'Strobe', fade: 0, vals: V([[G(11), { dim: 100, strobe: 92 }]]), fx: [] }]);
-  ex(3, 'Floor Chase', [
-    {
-      num: 1,
-      name: 'Chase',
-      fade: 0.5,
-      vals: V([[G(7), both('skyFan', { ...C('White'), zoom: 2 })]]),
-      fx: [FXI('dimChase', G(7), { rate: 2, spread: 360 })],
-    },
-  ]);
-  ex(4, 'Swipe T2', [
-    {
-      num: 1,
-      name: 'Swipe',
-      fade: 0.5,
-      vals: V([[G(2), both('fanAud', { ...C('Cyan'), zoom: 2 })]]),
-      fx: [FXI('dimSaw', G(2), { rate: 1, spread: 360 })],
-    },
-  ]);
-  ex(5, 'Red Alert', [
-    { num: 1, name: 'Red', fade: 1, vals: V([[[...G(15), ...G(9)], { dim: 100, ...C('Red') }]]), fx: [] },
-  ]);
-  ex(6, 'Key Light', [
-    {
-      num: 1,
-      name: 'Singer',
-      fade: 2,
-      vals: V([[rig.range(108, 113), both('singer', { dim: 100, ...C('White'), gobo: 0, zoom: 8, grot: 0 })]]),
-      fx: [],
-    },
-  ]);
-  ex(8, 'Ring FX', [
-    {
-      num: 1,
-      name: 'Pillars',
-      fade: 1,
-      vals: V([[G(24), both('ringDown', { dim: 100, ...C('White'), zoom: 2 })]]),
-      fx: [FXI('dimChase', G(24), { rate: 1, spread: 360 })],
-    },
-    {
-      num: 2,
-      name: 'Cone',
-      fade: 1,
-      vals: V([[G(24), both('ringCone', { dim: 100, ...C('Cyan'), zoom: 2 })]]),
-      fx: [FXI('dimSine', G(24), { rate: 1, spread: 720 })],
-    },
-    {
-      num: 3,
-      name: 'Tornado',
-      fade: 1,
-      vals: V([[G(24), both('ringTwist', { dim: 100, ...C('Magenta'), zoom: 2 })]]),
-      fx: [FXI('circle', G(24), { size: 16, rate: 1, spread: 360 })],
-    },
-    {
-      num: 4,
-      name: 'Sunburst',
-      fade: 1,
-      vals: V([[G(24), both('ringSun', { dim: 100, ...C('Amber'), zoom: 2 })]]),
-      fx: [FXI('tilt', G(24), { size: 18, rate: 1, spread: 360 })],
-    },
-    {
-      num: 5,
-      name: 'Crown',
-      fade: 1,
-      vals: V([[G(24), both('ringCrown', { dim: 100, ...C('Lt Blue'), zoom: 2 })]]),
-      fx: [FXI('pan', G(24), { size: 20, rate: 0.5, spread: 360 })],
-    },
-  ]);
-  ex(9, 'Wings', [
-    {
-      num: 1,
-      name: 'Wing Fan',
-      fade: 1,
-      vals: V([[G(26), both('wingFan', { dim: 100, ...C('White'), zoom: 2 })]]),
-      fx: [FXI('dimSaw', G(26), { rate: 1, spread: 360 })],
-    },
-    {
-      num: 2,
-      name: 'Converge',
-      fade: 1,
-      vals: V([[G(26), both('converge', { dim: 100, ...C('Red'), zoom: 2 })]]),
-      fx: [FXI('circle', G(26), { size: 8, rate: 1, spread: 360 })],
-    },
-  ]);
-  ex(7, 'Screen Sparkle', [
-    {
-      num: 1,
-      name: 'Sparkle',
-      fade: 1,
-      vals: V([[SCR, { dim: 100, r: 100, g: 100, b: 100, gobo: 7, grot: 40 }]]),
-      fx: [],
-    },
-  ]);
-  tempo.setBpm(124);
-  appState.haze = 0.62;
-  $('#haze').value = 62;
-  programmer.clear();
-  selection.set([]);
-  renderPools();
-  execs[0].goto(0, 0);
-  appState.selectExec(0);
-  persist();
-}
 
 /* ====================================================================
    VIEWPORT INTERACTION (picking, box select, tooltip)
@@ -4727,11 +3969,12 @@ function loop(t) {
   last = t;
   const now = t / 1000;
   crowdU.uBeat.value = (((now - tempo.beatOrigin) * tempo.bpm) / 60) * Math.PI;
-  crowdU.uJump.value = auto.pulse === 'audio' && song.an ? 0.3 + autoPump : 1;
-  songSync();
-  autoTick(now);
+  crowdU.uJump.value =
+    autoShow.settings.pulse === 'audio' && songPlayer.audioGraph ? 0.3 + autoShow.modulation.pump : 1;
+  songPlayer.sync(tempo);
+  autoShow.tick(now);
   pool.stepFades(now);
-  merger.compute(now, { pump: autoPump, hitUntil: autoHitUntil });
+  merger.compute(now, autoShow.modulation);
   updateVisuals(now, dt);
   updateProps(now);
   animPerformers(now);
@@ -4778,583 +4021,40 @@ function loop(t) {
 /* ====================================================================
    AUTO SHOW — style-based look generator synced to BPM / music
 ==================================================================== */
-let autoPump = 1,
-  autoHitUntil = 0;
-const pickR = (a) => a[Math.floor(Math.random() * a.length)];
-const COL = (n) => {
-  const c = COLORS.find((x) => x[0] === n);
-  return { r: c[1], g: c[2], b: c[3] };
-};
-const SEC_NAMES = {
-  groove: 'Groove',
-  verse: 'Verse',
-  chorus: 'Chorus',
-  hook: 'Hook',
-  build: 'Build-up',
-  drop: 'Drop',
-  intro: 'Intro',
-};
-const STYLES = {
-  edm: {
-    name: 'EDM / Festival',
-    he: 'בילדים, דרופים וסטרובים',
-    fade: 0.12,
-    bars: 4,
-    pal: [
-      ['Cyan', 'Magenta'],
-      ['Blue', 'White'],
-      ['Red', 'White'],
-      ['Lime', 'Blue'],
-      ['Magenta', 'Congo'],
-      ['Orange', 'Cyan'],
-    ],
-    pos: ['fanAud', 'skyFan', 'vOut', 'tunnel', 'audience'],
-    fxPos: ['bally', 'circle', 'tilt', 'pan'],
-    fxDim: ['dimChase', 'dimSaw', 'flash'],
-    rate: [1, 2],
-    strobe: true,
-    blinders: true,
-    screen: [2, 3, 7, 4],
-    sections: ['groove', 'groove', 'build', 'drop'],
-  },
-  techno: {
-    name: 'Techno',
-    he: 'מונוכרום, חד ומכני',
-    fade: 0.05,
-    bars: 8,
-    pal: [
-      ['White', 'White'],
-      ['Red', 'Red'],
-      ['Blue', 'White'],
-      ['CTO', 'White'],
-    ],
-    pos: ['straight', 'tunnel', 'vOut', 'skyFan'],
-    fxPos: ['tilt', 'pan'],
-    fxDim: ['dimChase', 'flash', 'dimSaw'],
-    rate: [2, 4],
-    strobe: true,
-    blinders: false,
-    mono: true,
-    screen: [5, 7, 2],
-    sections: ['groove', 'build', 'drop', 'groove'],
-  },
-  rock: {
-    name: 'Rock',
-    he: 'אדום־ענבר, בלינדרים בפזמון',
-    fade: 0.3,
-    bars: 8,
-    pal: [
-      ['Red', 'Amber'],
-      ['Amber', 'White'],
-      ['Blue', 'White'],
-      ['Red', 'Blue'],
-      ['CTO', 'Red'],
-    ],
-    pos: ['band', 'cross', 'audience', 'vOut'],
-    fxPos: ['tilt', 'bally'],
-    fxDim: ['dimChase'],
-    rate: [0.5, 1],
-    strobe: true,
-    blinders: true,
-    screen: [1, 2, 6],
-    sections: ['verse', 'chorus'],
-  },
-  pop: {
-    name: 'Pop',
-    he: 'צבעוני, תנועה רכה ומלוטשת',
-    fade: 0.8,
-    bars: 8,
-    pal: [
-      ['Pink', 'Lt Blue'],
-      ['Magenta', 'Cyan'],
-      ['Lavender', 'Amber'],
-      ['Yellow', 'Magenta'],
-      ['Congo', 'Pink'],
-    ],
-    pos: ['fanAud', 'band', 'skyFan', 'cross'],
-    fxPos: ['circle', 'pan'],
-    fxDim: ['dimSine'],
-    fxCol: ['rainbow'],
-    rate: [0.5, 1],
-    strobe: false,
-    blinders: true,
-    screen: [3, 4, 6, 1],
-    sections: ['verse', 'chorus'],
-  },
-  hiphop: {
-    name: 'Hip-Hop',
-    he: 'כבד, חם, שוטים חדים',
-    fade: 0.15,
-    bars: 4,
-    pal: [
-      ['Amber', 'Magenta'],
-      ['Congo', 'Amber'],
-      ['Red', 'Blue'],
-      ['Yellow', 'Congo'],
-    ],
-    pos: ['vOut', 'fanAud', 'straight', 'down'],
-    fxPos: ['tilt'],
-    fxDim: ['dimChase', 'dimSaw'],
-    rate: [0.5, 1],
-    strobe: true,
-    blinders: true,
-    screen: [5, 2, 4],
-    sections: ['verse', 'hook'],
-  },
-  mizrahi: {
-    name: 'Mizrahi / Party',
-    he: 'קשת צבעים והמון תנועה',
-    fade: 0.3,
-    bars: 4,
-    pal: [
-      ['Magenta', 'Cyan'],
-      ['Orange', 'Magenta'],
-      ['Yellow', 'Congo'],
-      ['Red', 'Lime'],
-      ['Pink', 'Blue'],
-    ],
-    pos: ['fanAud', 'skyFan', 'band', 'audience'],
-    fxPos: ['bally', 'circle', 'pan'],
-    fxDim: ['dimChase', 'dimSine'],
-    fxCol: ['rainbow', 'rgbChase'],
-    rate: [1, 2],
-    strobe: false,
-    blinders: true,
-    screen: [3, 6, 7],
-    sections: ['groove', 'chorus'],
-  },
-  ballad: {
-    name: 'Ballad',
-    he: 'חם, איטי, פייד ארוך',
-    fade: 3.5,
-    bars: 16,
-    pal: [
-      ['Blue', 'Lavender'],
-      ['CTO', 'Warm'],
-      ['Congo', 'Blue'],
-      ['Amber', 'Warm'],
-      ['Lt Blue', 'White'],
-    ],
-    pos: ['skyFan', 'screen', 'center'],
-    fxPos: ['circle'],
-    fxDim: [],
-    rate: [0.125, 0.25],
-    calm: true,
-    strobe: false,
-    blinders: false,
-    screen: [1, 4, 0],
-    sections: ['verse', 'chorus'],
-  },
-  orchestral: {
-    name: 'Orchestral',
-    he: 'פוקוס על התזמורת, חם ואלגנטי',
-    fade: 4,
-    bars: 16,
-    pal: [
-      ['Amber', 'Blue'],
-      ['CTO', 'Congo'],
-      ['Warm', 'Lavender'],
-      ['Amber', 'Lt Blue'],
-    ],
-    pos: ['skyFan', 'screen'],
-    fxPos: [],
-    fxDim: [],
-    gobos: [2, 7, 1],
-    calm: true,
-    orch: true,
-    strobe: false,
-    blinders: false,
-    screen: [1, 0, 4],
-    sections: ['verse', 'chorus'],
-  },
-  cinematic: {
-    name: 'Cinematic',
-    he: 'בימים לשמיים, נשימה איטית',
-    fade: 2,
-    bars: 8,
-    pal: [
-      ['White', 'Blue'],
-      ['Lt Blue', 'Congo'],
-      ['CTO', 'Blue'],
-    ],
-    pos: ['skyFan', 'screen', 'tunnel', 'vOut'],
-    fxPos: ['tilt', 'pan'],
-    fxDim: ['dimSaw', 'dimSine'],
-    rate: [0.25, 0.5],
-    strobe: false,
-    blinders: true,
-    screen: [1, 4, 6],
-    sections: ['build', 'chorus'],
-  },
-};
-const AG = {
-  audW: rig.range(1801, 1899),
-  towB: rig.range(1601, 1699),
-  towW: rig.range(1701, 1799),
-  ring: rig.range(1201, 1299),
-  rwash: rig.range(1301, 1399),
-  angB: rig.range(1401, 1499),
-  angS: rig.range(1501, 1599),
-  foh: rig.range(101, 199),
-  t2: rig.range(201, 299),
-  t3: rig.range(301, 399),
-  t4: rig.range(401, 499),
-  back: rig.range(501, 599),
-  tow: rig.range(601, 699),
-  floor: rig.range(701, 799),
-  fwash: rig.range(1001, 1099),
-  pars: rig.range(1101, 1199),
-  blind: rig.range(801, 899),
-  strobe: rig.range(901, 999),
-  bars: rig.range(2101, 2199),
-  follow: rig.range(1901, 1999),
-  prof: rig.range(2201, 2299),
-};
-const auto = {
-  on: false,
-  style: 'edm',
-  energy: 0.85,
-  master: 1,
-  bars: 0,
-  pulse: 'off',
-  strobes: true,
-  hits: true,
-  screen: true,
-  take: true,
-  secIdx: 0,
-  lastBar: null,
-  sec: '',
-  changeAt: 0,
-};
-function genLook(S, sec) {
-  const vals = {},
-    fx = [];
-  const set = (ids, o) =>
-    ids.forEach((id, k) => {
-      const f = FX[id];
-      const v = typeof o === 'function' ? o(f, k, ids.length) : o;
-      const out = (vals[id] = vals[id] || {});
-      for (const a in v) if (f.has(a)) out[a] = a === 'zoom' ? clamp(v[a], f.T.zr[0], f.T.zr[1]) : v[a];
-    });
-  const secE = { groove: 0.75, verse: 0.65, chorus: 1, hook: 1, build: 0.8, drop: 1 }[sec] ?? 0.8;
-  const E = clamp(auto.energy * secE, 0.05, 1.2),
-    L = (x) => Math.round(clamp(x * E, 0, 100));
-  const [n1, n2] = pickR(S.pal),
-    c1 = COL(n1),
-    c2 = COL(n2);
-  const big = sec === 'chorus' || sec === 'hook' || sec === 'drop';
-  set(rig.lightIds(), { dim: 0, strobe: 0, gobo: 0, grot: 0 });
-  const wPos = S.orch
-    ? pickR(['orch', 'band', 'center'])
-    : S.calm
-      ? pickR(['center', 'band', 'singer'])
-      : pickR(['center', 'band', 'cross', 'down', 'orch']);
-  set(AG.t3, (f, k, n) => ({
-    ...PRESET_FNS[wPos](f, k, n),
-    ...(k % 2 ? c2 : c1),
-    dim: L(S.calm ? 62 : 78),
-    zoom: S.calm ? 34 : 24,
-  }));
-  set(AG.tow, (f, k, n) => ({
-    ...PRESET_FNS[S.orch || Math.random() < 0.4 ? 'orch' : 'band'](f, k, n),
-    ...c2,
-    dim: L(S.calm ? 50 : 66),
-    zoom: 28,
-  }));
-  set(AG.pars, { ...c2, dim: L(85) });
-  set(AG.audW, (f, k, n) => ({
-    ...PRESET_FNS.crowd(f, k, n),
-    ...(big ? COL('White') : c2),
-    dim: L(big ? 95 : S.calm ? 25 : 45),
-    zoom: 50,
-    strobe: sec === 'drop' && S.strobe && auto.strobes ? 50 : 0,
-  }));
-  set(AG.towW, (f, k, n) => ({
-    ...PRESET_FNS[S.calm || S.orch ? 'band' : pickR(['band', 'audience', 'center'])](f, k, n),
-    ...(k % 2 ? c1 : c2),
-    dim: L(S.calm ? 40 : 60),
-    zoom: 30,
-  }));
-  set(AG.fwash, (f, k, n) => ({
-    ...PRESET_FNS[sec === 'verse' || S.calm ? 'down' : 'vOut'](f, k, n),
-    ...c1,
-    dim: L(sec === 'verse' || S.calm ? 35 : 62),
-    zoom: 20,
-  }));
-  // footlight bars: a tight colour curtain straight up on big sections, otherwise a soft wash back onto the band
-  set(AG.bars, (f, k) => ({
-    tilt: big ? 6 : -32,
-    ...(big && k % 2 ? c2 : c1),
-    dim: L(big ? 90 : 45),
-    zoom: big ? 6 : 30,
-  }));
-  if ((sec === 'build' || sec === 'drop') && S.fxPos.length)
-    fx.push({ type: 'tilt', rate: pickR(S.rate || [1]), size: PHASER_TYPES.tilt.size, spread: 360, ids: [...AG.bars] });
-  // follow spots stay on the lead singer; profiles add a side wash
-  set(AG.follow, (f, k, n) => ({
-    ...PRESET_FNS.singer(f, k, n),
-    ...COL('Warm'),
-    dim: L(big ? 85 : 55),
-    zoom: big ? 7 : 11,
-    gobo: 0,
-  }));
-  set(AG.prof, (f, k) => ({ ...(k % 2 ? c1 : c2), dim: L(S.calm ? 55 : 35) }));
-  const gob = pickR(S.gobos || [1, 2, 3, 4, 5, 7]);
-  if (S.calm || !big)
-    set(AG.foh, (f, k, n) => ({
-      ...PRESET_FNS[S.orch && k % 2 ? 'orch' : 'singer'](f, k, n),
-      ...COL('Warm'),
-      dim: L(72),
-      gobo: S.calm ? (S.gobos ? gob : 0) : gob,
-      zoom: S.calm ? 11 : 13,
-      grot: S.calm ? 0 : 8,
-    }));
-  else
-    set(AG.foh, (f, k, n) => ({
-      ...PRESET_FNS[pickR(['audience', 'cross', 'fanAud'])](f, k, n),
-      ...COL('White'),
-      dim: L(82),
-      gobo: gob,
-      zoom: 14,
-      grot: pickR([-30, 20, 40]),
-    }));
-  set(AG.t4, (f, k, n) => ({
-    ...PRESET_FNS[S.orch ? 'orch' : pickR(['cross', 'band', 'down', 'orch'])](f, k, n),
-    ...(S.mono ? COL('White') : c1),
-    dim: L(S.calm ? 48 : 62),
-    gobo: pickR(S.gobos || [1, 2, 3, 7]),
-    zoom: 16,
-    grot: pickR([-12, 12, 0]),
-  }));
-  set(AG.rwash, (f, k, n) => ({
-    ...PRESET_FNS[S.calm ? 'ringCone' : pickR(['center', 'ringCone', 'band'])](f, k, n),
-    ...(k % 2 ? c1 : c2),
-    dim: L(S.calm ? 45 : 70),
-    zoom: 26,
-  }));
-  if (!S.calm || S.orch)
-    set(AG.angS, (f, k, n) => ({
-      ...PRESET_FNS[S.orch ? 'orch' : pickR(['cross', 'band', 'audience'])](f, k, n),
-      ...(S.mono ? COL('White') : c2),
-      dim: L(S.calm ? 45 : 70),
-      gobo: pickR(S.gobos || [1, 3, 5, 7]),
-      zoom: 14,
-      grot: pickR([-20, 20, 35]),
-    }));
-  const order = [AG.t2, AG.back, AG.floor, AG.angB, AG.towB];
-  let active = big ? [AG.ring, ...order] : sec === 'build' ? [AG.ring, AG.floor, AG.t2] : [AG.ring, pickR(order)];
-  if (auto.energy < 0.45) active = active.slice(0, 1);
-  if (S.calm) active = [AG.ring, AG.back];
-  active.forEach((ids, gi) => {
-    const pn =
-        ids === AG.ring
-          ? pickR(
-              S.calm
-                ? ['ringDown', 'ringCrown', 'ringCone']
-                : sec === 'drop'
-                  ? ['ringSun', 'ringTwist']
-                  : ['ringCone', 'ringSun', 'ringTwist', 'ringCrown', 'ringDown'],
-            )
-          : ids === AG.angB
-            ? pickR(['wingFan', 'converge', 'ringCrown', ...S.pos])
-            : pickR(S.pos),
-      col = S.mono ? COL(pickR(['White', 'White', n1])) : gi % 2 ? c2 : c1;
-    set(ids, (f, k, n) => ({ ...PRESET_FNS[pn](f, k, n), ...col, dim: L(S.calm ? 50 : 95), zoom: 2, gobo: 0 }));
-    const rate = pickR(S.rate || [1]) * (sec === 'drop' || sec === 'build' ? 2 : 1);
-    if (S.fxPos.length && Math.random() < (S.calm ? 0.7 : 0.85)) {
-      const t = pickR(S.fxPos);
-      fx.push({
-        type: t,
-        rate,
-        size: PHASER_TYPES[t].size * (S.calm ? 0.5 : sec === 'drop' ? 1.2 : 1),
-        spread: pickR([0, 180, 360, 720]),
-        ids: [...ids],
-      });
-    }
-    if (S.fxDim.length && (sec === 'build' || sec === 'drop' || Math.random() < 0.45))
-      fx.push({
-        type: sec === 'build' ? 'dimChase' : pickR(S.fxDim),
-        rate,
-        size: L(100),
-        spread: pickR([360, 720]),
-        ids: [...ids],
-      });
-    if (S.fxCol && Math.random() < 0.4)
-      fx.push({ type: pickR(S.fxCol), rate: 0.5, size: 100, spread: 360, ids: [...ids] });
-  });
-  if (sec === 'drop' && S.strobe && auto.strobes) {
-    set(AG.strobe, { dim: 100, strobe: pickR([75, 85, 92]) });
-    set(AG.t3, { strobe: 35 });
-  }
-  if (auto.screen)
-    set([2001], {
-      ...(S.mono ? COL('White') : c1),
-      dim: L(S.calm ? 28 : 80),
-      gobo: pickR(S.screen),
-      grot: S.calm ? 5 : pickR([20, 40, 70]),
-    });
-  else set([2001], { dim: 0 });
-  return { num: 1, name: `${S.name} · ${SEC_NAMES[sec] || sec}`, fade: S.fade, vals, fx, sec };
-}
-function autoNewLook() {
-  const S = STYLES[auto.style],
-    sec = S.sections[auto.secIdx % S.sections.length];
-  auto.secIdx++;
-  const cue = genLook(S, sec);
-  auto.sec = sec;
-  autoExec.cues = [cue];
-  autoExec.resetTracking();
-  autoExec.level = auto.master;
-  autoExec.goto(0, S.fade);
-  if (auto.hits && S.blinders && (sec === 'chorus' || sec === 'drop' || sec === 'hook'))
-    autoHitUntil = clock.nowSeconds() + 0.28;
-}
-function autoBars() {
-  return auto.bars || STYLES[auto.style].bars;
-}
-function autoStart() {
-  auto.on = true;
-  auto.secIdx = 0;
-  auto.lastBar = null;
-  if (auto.take) execs.forEach((e) => e.off());
-  if (programmer.hasContent()) toast('Note: programmer values override Auto — press CLEAR twice to release');
-  tempo.setBeatOrigin(clock.nowSeconds());
-  autoNewLook();
-  auto.lastBar = 0;
-  renderAuto();
-}
-function autoStop() {
-  auto.on = false;
-  autoExec.off();
-  renderAuto();
-}
-function autoTick(now) {
-  const beatF = ((now - tempo.beatOrigin) * tempo.bpm) / 60,
-    beat = Math.floor(beatF),
-    bar = Math.floor(beat / 4);
-  // pulse
-  if (auto.pulse === 'beat') autoPump = 0.45 + 0.55 * Math.exp(-(beatF - beat) * 5);
-  else if (auto.pulse === 'audio' && song.an) {
-    song.an.getByteFrequencyData(song.fd);
-    let b = 0;
-    for (let i = 1; i < 7; i++) b += song.fd[i];
-    b /= 6 * 255;
-    song.peak = Math.max(b, song.peak * 0.996, 0.05);
-    const n = b / song.peak;
-    autoPump = 0.2 + 0.8 * n * n;
-  } else autoPump = 1;
-  if (!auto.on) return;
-  autoExec.level = auto.master;
-  if (auto.lastBar === null) auto.lastBar = bar;
-  if (bar !== auto.lastBar) {
-    auto.lastBar = bar;
-    if (((bar % autoBars()) + autoBars()) % autoBars() === 0) autoNewLook();
-  }
-}
+const looks = new LookGenerator(rig, Math.random);
+const songPlayer = new SongPlayer(clock, () => {
+  $('#songPlay').textContent = '▶ Play';
+});
+const autoShow = new AutoShow({
+  pool,
+  programmer,
+  tempo,
+  clock,
+  looks,
+  bus,
+  bassLevel: () => songPlayer.bassLevel(),
+  onChange: () => renderAuto(),
+});
 /* music: load, detect BPM, play */
-const song = { el: null, ctx: null, an: null, fd: null, bpm: null, off: 0, peak: 0.1 };
-function detectBpm(ab) {
-  const ch = ab.getChannelData(0),
-    sr = ab.sampleRate,
-    hop = 512;
-  const start = Math.min(Math.floor(sr * 20), Math.max(0, ch.length - sr * 60)),
-    end = Math.min(ch.length, start + sr * 60);
-  let lp = 0,
-    acc = 0,
-    n = 0;
-  const env = [];
-  for (let i = start; i < end; i++) {
-    lp += (ch[i] - lp) * 0.06;
-    acc += lp * lp;
-    if (++n === hop) {
-      env.push(Math.sqrt(acc / hop));
-      acc = 0;
-      n = 0;
-    }
-  }
-  const on = env.map((v, i) => (i ? Math.max(0, v - env[i - 1]) : 0)),
-    fps = sr / hop;
-  let best = -1,
-    bb = 120;
-  for (let b = 70; b <= 180; b += 0.5) {
-    const lag = (fps * 60) / b,
-      li = Math.floor(lag),
-      fr = lag - li;
-    let sum = 0;
-    for (let i = li + 1; i < on.length; i++) sum += on[i] * (on[i - li] * (1 - fr) + on[i - li - 1] * fr);
-    sum /= on.length - lag;
-    sum *= 1 - Math.abs(Math.log2(b / 120)) * 0.35;
-    if (sum > best) {
-      best = sum;
-      bb = b;
-    }
-  }
-  const per = (fps * 60) / bb;
-  let bp = -1,
-    bo = 0;
-  for (let o = 0; o < per; o++) {
-    let sm = 0;
-    for (let t = o; t < on.length; t += per) sm += on[Math.round(t)] || 0;
-    if (sm > bp) {
-      bp = sm;
-      bo = o;
-    }
-  }
-  return { bpm: Math.round(bb), off: (start / sr + bo / fps) % (60 / bb) };
-}
 async function loadSong(file) {
   $('#songStat').textContent = 'Analyzing tempo…';
   try {
-    if (!song.el) {
-      song.el = new Audio();
-      song.el.crossOrigin = 'anonymous';
-      song.el.onended = () => {
-        $('#songPlay').textContent = '▶ Play';
-      };
-    }
-    song.el.src = URL.createObjectURL(file);
-    const buf = await file.arrayBuffer();
-    const oc = new OfflineAudioContext(1, 44100, 44100);
-    const ab = await oc.decodeAudioData(buf);
-    const r = detectBpm(ab);
-    song.bpm = r.bpm;
-    song.off = r.off;
+    const loaded = await songPlayer.load(file);
     $('#songStat').innerHTML =
-      `<b style="color:var(--acc)">${file.name}</b> · detected <b style="color:var(--acc)">${r.bpm} BPM</b> · ${Math.round(ab.duration / 60)}:${String(Math.round(ab.duration % 60)).padStart(2, '0')}`;
+      `<b style="color:var(--acc)">${loaded.name}</b> · detected <b style="color:var(--acc)">${loaded.bpm} BPM</b> · ${Math.round(loaded.duration / 60)}:${String(Math.round(loaded.duration % 60)).padStart(2, '0')}`;
     $('#songPlay').disabled = false;
     $('#aPulse').value = 'audio';
-    auto.pulse = 'audio';
+    autoShow.settings.pulse = 'audio';
   } catch (e) {
     $('#songStat').textContent = 'Could not read this audio file.';
   }
 }
 function toggleSong() {
-  if (!song.el) return;
-  if (!song.ctx) {
-    song.ctx = new AudioContext();
-    const src = song.ctx.createMediaElementSource(song.el);
-    song.an = song.ctx.createAnalyser();
-    song.an.fftSize = 1024;
-    song.an.smoothingTimeConstant = 0.5;
-    src.connect(song.an);
-    song.an.connect(song.ctx.destination);
-    song.fd = new Uint8Array(song.an.frequencyBinCount);
-  }
-  song.ctx.resume();
-  if (song.el.paused) {
-    song.el.play();
+  const state = songPlayer.toggle();
+  if (state === 'playing') {
     $('#songPlay').textContent = '❚❚ Pause';
-    if (!auto.on) autoStart();
-  } else {
-    song.el.pause();
-    $('#songPlay').textContent = '▶ Play';
-  }
-}
-function songSync() {
-  if (song.el && !song.el.paused && song.bpm) {
-    tempo.setBpm(song.bpm);
-    tempo.setBeatOrigin(clock.nowSeconds() - (song.el.currentTime - song.off));
-  }
+    if (!autoShow.on) autoShow.start();
+  } else if (state === 'paused') $('#songPlay').textContent = '▶ Play';
 }
 /* auto UI */
 function renderAuto() {
@@ -5363,111 +4063,97 @@ function renderAuto() {
   for (const k in STYLES) {
     const S = STYLES[k],
       c = S.pal[0].map((n) => {
-        const x = COL(n);
+        const x = colorByName(n);
         return cssRgb(x.r, x.g, x.b);
       });
     const d = el(
       'div',
-      'style' + (auto.style === k ? ' on' : ''),
-      `<div class="sb" style="background:linear-gradient(90deg,${c[0]},${c[1]})"></div><b>${S.name}</b><span dir="rtl">${S.he}</span>`,
+      'style' + (autoShow.settings.style === k ? ' on' : ''),
+      `<div class="sb" style="background:linear-gradient(90deg,${c[0]},${c[1]})"></div><b>${S.name}</b><span dir="rtl">${he.autoStyleTaglines[k]}</span>`,
     );
     d.onclick = () => {
-      auto.style = k;
-      auto.secIdx = 0;
-      if (auto.on) autoNewLook();
+      autoShow.selectStyle(k);
       renderAuto();
     };
     g.appendChild(d);
   }
   const b = $('#autoGo');
-  b.classList.toggle('on', auto.on);
-  b.textContent = auto.on ? '■ STOP AUTO' : '▶ START AUTO';
+  b.classList.toggle('on', autoShow.on);
+  b.textContent = autoShow.on ? '■ STOP AUTO' : '▶ START AUTO';
 }
 function updateAutoUI(now) {
   const beatF = ((now - tempo.beatOrigin) * tempo.bpm) / 60,
     beat = ((Math.floor(beatF) % 4) + 4) % 4,
     bar = Math.floor(beatF / 4),
-    nb = autoBars();
+    nb = autoShow.barsPerLook();
   $$('#beatDots i').forEach((d, i) => d.classList.toggle('on', i === beat));
   $('#autoBpm').textContent = tempo.bpm + ' BPM';
   if (sideTab === 'auto') {
     const left = nb - (((bar % nb) + nb) % nb);
-    $('#autoSec').textContent = auto.on
-      ? `${SEC_NAMES[auto.sec] || ''} · next look in ${left} bar${left > 1 ? 's' : ''}`
+    $('#autoSec').textContent = autoShow.on
+      ? `${sectionName(autoShow.section) || ''} · next look in ${left} bar${left > 1 ? 's' : ''}`
       : '';
-    $('#autoStatus').innerHTML = auto.on
-      ? `<b>● AUTO RUNNING</b> — ${STYLES[auto.style].name}, section <b>${SEC_NAMES[auto.sec]}</b>, fade ${STYLES[auto.style].fade}s, change every ${nb} bars.<br>Programmer still overrides Auto, so you can grab fixtures live. Executor faders (HTP) add on top.`
+    $('#autoStatus').innerHTML = autoShow.on
+      ? `<b>● AUTO RUNNING</b> — ${autoShow.style.name}, section <b>${sectionName(autoShow.section)}</b>, fade ${autoShow.style.fade}s, change every ${nb} bars.<br>Programmer still overrides Auto, so you can grab fixtures live. Executor faders (HTP) add on top.`
       : "Pick a style and press START. Looks are generated on the bar, following the style's song sections (verse / chorus / build / drop). Use TAP or load a song to lock to the music.";
   }
 }
-$('#autoGo').onclick = () => (auto.on ? autoStop() : autoStart());
+$('#autoGo').onclick = () => (autoShow.on ? autoShow.stop() : autoShow.start());
 $('#aEnergy').oninput = (ev) => {
-  auto.energy = ev.target.value / 100;
+  autoShow.settings.energy = ev.target.value / 100;
   $('#aEnergyV').textContent = ev.target.value;
 };
 $('#aEnergy').onchange = () => {
-  if (auto.on) autoNewLook();
+  if (autoShow.on) autoShow.newLook();
 };
 $('#aMaster').oninput = (ev) => {
-  auto.master = ev.target.value / 100;
+  autoShow.settings.master = ev.target.value / 100;
   $('#aMasterV').textContent = ev.target.value;
 };
-$('#aBars').onchange = (ev) => (auto.bars = +ev.target.value);
-$('#aPulse').onchange = (ev) => (auto.pulse = ev.target.value);
-$('#aStrobe').onchange = (ev) => (auto.strobes = ev.target.checked);
-$('#aHits').onchange = (ev) => (auto.hits = ev.target.checked);
-$('#aScreen').onchange = (ev) => (auto.screen = ev.target.checked);
-$('#aTake').onchange = (ev) => (auto.take = ev.target.checked);
+$('#aBars').onchange = (ev) => (autoShow.settings.bars = +ev.target.value);
+$('#aPulse').onchange = (ev) => (autoShow.settings.pulse = ev.target.value);
+$('#aStrobe').onchange = (ev) => (autoShow.settings.strobes = ev.target.checked);
+$('#aHits').onchange = (ev) => (autoShow.settings.hits = ev.target.checked);
+$('#aScreen').onchange = (ev) => (autoShow.settings.screen = ev.target.checked);
+$('#aTake').onchange = (ev) => (autoShow.settings.take = ev.target.checked);
 $('#songFile').onchange = (ev) => {
   const f = ev.target.files[0];
   if (f) loadSong(f);
 };
 $('#songPlay').onclick = toggleSong;
 $('#aNext').onclick = () => {
-  if (!auto.on) autoStart();
-  else autoNewLook();
+  if (!autoShow.on) autoShow.start();
+  else autoShow.newLook();
 };
 $('#aSave').onclick = () => {
-  if (!auto.on || !autoExec.cues[0]) {
+  if (!autoShow.on || !autoExec.cues[0]) {
     toast('Start Auto first');
     return;
   }
   const e = execs[appState.selExec],
     num = e.cues.length ? Math.floor(e.cues[e.cues.length - 1].num) + 1 : 1;
-  const c = jsonClone(autoExec.cues[0]);
-  c.num = num;
-  c.name = `${STYLES[auto.style].name.split(' ')[0]} ${SEC_NAMES[c.sec] || ''}`;
-  delete c.sec;
-  e.cues.push(c);
+  e.cues.push(savedLookCue(autoExec.cues[0], num, autoShow.style));
   if (!e.name) e.name = `Seq ${appState.selExec + 1}`;
   e.invalidate();
-  persist();
+  showStorage.persist();
   uiDirty.all = true;
   toast(`Look saved as Cue ${num} in Exec ${appState.selExec + 1}`);
   log(`Auto look → Exec ${appState.selExec + 1} Cue ${num}`, 'ok');
 };
 $('#aList').onclick = () => {
-  const S = STYLES[auto.style];
+  const S = autoShow.style;
   let ei = execs.findIndex((e, i) => i > 0 && !e.cues.length);
   if (ei < 0) {
     toast('No empty executor — clear one first');
     return;
   }
-  const cues = [];
-  for (let i = 0; i < 8; i++) {
-    const sec = S.sections[i % S.sections.length];
-    const c = genLook(S, sec);
-    c.num = i + 1;
-    c.name = `${SEC_NAMES[sec]} ${i + 1}`;
-    delete c.sec;
-    cues.push(c);
-  }
+  const cues = buildLookList(looks, S, autoShow.settings);
   const e = execs[ei];
   e.name = S.name;
   e.cues = cues;
   e.resetTracking();
   appState.selectExec(ei);
-  persist();
+  showStorage.persist();
   toast(`8-cue ${S.name} list built in Exec ${ei + 1}`);
   log(`Built ${S.name} cue list → Exec ${ei + 1}`, 'ok');
 };
@@ -5678,9 +4364,7 @@ function openGuide(i) {
 }
 function closeGuide() {
   $('#guide').classList.remove('show');
-  try {
-    localStorage.setItem('lumadesk-guide-seen', '1');
-  } catch (e) {}
+  guideFlag.markSeen();
 }
 $('#gClose').onclick = closeGuide;
 $('#gPrev').onclick = () => {
@@ -5879,7 +4563,7 @@ function downloadBlob(blob, name) {
     a.remove();
   }, 2000);
 }
-const rec = { mr: null, chunks: [], t0: 0 };
+const rec = { mr: null, chunks: [], t0: 0, dest: null };
 $('#recBtn').onclick = () => {
   if (rec.mr) {
     rec.mr.stop();
@@ -5890,12 +4574,13 @@ $('#recBtn').onclick = () => {
     return;
   }
   const stream = canvas.captureStream(30);
-  if (song.ctx) {
-    if (!song.recDest) {
-      song.recDest = song.ctx.createMediaStreamDestination();
-      song.an.connect(song.recDest);
+  const songGraph = songPlayer.audioGraph;
+  if (songGraph) {
+    if (!rec.dest) {
+      rec.dest = songGraph.context.createMediaStreamDestination();
+      songGraph.node.connect(rec.dest);
     }
-    song.recDest.stream.getAudioTracks().forEach((t) => stream.addTrack(t));
+    rec.dest.stream.getAudioTracks().forEach((t) => stream.addTrack(t));
   }
   const mime =
     ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'].find((m) =>
@@ -6026,7 +4711,7 @@ function kpPress(t) {
         cmd.value = '';
         return;
       }
-      runCmd(v);
+      runner.run(v);
     }
     cmd.value = '';
     return;
@@ -6050,11 +4735,7 @@ let deskMode = 'ma',
   maForcedTab = null,
   maSize,
   maGeo = null;
-const saveLayout = () => {
-  try {
-    localStorage.setItem('lumadesk-layout2', JSON.stringify({ deskMode, deskZoom, maSize }));
-  } catch (e) {}
-};
+const saveLayout = () => layoutPrefs.save({ deskMode, deskZoom, maSize });
 const PARTS = {
   featTabs: $('#featTabs'),
   encBody: $('#encBody'),
@@ -6391,16 +5072,8 @@ setInterval(() => {
   $('#cwProgInfo').textContent = `${selection.ids.length} SELECTED`;
   $('#cwScreenInfo').textContent = (sideTab || '').toUpperCase();
 }, 250);
-try {
-  const L = JSON.parse(localStorage.getItem('lumadesk-layout2') || 'null');
-  if (L) {
-    deskMode = L.deskMode || 'ma';
-    deskZoom = L.deskZoom || 'auto';
-    // earlier versions stored MA_SIZE without a grip drag: read it as the adaptive default
-    const s = +L.maSize;
-    if (Number.isFinite(s) && s > 0 && s !== MA_SIZE) maSize = clamp(s, 0.3, 0.7);
-  }
-} catch (e) {}
+const savedLayout = layoutPrefs.load(MA_SIZE);
+if (savedLayout) ({ deskMode, deskZoom, maSize } = savedLayout);
 $('#layoutSel').value = deskMode;
 $('#deskZoom').value = deskZoom;
 applyLayout();
@@ -6408,7 +5081,7 @@ applyLayout();
 /* engine -> UI: the engine reports through the bus; until Phase 5 these subscribers are the UI side */
 bus.on('message', (m) => (m.kind === 'log' ? log(m.text, m.level) : toast(m.text)));
 bus.on('poolsChanged', () => renderPools());
-bus.on('showChanged', () => persist());
+bus.on('showChanged', () => showStorage.persist());
 bus.on('stateDirty', () => (uiDirty.all = true));
 bus.on('storeModeChanged', ({ on }) => {
   $('#kStore').classList.toggle('on', on);
@@ -6419,22 +5092,9 @@ renderFeatTabs();
 renderEncoders();
 buildExecs();
 renderAuto();
-let loaded = false;
-try {
-  const s = localStorage.getItem(LS);
-  if (s) {
-    loadShow(JSON.parse(s));
-    loaded = execs.some((e) => e.cues.length);
-    if (loaded && execs[0].cues.length) {
-      execs[0].goto(0, 0);
-      if (!execs[0].level) execs[0].level = 1;
-    }
-  }
-} catch (e) {}
-if (!loaded) buildDemo();
-try {
-  if (!localStorage.getItem('lumadesk-guide-seen')) setTimeout(() => openGuide(0), 600);
-} catch (e) {}
+restoreShow({ storage: showStorage, serializer, execs, demo });
+showLoaded();
+if (!guideFlag.seen()) setTimeout(() => openGuide(0), 600);
 requestAnimationFrame(loop);
 window.__desk = {
   renderer,
@@ -6442,7 +5102,7 @@ window.__desk = {
   perf: performers,
   prog: programmer,
   applyPreset: (type, slot) => programmer.applyPreset(type, slot),
-  runCmd,
+  runCmd: (raw) => runner.run(raw),
   execs,
   setView,
   FX,
@@ -6464,7 +5124,7 @@ if (window.__deskClock) {
   fbLog.observe($('#cmdFb'), { childList: true });
   toastLog.observe($('#toast'), { childList: true, characterData: true, subtree: true });
   const state = () => {
-    const show = serialize();
+    const show = serializer.serialize();
     return jsonClone({
       sel: selection.ids,
       prog: programmer.vals,
@@ -6487,20 +5147,20 @@ if (window.__deskClock) {
   window.__desk.test = {
     ...C,
     state,
-    serialize: () => jsonClone(serialize()),
+    serialize: () => jsonClone(serializer.serialize()),
     // move to an absolute time (seconds, never backwards) and return the output of every fixture there
     outputAt: (sec) => {
       if (sec * 1000 > C.now()) C.advance(sec * 1000 - C.now());
       const now = C.now() / 1000;
       pool.stepFades(now);
-      merger.compute(now, { pump: autoPump, hitUntil: autoHitUntil });
+      merger.compute(now, autoShow.modulation);
       return fixtures.map((f) => ({ id: f.id, ...f.out }));
     },
     // run one command line and return the log lines it wrote, the toast it showed (null if none) and the state after it
     run: (line) => {
       fbLog.takeRecords();
       toastLog.takeRecords();
-      runCmd(line);
+      runner.run(line);
       const added = fbLog.takeRecords().flatMap((m) => [...m.addedNodes]);
       const toast = toastLog.takeRecords().length ? $('#toast').textContent : null;
       return { line, log: added.map((n) => [n.firstChild?.className || '', n.textContent]), toast, state: state() };

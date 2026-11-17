@@ -1,10 +1,10 @@
 import type { AttrValues } from '../../domain/attributes';
 import type { Rig } from '../../domain/rig';
 import type { Cue, FixtureValues } from '../../engine/CueList';
+import { colorByName } from '../../engine/colorByName';
 import { buildCueVals, type CueValueStep } from '../../engine/cueValues';
 import type { GroupPool } from '../../engine/GroupLibrary';
 import type { PresetFn } from '../../engine/positionPresets';
-import { COLORS } from '../../engine/presetColors';
 import { PRESET_FNS, type PresetFnName } from '../../engine/presetFunctions';
 import { PHASER_TYPES, type PhaserInstance, type PhaserType } from '../../engine/shared';
 
@@ -41,11 +41,7 @@ export function createDemoKit(rig: Rig, groups: GroupPool): DemoKit {
       if (!group) throw new Error(`Demo show: no default group ${slot}`);
       return group.ids;
     },
-    color: (name) => {
-      const c = COLORS.find((x) => x[0] === name);
-      if (!c) throw new Error(`Demo show: no colour ${name}`);
-      return { r: c[1], g: c[2], b: c[3] };
-    },
+    color: colorByName,
     aimed: (position, extra) => (f, k, n) => ({ ...PRESET_FNS[position](f, k, n), ...extra }),
     phaser: (type, ids, options = {}) => ({
       type,
