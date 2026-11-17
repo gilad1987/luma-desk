@@ -24,7 +24,8 @@ async function waitForWebFonts(page: Page): Promise<void> {
 
 for (const layout of LAYOUTS) {
   for (const view of VIEWS) {
-    test(`screenshot ${layout} / ${view}`, async ({ page }) => {
+    // @screenshot: the baselines are macOS only, so CI skips this tag and the screenshot run stays a local check
+    test(`screenshot ${layout} / ${view}`, { tag: '@screenshot' }, async ({ page }) => {
       const desk = await bootApp(page, { layout });
       await waitForWebFonts(page);
       await page.evaluate((v) => window.__desk.setView(v, true), view);

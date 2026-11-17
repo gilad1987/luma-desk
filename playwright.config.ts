@@ -25,7 +25,8 @@ export default defineConfig({
   fullyParallel: true,
   workers: 2,
   retries: 0,
-  reporter: [['list']],
+  // CI keeps short log lines and an HTML report that the workflow uploads when a test fails; locally a list is enough
+  reporter: process.env['CI'] ? [['line'], ['html', { outputFolder: 'playwright-report', open: 'never' }]] : [['list']],
   // per platform: another OS rasterizes fonts and WebGL differently and needs its own baselines
   snapshotPathTemplate: '{testDir}/__screenshots__/{platform}/{testFilePath}/{arg}{ext}',
   use: {
