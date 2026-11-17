@@ -4,10 +4,13 @@
  * change sides of a valid patch are owned by noOps.test.ts and propsPatch.test.ts.
  */
 import { describe, expect, it } from 'vitest';
+import { MOUNTS, type Mount } from '../../../../../src/domain/Fixture.ts';
+import type { FixtureTypeId } from '../../../../../src/domain/FixtureType.ts';
 import { setFixtureProps, type FixturePatch } from '../../../../../src/domain/stage/edit/itemOps.ts';
 import { setLedWall } from '../../../../../src/domain/stage/edit/ledWall.ts';
 import { parseStageDesign } from '../../../../../src/domain/stage/parse/parseStageDesign.ts';
 import type { StageDesign } from '../../../../../src/domain/stage/StageDesign.ts';
+import { FIXTURE_ROLES, type FixtureRole } from '../../../../../src/domain/stage/types.ts';
 import { jsonRoundTrip } from '../../../../shared/index.ts';
 import { sampleDesign } from './sampleDesign.ts';
 
@@ -19,6 +22,8 @@ function withWall(): { readonly d: StageDesign; readonly wallId: number } {
   return { d, wallId };
 }
 
+const STRIP = { p: [-3, 7, 0], tan: [1, 0, 0], len: 2 } as const;
+
 const VALID: readonly (readonly [string, FixturePatch])[] = [
   ['a new position', { position: [1, 6.5, -0.5] }],
   ['a rotation', { rotation: [0, 0, 0.6, 0.8] }],
@@ -26,13 +31,30 @@ const VALID: readonly (readonly [string, FixturePatch])[] = [
   ['a move to another truss', { trussId: 'left-1' }],
   ['a move off the truss', { trussId: null, mount: 'floor' }],
   ['a new type and role', { type: 'beam', role: 'side' }],
+  ['a pixel strip', { pixel: STRIP }],
 ];
+
+/** The type system refuses these values; a panel `<select>` value can still carry one at runtime. */
+const UNKNOWN_TYPE = 'laser' as FixtureTypeId;
+const UNKNOWN_ROLE = 'spot' as FixtureRole;
+const UNKNOWN_MOUNT = 'ceiling' as Mount;
 
 const BAD: readonly (readonly [string, FixturePatch, string])[] = [
   ['NaN position', { position: [Number.NaN, 7, 0] }, 'position must be finite, got [NaN, 7, 0]'],
   ['infinite rotation', { rotation: [0, 0, Infinity, 1] }, 'rotation must be finite, got [0, 0, Infinity, 1]'],
   ['NaN pan', { fixed: { pan: Number.NaN, tilt: 0 } }, 'fixed must be finite, got [NaN, 0]'],
   ['unknown truss', { trussId: 'gone-1' }, 'trussId must name a truss, got gone-1'],
+  ['zero-length rotation', { rotation: [0, 0, 0, 0] }, 'rotation must be longer than 0.000001, got [0, 0, 0, 0]'],
+  ['NaN pixel start', { pixel: { ...STRIP, p: [Number.NaN, 7, 0] } }, 'pixel.p must be finite, got [NaN, 7, 0]'],
+  [
+    'infinite pixel tangent',
+    { pixel: { ...STRIP, tan: [1, Infinity, 0] } },
+    'pixel.tan must be finite, got [1, Infinity, 0]',
+  ],
+  ['NaN pixel length', { pixel: { ...STRIP, len: Number.NaN } }, 'pixel.len must be finite, got [NaN]'],
+  ['unknown type', { type: UNKNOWN_TYPE }, 'type must be a known fixture type, got laser'],
+  ['unknown role', { role: UNKNOWN_ROLE }, `role must be one of ${FIXTURE_ROLES.join(', ')}, got spot`],
+  ['unknown mount', { mount: UNKNOWN_MOUNT }, `mount must be one of ${MOUNTS.join(', ')}, got ceiling`],
 ];
 
 describe('setFixtureProps returns only designs the parser accepts', () => {

@@ -47,3 +47,9 @@ export const BOOLEAN: ValueRule<boolean> = {
   accepts: (v): v is boolean => typeof v === 'boolean',
   expected: 'true or false',
 };
+
+/**
+ * A quaternion this long or shorter has no direction, so it cannot be normalized to a rotation. The parser and the
+ * fixture patch check both read it, so an edit never saves a rotation the next show load would refuse.
+ */
+export const MIN_QUAT_LENGTH = 1e-6;
