@@ -1,0 +1,17 @@
+/** The Auto Show pane, byte for byte as the original page had it; `renderStyles` fills `#styleGrid`. */
+export const autoShowMarkup = `<div class="pane" id="pane-auto">
+        <div class="autoTop"><button class="autoGo" id="autoGo">▶ START AUTO</button><div class="beatBox"><span id="autoBpm">124 BPM</span><div class="dots" id="beatDots"><i class="d1"></i><i></i><i></i><i></i></div></div></div>
+        <div class="ptitle"><span>Style</span><span id="autoSec"></span></div>
+        <div class="styles" id="styleGrid"></div>
+        <div class="ctl">
+          <label>Energy</label><input type="range" id="aEnergy" min="20" max="120" value="85"><output id="aEnergyV">85</output>
+          <label>Auto master</label><input type="range" id="aMaster" min="0" max="100" value="100"><output id="aMasterV">100</output>
+          <label>Change every</label><select id="aBars"><option value="0">Style default</option><option value="1">1 bar</option><option value="2">2 bars</option><option value="4">4 bars</option><option value="8">8 bars</option><option value="16">16 bars</option></select><span></span>
+          <label>Pulse</label><select id="aPulse"><option value="off">Off</option><option value="beat">To the beat</option><option value="audio">To the music (audio)</option></select><span></span>
+        </div>
+        <div class="chk"><label><input type="checkbox" id="aStrobe" checked>Strobes on drops</label><label><input type="checkbox" id="aHits" checked>Blinder hits</label><label><input type="checkbox" id="aScreen" checked>LED screen</label><label><input type="checkbox" id="aTake" checked>Take over executors</label></div>
+        <div class="music"><div class="xlabel" style="margin:0">Music — load a song to sync BPM &amp; pulse</div>
+          <div class="r"><input type="file" id="songFile" accept="audio/*"><button id="songPlay" disabled>▶ Play</button></div><div id="songStat">No song loaded — TAP the beat, or load an mp3/wav.</div></div>
+        <div class="autoBtns"><button id="aNext">Next look now</button><button id="aSave">Save look → cue</button><button id="aList">Build cue list</button></div>
+        <div id="autoStatus"></div>
+      </div>`;
