@@ -1,8 +1,10 @@
 import { defineConfig } from '@playwright/test';
 
-// BASE_URL and WEB_SERVER_CMD let the same suite run against a built app later, for example
-// BASE_URL=http://127.0.0.1:4173/ WEB_SERVER_CMD="npm run preview -- --port 4173 --strictPort".
-const baseURL = process.env.BASE_URL ?? 'http://127.0.0.1:4173/';
+// The suite runs against the production build, so it checks what ships. BASE_URL and WEB_SERVER_CMD point it at
+// another server, for example BASE_URL=http://127.0.0.1:5173/ WEB_SERVER_CMD="npm run dev -- --port 5173 --strictPort".
+const PORT = 4173;
+const baseURL = process.env.BASE_URL ?? `http://127.0.0.1:${PORT}/`;
+const buildAndPreview = `npm run build && npm run preview -- --host 127.0.0.1 --port ${PORT} --strictPort`;
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -25,16 +27,17 @@ export default defineConfig({
     deviceScaleFactor: 1,
     timezoneId: 'UTC',
     locale: 'en-GB',
-    // sw.js would cache the app shell between tests; the tests need the files as they are on disk
+    // sw.js would cache the app shell between tests; the tests need the files the server serves now
     serviceWorkers: 'block',
     launchOptions: {
       args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
     },
   },
   webServer: {
-    command: process.env.WEB_SERVER_CMD ?? 'node tests/serve.ts',
+    command: process.env.WEB_SERVER_CMD ?? buildAndPreview,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    // a server left running from another checkout would serve other code; always start this one
+    reuseExistingServer: false,
     timeout: 60_000,
   },
 });

@@ -1,0 +1,20 @@
+# Build and test output
+dist/
+node_modules/
+test-results/
+playwright-report/
+
+# Recorded baselines: the parity suite compares them byte for byte
+tests/golden/
+tests/fixtures/
+tests/e2e/__screenshots__/
+docs/screenshots/
+
+package-lock.json
+
+# Third-party and legacy code that later phases delete or replace (vendor/ in Phase 6, sw.js in Phase 7)
+vendor/
+public/sw.js
+
+# Planning notes, kept as the explorers wrote them
+docs/plan/

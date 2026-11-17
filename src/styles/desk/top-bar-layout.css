@@ -1,0 +1,29 @@
+/* top-bar layout controls */
+#top {
+  gap: 10px;
+  overflow: hidden;
+}
+#top button {
+  white-space: nowrap;
+}
+#top .tbg button {
+  padding: 3px 7px;
+}
+@media (max-width: 2100px) {
+  #showName {
+    display: none;
+  }
+}
+@media (max-width: 1700px) {
+  #top .tbg label {
+    display: none;
+  }
+}
+#layoutBox select {
+  background: var(--p3);
+  color: var(--txt);
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 11px;
+}
