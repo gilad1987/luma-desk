@@ -23,13 +23,15 @@ export function checkFinite(op: string, name: string, v: readonly number[]): voi
 }
 
 /**
- * Runs a show parser reader over an edited item and refuses the edit when the parser records an error (rule P6). The
+ * Runs a show parser reader over an edited list and refuses the edit when the parser records an error (rule P6). The
  * parser is the one owner of the stored-design rules, so an edit never saves an item the next show load would refuse,
- * and a rule added to the parser reaches the edit ops without a second copy here.
+ * and a rule added to the parser reaches the edit ops without a second copy here. The reader's result is returned, so
+ * the op stores what the parser reads and the design in memory equals the design after a save and load.
  * @throws RangeError naming the op and every parser error, each with its path and value (rule P7).
  */
-export function checkParserAccepts(op: string, read: (r: Reader) => unknown): void {
+export function checkParserAccepts<T>(op: string, read: (r: Reader) => T): T {
   const r = new Reader();
-  read(r);
+  const result = read(r);
   if (r.errors.length > 0) throw new RangeError(`${op}: ${r.errors.join('; ')}`);
+  return result;
 }

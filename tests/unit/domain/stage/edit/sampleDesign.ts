@@ -1,4 +1,8 @@
-import { STAGE_DESIGN_VERSION, type StageDesign } from '../../../../../src/domain/stage/StageDesign.ts';
+import {
+  STAGE_DESIGN_VERSION,
+  type StageDesign,
+  type StageFixture,
+} from '../../../../../src/domain/stage/StageDesign.ts';
 import type { StageTruss } from '../../../../../src/domain/stage/trussTypes.ts';
 
 /** A 10 m pipe on the centre line, 7 m up. */
@@ -53,4 +57,9 @@ export function sampleDesign(): StageDesign {
 /** Numbers rounded to 1e-9 with -0 made +0, so float results compare with `toEqual`. */
 export function rounded(values: readonly number[]): number[] {
   return values.map((v) => Math.round(v * 1e9) / 1e9 + 0);
+}
+
+/** `d` with the patch written straight into fixture `id`, past the op's check, as a hand-edited show would hold it. */
+export function patchedFixture(d: StageDesign, id: number, patch: Partial<StageFixture>): StageDesign {
+  return { ...d, fixtures: d.fixtures.map((f) => (f.id === id ? { ...f, ...patch } : f)) };
 }

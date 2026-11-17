@@ -5,29 +5,33 @@ import { checkParserAccepts } from './inputChecks';
 const OP = 'setFixtureProps';
 
 /**
- * Refuses a fixture patch that would give a design the show parser refuses (rule P6). Without it a bad panel value is
- * saved, and the next show load drops the whole stage for the built-in one. The parser's fixture reader checks the
- * patched fixture against the design's trusses, so it stays the one owner of the stored-fixture rules.
- * @throws RangeError with every parser error of the patched fixture, or when the patch changes the type of a
- * 'screen' fixture or of a fixture an LED wall points at.
+ * Builds the fixture list with the patch applied and reads it with the show parser's fixture reader (rule P6). Without
+ * it a bad panel value is saved, and the next show load drops the whole stage for the built-in one. The reader checks
+ * the whole list against the design's trusses, so it stays the one owner of the stored-fixture rules and an error
+ * names the fixture's real index. The parsed list is returned, so the design in memory equals the design after a save
+ * and load (a non-unit rotation is stored normalized).
+ * @throws RangeError with every parser error of the patched list, or when the patch changes the type of a 'screen'
+ * fixture.
  */
 export function checkFixturePatch(
   d: StageDesign,
   fixture: StageFixture,
   patch: Partial<Omit<StageFixture, 'id'>>,
-): void {
+): StageFixture[] {
   const trussIds = new Set(d.trusses.map((t) => t.id));
-  checkParserAccepts(OP, (r) => parseFixtures(r, { fixtures: [{ ...fixture, ...patch }] }, trussIds));
-  if (patch.type !== undefined && patch.type !== fixture.type && drivesScreen(d, fixture)) {
-    throw new RangeError(`${OP}: type of LED wall fixture ${fixture.id} must stay ${fixture.type}, got ${patch.type}`);
+  const patched = d.fixtures.map((f) => (f.id === fixture.id ? { ...f, ...patch } : f));
+  const parsed = checkParserAccepts(OP, (r) => parseFixtures(r, { fixtures: patched }, trussIds));
+  if (patch.type !== undefined && patch.type !== fixture.type && drivesScreen(fixture)) {
+    throw new RangeError(`${OP}: type of screen fixture ${fixture.id} cannot change, got ${patch.type}`);
   }
+  return parsed.fixtures;
 }
 
 /**
- * An LED wall reads its picture from the output of a 'screen' fixture, so that fixture keeps its type. For a fixture
- * a wall points at, the parser's screen rule refuses the same change, but the fixture reader alone cannot see the
- * screens. For a 'screen' fixture no wall points at yet, this is a product rule stricter than the parser.
+ * A product rule, stricter than the parser: an LED wall reads its picture from the output of a 'screen' fixture, so
+ * that fixture keeps its type even before a wall points at it. The parser's screens rule already refuses the change
+ * for a fixture a wall points at; the fixture reader alone cannot see the screens.
  */
-function drivesScreen(d: StageDesign, fixture: StageFixture): boolean {
-  return fixture.type === 'screen' || d.screens.some((s) => s.fixtureId === fixture.id);
+function drivesScreen(fixture: StageFixture): boolean {
+  return fixture.type === 'screen';
 }

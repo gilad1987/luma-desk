@@ -58,13 +58,13 @@ export function deleteTruss(d: StageDesign, trussId: string): StageDesign {
 }
 
 /**
- * Sets fields of one fixture. A patch that changes no value returns `d` itself, so History adds no undo step.
+ * Sets fields of one fixture and stores the fixture list the parser read, so the design in memory equals the design
+ * after a save and load. A patch that changes no value returns `d` itself, so History adds no undo step.
  * @throws RangeError when the fixture is missing or the patch is refused by `checkFixturePatch`.
  */
 export function setFixtureProps(d: StageDesign, id: number, patch: FixturePatch): StageDesign {
   const fixture = d.fixtures.find((f) => f.id === id);
   if (!fixture) throw new RangeError(`setFixtureProps: no fixture with id ${id}`);
-  checkFixturePatch(d, fixture, patch);
   if (isSameData({ ...fixture, ...patch }, fixture)) return d;
-  return { ...d, fixtures: d.fixtures.map((f) => (f.id === id ? { ...f, ...patch } : f)) };
+  return { ...d, fixtures: checkFixturePatch(d, fixture, patch) };
 }

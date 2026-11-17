@@ -21,7 +21,7 @@ const PART = { size: [1, 0.1, 1], at: [0, 0, 0], material: 'dark' } as const;
 /** The type system refuses these values; a panel `<select>` value can still carry one at runtime. */
 const UNKNOWN_ROLE = 'spot' as FixtureRole;
 const UNKNOWN_MATERIAL = 'chrome' as TrussMaterial;
-const UNKNOWN_KIND = { ...GOAL, kind: 'dome' } as unknown as TrussParams;
+const UNKNOWN_KIND: TrussParams = { ...GOAL, kind: 'dome' as typeof GOAL.kind };
 
 const VALID: readonly (readonly [string, TrussPatch])[] = [
   ['a new name and role', { name: 'Front pipe', role: 'side' }],
@@ -36,7 +36,7 @@ const POSITIVE = 'expected a number greater than 0, got';
 const FINITE = 'expected a finite number, got';
 const COUNT = 'expected a positive integer, got';
 
-/** The pipe is `trusses[0]` of the sample, so the parser error path is the one the op reports. */
+/** The pipe is `trusses[0]` of the sample, so every row has one path prefix; patchErrorIndex.test.ts covers others. */
 const BAD: readonly (readonly [string, TrussPatch, string])[] = [
   ['zero line section', { params: { ...LINE, section: 0 } }, `params.section: ${POSITIVE} 0`],
   ['NaN line end a', { params: { ...LINE, a: [Number.NaN, 0, 0] } }, `params.a[0]: ${FINITE} NaN`],

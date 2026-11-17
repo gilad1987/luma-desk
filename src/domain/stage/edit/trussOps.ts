@@ -54,16 +54,18 @@ export function moveTruss(d: StageDesign, trussId: string, delta: Vec3): StageDe
 
 /**
  * Sets name, role or shape of a truss. Its fixtures keep their absolute positions; the user moves them on purpose.
- * The parser's truss reader checks the patched truss (rule P6), so a bad panel value never reaches the saved design,
- * where the next load would drop the whole stage, or the renderer, which cannot draw a truss with a zero or NaN size.
+ * The parser's truss reader reads the patched truss list (rule P6), so a bad panel value never reaches the saved
+ * design, where the next load would drop the whole stage, or the renderer, which cannot draw a truss with a zero or
+ * NaN size. The op stores the list the parser read, so the design in memory equals the design after a save and load.
  * A patch that changes no value returns `d` itself, so History adds no undo step.
- * @throws RangeError when the truss is missing, or with every parser error of the patched truss.
+ * @throws RangeError when the truss is missing, or with every parser error of the patched list, each at its index.
  */
 export function setTrussProps(d: StageDesign, trussId: string, patch: TrussPatch): StageDesign {
   const truss = findTruss(d, trussId);
-  checkParserAccepts('setTrussProps', (r) => parseTrusses(r, { trusses: [{ ...truss, ...patch }] }));
   if (isSameData({ ...truss, ...patch }, truss)) return d;
-  return { ...d, trusses: d.trusses.map((t) => (t.id === trussId ? { ...t, ...patch } : t)) };
+  const patched = d.trusses.map((t) => (t.id === trussId ? { ...t, ...patch } : t));
+  const { trusses } = checkParserAccepts('setTrussProps', (r) => parseTrusses(r, { trusses: patched }));
+  return { ...d, trusses };
 }
 
 /** A fixture moved by `delta`, its pixel strip included, so the strip stays on the body. */
