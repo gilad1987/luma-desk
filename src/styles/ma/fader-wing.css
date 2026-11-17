@@ -1,7 +1,53 @@
 /* fader wing: one letterbox LCD across all columns, then keys / fader / keys per column */
-.maLcd{position:absolute;left:5px;right:5px;top:22px;height:108px;border-radius:5px;border:3px solid #030304;background:#070a10;box-shadow:0 0 0 1px #2a2a30,inset 0 0 14px #000;pointer-events:none}
-.maFaders{position:relative;z-index:1;flex:1;display:flex;gap:14px;min-height:0}
-.maSpecs{flex:0 0 calc((100% - 2px) * 4.4 / 14.4 - 6px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0 4px;min-width:0}
-#pbSlot{flex:1;display:flex;min-width:0;min-height:0}
-body.ma #execs{flex:1;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:0 2px;padding:0;min-height:0}
-body.ma .ex,.spc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:21px 33px 34px 16px 34px minmax(0,1fr) 30px 30px;column-gap:3px;min-width:0;min-height:0}
+.maLcd {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 22px;
+  height: 108px;
+  border-radius: 5px;
+  border: 3px solid #030304;
+  background: #070a10;
+  box-shadow:
+    0 0 0 1px #2a2a30,
+    inset 0 0 14px #000;
+  pointer-events: none;
+}
+.maFaders {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  gap: 14px;
+  min-height: 0;
+}
+.maSpecs {
+  flex: 0 0 calc((100% - 2px) * 4.4 / 14.4 - 6px);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0 4px;
+  min-width: 0;
+}
+#pbSlot {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+body.ma #execs {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 0 2px;
+  padding: 0;
+  min-height: 0;
+}
+body.ma .ex,
+.spc {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: 21px 33px 34px 16px 34px minmax(0, 1fr) 30px 30px;
+  column-gap: 3px;
+  min-width: 0;
+  min-height: 0;
+}

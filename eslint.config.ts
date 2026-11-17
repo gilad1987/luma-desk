@@ -47,7 +47,8 @@ function layerRules(layer: Layer, forbidden: readonly Layer[]): Linter.Config {
     group: [`**/${name}`, `**/${name}/*`],
     message: `${layer} must not import ${name}: see the layer rules in docs/plan.`,
   }));
-  const three = layer === 'core' ? [THREE_CORE, THREE_ADDONS] : layer === 'domain' || layer === 'engine' ? [THREE_ADDONS] : [];
+  const three =
+    layer === 'core' ? [THREE_CORE, THREE_ADDONS] : layer === 'domain' || layer === 'engine' ? [THREE_ADDONS] : [];
   return {
     files: [`src/${layer}/**/*.ts`],
     rules: { 'no-restricted-imports': ['error', { patterns: [SHARED_INTERNALS, ...layers, ...three] }] },

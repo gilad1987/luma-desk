@@ -1,8 +1,69 @@
-.encoder{width:84px;display:flex;flex-direction:column;align-items:center;gap:6px}
-.encoder .lb{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
-.knob{width:62px;height:62px;border-radius:50%;background:radial-gradient(circle at 40% 30%,#3a3a40,#141416 70%);border:1px solid #444;position:relative;cursor:ns-resize;box-shadow:0 4px 10px #0008,inset 0 1px 0 #ffffff15;touch-action:none}
-.knob::before{content:'';position:absolute;inset:-6px;border-radius:50%;background:conic-gradient(from 225deg,var(--kc,#ffc21a) 0 var(--kv,0deg),#ffffff10 var(--kv,0deg) 270deg,transparent 270deg);-webkit-mask:radial-gradient(circle,transparent 36px,#000 37px);mask:radial-gradient(circle,transparent 36px,#000 37px)}
-.knob .ind{position:absolute;left:50%;top:6px;width:2px;height:14px;margin-left:-1px;background:#eee;border-radius:1px;transform-origin:1px 25px}
-.encoder .val{font:600 12px var(--mono);background:#000;border:1px solid var(--line);border-radius:3px;padding:2px 6px;min-width:72px;text-align:center;cursor:text}
-.encoder .val.p{color:var(--prog);border-color:#5a1d1d}
-.encoder.dis{opacity:.3;pointer-events:none}
+.encoder {
+  width: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.encoder .lb {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mut);
+}
+.knob {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 30%, #3a3a40, #141416 70%);
+  border: 1px solid #444;
+  position: relative;
+  cursor: ns-resize;
+  box-shadow:
+    0 4px 10px #0008,
+    inset 0 1px 0 #ffffff15;
+  touch-action: none;
+}
+.knob::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 225deg,
+    var(--kc, #ffc21a) 0 var(--kv, 0deg),
+    #ffffff10 var(--kv, 0deg) 270deg,
+    transparent 270deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent 36px, #000 37px);
+  mask: radial-gradient(circle, transparent 36px, #000 37px);
+}
+.knob .ind {
+  position: absolute;
+  left: 50%;
+  top: 6px;
+  width: 2px;
+  height: 14px;
+  margin-left: -1px;
+  background: #eee;
+  border-radius: 1px;
+  transform-origin: 1px 25px;
+}
+.encoder .val {
+  font: 600 12px var(--mono);
+  background: #000;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 2px 6px;
+  min-width: 72px;
+  text-align: center;
+  cursor: text;
+}
+.encoder .val.p {
+  color: var(--prog);
+  border-color: #5a1d1d;
+}
+.encoder.dis {
+  opacity: 0.3;
+  pointer-events: none;
+}

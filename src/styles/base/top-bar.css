@@ -1,13 +1,64 @@
 /* top bar */
-#top{display:flex;align-items:center;gap:14px;padding:0 12px;background:linear-gradient(#141417,#0d0d0f);border-bottom:1px solid var(--line)}
-.brand{font-weight:800;letter-spacing:.14em;font-size:13px;display:flex;align-items:center;gap:7px}
-.brand i{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff7cf,#ffc21a 45%,#7a4b00);box-shadow:0 0 12px #ffc21a99}
-.brand b{color:var(--acc)}
-.showname{color:var(--mut);font-size:11px;border-left:1px solid var(--line);padding-left:12px}
-.tbg{display:flex;align-items:center;gap:4px}
-.tbg label{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-right:3px}
-.tbg button{padding:3px 8px;font-size:11px}
-.spacer{flex:1}
-#clock{font-family:var(--mono);color:var(--mut);font-size:11px}
-#fps{font-family:var(--mono);color:#4b4b52;font-size:10px;width:44px;text-align:right}
-
+#top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 12px;
+  background: linear-gradient(#141417, #0d0d0f);
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.brand i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff7cf, #ffc21a 45%, #7a4b00);
+  box-shadow: 0 0 12px #ffc21a99;
+}
+.brand b {
+  color: var(--acc);
+}
+.showname {
+  color: var(--mut);
+  font-size: 11px;
+  border-left: 1px solid var(--line);
+  padding-left: 12px;
+}
+.tbg {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.tbg label {
+  color: var(--mut);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-right: 3px;
+}
+.tbg button {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+.spacer {
+  flex: 1;
+}
+#clock {
+  font-family: var(--mono);
+  color: var(--mut);
+  font-size: 11px;
+}
+#fps {
+  font-family: var(--mono);
+  color: #4b4b52;
+  font-size: 10px;
+  width: 44px;
+  text-align: right;
+}

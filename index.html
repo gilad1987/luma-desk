@@ -1,183 +1,408 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LUMA DESK — Stage Lighting Console</title>
-<meta name="description" content="grandMA-style stage lighting console with a 3D Sultan's Pool stage — 405 fixtures, band, orchestra and crowd. Runs in the browser.">
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0a0a0e">
-<link rel="icon" type="image/png" href="icons/favicon.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="LUMA DESK">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./src/styles/index.css">
-<script>
-// TEST HOOK, active only with "?test" in the URL. The Playwright baselines (screenshots, golden outputs) must repeat
-// exactly, but the app reads the real clock and Math.random. Here time is frozen and moves only when the test calls
-// advance(); requestAnimationFrame callbacks run only when the test calls frames(n), so the number of frames is fixed
-// and the slow software WebGL renderer does not run free; Math.random is a seeded PRNG (mulberry32).
-// Without "?test" this block does nothing. The test API is window.__desk.test (end of src/main.ts).
-if (/^\?test(?:[&=]|$)/.test(location.search)) {
-  let T = 10000, seed = 0x9e3779b9, id = 0, queue = new Map();
-  const EPOCH = Date.UTC(2026, 0, 1, 12), RealDate = Date, raf = requestAnimationFrame.bind(window);
-  Math.random = () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-  performance.now = () => T;
-  window.Date = class extends RealDate {
-    constructor(...a) { if (a.length) super(...a); else super(EPOCH + T); }
-    static now() { return EPOCH + T; }
-  };
-  window.requestAnimationFrame = cb => (queue.set(++id, cb), id);
-  window.cancelAnimationFrame = h => queue.delete(h);
-  const frame = () => new Promise(done => raf(() => {
-    const due = queue; queue = new Map();
-    due.forEach(cb => { try { cb(T); } catch (e) { reportError(e); } });
-    done();
-  }));
-  window.__deskClock = {
-    now: () => T,
-    advance: ms => (T += ms),
-    frames: async (n = 1) => { for (let i = 0; i < n; i++) await frame(); },
-  };
-}
-</script>
-</head>
-<body>
-<div id="app">
-  <header id="top">
-    <div class="brand"><i></i>LUMA<b>DESK</b></div>
-    <div class="showname" id="showName">Demo Show — Sultan's Pool, Jerusalem</div>
-    <div class="tbg"><label>View</label>
-      <button data-view="foh" class="on">FOH</button><button data-view="front">Front</button><button data-view="stage">On Stage</button><button data-view="top">Top</button><button data-view="side">Side</button><button data-view="crowd">Crowd</button><button data-view="band">Band</button><button data-view="orch">Orchestra</button><button data-view="ring">Ring</button><button data-view="wide">Wide</button><button data-view="aud">Audience</button><button data-view="drums">Drums</button><button data-view="valley">Old City</button><button data-view="walls">Walls</button>
-    </div>
-    <div class="tbg"><label>House</label><input type="range" id="house" min="0" max="100" value="30" style="width:70px" title="Audience house lights"></div>
-    <div class="tbg"><label>Haze</label><input type="range" id="haze" min="0" max="100" value="62" style="width:90px"></div>
-    <div class="tbg"><button id="glowBtn" class="on">Glow</button><button id="idsBtn">Fixture IDs</button><button id="realBtn" class="on" title="Real spot lights & shadows on performers">Real light</button></div>
-    <div class="spacer"></div>
-    <div class="tbg" id="layoutBox"><label>Layout</label><select id="layoutSel" title="פריסת מסך"><option value="ma">Console (MA)</option><option value="desk">Desk</option><option value="classic">Classic</option></select><select id="deskZoom" title="גודל הקונסולה"><option value="auto">Auto</option><option value=".85">85%</option><option value="1">100%</option><option value="1.15">115%</option><option value="1.3">130%</option><option value="1.5">150%</option></select></div>
-    <div class="tbg"><button id="recBtn" title="הקלטת וידאו של התצוגה (.webm)">● REC</button><button id="fsBtn" title="מסך מלא (F)">⛶</button><button id="installBtn" style="display:none">⬇ התקן אפליקציה</button><button id="midiBtn">MIDI</button><button id="fileBtn">Show File</button><button id="helpBtn" class="on">📖 מדריך</button></div>
-    <div id="clock"></div><div id="fps"></div>
-  </header>
-
-  <main id="main">
-    <section id="viewer">
-      <canvas id="c"></canvas><canvas id="ov"></canvas><div id="selRect"></div>
-      <div id="vhud"><div class="chip" id="selInfo">Selection: <b>0</b></div><div class="chip" id="progInfo">Programmer: empty</div></div>
-      <div id="tip"></div>
-      <div id="cueHud"><div class="l1" id="hudExec">Exec 1</div><div class="l2" id="hudCue">—</div><div class="l3" id="hudNext"></div><div class="bar"><i id="hudBar"></i></div></div>
-      <div id="viewHint">Click fixture: select · Shift+click: add · Shift+drag: box select<br>Drag: orbit · Right-drag: pan · Wheel: zoom</div>
-    </section>
-    <aside id="side">
-      <nav class="tabs" id="sideTabs"><button data-t="pools" class="on">Pools</button><button data-t="auto">Auto Show</button><button data-t="seq">Sequence</button><button data-t="sheet">Fixture Sheet</button></nav>
-      <div class="pane on" id="pane-pools">
-        <div class="ptitle"><span>Groups</span><span id="grpHint"></span></div>
-        <div class="pool" id="groupPool"></div>
-        <div class="ptitle"><span>Presets</span><span class="ptabs" id="presetTabs"></span></div>
-        <div class="pool" id="presetPool"></div>
-      </div>
-      <div class="pane" id="pane-auto">
-        <div class="autoTop"><button class="autoGo" id="autoGo">▶ START AUTO</button><div class="beatBox"><span id="autoBpm">124 BPM</span><div class="dots" id="beatDots"><i class="d1"></i><i></i><i></i><i></i></div></div></div>
-        <div class="ptitle"><span>Style</span><span id="autoSec"></span></div>
-        <div class="styles" id="styleGrid"></div>
-        <div class="ctl">
-          <label>Energy</label><input type="range" id="aEnergy" min="20" max="120" value="85"><output id="aEnergyV">85</output>
-          <label>Auto master</label><input type="range" id="aMaster" min="0" max="100" value="100"><output id="aMasterV">100</output>
-          <label>Change every</label><select id="aBars"><option value="0">Style default</option><option value="1">1 bar</option><option value="2">2 bars</option><option value="4">4 bars</option><option value="8">8 bars</option><option value="16">16 bars</option></select><span></span>
-          <label>Pulse</label><select id="aPulse"><option value="off">Off</option><option value="beat">To the beat</option><option value="audio">To the music (audio)</option></select><span></span>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>LUMA DESK — Stage Lighting Console</title>
+    <meta
+      name="description"
+      content="grandMA-style stage lighting console with a 3D Sultan's Pool stage — 405 fixtures, band, orchestra and crowd. Runs in the browser."
+    />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#0a0a0e" />
+    <link rel="icon" type="image/png" href="icons/favicon.png" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="LUMA DESK" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./src/styles/index.css" />
+    <script>
+      // TEST HOOK, active only with "?test" in the URL. The Playwright baselines (screenshots, golden outputs) must repeat
+      // exactly, but the app reads the real clock and Math.random. Here time is frozen and moves only when the test calls
+      // advance(); requestAnimationFrame callbacks run only when the test calls frames(n), so the number of frames is fixed
+      // and the slow software WebGL renderer does not run free; Math.random is a seeded PRNG (mulberry32).
+      // Without "?test" this block does nothing. The test API is window.__desk.test (end of src/main.ts).
+      if (/^\?test(?:[&=]|$)/.test(location.search)) {
+        let T = 10000,
+          seed = 0x9e3779b9,
+          id = 0,
+          queue = new Map();
+        const EPOCH = Date.UTC(2026, 0, 1, 12),
+          RealDate = Date,
+          raf = requestAnimationFrame.bind(window);
+        Math.random = () => {
+          seed = (seed + 0x6d2b79f5) | 0;
+          let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+        performance.now = () => T;
+        window.Date = class extends RealDate {
+          constructor(...a) {
+            if (a.length) super(...a);
+            else super(EPOCH + T);
+          }
+          static now() {
+            return EPOCH + T;
+          }
+        };
+        window.requestAnimationFrame = (cb) => (queue.set(++id, cb), id);
+        window.cancelAnimationFrame = (h) => queue.delete(h);
+        const frame = () =>
+          new Promise((done) =>
+            raf(() => {
+              const due = queue;
+              queue = new Map();
+              due.forEach((cb) => {
+                try {
+                  cb(T);
+                } catch (e) {
+                  reportError(e);
+                }
+              });
+              done();
+            }),
+          );
+        window.__deskClock = {
+          now: () => T,
+          advance: (ms) => (T += ms),
+          frames: async (n = 1) => {
+            for (let i = 0; i < n; i++) await frame();
+          },
+        };
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <header id="top">
+        <div class="brand"><i></i>LUMA<b>DESK</b></div>
+        <div class="showname" id="showName">Demo Show — Sultan's Pool, Jerusalem</div>
+        <div class="tbg">
+          <label>View</label> <button data-view="foh" class="on">FOH</button><button data-view="front">Front</button
+          ><button data-view="stage">On Stage</button><button data-view="top">Top</button
+          ><button data-view="side">Side</button><button data-view="crowd">Crowd</button
+          ><button data-view="band">Band</button><button data-view="orch">Orchestra</button
+          ><button data-view="ring">Ring</button><button data-view="wide">Wide</button
+          ><button data-view="aud">Audience</button><button data-view="drums">Drums</button
+          ><button data-view="valley">Old City</button><button data-view="walls">Walls</button>
         </div>
-        <div class="chk"><label><input type="checkbox" id="aStrobe" checked>Strobes on drops</label><label><input type="checkbox" id="aHits" checked>Blinder hits</label><label><input type="checkbox" id="aScreen" checked>LED screen</label><label><input type="checkbox" id="aTake" checked>Take over executors</label></div>
-        <div class="music"><div class="xlabel" style="margin:0">Music — load a song to sync BPM &amp; pulse</div>
-          <div class="r"><input type="file" id="songFile" accept="audio/*"><button id="songPlay" disabled>▶ Play</button></div><div id="songStat">No song loaded — TAP the beat, or load an mp3/wav.</div></div>
-        <div class="autoBtns"><button id="aNext">Next look now</button><button id="aSave">Save look → cue</button><button id="aList">Build cue list</button></div>
-        <div id="autoStatus"></div>
-      </div>
-      <div class="pane" id="pane-seq">
-        <div id="seqHead"><select id="seqSel"></select><span class="sp"></span><button id="seqBack">GO−</button><button id="seqGo">GO+</button><button id="seqDel">Delete Cue</button></div>
-        <table id="seqTable"></table>
-        <div class="seqHelp">Click a cue = Goto · Double-click name/fade to edit · STORE then click a cue = merge programmer into it.</div>
-      </div>
-      <div class="pane" id="pane-sheet"><table id="sheet"></table></div>
-    </aside>
-  </main>
+        <div class="tbg">
+          <label>House</label
+          ><input
+            type="range"
+            id="house"
+            min="0"
+            max="100"
+            value="30"
+            style="width: 70px"
+            title="Audience house lights"
+          />
+        </div>
+        <div class="tbg">
+          <label>Haze</label><input type="range" id="haze" min="0" max="100" value="62" style="width: 90px" />
+        </div>
+        <div class="tbg">
+          <button id="glowBtn" class="on">Glow</button><button id="idsBtn">Fixture IDs</button
+          ><button id="realBtn" class="on" title="Real spot lights & shadows on performers">Real light</button>
+        </div>
+        <div class="spacer"></div>
+        <div class="tbg" id="layoutBox">
+          <label>Layout</label
+          ><select id="layoutSel" title="פריסת מסך">
+            <option value="ma">Console (MA)</option>
+            <option value="desk">Desk</option>
+            <option value="classic">Classic</option></select
+          ><select id="deskZoom" title="גודל הקונסולה">
+            <option value="auto">Auto</option>
+            <option value=".85">85%</option>
+            <option value="1">100%</option>
+            <option value="1.15">115%</option>
+            <option value="1.3">130%</option>
+            <option value="1.5">150%</option>
+          </select>
+        </div>
+        <div class="tbg">
+          <button id="recBtn" title="הקלטת וידאו של התצוגה (.webm)">● REC</button
+          ><button id="fsBtn" title="מסך מלא (F)">⛶</button
+          ><button id="installBtn" style="display: none">⬇ התקן אפליקציה</button><button id="midiBtn">MIDI</button
+          ><button id="fileBtn">Show File</button><button id="helpBtn" class="on">📖 מדריך</button>
+        </div>
+        <div id="clock"></div>
+        <div id="fps"></div>
+      </header>
 
-  <section id="enc">
-    <nav id="featTabs"></nav>
-    <div id="encBody"><div id="encoders"></div><div id="encExtra"></div></div>
-  </section>
-
-  <section id="console"><div class="cbody" id="cbody">
-    <div class="cwing" id="cwScreen"><div class="clabel"><span>SCREEN</span><b id="cwScreenInfo"></b></div></div>
-    <div class="cwing ccenter" id="cwCenter"><div class="clabel"><span>PROGRAMMER</span><b id="cwProgInfo"></b></div><div id="encSlot" style="min-height:0"></div><div class="clabel"><span>PLAYBACK</span><b id="cwPbInfo"></b></div><div id="execSlot" style="min-height:0;display:flex;flex-direction:column"></div></div>
-    <div class="cright">
-      <div class="cwing" id="cwCmd"><div class="clabel"><span>COMMAND</span><b>MA syntax</b></div></div>
-      <div class="cwing" id="cwMaster"><div class="clabel"><span>MASTER</span></div></div>
-    </div>
-  </div></section>
-  <section id="maConsole"><div class="maDesk" id="maBody">
-    <div class="maScreens"><i class="maCheek"></i><i class="maCheek r"></i><i id="maGrip" title="Drag: console size · double-click: default"></i>
-      <div class="disp"><div class="dhead"><span>1 · SHEETS + COMMAND</span><b id="d1info"></b></div><div class="dslot" id="d1s"></div>
-        <div class="dcmd" id="d3s"><div class="dsub"><span>COMMAND</span><b id="d3info"></b></div></div></div>
-      <div class="disp"><div class="dhead"><span>2 · POOLS + PROGRAMMER</span><b id="d2info"></b></div><div class="dslot dsplit" id="d2s"></div></div>
-    </div>
-    <div class="maDeck"><i class="maCheek"></i><i class="maCheek r"></i>
-    <div class="maHinge"></div>
-    <div class="maSurface">
-      <div class="srf"><span class="slab">SPECIAL MASTERS</span><span class="slab s2">PLAYBACK · EXECUTORS 1–10</span><div class="maLcd"></div>
-        <div class="maFaders"><div class="maSpecs" id="maSpecs"></div><div id="pbSlot"></div></div></div>
-      <div class="srf maProg"><span class="slab">PROGRAMMER</span><div id="ftSlot"></div><div id="ecSlot"></div>
-        <div class="maLow">
-          <div class="maLeft">
-            <div class="maTouch">
-              <div class="tscr"><div class="thead"><span>COLOR</span><b id="tsColInfo"></b></div><div class="tbody"><canvas class="pad" id="tsCol" width="204" height="124"></canvas><i class="tmk" id="tsColMk"></i><div class="tnone" id="tsColNone"></div></div></div>
-              <div class="tscr"><div class="thead"><span>POSITION</span><b id="tsPosInfo"></b></div><div class="tbody"><canvas class="pad" id="tsPos" width="204" height="124"></canvas><div class="tnone" id="tsPosNone">NO SELECTION</div></div></div>
-            </div>
-            <div id="kySlot"></div>
+      <main id="main">
+        <section id="viewer">
+          <canvas id="c"></canvas><canvas id="ov"></canvas>
+          <div id="selRect"></div>
+          <div id="vhud">
+            <div class="chip" id="selInfo">Selection: <b>0</b></div>
+            <div class="chip" id="progInfo">Programmer: empty</div>
           </div>
-          <div id="kpSlot"></div>
+          <div id="tip"></div>
+          <div id="cueHud">
+            <div class="l1" id="hudExec">Exec 1</div>
+            <div class="l2" id="hudCue">—</div>
+            <div class="l3" id="hudNext"></div>
+            <div class="bar"><i id="hudBar"></i></div>
+          </div>
+          <div id="viewHint">
+            Click fixture: select · Shift+click: add · Shift+drag: box select<br />Drag: orbit · Right-drag: pan ·
+            Wheel: zoom
+          </div>
+        </section>
+        <aside id="side">
+          <nav class="tabs" id="sideTabs">
+            <button data-t="pools" class="on">Pools</button><button data-t="auto">Auto Show</button
+            ><button data-t="seq">Sequence</button><button data-t="sheet">Fixture Sheet</button>
+          </nav>
+          <div class="pane on" id="pane-pools">
+            <div class="ptitle"><span>Groups</span><span id="grpHint"></span></div>
+            <div class="pool" id="groupPool"></div>
+            <div class="ptitle"><span>Presets</span><span class="ptabs" id="presetTabs"></span></div>
+            <div class="pool" id="presetPool"></div>
+          </div>
+          <div class="pane" id="pane-auto">
+            <div class="autoTop">
+              <button class="autoGo" id="autoGo">▶ START AUTO</button>
+              <div class="beatBox">
+                <span id="autoBpm">124 BPM</span>
+                <div class="dots" id="beatDots"><i class="d1"></i><i></i><i></i><i></i></div>
+              </div>
+            </div>
+            <div class="ptitle"><span>Style</span><span id="autoSec"></span></div>
+            <div class="styles" id="styleGrid"></div>
+            <div class="ctl">
+              <label>Energy</label><input type="range" id="aEnergy" min="20" max="120" value="85" /><output
+                id="aEnergyV"
+                >85</output
+              >
+              <label>Auto master</label><input type="range" id="aMaster" min="0" max="100" value="100" /><output
+                id="aMasterV"
+                >100</output
+              >
+              <label>Change every</label
+              ><select id="aBars">
+                <option value="0">Style default</option>
+                <option value="1">1 bar</option>
+                <option value="2">2 bars</option>
+                <option value="4">4 bars</option>
+                <option value="8">8 bars</option>
+                <option value="16">16 bars</option></select
+              ><span></span> <label>Pulse</label
+              ><select id="aPulse">
+                <option value="off">Off</option>
+                <option value="beat">To the beat</option>
+                <option value="audio">To the music (audio)</option></select
+              ><span></span>
+            </div>
+            <div class="chk">
+              <label><input type="checkbox" id="aStrobe" checked />Strobes on drops</label
+              ><label><input type="checkbox" id="aHits" checked />Blinder hits</label
+              ><label><input type="checkbox" id="aScreen" checked />LED screen</label
+              ><label><input type="checkbox" id="aTake" checked />Take over executors</label>
+            </div>
+            <div class="music">
+              <div class="xlabel" style="margin: 0">Music — load a song to sync BPM &amp; pulse</div>
+              <div class="r">
+                <input type="file" id="songFile" accept="audio/*" /><button id="songPlay" disabled>▶ Play</button>
+              </div>
+              <div id="songStat">No song loaded — TAP the beat, or load an mp3/wav.</div>
+            </div>
+            <div class="autoBtns">
+              <button id="aNext">Next look now</button><button id="aSave">Save look → cue</button
+              ><button id="aList">Build cue list</button>
+            </div>
+            <div id="autoStatus"></div>
+          </div>
+          <div class="pane" id="pane-seq">
+            <div id="seqHead">
+              <select id="seqSel"></select
+              ><span class="sp"></span><button id="seqBack">GO−</button><button id="seqGo">GO+</button
+              ><button id="seqDel">Delete Cue</button>
+            </div>
+            <table id="seqTable"></table>
+            <div class="seqHelp">
+              Click a cue = Goto · Double-click name/fade to edit · STORE then click a cue = merge programmer into it.
+            </div>
+          </div>
+          <div class="pane" id="pane-sheet"><table id="sheet"></table></div>
+        </aside>
+      </main>
+
+      <section id="enc">
+        <nav id="featTabs"></nav>
+        <div id="encBody">
+          <div id="encoders"></div>
+          <div id="encExtra"></div>
+        </div>
+      </section>
+
+      <section id="console">
+        <div class="cbody" id="cbody">
+          <div class="cwing" id="cwScreen">
+            <div class="clabel"><span>SCREEN</span><b id="cwScreenInfo"></b></div>
+          </div>
+          <div class="cwing ccenter" id="cwCenter">
+            <div class="clabel"><span>PROGRAMMER</span><b id="cwProgInfo"></b></div>
+            <div id="encSlot" style="min-height: 0"></div>
+            <div class="clabel"><span>PLAYBACK</span><b id="cwPbInfo"></b></div>
+            <div id="execSlot" style="min-height: 0; display: flex; flex-direction: column"></div>
+          </div>
+          <div class="cright">
+            <div class="cwing" id="cwCmd">
+              <div class="clabel"><span>COMMAND</span><b>MA syntax</b></div>
+            </div>
+            <div class="cwing" id="cwMaster">
+              <div class="clabel"><span>MASTER</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="maConsole">
+        <div class="maDesk" id="maBody">
+          <div class="maScreens">
+            <i class="maCheek"></i><i class="maCheek r"></i
+            ><i id="maGrip" title="Drag: console size · double-click: default"></i>
+            <div class="disp">
+              <div class="dhead"><span>1 · SHEETS + COMMAND</span><b id="d1info"></b></div>
+              <div class="dslot" id="d1s"></div>
+              <div class="dcmd" id="d3s">
+                <div class="dsub"><span>COMMAND</span><b id="d3info"></b></div>
+              </div>
+            </div>
+            <div class="disp">
+              <div class="dhead"><span>2 · POOLS + PROGRAMMER</span><b id="d2info"></b></div>
+              <div class="dslot dsplit" id="d2s"></div>
+            </div>
+          </div>
+          <div class="maDeck">
+            <i class="maCheek"></i><i class="maCheek r"></i>
+            <div class="maHinge"></div>
+            <div class="maSurface">
+              <div class="srf">
+                <span class="slab">SPECIAL MASTERS</span><span class="slab s2">PLAYBACK · EXECUTORS 1–10</span>
+                <div class="maLcd"></div>
+                <div class="maFaders">
+                  <div class="maSpecs" id="maSpecs"></div>
+                  <div id="pbSlot"></div>
+                </div>
+              </div>
+              <div class="srf maProg">
+                <span class="slab">PROGRAMMER</span>
+                <div id="ftSlot"></div>
+                <div id="ecSlot"></div>
+                <div class="maLow">
+                  <div class="maLeft">
+                    <div class="maTouch">
+                      <div class="tscr">
+                        <div class="thead"><span>COLOR</span><b id="tsColInfo"></b></div>
+                        <div class="tbody">
+                          <canvas class="pad" id="tsCol" width="204" height="124"></canvas
+                          ><i class="tmk" id="tsColMk"></i>
+                          <div class="tnone" id="tsColNone"></div>
+                        </div>
+                      </div>
+                      <div class="tscr">
+                        <div class="thead"><span>POSITION</span><b id="tsPosInfo"></b></div>
+                        <div class="tbody">
+                          <canvas class="pad" id="tsPos" width="204" height="124"></canvas>
+                          <div class="tnone" id="tsPosNone">NO SELECTION</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div id="kySlot"></div>
+                  </div>
+                  <div id="kpSlot"></div>
+                </div>
+              </div>
+              <div class="srf maMs">
+                <span class="slab">MASTER</span>
+                <div id="msSlot"></div>
+                <div class="maWheel">
+                  <span class="lb">LEVEL</span>
+                  <div class="wheel" id="lvlWheel" title="Dimmer of the selection (Shift = fine)"></div>
+                  <span class="lb" id="lvlVal">—</span>
+                </div>
+              </div>
+            </div>
+            <div class="maRest"></div>
+            <div class="maFront">LUMA DESK · LIGHTING CONSOLE</div>
+          </div>
+        </div>
+      </section>
+      <footer id="desk">
+        <div id="cmdArea">
+          <div id="cmdFb">
+            <div>Welcome. Type commands like <span class="ok">Fixture 201 Thru 224 At Full</span></div>
+          </div>
+          <div class="cmdrow">
+            <span>[Channel]&gt;</span
+            ><input id="cmd" autocomplete="off" spellcheck="false" placeholder="Group 2 At 80" />
+          </div>
+          <div class="keys">
+            <button class="store" id="kStore">STORE</button><button id="kClear">CLEAR</button
+            ><button id="kHigh">HIGHLT</button><button id="kFan">FAN</button> <button id="kAll">ALL</button
+            ><button id="kOdd">ODD</button><button id="kEven">EVEN</button><button id="kRev">REVERSE</button>
+          </div>
+        </div>
+        <div id="execs"></div>
+        <div id="master">
+          <div class="mGo">
+            <div class="sx">Selected exec: <b id="mSelName">1</b></div>
+            <button id="goBig">GO +</button>
+            <div class="mRow">
+              <button id="goBack">GO −</button><button id="pauseBtn">PAUSE</button><button id="boBtn">B.O.</button>
+            </div>
+            <div class="mRow">
+              <button id="tapBtn">TAP</button>
+              <div id="bpmBox" style="display: flex; align-items: center; justify-content: center">120 BPM</div>
+              <button id="offBtn">OFF</button>
+            </div>
+          </div>
+          <div class="gm">
+            <span class="lb">GM</span>
+            <div class="fader" id="gmFader">
+              <div class="ff"></div>
+              <div class="cap"></div>
+            </div>
+            <span class="lb" id="gmVal">100</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <div id="guide">
+      <div class="gbox">
+        <nav class="gnav" id="gNav"></nav>
+        <div class="gmain">
+          <div class="ghead">
+            <h2 id="gTitle"></h2>
+            <button id="gClose">✕ סגור</button>
+          </div>
+          <div class="gbody" id="gBody"></div>
+          <div class="gfoot"><button id="gPrev">→ הקודם</button><button id="gNext">הבא ←</button></div>
         </div>
       </div>
-      <div class="srf maMs"><span class="slab">MASTER</span><div id="msSlot"></div>
-        <div class="maWheel"><span class="lb">LEVEL</span><div class="wheel" id="lvlWheel" title="Dimmer of the selection (Shift = fine)"></div><span class="lb" id="lvlVal">—</span></div></div>
     </div>
-    <div class="maRest"></div>
-    <div class="maFront">LUMA DESK · LIGHTING CONSOLE</div></div>
-  </div></section>
-  <footer id="desk">
-    <div id="cmdArea">
-      <div id="cmdFb"><div>Welcome. Type commands like <span class="ok">Fixture 201 Thru 224 At Full</span></div></div>
-      <div class="cmdrow"><span>[Channel]&gt;</span><input id="cmd" autocomplete="off" spellcheck="false" placeholder="Group 2 At 80"></div>
-      <div class="keys">
-        <button class="store" id="kStore">STORE</button><button id="kClear">CLEAR</button><button id="kHigh">HIGHLT</button><button id="kFan">FAN</button>
-        <button id="kAll">ALL</button><button id="kOdd">ODD</button><button id="kEven">EVEN</button><button id="kRev">REVERSE</button>
+    <div id="tourHole"></div>
+    <div id="tourTip">
+      <h4 id="tTitle"></h4>
+      <p id="tText"></p>
+      <div class="tr">
+        <button id="tPrev">→</button><button class="nx" id="tNext">הבא</button><button id="tEnd">סיום</button
+        ><span id="tCount"></span>
       </div>
     </div>
-    <div id="execs"></div>
-    <div id="master">
-      <div class="mGo">
-        <div class="sx">Selected exec: <b id="mSelName">1</b></div>
-        <button id="goBig">GO +</button>
-        <div class="mRow"><button id="goBack">GO −</button><button id="pauseBtn">PAUSE</button><button id="boBtn">B.O.</button></div>
-        <div class="mRow"><button id="tapBtn">TAP</button><div id="bpmBox" style="display:flex;align-items:center;justify-content:center">120 BPM</div><button id="offBtn">OFF</button></div>
-      </div>
-      <div class="gm"><span class="lb">GM</span><div class="fader" id="gmFader"><div class="ff"></div><div class="cap"></div></div><span class="lb" id="gmVal">100</span></div>
-    </div>
-  </footer>
-</div>
-<div id="guide"><div class="gbox"><nav class="gnav" id="gNav"></nav><div class="gmain"><div class="ghead"><h2 id="gTitle"></h2><button id="gClose">✕ סגור</button></div><div class="gbody" id="gBody"></div>
-  <div class="gfoot"><button id="gPrev">→ הקודם</button><button id="gNext">הבא ←</button></div></div></div></div>
-<div id="tourHole"></div><div id="tourTip"><h4 id="tTitle"></h4><p id="tText"></p><div class="tr"><button id="tPrev">→</button><button class="nx" id="tNext">הבא</button><button id="tEnd">סיום</button><span id="tCount"></span></div></div>
-<div id="modal"><div class="mbox" id="mbox"></div></div>
-<div id="toast"></div>
+    <div id="modal"><div class="mbox" id="mbox"></div></div>
+    <div id="toast"></div>
 
-<script type="module" src="./src/main.ts"></script>
-</body>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
 </html>
