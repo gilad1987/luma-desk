@@ -14,5 +14,6 @@ export function recordEvents(bus: EngineBus): string[] {
   bus.on('stateDirty', () => lines.push('stateDirty'));
   bus.on('showChanged', () => lines.push('showChanged'));
   bus.on('storeModeChanged', (s) => lines.push(`storeModeChanged:${String(s.on)}`));
+  bus.on('rigChanged', (r) => lines.push(`rigChanged:${r.design.source.name}`));
   return lines;
 }
