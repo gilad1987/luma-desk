@@ -13,5 +13,7 @@ export default defineConfig({
     include: ['tests/unit/**/*.test.ts'],
     // a `.only` left in a commit would silently skip the rest of the suite
     allowOnly: false,
+    // the parity oracles replay thousands of seeded frames; the 5 s default times out on a loaded machine
+    testTimeout: 30_000,
   },
 });
