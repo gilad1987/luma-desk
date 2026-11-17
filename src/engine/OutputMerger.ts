@@ -40,16 +40,16 @@ export interface OutputSources {
  * phasers, masters.
  */
 export class OutputMerger {
-  private readonly sources: OutputSources;
-  private readonly sample: FxSample = { dp: 0, dt: 0, dim: 0, r: 0, g: 0, b: 0 };
+  readonly #sources: OutputSources;
+  readonly #sample: FxSample = { dp: 0, dt: 0, dim: 0, r: 0, g: 0, b: 0 };
 
   constructor(sources: OutputSources) {
-    this.sources = sources;
+    this.#sources = sources;
   }
 
   /** Merges the frame at render-loop time `now` (seconds). */
   compute(now: number, modulation: OutputModulation): void {
-    const { rig, pool, programmer, master, selection, tempo } = this.sources;
+    const { rig, pool, programmer, master, selection, tempo } = this.#sources;
     const active = pool.all.filter((e) => e.on && (e.level > 0 || e.flash)).sort((a, b) => a.lastGo - b.lastGo);
     const auto = pool.autoExec;
     for (const f of rig.fixtures) {
@@ -58,7 +58,7 @@ export class OutputMerger {
       if (f.type === 'blinder' && modulation.hitUntil > now && auto.on) o.dim = Math.max(o.dim, 100 * auto.level);
       mergeProgrammer(f, o, slots, programmer);
       Object.assign(f.base, o);
-      applyPhasers(f, o, slots, now, tempo, this.sample);
+      applyPhasers(f, o, slots, now, tempo, this.#sample);
       applyMasters(f, o, master, selection);
     }
   }

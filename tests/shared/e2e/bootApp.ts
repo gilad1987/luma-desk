@@ -1,7 +1,7 @@
 import type { JSHandle, Page } from '@playwright/test';
-import type { DeskTestApi, Layout } from './deskApi';
-import type { SavedShow } from './savedShow';
-import { STORAGE_KEYS } from './storageKeys';
+import type { DeskTestApi, Layout } from '../deskApi';
+import type { SavedShow } from '../savedShow';
+import { STORAGE_KEYS } from '../storageKeys';
 import { waitForTestApi } from './waitForTestApi';
 
 /** What localStorage holds before the app boots; anything not given is absent, as in a fresh browser. */
@@ -19,7 +19,7 @@ export interface BootOptions {
  * storage is written by an init script, so it is in place before the app reads it, and again on every reload.
  */
 export async function bootApp(page: Page, opts: BootOptions = {}): Promise<JSHandle<DeskTestApi>> {
-  const show = typeof opts.show === 'string' ? opts.show : opts.show ? JSON.stringify(opts.show) : null;
+  const show = storedShowText(opts.show);
   const layout = opts.layout ? JSON.stringify({ deskMode: opts.layout, deskZoom: 'auto' }) : null;
   await page.addInitScript(
     ({ keys, show, layout, guideSeen }) => {
@@ -31,4 +31,10 @@ export async function bootApp(page: Page, opts: BootOptions = {}): Promise<JSHan
   );
   await page.goto('./?test');
   return waitForTestApi(page);
+}
+
+/** The text the show key holds: raw text as given, a show as JSON, or null when the storage has no show. */
+function storedShowText(show: SavedShow | string | undefined): string | null {
+  if (typeof show === 'string') return show;
+  return show ? JSON.stringify(show) : null;
 }

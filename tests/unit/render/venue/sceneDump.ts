@@ -58,6 +58,12 @@ const geometry = (g: BufferGeometry): unknown => ({
     }),
 });
 
+/** A drawable's material or material list as plain data; 0 for an object that has none. */
+const materials = (mats: Material | Material[] | undefined): unknown => {
+  if (!mats) return 0;
+  return Array.isArray(mats) ? mats.map(material) : material(mats);
+};
+
 /** The scene object kinds that carry a geometry and a material. */
 const isDrawable = (o: Object3D): o is Mesh | Points | Sprite =>
   o instanceof Mesh || o instanceof Points || o instanceof Sprite;
@@ -78,7 +84,7 @@ export function dumpObject(o: Object3D): unknown {
     flags: [o.castShadow, o.receiveShadow, o.frustumCulled, o.visible],
     userData: o.userData,
     geometry: isDrawable(o) && o.geometry instanceof BufferGeometry ? geometry(o.geometry) : 0,
-    material: mats ? (Array.isArray(mats) ? mats.map(material) : material(mats)) : 0,
+    material: materials(mats),
     instances:
       o instanceof InstancedMesh
         ? [o.count, sum(o.instanceMatrix.array), o.instanceColor ? sum(o.instanceColor.array) : 0]

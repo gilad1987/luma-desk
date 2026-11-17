@@ -9,6 +9,7 @@ import {
   type Texture,
 } from 'three';
 import { addMesh } from '../shared';
+import type { CymbalSpec, DrumSpec } from './drumSpec';
 
 /** The drum kit's own finishes. */
 export interface DrumMaterials {
@@ -31,9 +32,9 @@ export class DrumParts {
   }
 
   /** A drum shell with its batter head and chrome rim; `front` adds the logo head (the kick drum). */
-  drum(r: number, d: number, x: number, y: number, z: number, rx = 0, rz = 0, front = false): void {
+  drum({ r, d, at, tilt: [rx, rz] = [0, 0], front = false }: DrumSpec): void {
     const drum = new Group();
-    drum.position.set(x, y, z);
+    drum.position.set(...at);
     drum.rotation.set(rx, 0, rz);
     addMesh(drum, new CylinderGeometry(r, r, d, 28), this.#m.shell);
     addMesh(drum, new CylinderGeometry(r * 1.01, r * 1.01, 0.012, 28), this.#m.head, { position: [0, d / 2, 0] });
@@ -59,11 +60,11 @@ export class DrumParts {
   }
 
   /** A cymbal of radius `r` on its own stand, tilted toward the drummer. */
-  cymbal(x: number, y: number, z: number, r: number, tilt: number, tz: number): void {
+  cymbal({ at: [x, y, z], r, tilt: [rx, rz] }: CymbalSpec): void {
     this.stand(x, z, y);
     addMesh(this.#kit, new CylinderGeometry(r * 0.12, r, 0.03, 32, 1, true), this.#m.cymbal, {
       position: [x, y, z],
-      rotation: [tilt, 0, tz],
+      rotation: [rx, 0, rz],
     });
   }
 

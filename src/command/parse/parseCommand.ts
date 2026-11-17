@@ -52,6 +52,7 @@ export function parseCommand(word: string | undefined, cursor: TokenCursor): Sta
       return { kind: 'toggleBlackout' };
     case 'fade':
       return { kind: 'cueFade', seconds: cursor.num() };
+    case undefined: // no keyword left: reported like an unknown one
     default:
       throw new CommandError(`Unknown keyword "${cursor.lastOriginal ?? ''}"`);
   }

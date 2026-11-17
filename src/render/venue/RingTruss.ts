@@ -18,13 +18,18 @@ const FACES: readonly (readonly [dr: number, dy: number, face: 'v' | 'h'])[] = [
   [0, 1, 'h'],
 ];
 
+/** One ring level: beam `radius` around the ring centre, height `y`, and the `spacing` between its chords. */
+export interface RingLevel {
+  readonly radius: number;
+  readonly y: number;
+  readonly spacing: number;
+}
+
 /**
  * Builds a box truss bent into a circle around the ring centre: 4 torus chords, all lacing as one instanced mesh,
  * and 6 chains up to the roof.
  */
-export function buildRingTruss(scene: Object3D, kit: TrussKit, radius: number, y: number, spacing: number): void {
-  const R = radius,
-    s = spacing;
+export function buildRingTruss(scene: Object3D, kit: TrussKit, { radius: R, y, spacing: s }: RingLevel): void {
   for (const [dr, dy] of CHORDS)
     addMesh(scene, new TorusGeometry(R + (dr * s) / 2, 0.045, 6, 160), kit.steel, {
       position: [RING.x, y + (dy * s) / 2, RING.z],

@@ -7,5 +7,5 @@
     "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": true
   },
-  "include": ["*.config.ts", "scripts", "tests", "build", "src/types/glsl.d.ts"]
+  "include": ["*.config.ts", "eslint", "scripts", "tests", "build", "src/types/glsl.d.ts"]
 }

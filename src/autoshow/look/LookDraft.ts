@@ -9,7 +9,7 @@ import type { LookOptions } from '../AutoSettings';
 import type { AutoStyle } from '../AutoStyle';
 import { colorByName } from '../../engine/colorByName';
 import type { NamedColor } from '../../engine/colorByName';
-import { sectionName, type Section } from '../sections';
+import { isBigSection, sectionName, type Section } from '../sections';
 import { sectionEnergy } from '../SongStructure';
 
 /** What every look is built against: the rig, its auto-show groups and the random source. */
@@ -52,7 +52,7 @@ export class LookDraft {
     this.firstColorName = n1;
     this.c1 = colorByName(n1);
     this.c2 = colorByName(n2);
-    this.big = section === 'chorus' || section === 'hook' || section === 'drop';
+    this.big = isBigSection(section);
   }
 
   /** One item drawn at random. Lists are never empty by construction, so an empty one is a programming error. */

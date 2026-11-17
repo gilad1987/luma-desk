@@ -56,7 +56,9 @@ function blendFixture(a: AttrValues, b: AttrValues, k: number): AttrValues {
       continue;
     }
     const from = fa ?? fb;
-    o[at] = at === 'gobo' ? (k < 0.5 ? from : fb) : lerp(from, fb, k);
+    // gobo is a slot number: it snaps half way through the fade instead of blending
+    if (at === 'gobo') o[at] = k < 0.5 ? from : fb;
+    else o[at] = lerp(from, fb, k);
   }
   return o;
 }

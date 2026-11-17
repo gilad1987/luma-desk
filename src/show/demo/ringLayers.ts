@@ -1,12 +1,28 @@
 import type { Cue } from '../../engine/CueList';
 import type { DemoKit } from './demoKit';
+import { addRingChorusLayers } from './ringChorusLayers';
+import { addRingEndLayers } from './ringEndLayers';
+
+/** The halo ring and angled-truss groups the ring layers address; phasers share these id lists with the groups. */
+export interface RingGroups {
+  readonly ringBeams: number[];
+  readonly ringWashes: number[];
+  readonly angledBeams: number[];
+  readonly angledSpots: number[];
+}
 
 /** Adds the halo ring and the angled trusses (groups 24-27) to cues 1-9 of the demo song. */
-export function addRingLayers(cues: Cue[], { group, color, aimed, phaser, layer }: DemoKit): void {
-  const ringBeams = group(24),
-    ringWashes = group(25),
-    angledBeams = group(26),
-    angledSpots = group(27);
+export function addRingLayers(cues: Cue[], kit: DemoKit): void {
+  const { group } = kit;
+  const ring = { ringBeams: group(24), ringWashes: group(25), angledBeams: group(26), angledSpots: group(27) };
+  addRingOpeningLayers(cues, kit, ring);
+  addRingChorusLayers(cues, kit, ring);
+  addRingEndLayers(cues, kit, ring);
+}
+
+/** Cues 1-4: the ring glows low, flares for the intro and chases on the pre-chorus. */
+function addRingOpeningLayers(cues: Cue[], { color, aimed, phaser, layer }: DemoKit, ring: RingGroups): void {
+  const { ringBeams, ringWashes, angledBeams, angledSpots } = ring;
   layer(
     cues,
     1,
@@ -43,58 +59,4 @@ export function addRingLayers(cues: Cue[], { group, color, aimed, phaser, layer 
     ],
     [phaser('dimChase', ringBeams, { rate: 1, spread: 360 })],
   );
-  layer(
-    cues,
-    5,
-    [
-      [ringBeams, aimed('ringSun', { dim: 100, ...color('White'), zoom: 2 })],
-      [ringWashes, aimed('center', { dim: 90, ...color('Red'), zoom: 30 })],
-      [angledBeams, aimed('converge', { dim: 100, ...color('Red'), zoom: 2 })],
-      [angledSpots, aimed('audience', { dim: 80, ...color('White'), gobo: 7, zoom: 12, grot: 40 })],
-    ],
-    [
-      phaser('tilt', ringBeams, { size: 14, rate: 1, spread: 360 }),
-      phaser('circle', angledBeams, { size: 10, rate: 1, spread: 360 }),
-    ],
-  );
-  layer(
-    cues,
-    6,
-    [
-      [ringBeams, aimed('ringTwist', { dim: 100, zoom: 2 })],
-      [angledBeams, aimed('ringCrown', { dim: 90, zoom: 2 })],
-      [ringWashes, { dim: 70 }],
-      [angledSpots, { dim: 0 }],
-    ],
-    [
-      phaser('rainbow', ringBeams, { rate: 0.5, spread: 360 }),
-      phaser('circle', ringBeams, { size: 8, rate: 0.5, spread: 360 }),
-      phaser('rainbow', [...angledBeams, ...ringWashes], { rate: 0.25, spread: 720 }),
-    ],
-  );
-  layer(
-    cues,
-    7,
-    [
-      [ringBeams, aimed('ringCrown', { dim: 70, ...color('Lt Blue'), zoom: 2 })],
-      [ringWashes, { dim: 20, ...color('Blue') }],
-      [angledBeams, { dim: 0 }],
-    ],
-    [phaser('dimSine', ringBeams, { size: 80, rate: 0.5, spread: 720 })],
-  );
-  layer(
-    cues,
-    8,
-    [
-      [ringBeams, aimed('ringSun', { dim: 100, ...color('White'), zoom: 2 })],
-      [angledBeams, aimed('wingFan', { dim: 100, ...color('White'), zoom: 2 })],
-      [angledSpots, aimed('audience', { dim: 100, ...color('White'), gobo: 3, zoom: 14, grot: 60 })],
-      [ringWashes, { dim: 100, ...color('White'), strobe: 60 }],
-    ],
-    [phaser('flash', ringBeams, { rate: 1 }), phaser('bally', angledBeams, { size: 36, rate: 2 })],
-  );
-  layer(cues, 9, [
-    [[...ringBeams, ...angledBeams, ...angledSpots], { dim: 0 }],
-    [ringWashes, aimed('singer', { dim: 50, ...color('CTO'), zoom: 18, strobe: 0 })],
-  ]);
 }

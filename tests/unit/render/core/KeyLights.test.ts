@@ -10,7 +10,7 @@ import { LightFrame, type KeyLightCandidate } from '../../../../src/render/light
 import { KeyLights } from '../../../../src/render/lights/KeyLights';
 
 function candidate(score: number, type: 'wash' | 'spot' = 'spot'): KeyLightCandidate {
-  const fixture = new Fixture(score, type, new Vector3(), 'hang', null);
+  const fixture = new Fixture({ id: score, type, pos: new Vector3(), mount: 'hang', fixed: null });
   const position = new Vector3(score, 10, 0);
   return {
     fixture,

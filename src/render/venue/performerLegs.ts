@@ -9,11 +9,17 @@ const CHAIR_LEGS: readonly (readonly [x: number, z: number])[] = [
   [0.2, 0.2],
 ];
 
+/** How a player stands or sits: `hip` is the hip height, lower when seated. */
+export interface Posture {
+  readonly seated: boolean;
+  readonly hip: number;
+}
+
 /**
  * Adds a performer's legs: two straight legs when standing; when seated, thighs and shins plus the chair (seat, back
  * and four thin legs) in `chair` material.
  */
-export function addPerformerLegs(body: Group, cloth: Material, chair: Material, seated: boolean, hip: number): void {
+export function addPerformerLegs(body: Group, cloth: Material, chair: Material, { seated, hip }: Posture): void {
   if (!seated) {
     for (const sx of [-0.11, 0.11])
       addMesh(body, new CylinderGeometry(0.065, 0.055, hip, 8), cloth, { position: [sx, hip / 2, 0] });

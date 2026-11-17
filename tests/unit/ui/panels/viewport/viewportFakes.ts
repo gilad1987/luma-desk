@@ -21,7 +21,7 @@ class Target extends FakeElement {
   }
 }
 /** At the world origin, which the camera below puts in the middle of the 100 px canvas: client (50, 50). */
-const lamp = new Fixture(7, 'spot', new Vector3(), 'hang', null);
+const lamp = new Fixture({ id: 7, type: 'spot', pos: new Vector3(), mount: 'hang', fixed: null });
 /** Maps world x/y in -1..1 straight to NDC, so client = (ndc + 1) * 50 on the 100 px canvas rect. */
 const camera = new OrthographicCamera(-1, 1, 1, -1, -1, 1);
 

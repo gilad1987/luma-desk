@@ -5,9 +5,14 @@ import type { InstrumentBuilder } from './performerSpec';
 
 type StringInstrument = 'guitar' | 'bass' | 'violin' | 'viola' | 'cello' | 'dbass';
 
-/** A guitar or bass slung across the body; `length` scales the body and neck. */
-function slungGuitar(body: Group, m: BandMaterials, hip: number, length: number, finish: Material): void {
-  const L = length;
+/** A slung instrument's size and body finish: `length` scales the body and neck (the bass is 1.25). */
+interface SlungSize {
+  readonly length: number;
+  readonly finish: Material;
+}
+
+/** A guitar or bass slung across the body. */
+function slungGuitar(body: Group, m: BandMaterials, hip: number, { length: L, finish }: SlungSize): void {
   const guitar = new Group();
   guitar.position.set(0, hip + 0.22, 0.2);
   guitar.rotation.z = -0.95;
@@ -30,8 +35,8 @@ function chinInstrument(body: Group, m: BandMaterials, hip: number, k: number): 
 
 /** The string section: guitars, the bowed strings and the double bass. */
 export const STRING_INSTRUMENTS: Readonly<Record<StringInstrument, InstrumentBuilder>> = {
-  guitar: (body, m, hip) => slungGuitar(body, m, hip, 1, m.wood),
-  bass: (body, m, hip) => slungGuitar(body, m, hip, 1.25, m.black),
+  guitar: (body, m, hip) => slungGuitar(body, m, hip, { length: 1, finish: m.wood }),
+  bass: (body, m, hip) => slungGuitar(body, m, hip, { length: 1.25, finish: m.black }),
   violin: (body, m, hip) => chinInstrument(body, m, hip, 1),
   viola: (body, m, hip) => chinInstrument(body, m, hip, 1.12),
   cello: (body, m, hip) => {

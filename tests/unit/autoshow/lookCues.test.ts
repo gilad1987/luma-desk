@@ -33,7 +33,7 @@ describe('auto look to cue', () => {
     const cues = buildLookList(new LookGenerator(rig, rng(11)), STYLES.edm, options);
     vi.spyOn(Math, 'random').mockImplementation(rng(11));
     const env = legacyEnv(rig, options);
-    const style = LEGACY_STYLES.edm;
+    const style = LEGACY_STYLES['edm'];
     if (!style) throw new Error('oracle has no edm');
     const expected = [];
     for (let i = 0; i < 8; i++) {

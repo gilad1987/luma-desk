@@ -15,7 +15,7 @@ class TestFixture extends Fixture {
   readonly #hasAll: boolean;
 
   constructor(id: number, base: Partial<Record<AttrName, number>>, type: FixtureTypeId, hasAll: boolean) {
-    super(id, type, new Vector3(), 'hang', null);
+    super({ id, type, pos: new Vector3(), mount: 'hang', fixed: null });
     Object.assign(this.base, base);
     this.#hasAll = hasAll;
   }

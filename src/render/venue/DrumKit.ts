@@ -24,21 +24,22 @@ export function buildDrumKit(scene: Object3D): void {
     cymbal = new MeshStandardMaterial({ color: 0xd4a640, metalness: 0.95, roughness: 0.22, side: DoubleSide });
   const logo = createCanvasTexture(drawCanvas(256, 256, paintDrumLogo), { colorSpace: SRGBColorSpace });
   const parts = new DrumParts(kit, { shell, head, chrome, cymbal, logo });
-  parts.drum(0.29, 0.48, 0, 0.3, 0.05, Math.PI / 2, 0, true); // kick, logo head toward the audience
-  parts.drum(0.18, 0.14, -0.4, 0.66, -0.42, -0.18, -0.12); // snare
-  parts.drum(0.15, 0.2, -0.16, 0.98, -0.12, -0.5, 0.12);
-  parts.drum(0.17, 0.22, 0.2, 0.98, -0.12, -0.5, -0.12); // rack toms
-  parts.drum(0.21, 0.4, 0.55, 0.45, -0.5);
-  parts.drum(0.23, 0.42, 0.7, 0.46, -0.06); // floor toms
+  // kick, logo head toward the audience
+  parts.drum({ r: 0.29, d: 0.48, at: [0, 0.3, 0.05], tilt: [Math.PI / 2, 0], front: true });
+  parts.drum({ r: 0.18, d: 0.14, at: [-0.4, 0.66, -0.42], tilt: [-0.18, -0.12] }); // snare
+  parts.drum({ r: 0.15, d: 0.2, at: [-0.16, 0.98, -0.12], tilt: [-0.5, 0.12] });
+  parts.drum({ r: 0.17, d: 0.22, at: [0.2, 0.98, -0.12], tilt: [-0.5, -0.12] }); // rack toms
+  parts.drum({ r: 0.21, d: 0.4, at: [0.55, 0.45, -0.5] });
+  parts.drum({ r: 0.23, d: 0.42, at: [0.7, 0.46, -0.06] }); // floor toms
   for (const [x, z] of SPURS)
     addMesh(kit, new CylinderGeometry(0.012, 0.012, 0.3, 4), chrome, { position: [x, 0.15, z] });
   parts.stand(-0.72, -0.5, 0.95);
   for (const dy of [0, 0.025])
     addMesh(kit, new CylinderGeometry(0.03, 0.18, 0.02, 28), cymbal, { position: [-0.72, 0.95 + dy, -0.5] }); // hi-hat
-  parts.cymbal(-0.62, 1.42, 0.02, 0.23, 0.3, 0.25);
-  parts.cymbal(0.42, 1.5, 0.08, 0.25, 0.3, -0.2);
-  parts.cymbal(0.92, 1.15, -0.32, 0.3, 0.15, -0.25);
-  parts.cymbal(-1.0, 1.28, -0.2, 0.22, 0.25, 0.45); // crashes, ride, china
+  parts.cymbal({ at: [-0.62, 1.42, 0.02], r: 0.23, tilt: [0.3, 0.25] });
+  parts.cymbal({ at: [0.42, 1.5, 0.08], r: 0.25, tilt: [0.3, -0.2] });
+  parts.cymbal({ at: [0.92, 1.15, -0.32], r: 0.3, tilt: [0.15, -0.25] });
+  parts.cymbal({ at: [-1.0, 1.28, -0.2], r: 0.22, tilt: [0.25, 0.45] }); // crashes, ride, china
   addMesh(
     kit,
     new CylinderGeometry(0.18, 0.16, 0.08, 16),

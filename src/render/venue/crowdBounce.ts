@@ -13,8 +13,8 @@ export interface CrowdBounceUniforms {
  */
 export function injectCrowdBounce<T extends Material>(material: T, uniforms: CrowdBounceUniforms): T {
   material.onBeforeCompile = (shader) => {
-    shader.uniforms.uBeat = uniforms.uBeat;
-    shader.uniforms.uJump = uniforms.uJump;
+    shader.uniforms['uBeat'] = uniforms.uBeat;
+    shader.uniforms['uJump'] = uniforms.uJump;
     shader.vertexShader =
       crowdBounceParsChunk +
       shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n' + crowdBounceVertexChunk);

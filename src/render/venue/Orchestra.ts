@@ -51,7 +51,7 @@ export function buildOrchestra(scene: Object3D, materials: BandMaterials): Perfo
             z: row.z,
             facing: 0.32,
             instrument: left,
-            pose: POSE[left],
+            pose: POSE[left] ?? 'down',
             seated,
             stand: true,
           }),
@@ -59,7 +59,7 @@ export function buildOrchestra(scene: Object3D, materials: BandMaterials): Perfo
       }
       if (right) {
         const seated = !(right === 'dbass' || right === 'timpani');
-        const spec = { x: -x, y, z: row.z, facing: -0.32, instrument: right, pose: POSE[right], seated };
+        const spec = { x: -x, y, z: row.z, facing: -0.32, instrument: right, pose: POSE[right] ?? 'down', seated };
         players.push(addPerformer(scene, materials, { ...spec, stand: right !== 'timpani' }));
       }
     }),

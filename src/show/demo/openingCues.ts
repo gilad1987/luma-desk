@@ -1,8 +1,14 @@
 import type { Cue } from '../../engine/CueList';
+import { chorusCue } from './chorusCue';
 import type { DemoKit } from './demoKit';
 
 /** Cues 1-5 of the demo song, Walk-In to Chorus, on the main stage groups and the screen. */
-export function openingCues({ vals, group, color, aimed, phaser, screen, rig }: DemoKit): Cue[] {
+export function openingCues(kit: DemoKit): Cue[] {
+  return [...introCues(kit), ...verseCues(kit), chorusCue(kit)];
+}
+
+/** Cues 1-2: the dark walk-in on the movers, then the singer and the sky fan. */
+function introCues({ vals, group, color, aimed, phaser, screen, rig }: DemoKit): Cue[] {
   const movers = rig.fixtures.filter((f) => f.T.moving).map((f) => f.id);
   return [
     {
@@ -34,6 +40,12 @@ export function openingCues({ vals, group, color, aimed, phaser, screen, rig }: 
       ]),
       fx: [phaser('tilt', group(5), { size: 10, rate: 0.5 })],
     },
+  ];
+}
+
+/** Cues 3-4: the amber verse and the cyan pre-chorus. */
+function verseCues({ vals, group, color, aimed, phaser, screen }: DemoKit): Cue[] {
+  return [
     {
       num: 3,
       name: 'Verse',
@@ -63,27 +75,6 @@ export function openingCues({ vals, group, color, aimed, phaser, screen, rig }: 
         [screen, { dim: 70, r: 0, g: 80, b: 100, gobo: 2, grot: 30 }],
       ]),
       fx: [phaser('tilt', group(2), { size: 18, rate: 1, spread: 360 })],
-    },
-    {
-      num: 5,
-      name: 'Chorus',
-      fade: 0.3,
-      vals: vals([
-        [group(2), { dim: 100, ...color('White') }],
-        [group(5), aimed('fanAud', { dim: 100, ...color('White'), zoom: 2 })],
-        [group(7), { dim: 100, ...color('White') }],
-        [group(3), { dim: 95, ...color('Red'), zoom: 22 }],
-        [group(6), { dim: 90, ...color('Red') }],
-        [group(9), { dim: 100, ...color('Red') }],
-        [group(1), aimed('audience', { dim: 85, ...color('White'), gobo: 3, zoom: 14, grot: 35 })],
-        [group(8), aimed('vOut', { dim: 80, ...color('Red'), zoom: 18 })],
-        [screen, { dim: 90, r: 100, g: 0, b: 0, gobo: 2, grot: 60 }],
-      ]),
-      fx: [
-        phaser('bally', group(2), { size: 30, rate: 1 }),
-        phaser('circle', group(5), { size: 16, rate: 1, spread: 360 }),
-        phaser('tilt', group(7), { size: 22, rate: 2, spread: 360 }),
-      ],
     },
   ];
 }

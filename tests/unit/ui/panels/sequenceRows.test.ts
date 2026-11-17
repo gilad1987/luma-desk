@@ -4,7 +4,12 @@ import type { PhaserInstance } from '../../../../src/engine/shared';
 import { cueTable, execOptions } from '../../../../src/ui/panels/sequence/sequenceRows';
 
 const phaser: PhaserInstance = { type: 'circle', rate: 1, size: 1, spread: 0, ids: [] };
-const cue = (num: number, name: string, fade: number, nVals: number, nFx: number): Cue => ({
+interface CueCounts {
+  readonly nVals?: number;
+  readonly nFx?: number;
+}
+/** A cue with `nVals` fixture values and `nFx` phasers; the rows only show the counts. */
+const cue = ({ num, name, fade, nVals = 0, nFx = 0 }: Pick<Cue, 'num' | 'name' | 'fade'> & CueCounts): Cue => ({
   num,
   name,
   fade,
@@ -17,14 +22,17 @@ const HEAD = '<tr><th>Cue</th><th>Name</th><th>Fade</th><th>Content</th></tr>';
 
 describe('sequence rows (same strings as the original renderSeq)', () => {
   it('lists executors with the selected one marked', () => {
-    const execs = [exec({ name: 'Intro' }), exec({ cues: [cue(1, 'a', 0, 0, 0)] })];
+    const execs = [exec({ name: 'Intro' }), exec({ cues: [cue({ num: 1, name: 'a', fade: 0 })] })];
     expect(execOptions(execs, 1)).toBe(
       '<option value="0" >Exec 1 — Intro (0)</option><option value="1" selected>Exec 2 — empty (1)</option>',
     );
   });
 
   it('marks the current and, while running, the next cue (wrapping)', () => {
-    const cues = [cue(1, 'A', 2, 3, 0), cue(2.5, 'B', 0, 1, 2)];
+    const cues = [
+      cue({ num: 1, name: 'A', fade: 2, nVals: 3 }),
+      cue({ num: 2.5, name: 'B', fade: 0, nVals: 1, nFx: 2 }),
+    ];
     expect(cueTable(exec({ cues, cur: 1, on: true }))).toBe(
       HEAD +
         '<tr data-i="0" class="nxt"><td class="num">1</td><td class="name">A</td><td class="fade">2s</td>' +
@@ -45,6 +53,6 @@ describe('sequence rows (same strings as the original renderSeq)', () => {
   });
 
   it('keeps one implicit tbody when there are cues', () => {
-    expect(cueTable(exec({ cues: [cue(1, 'A', 2, 0, 0)] }))).not.toContain('tbody');
+    expect(cueTable(exec({ cues: [cue({ num: 1, name: 'A', fade: 2 })] }))).not.toContain('tbody');
   });
 });

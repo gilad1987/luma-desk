@@ -9,7 +9,8 @@ import type { Programmer } from '../engine/Programmer';
 import type { Selection } from '../engine/Selection';
 import type { Tempo } from '../engine/Tempo';
 import { savedPresets, withSavedPresets } from './savedPresets';
-import type { ShowFileInput, ShowFileV1 } from './ShowFile';
+import { readShowFile } from './readShowFile';
+import type { ShowFileV1 } from './ShowFile';
 
 /** The engine state a show file captures, plus the programmer and selection that a load resets. */
 export interface ShowSerializerDeps {
@@ -49,12 +50,13 @@ export class ShowSerializer {
   }
 
   /**
-   * Replaces the show with `d`, keeping the original defaults rule by rule: `bpm` 0 or missing becomes 120 while
-   * `haze` 0 stays 0; shows saved before the newer default groups get them only in empty slots; missing or extra
-   * executors are ignored. It stops all executors and clears the programmer and the selection. Bad data may throw
-   * part-way, as it always did; callers catch it.
+   * Replaces the show with parsed show JSON, narrowed by `readShowFile`, keeping the original defaults rule by rule:
+   * `bpm` 0 or missing becomes 120 while `haze` 0 stays 0; shows saved before the newer default groups get them only
+   * in empty slots; missing or extra executors are ignored. It stops all executors and clears the programmer and the
+   * selection. Bad data may throw part-way, as it always did; callers catch it.
    */
-  load(d: ShowFileInput): void {
+  load(data: unknown): void {
+    const d = readShowFile(data);
     const { rig, groups, presets, execs, tempo, state, programmer, selection } = this.#deps;
     groups.replace(d.groups ? addNewDefaultGroups(d.groups, defaultGroups(rig)) : defaultGroups(rig));
     presets.replace(withSavedPresets(defaultPresets(), d.presets));

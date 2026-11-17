@@ -56,8 +56,8 @@ describe('projectToScreen', () => {
 describe('FixturePicker', () => {
   it('returns the fixture of the nearest registered object under the pointer', () => {
     const picker = new FixturePicker({ getBoundingClientRect: () => rect }, lookingDownMinusZ());
-    const near = new Fixture(1, 'wash', new Vector3(), 'hang', null);
-    const far = new Fixture(2, 'spot', new Vector3(), 'hang', null);
+    const near = new Fixture({ id: 1, type: 'wash', pos: new Vector3(), mount: 'hang', fixed: null });
+    const far = new Fixture({ id: 2, type: 'spot', pos: new Vector3(), mount: 'hang', fixed: null });
     picker.register(boxAt(-20), far);
     picker.register(boxAt(-10), near);
     expect(picker.pickAt(110, 70)).toBe(near);
@@ -65,7 +65,7 @@ describe('FixturePicker', () => {
 
   it('returns null when nothing registered is hit', () => {
     const picker = new FixturePicker({ getBoundingClientRect: () => rect }, lookingDownMinusZ());
-    picker.register(boxAt(-10), new Fixture(1, 'wash', new Vector3(), 'hang', null));
+    picker.register(boxAt(-10), new Fixture({ id: 1, type: 'wash', pos: new Vector3(), mount: 'hang', fixed: null }));
     expect(picker.pickAt(15, 25)).toBeNull();
   });
 });

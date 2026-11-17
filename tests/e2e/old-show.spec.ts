@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { bootApp, collectErrors, jsonRoundTrip, readDeskState, readGolden, type SavedShow } from '../shared';
+import { jsonRoundTrip, readGolden, type SavedShow } from '../shared';
+import { bootApp, collectErrors, readDeskState } from '../shared/e2e';
 
 /** Groups added after the first release; loadShow() puts them into old shows, but only into empty slots. */
 const NEW_GROUPS = ['LED Bars', 'Follow Spots', 'Profiles'];

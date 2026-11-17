@@ -51,7 +51,7 @@ describe('Encoder', () => {
 
   it('builds the legacy markup with data-a; a double click on the value asks to edit', () => {
     const { encoder, handlers, element } = build();
-    expect([element.tagName, element.className, element.dataset.a]).toEqual(['div', 'encoder', 'dim']);
+    expect([element.tagName, element.className, element.dataset['a']]).toEqual(['div', 'encoder', 'dim']);
     expect(encoder.element.innerHTML).toBe(
       '<div class="lb">Dim</div><div class="knob"><div class="ind"></div></div><div class="val">—</div>',
     );

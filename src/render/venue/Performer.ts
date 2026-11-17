@@ -11,9 +11,14 @@ import { STRING_INSTRUMENTS } from './stringInstruments';
 const INSTRUMENTS = { ...STRING_INSTRUMENTS, ...STAGE_INSTRUMENTS };
 
 /** An arm hangs from a shoulder pivot group, so the pose turns the whole arm about the shoulder. */
-function addArm(body: Group, cloth: Material, x: number, shoulder: number, [rx, rz]: readonly [number, number]): void {
+function addArm(
+  body: Group,
+  cloth: Material,
+  [x, y]: readonly [x: number, y: number],
+  [rx, rz]: readonly [x: number, z: number],
+): void {
   const arm = new Group();
-  arm.position.set(x, shoulder, 0);
+  arm.position.set(x, y, 0);
   arm.rotation.set(rx, 0, rz);
   addMesh(arm, new CylinderGeometry(0.045, 0.04, 0.55, 6), cloth, { position: [0, -0.27, 0] });
   body.add(arm);
@@ -28,12 +33,12 @@ export function addPerformer(scene: Object3D, materials: BandMaterials, spec: Pe
     cloth = materials.cloth[spec.cloth ?? Math.floor(Math.random() * materials.cloth.length)] ?? materials.black;
   const seated = spec.seated ?? false,
     hip = seated ? 0.5 : 0.9;
-  addPerformerLegs(body, cloth, materials.black, seated, hip);
+  addPerformerLegs(body, cloth, materials.black, { seated, hip });
   addMesh(body, new CapsuleGeometry(0.17, 0.42, 4, 10), cloth, { position: [0, hip + 0.36, 0] });
   const head = addMesh(body, new SphereGeometry(0.115, 14, 10), materials.skin, { position: [0, hip + 0.83, 0.02] });
   const [left, right] = ARM_POSES[spec.pose ?? 'down'];
-  addArm(body, cloth, -0.22, hip + 0.55, left);
-  addArm(body, cloth, 0.22, hip + 0.55, right);
+  addArm(body, cloth, [-0.22, hip + 0.55], left);
+  addArm(body, cloth, [0.22, hip + 0.55], right);
   if (spec.instrument) INSTRUMENTS[spec.instrument](body, materials, hip);
   if (spec.stand) addMusicStand(body, materials, seated);
   body.position.set(spec.x, spec.y, spec.z);

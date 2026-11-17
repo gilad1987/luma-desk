@@ -6,10 +6,13 @@ import { TYPES } from './fixtureTypes';
 /** How a fixture is rigged; floor units point up at tilt 0, hung and wall units point down. */
 export type Mount = 'hang' | 'floor' | 'wall';
 
-/** A pan/tilt pair in degrees. */
+/**
+ * A pan/tilt pair in degrees: what `aimAt` returns and what a static fixture is rigged at. It is readonly because a
+ * rigged aim is fixed for the life of the rig; code that wants a different aim makes a new pair.
+ */
 export interface PanTilt {
-  pan: number;
-  tilt: number;
+  readonly pan: number;
+  readonly tilt: number;
 }
 
 /** Where a fixture's LED pixel strip sits on its truss: centre, direction along the truss, and length. */
@@ -31,16 +34,22 @@ export class Fixture {
   readonly T: FixtureType;
   readonly pos: Vector3;
   readonly mount: Mount;
-  /** The rigged pan/tilt of a static fixture, or null for a moving one; the profile build aims it in place. */
+  /**
+   * The rigged pan/tilt of a static fixture, or null for a moving one and for the LED screen, which has no beam to
+   * aim. The profiles get theirs from `aimAt` while the rig is built.
+   */
   readonly fixed: PanTilt | null;
   /** This frame's output values. Empty until the first output merge, which then writes every attribute each frame. */
   readonly out: AttrValues = {};
   /** The output before phasers; the UI shows it as the value a fixture would hold without effects. */
   readonly base: AttrValues = {};
-  /** Set only on fixtures that carry a pixel strip (ring, tower and angled-truss units). */
-  pix?: PixelStrip;
+  /**
+   * Set only on fixtures that carry a pixel strip (ring, tower and angled-truss units). `declare` keeps the other
+   * fixtures without a `pix` key at all, as the original plain objects were.
+   */
+  declare pix?: PixelStrip;
 
-  constructor(id: number, type: FixtureTypeId, pos: Vector3, mount: Mount, fixed: PanTilt | null) {
+  constructor({ id, type, pos, mount, fixed }: Pick<Fixture, 'id' | 'type' | 'pos' | 'mount' | 'fixed'>) {
     this.id = id;
     this.type = type;
     this.T = TYPES[type];

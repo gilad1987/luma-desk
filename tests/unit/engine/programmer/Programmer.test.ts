@@ -63,10 +63,14 @@ describe('Programmer', () => {
     e.clock.seconds = 10.399;
     e.programmer.clearPress();
     expect(e.messages.filter((m) => m.includes('Clear'))).toEqual([':Clear Selection', 'ok:Clear All']);
-    expect([e.programmer.hasContent(), e.state.highlight, e.state.lastClear]).toEqual([false, false, 10399]);
+    expect([e.programmer.hasContent(), e.state.highlight]).toEqual([false, false]);
     e.clock.seconds = 10.799;
     e.programmer.clearPress();
     expect(e.messages.at(-2)).toBe(':Clear Programmer');
+    // 201 ms after the last press, not the first: every press, single or double, restarts the window
+    e.clock.seconds = 11;
+    e.programmer.clearPress();
+    expect(e.messages.at(-2)).toBe('ok:Clear All');
   });
 
   it('rounds stepped attributes, clamps zoom to the fixture type and ignores attributes a fixture lacks', () => {

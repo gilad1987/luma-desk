@@ -28,25 +28,29 @@ function oracleLook(id: AutoStyleId, sec: Section, options: LookOptions, seed: n
   return { look, next: random() };
 }
 
+/** Every style, section, option set and seed, in that nesting order. */
+function allCases() {
+  return STYLE_IDS.flatMap((id) =>
+    SECTIONS.flatMap((sec) => OPTIONS.flatMap((options) => SEEDS.map((seed) => ({ id, sec, options, seed })))),
+  );
+}
+
 afterEach(() => vi.restoreAllMocks());
 
 describe('LookGenerator parity with the original genLook', () => {
   it('builds the same look and draws the same randoms for every style, section, seed and option set', () => {
     const mismatches: string[] = [];
     let compared = 0;
-    for (const id of STYLE_IDS)
-      for (const sec of SECTIONS)
-        for (const options of OPTIONS)
-          for (const seed of SEEDS) {
-            const expected = oracleLook(id, sec, options, seed);
-            const random = rng(seed);
-            const look = new LookGenerator(rig, random).generate(STYLES[id], sec, options);
-            compared++;
-            // JSON text also pins the key order of every nested object (vals, attribute order, fx fields, sec)
-            if (JSON.stringify(look) !== JSON.stringify(expected.look) || random() !== expected.next)
-              mismatches.push(`${id}/${sec}/${options.energy}/${seed}`);
-            else expect(look).toStrictEqual(expected.look);
-          }
+    for (const { id, sec, options, seed } of allCases()) {
+      const expected = oracleLook(id, sec, options, seed);
+      const random = rng(seed);
+      const look = new LookGenerator(rig, random).generate(STYLES[id], sec, options);
+      compared++;
+      // JSON text also pins the key order of every nested object (vals, attribute order, fx fields, sec)
+      if (JSON.stringify(look) !== JSON.stringify(expected.look) || random() !== expected.next)
+        mismatches.push(`${id}/${sec}/${options.energy}/${seed}`);
+      else expect(look).toStrictEqual(expected.look);
+    }
     expect(compared).toBe(STYLE_IDS.length * SECTIONS.length * OPTIONS.length * SEEDS.length);
     expect(compared).toBe(1512);
     expect(mismatches).toEqual([]);

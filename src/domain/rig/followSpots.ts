@@ -7,6 +7,11 @@ import type { RigBuilder } from './RigBuilder';
  */
 export function addFollowSpots(rig: RigBuilder): void {
   [2, 6, 12, 16].forEach((gap, k) =>
-    rig.add(1901 + k, 'follow', -20 + (40 / 19) * (gap + 0.5), TR.front.y - 0.75, TR.front.z, 'hang'),
+    rig.add({
+      id: 1901 + k,
+      type: 'follow',
+      at: [-20 + (40 / 19) * (gap + 0.5), TR.front.y - 0.75, TR.front.z],
+      mount: 'hang',
+    }),
   );
 }

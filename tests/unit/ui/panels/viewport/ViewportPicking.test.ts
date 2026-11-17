@@ -2,6 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { asReal } from '../../fakes/asReal';
 import { mount } from './viewportFakes';
 
+/** The inline style properties the picking code writes on the fake elements. */
+type InlineStyle = Record<'display' | 'left' | 'top' | 'width' | 'height' | 'cursor', string>;
+
 describe('ViewportPicking', () => {
   afterEach(() => vi.unstubAllGlobals());
 
@@ -21,7 +24,7 @@ describe('ViewportPicking', () => {
     canvas.fire('pointerdown', at(80, 90, { shiftKey: true, button: 0 }));
     expect(controls.enabled).toBe(false);
     win.fire('pointermove', at(40, 30));
-    const style = asReal<Record<string, string>>(dom.get('selRect').style);
+    const style = asReal<InlineStyle>(dom.get('selRect').style);
     expect([style.display, style.left, style.top, style.width, style.height]).toEqual([
       'block',
       '40px',
@@ -46,9 +49,9 @@ describe('ViewportPicking', () => {
     const hit = mount();
     hit.canvas.fire('pointermove', hit.at(20, 30));
     const tip = hit.dom.get('tip'),
-      style = asReal<Record<string, string>>(tip.style);
+      style = asReal<InlineStyle>(tip.style);
     expect([style.display, style.left, style.top, tip.textContent]).toEqual(['block', '32px', '42px', '7 · Spot']);
-    expect(asReal<Record<string, string>>(hit.canvas.style).cursor).toBe('pointer');
+    expect(asReal<InlineStyle>(hit.canvas.style).cursor).toBe('pointer');
     vi.unstubAllGlobals();
     const miss = mount(null);
     miss.canvas.fire('pointermove', miss.at(20, 30));

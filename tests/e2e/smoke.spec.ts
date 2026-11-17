@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { STORAGE_KEYS, bootApp, collectErrors, readDeskState, readStoredJson, stepFrames } from '../shared';
+import { STORAGE_KEYS } from '../shared';
+import { bootApp, collectErrors, readDeskState, readStoredJson, stepFrames } from '../shared/e2e';
 
 test('boots with no console errors or page errors', async ({ page }) => {
   const errors = collectErrors(page);
@@ -38,7 +39,7 @@ test('command line selects and sets fixtures', async ({ page }) => {
   for (const id of s.sel) expect(s.prog[id]).toEqual({ dim: 100 });
   await stepFrames(desk);
   const dims = await page.evaluate(() =>
-    window.__desk.fixtures.filter((f) => f.id >= 201 && f.id <= 230).map((f) => f.out.dim),
+    window.__desk.fixtures.filter((f) => f.id >= 201 && f.id <= 230).map((f) => f.out['dim']),
   );
   expect(new Set(dims)).toEqual(new Set([100]));
 });
@@ -63,4 +64,15 @@ test('layout switch: ma, desk, classic', async ({ page }) => {
     for (const id of ['#cmd', '#goBig', '#execs']) await expect(page.locator(id)).toBeVisible();
   }
   expect(errors).toEqual([]);
+});
+
+test('STORE turns store mode on and off on the key and the page', async ({ page }) => {
+  await bootApp(page);
+  const store = page.locator('#kStore');
+  await store.click();
+  await expect(store).toHaveClass(/\bon\b/);
+  await expect(page.locator('body')).toHaveClass(/\bstoring\b/);
+  await store.click();
+  await expect(store).not.toHaveClass(/\bon\b/);
+  await expect(page.locator('body')).not.toHaveClass(/\bstoring\b/);
 });

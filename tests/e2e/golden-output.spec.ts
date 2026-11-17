@@ -1,5 +1,6 @@
 import { test } from '@playwright/test';
-import { bootApp, expectGolden, type FixtureOutput } from '../shared';
+import type { FixtureOutput } from '../shared';
+import { bootApp, expectGolden } from '../shared/e2e';
 
 interface OutputSnapshot {
   label: string;

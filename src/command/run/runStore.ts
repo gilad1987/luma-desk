@@ -20,6 +20,6 @@ export function runStorePreset({ ref }: StatementOf<'storePreset'>, deps: Comman
 export function runStoreCue(statement: StatementOf<'storeCue'>, { pool, programmer, state }: CommandDeps): void {
   const exec = statement.exec ?? state.selExec;
   if (pool.execs[exec] === undefined) throw new CommandError('No such executor');
-  programmer.storeCue(exec, statement.cue, { fade: statement.fade });
+  programmer.storeCue(exec, statement.cue, statement.fade === undefined ? {} : { fade: statement.fade });
   state.setStoreMode(false);
 }

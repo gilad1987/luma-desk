@@ -9,9 +9,12 @@ import { ORCHESTRA_ROWS } from './orchestraRows';
 import { addPerformer } from './Performer';
 import type { Performer } from './performerSpec';
 
+/** An [x, y, z] triple in metres: a box size or a position. */
+type Triple = readonly [number, number, number];
+
 /** Flags a mesh as a riser: the band layout pass also stretches risers and lets them take shadows. */
 const markRiser = (mesh: Mesh): void => {
-  mesh.userData.riser = 1;
+  mesh.userData['riser'] = 1;
 };
 
 /**
@@ -19,11 +22,11 @@ const markRiser = (mesh: Mesh): void => {
  * LED edge, amps, wedges, then the eight members. Returns the members for the beat animation.
  */
 export function buildBand(scene: Object3D, venue: VenueMaterials, materials: BandMaterials): Performer[] {
-  const riser = (w: number, h: number, d: number, x: number, y: number, z: number): void =>
-    markRiser(addMesh(scene, new BoxGeometry(w, h, d), venue.dark, { position: [x, y, z] }));
-  riser(5, 0.5, 3.2, 0, DECK + 0.25, -9.5);
-  riser(3.4, 0.5, 2.4, 6.5, DECK + 0.25, -8.5);
-  for (const sx of [-1, 1]) for (const r of ORCHESTRA_ROWS) riser(8.4, r.h, 2.2, sx * 13.4, DECK + r.h / 2, r.z);
+  const riser = ([w, h, d]: Triple, position: Triple): void =>
+    markRiser(addMesh(scene, new BoxGeometry(w, h, d), venue.dark, { position }));
+  riser([5, 0.5, 3.2], [0, DECK + 0.25, -9.5]);
+  riser([3.4, 0.5, 2.4], [6.5, DECK + 0.25, -8.5]);
+  for (const sx of [-1, 1]) for (const r of ORCHESTRA_ROWS) riser([8.4, r.h, 2.2], [sx * 13.4, DECK + r.h / 2, r.z]);
   buildDrumKit(scene);
   const ledEdge = addMesh(
     scene,

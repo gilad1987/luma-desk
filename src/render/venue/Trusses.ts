@@ -17,8 +17,8 @@ const TRUSS_CHAIN_X = [-16, -5.5, 5.5, 16] as const;
 export function buildTrusses(scene: Object3D, materials: VenueMaterials): void {
   const kit = new TrussKit(materials.truss);
   buildRoofGrid(scene, kit);
-  buildRingTruss(scene, kit, RING.R, RING.y, 0.5);
-  buildRingTruss(scene, kit, RING.r2, RING.y2, 0.4);
+  buildRingTruss(scene, kit, { radius: RING.R, y: RING.y, spacing: 0.5 });
+  buildRingTruss(scene, kit, { radius: RING.r2, y: RING.y2, spacing: 0.4 });
   buildTrussTowers(scene, kit, materials.dark);
   for (const t of ANG) {
     kit.addSection(scene, [t.a.x, t.a.y, t.a.z], [t.b.x, t.b.y, t.b.z], 0.44);

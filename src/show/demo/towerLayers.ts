@@ -1,10 +1,24 @@
 import type { Cue } from '../../engine/CueList';
 import type { DemoKit } from './demoKit';
+import { addTowerPeakLayers } from './towerPeakLayers';
+
+/** The delay-tower groups the tower layers address. */
+export interface TowerGroups {
+  readonly towerBeams: number[];
+  readonly towerWashes: number[];
+}
 
 /** Adds the delay towers and the audience wash (groups 31-33) to cues 1-9 of the demo song. */
-export function addTowerLayers(cues: Cue[], { group, color, aimed, phaser, layer }: DemoKit): void {
-  const towerBeams = group(31),
-    towerWashes = group(32);
+export function addTowerLayers(cues: Cue[], kit: DemoKit): void {
+  const towers = { towerBeams: kit.group(31), towerWashes: kit.group(32) };
+  addTowerOpeningLayers(cues, kit, towers);
+  addTowerPeakLayers(cues, kit, towers);
+  addAudienceWashLayers(cues, kit);
+}
+
+/** Cues 1-4 of the tower layers. */
+function addTowerOpeningLayers(cues: Cue[], { color, aimed, phaser, layer }: DemoKit, towers: TowerGroups): void {
+  const { towerBeams, towerWashes } = towers;
   layer(cues, 1, [
     [towerBeams, aimed('straight', { dim: 0, zoom: 2 })],
     [towerWashes, aimed('band', { dim: 30, ...color('Congo'), zoom: 30 })],
@@ -31,41 +45,10 @@ export function addTowerLayers(cues: Cue[], { group, color, aimed, phaser, layer
     ],
     [phaser('dimChase', towerBeams, { rate: 2, spread: 360 })],
   );
-  layer(
-    cues,
-    5,
-    [
-      [towerBeams, aimed('audience', { dim: 100, ...color('White'), zoom: 2 })],
-      [towerWashes, aimed('audience', { dim: 90, ...color('Red'), zoom: 40 })],
-    ],
-    [phaser('bally', towerBeams, { size: 25, rate: 1, spread: 180 })],
-  );
-  layer(
-    cues,
-    6,
-    [
-      [towerBeams, aimed('skyFan', { dim: 100, zoom: 2 })],
-      [towerWashes, { dim: 70 }],
-    ],
-    [
-      phaser('rainbow', [...towerBeams, ...towerWashes], { rate: 0.5, spread: 360 }),
-      phaser('circle', towerBeams, { size: 14, rate: 0.5, spread: 360 }),
-    ],
-  );
-  layer(cues, 7, [
-    [towerBeams, { dim: 0 }],
-    [towerWashes, { dim: 25, ...color('Blue') }],
-  ]);
-  layer(
-    cues,
-    8,
-    [
-      [towerBeams, aimed('vOut', { dim: 100, ...color('White'), zoom: 2 })],
-      [towerWashes, { dim: 100, ...color('White'), strobe: 70 }],
-    ],
-    [phaser('flash', towerBeams, { rate: 1 })],
-  );
-  layer(cues, 9, [[[...towerBeams, ...towerWashes], { dim: 0, strobe: 0 }]]);
+}
+
+/** The audience wash (group 33) through the whole song. */
+function addAudienceWashLayers(cues: Cue[], { group, color, aimed, phaser, layer }: DemoKit): void {
   const audienceWash = group(33);
   layer(cues, 1, [[audienceWash, aimed('crowd', { dim: 40, ...color('CTO'), zoom: 50 })]]);
   layer(cues, 2, [[audienceWash, { dim: 22, ...color('Blue') }]]);

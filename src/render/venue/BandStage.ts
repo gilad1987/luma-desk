@@ -14,7 +14,7 @@ function spreadBandLayout(added: readonly Object3D[]): void {
   for (const o of added) {
     o.position.x *= SXZ[0];
     o.position.z *= SXZ[1];
-    if (o.userData.riser) {
+    if (o.userData['riser']) {
       o.scale.x *= SXZ[0];
       o.scale.z *= SXZ[1];
       o.receiveShadow = true;

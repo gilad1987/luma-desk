@@ -2,7 +2,12 @@ import type { SavedExec } from '../ShowFile';
 import type { DemoKit } from './demoKit';
 
 /** Executors 2-7 of the demo: one-cue looks to busk over the song (blinders, strobes, chases, key light). */
-export function buskingExecs({ vals, group, color, aimed, phaser, rig }: DemoKit): Partial<SavedExec>[] {
+export function buskingExecs(kit: DemoKit): Partial<SavedExec>[] {
+  return [...effectExecs(kit), ...colourExecs(kit)];
+}
+
+/** Executors 2-5: blinder hit, strobes, the floor chase and the truss-2 swipe. */
+function effectExecs({ vals, group, color, aimed, phaser }: DemoKit): Partial<SavedExec>[] {
   return [
     { name: 'Blinders', cues: [{ num: 1, name: 'Hit', fade: 0, vals: vals([[group(10), { dim: 100 }]]), fx: [] }] },
     {
@@ -33,6 +38,12 @@ export function buskingExecs({ vals, group, color, aimed, phaser, rig }: DemoKit
         },
       ],
     },
+  ];
+}
+
+/** Executors 6-7: the red alert wash and the singer's key light. */
+function colourExecs({ vals, group, color, aimed, rig }: DemoKit): Partial<SavedExec>[] {
+  return [
     {
       name: 'Red Alert',
       cues: [

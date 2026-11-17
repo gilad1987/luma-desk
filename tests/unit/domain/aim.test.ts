@@ -1,21 +1,22 @@
 import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
-import { aimAt, dirFrom } from '../../../src/domain/aim';
-import { buildRig } from '../../../src/domain/rig';
-import { DECK } from '../../../src/domain/venue';
-import { asRecorded, RECORDED_RIG as expected } from './recordedRig';
+import { aimAt, dirFrom } from '../../../src/domain/aim.ts';
+import { buildRig } from '../../../src/domain/rig/index.ts';
+import { DECK } from '../../../src/domain/venue.ts';
+import { jsonRoundTrip } from '../../shared/index.ts';
+import { RECORDED_RIG as expected } from './recordedRig.ts';
 
 const rig = buildRig();
 
 describe('aimAt', () => {
   it('matches the original for every fixture aimed at the stage', () => {
     const actual = rig.fixtures.map((f) => aimAt(f, 3, DECK + 1.5, -8));
-    expect(asRecorded(actual)).toEqual(expected.fixtures.map((f) => f.aimStage));
+    expect(jsonRoundTrip(actual)).toEqual(expected.fixtures.map((f) => f.aimStage));
   });
 
   it('matches the original for every fixture aimed over the house (pan wrap and tilt-only bars)', () => {
     const actual = rig.fixtures.map((f) => aimAt(f, -f.pos.x * 4, 40, f.pos.z + 30));
-    expect(asRecorded(actual)).toEqual(expected.fixtures.map((f) => f.aimHouse));
+    expect(jsonRoundTrip(actual)).toEqual(expected.fixtures.map((f) => f.aimHouse));
   });
 
   it('rounds to 0.1 degree and zeroes pan for a near-vertical beam', () => {
@@ -28,8 +29,15 @@ describe('aimAt', () => {
     const bar = rig.get(2101);
     if (!bar) throw new Error('fixture 2101 missing');
     const aim = aimAt(bar, bar.pos.x, bar.pos.y - 1, bar.pos.z - 0.001);
-    expect(aim.pan).toBe(0);
-    expect(Math.abs(aim.tilt)).toBeLessThanOrEqual(95);
+    expect(aim).toEqual({ pan: 0, tilt: -95 });
+  });
+
+  it('keeps pan once the tilt passes 0.5 degree, and zeroes it below', () => {
+    const hung = rig.get(301);
+    if (!hung) throw new Error('fixture 301 missing');
+    const off = (deg: number) => (hung.pos.y * Math.tan(deg * (Math.PI / 180))) / Math.SQRT2;
+    expect(aimAt(hung, hung.pos.x + off(0.45), 0, hung.pos.z + off(0.45))).toEqual({ pan: 0, tilt: 0.5 });
+    expect(aimAt(hung, hung.pos.x + off(0.55), 0, hung.pos.z + off(0.55))).toEqual({ pan: 45, tilt: 0.5 });
   });
 });
 

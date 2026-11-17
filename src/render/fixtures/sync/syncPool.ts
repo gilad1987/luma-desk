@@ -32,7 +32,7 @@ export function syncPool(frame: BeamFrame, gob: number, goboTextures: readonly T
     r = length * tz,
     n = hit.normal;
   const poolIntensity =
-    ((intensity * spec.power * 0.3) / (1 + r * 0.1)) * (n === SCREEN_NORMAL ? 0.45 : length > 24 ? 0.45 : 1);
+    ((intensity * spec.power * 0.3) / (1 + r * 0.1)) * (n === SCREEN_NORMAL || length > 24 ? 0.45 : 1);
   pl.material.color.setRGB(col[0] * poolIntensity, col[1] * poolIntensity, col[2] * poolIntensity);
   addPoolContributions(frame, n, out);
 }

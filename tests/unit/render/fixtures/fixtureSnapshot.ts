@@ -72,8 +72,8 @@ function describeObject(o: Object3D, picks: ReadonlySet<Object3D>): object {
   };
   if (o instanceof Mesh || o instanceof Sprite) {
     const mesh = o as Mesh<BufferGeometry, Material>;
-    out.geometry = describeGeometry(mesh.geometry);
-    out.material = describeMaterial(mesh.material);
+    out['geometry'] = describeGeometry(mesh.geometry);
+    out['material'] = describeMaterial(mesh.material);
   }
   return out;
 }

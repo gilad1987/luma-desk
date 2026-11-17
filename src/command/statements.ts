@@ -18,7 +18,7 @@ export type LabelTarget = 'cue' | 'group' | 'exec';
 
 /**
  * One parsed command statement. Executor fields are 0-based indexes (the typed number minus one, computed as the
- * original did); an absent `exec` means "the selected executor at the moment the statement runs", because an earlier
+ * original did); an undefined `exec` means "the selected executor at the moment the statement runs", because an earlier
  * `Exec n` in the same line may change it.
  */
 export type Statement =
@@ -26,12 +26,17 @@ export type Statement =
   | { readonly kind: 'level'; readonly value: number }
   | { readonly kind: 'storeGroup'; readonly group: number }
   | { readonly kind: 'storePreset'; readonly ref: PresetRef }
-  | { readonly kind: 'storeCue'; readonly cue: number | null; readonly fade?: number; readonly exec?: number }
+  | {
+      readonly kind: 'storeCue';
+      readonly cue: number | null;
+      readonly fade: number | undefined;
+      readonly exec: number | undefined;
+    }
   | { readonly kind: 'selectExec'; readonly exec: number }
-  | { readonly kind: 'go'; readonly direction: 1 | -1; readonly exec?: number }
+  | { readonly kind: 'go'; readonly direction: 1 | -1; readonly exec: number | undefined }
   | { readonly kind: 'gotoCue'; readonly cue: number }
   | { readonly kind: 'pause' }
-  | { readonly kind: 'off'; readonly exec?: number }
+  | { readonly kind: 'off'; readonly exec: number | undefined }
   | { readonly kind: 'clear' }
   | { readonly kind: 'clearAll' }
   | { readonly kind: 'applyPreset'; readonly ref: PresetRef }
