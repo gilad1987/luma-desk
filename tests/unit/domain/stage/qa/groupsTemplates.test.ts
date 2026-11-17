@@ -50,6 +50,12 @@ describe('QA3 groups on every template rig', () => {
     ]).toStrictEqual([true, true, pool[1]?.ids, 'All Movers', movers, true]);
   });
 
+  it.each<TemplateId>(['theatre', 'festival'])('gives %s a default pool with standard and truss groups', (id) => {
+    const design = createTemplate(id);
+    const slots = Object.keys(defaultGroupsOf(rigFromDesign(design), design)).map(Number);
+    expect([slots.some((n) => n <= 37), slots.some((n) => n > 37)]).toStrictEqual([true, true]);
+  });
+
   it.each(TEMPLATE_IDS)('gives %s a distinct array for every Auto Show key', (id) => {
     const design = createTemplate(id);
     const arrays = Object.values(autoGroupsOf(rigFromDesign(design), design));

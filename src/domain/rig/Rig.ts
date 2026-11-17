@@ -2,6 +2,14 @@ import type { Fixture } from '../Fixture';
 import type { FixtureTypeId } from '../FixtureType';
 
 /**
+ * Whether a fixture is a light: every fixture except the LED screen, which has no beam. "All lights" (select-all, the
+ * Everything group, look resets) and the stage `lights` query share this one rule.
+ */
+export function isLight(f: Fixture): boolean {
+  return f.type !== 'screen';
+}
+
+/**
  * The patched fixtures of one venue. The app builds one rig at boot and passes it to whatever needs it, so tests can
  * build their own. All id lists come back in build order, not id order: groups, the output merge and the golden files
  * depend on that order.
@@ -36,6 +44,6 @@ export class Rig {
    * and look resets. Returns a new array on each call, because callers keep or change it.
    */
   lightIds(): number[] {
-    return this.fixtures.filter((f) => f.type !== 'screen').map((f) => f.id);
+    return this.fixtures.filter(isLight).map((f) => f.id);
   }
 }

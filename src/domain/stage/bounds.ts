@@ -9,12 +9,14 @@ const UP = new Vector3(0, 1, 0);
 /**
  * The box around the whole design (G7): the deck joined with every truss end point, every LED wall and side screen
  * corner and every fixture position. The camera views fit to it, so a small deck fills the view and a large one,
- * with side screens far out to the sides, is not cut off.
+ * with side screens far out to the sides, is not cut off. With `scenery.ledWall` off the LED wall and side screens
+ * are not drawn, so they do not count.
  */
 export function boundsOf(d: StageDesign): StageBounds {
   const box = new Box3(new Vector3(d.deck.x0, 0, d.deck.z0), new Vector3(d.deck.x1, d.deck.height, d.deck.z1));
   for (const t of d.trusses) for (const p of trussPoints(t)) box.expandByPoint(p);
-  for (const s of d.screens) for (const p of screenPoints(s)) box.expandByPoint(p);
+  const screens = d.scenery.ledWall ? d.screens : [];
+  for (const s of screens) for (const p of screenPoints(s)) box.expandByPoint(p);
   for (const f of d.fixtures) box.expandByPoint(new Vector3(...f.position));
   return { min: box.min.toArray(), max: box.max.toArray() };
 }

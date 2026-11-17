@@ -3,8 +3,11 @@ import type { AttrName, AttrValues } from './attributes';
 import type { FixtureType, FixtureTypeId } from './FixtureType';
 import { TYPES } from './fixtureTypes';
 
+/** Every mount; the stage parser reads a stored mount against this list, so it cannot drift from `Mount`. */
+export const MOUNTS = ['hang', 'floor', 'wall'] as const;
+
 /** How a fixture is rigged; floor units point up at tilt 0, hung and wall units point down. */
-export type Mount = 'hang' | 'floor' | 'wall';
+export type Mount = (typeof MOUNTS)[number];
 
 /**
  * A pan/tilt pair in degrees: what `aimAt` returns and what a static fixture is rigged at. It is readonly because a

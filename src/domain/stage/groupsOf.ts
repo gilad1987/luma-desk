@@ -26,17 +26,22 @@ function trussGroups(rig: Rig, d: StageDesign): DefaultGroup[] {
 /**
  * The factory group pool of a stage. Slots 1-37 are the standard groups; an empty one is left out, so slot numbers
  * never shift between stages. Each truss that holds fixtures then gets a group in the next free slot from 38; trusses
- * past slot `GROUP_SLOTS` get none, as the pool grid ends there.
+ * past slot `GROUP_SLOTS` get none, as the pool grid ends there. `trussGroups: false` leaves slots 38-48 empty, so the
+ * built-in Sultan's Pool stage keeps exactly the old 37-slot pool that saved shows were made with.
  */
-export function defaultGroupsOf(rig: Rig, d: StageDesign): Record<number, DefaultGroup> {
+export function defaultGroupsOf(
+  rig: Rig,
+  d: StageDesign,
+  options: { readonly trussGroups?: boolean } = {},
+): Record<number, DefaultGroup> {
   const pool: Record<number, DefaultGroup> = {};
   STANDARD_GROUPS.forEach((rule, i) => {
     const ids = selectRule(rig, d, rule);
     if (ids.length > 0) pool[i + 1] = { name: rule.name, ids };
   });
+  if (options.trussGroups === false) return pool;
   const first = STANDARD_GROUPS.length + 1;
-  trussGroups(rig, d)
-    .slice(0, GROUP_SLOTS - first + 1)
-    .forEach((group, i) => (pool[first + i] = group));
+  const groups = trussGroups(rig, d).slice(0, GROUP_SLOTS - first + 1);
+  for (const [i, group] of groups.entries()) pool[first + i] = group;
   return pool;
 }

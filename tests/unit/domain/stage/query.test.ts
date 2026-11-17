@@ -1,9 +1,12 @@
 /**
  * Owns `selectIds` and `selectRule` on the Sultan's Pool design: each filter alone, `pick` after the filters, and
- * rule queries joined in order.
+ * rule queries joined in order. A three-fixture design covers the edges: x = 0 and a truss id the design lacks.
  */
 import { describe, expect, it } from 'vitest';
+import { isLight } from '../../../../src/domain/rig/Rig.ts';
 import { selectIds, selectRule } from '../../../../src/domain/stage/query.ts';
+import type { StageDesign, StageFixture } from '../../../../src/domain/stage/StageDesign.ts';
+import { createTemplate } from '../../../../src/domain/stage/templates/index.ts';
 import { rigFromDesign } from '../../../../src/domain/stage/deriveRig.ts';
 import { sultansPool } from '../../../../src/domain/stage/templates/sultansPool/index.ts';
 
@@ -35,6 +38,8 @@ describe('selectIds', () => {
   it('gives every light except the LED screen for lights', () => {
     expect(ids({ lights: true })).toEqual(rig.fixtures.filter((f) => f.id !== 2001).map((f) => f.id));
     expect(ids({ lights: true })).not.toContain(2001);
+    expect(ids({ lights: true })).toEqual(rig.lightIds());
+    expect(rig.fixtures.filter((f) => !isLight(f)).map((f) => f.id)).toEqual([2001]);
   });
 
   it('splits moving fixtures from fixed ones', () => {
@@ -43,6 +48,32 @@ describe('selectIds', () => {
     expect(moving.length + still.length).toBe(rig.fixtures.length);
     expect(moving.every((id) => rig.get(id)?.T.moving)).toBe(true);
     expect(still).toContain(801);
+  });
+});
+
+describe('selectIds on a small design', () => {
+  const par = (id: number, x: number, trussId: string | null): StageFixture => ({
+    id,
+    type: 'par',
+    role: 'floor',
+    trussId,
+    position: [x, 1, 0],
+    mount: 'floor',
+  });
+  const small: StageDesign = {
+    ...createTemplate('empty'),
+    fixtures: [par(1, -1, null), par(2, 0, null), par(3, 1, 'gone')],
+  };
+  const smallRig = rigFromDesign(small);
+
+  it('puts a fixture at x = 0 on neither side', () => {
+    const [left, right] = [selectIds(smallRig, small, { side: 'left' }), selectIds(smallRig, small, { side: 'right' })];
+    expect([left, right]).toStrictEqual([[1], [3]]);
+  });
+
+  it('matches no truss filter for a fixture whose truss id the design does not have', () => {
+    expect(selectIds(smallRig, small, { truss: 'none' })).toStrictEqual([1, 2]);
+    expect(selectIds(smallRig, small, { truss: 'straight' })).toStrictEqual([]);
   });
 });
 

@@ -5,13 +5,12 @@
  */
 import { describe, expect, it } from 'vitest';
 import { parseStageDesign } from '../../../../src/domain/stage/parse/parseStageDesign.ts';
+import { jsonRoundTrip } from '../../../shared/index.ts';
 import { errorsOf, SAMPLE } from './parseSample.ts';
-
-const json = (raw: unknown): unknown => JSON.parse(JSON.stringify(raw));
 
 describe('parseStageDesign', () => {
   it('round-trips a valid design through JSON', () => {
-    expect(parseStageDesign(json(SAMPLE))).toEqual({ ok: true, design: SAMPLE });
+    expect(parseStageDesign(jsonRoundTrip(SAMPLE))).toEqual({ ok: true, design: SAMPLE });
   });
 
   it('rejects a value that is not an object', () => {
@@ -64,7 +63,7 @@ describe('parseStageDesign', () => {
       'screens[0].sides[0].at: expected 3 numbers, got an array of 2',
     ]);
     expect(errorsOf({ ...SAMPLE, risers: [{ id: 'r', at: [0, 0, 0], size: [1, 'x', 1] }] })).toEqual([
-      'risers[0].size[1]: expected a finite number, got "x"',
+      'risers[0].size[1]: expected a number greater than 0, got "x"',
     ]);
   });
 

@@ -32,6 +32,13 @@ describe('boundsOf', () => {
     expect(boundsOf({ ...design, screens: [] }).max[0]).toBeLessThan(33.5);
   });
 
+  it('leaves out the LED wall and side screens when the LED wall scenery is off', () => {
+    const scenery = { ...design.scenery, ledWall: false };
+    const box = boundsOf({ ...design, scenery });
+    expect(box).toStrictEqual(boundsOf({ ...design, screens: [] }));
+    expect(box.max[0]).toBeLessThan(33.5);
+  });
+
   it('joins the LED wall corners and a side screen centred on its position', () => {
     const [wall] = design.screens;
     if (!wall) throw new Error('the template has no LED wall');

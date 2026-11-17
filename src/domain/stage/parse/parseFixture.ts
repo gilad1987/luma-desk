@@ -1,33 +1,43 @@
-import type { Mount, PanTilt } from '../../Fixture';
+import { MOUNTS, type PanTilt } from '../../Fixture';
 import type { FixtureTypeId } from '../../FixtureType';
 import { TYPES } from '../../fixtureTypes';
 import type { StageFixture } from '../StageDesign';
 import { FIXTURE_ROLES } from '../types';
-import { allDefined, describeValue, type Reader } from './readers';
+import { allDefined, describeValue, type Raw } from './rawValues';
+import type { Reader } from './readers';
+import { uniqueId } from './uniqueId';
 
-const MOUNTS: readonly Mount[] = ['hang', 'floor', 'wall'];
+/** The parsed fixtures and every fixture id that was read, including ids of fixtures that failed on another field. */
+export interface ParsedFixtures {
+  readonly fixtures: StageFixture[];
+  readonly ids: ReadonlySet<number>;
+}
 
 /**
  * Reads the `fixtures` list of a stored design. Ids must be unique positive integers because cues, groups and the
  * fixture sheet address fixtures by id; `trussIds` are the ids of the parsed trusses, so a fixture cannot link to a
- * truss that is not in the design. There is no count cap: the builder only warns above the soft limit.
+ * truss that is not in the design. `ids` lets a screen that names a fixture with another bad field skip a second,
+ * misleading error. There is no count cap: the builder only warns above the soft limit.
  */
-export function parseFixtures(r: Reader, raw: unknown, trussIds: ReadonlySet<string>): StageFixture[] {
+export function parseFixtures(r: Reader, raw: unknown, trussIds: ReadonlySet<string>): ParsedFixtures {
   const ids = new Set<number>();
   const fixtures = r.list(raw, 'fixtures', (v, path) => {
-    const fixture = parseFixture(r, v, path, trussIds);
-    if (fixture && ids.has(fixture.id)) r.fail(`${path}.id`, `duplicate id ${fixture.id}`);
-    if (fixture) ids.add(fixture.id);
-    return fixture;
+    const o = r.obj(v, path);
+    if (!o) return undefined;
+    const id = uniqueId(r, ids, r.positiveInt(o.id, `${path}.id`), `${path}.id`);
+    const fields = parseFields(r, o, path, trussIds);
+    return id === undefined || fields === undefined ? undefined : { id, ...fields };
   });
-  return fixtures ?? [];
+  return { fixtures: fixtures ?? [], ids };
 }
 
-function parseFixture(r: Reader, raw: unknown, path: string, trussIds: ReadonlySet<string>): StageFixture | undefined {
-  const o = r.obj(raw, path);
-  if (!o) return undefined;
+function parseFields(
+  r: Reader,
+  o: Raw,
+  path: string,
+  trussIds: ReadonlySet<string>,
+): Omit<StageFixture, 'id'> | undefined {
   const fixture = {
-    id: r.positiveInt(o.id, `${path}.id`),
     type: isTypeId(o.type) ? o.type : r.fail(`${path}.type`, `unknown type ${describeValue(o.type)}`),
     role: r.oneOf(o.role, `${path}.role`, FIXTURE_ROLES, 'role'),
     trussId: parseTrussId(r, o.trussId, `${path}.trussId`, trussIds),
