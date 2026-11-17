@@ -5,6 +5,9 @@ export const STATIC_TYPES = {
   par: {
     name: 'LED Par',
     model: 'parfect',
+    // GDTF name and mode unverified: no official MVR sample holds this product.
+    gdtfSpec: 'Robe Lighting@ParFect 150.gdtf',
+    gdtfMode: 'Mode 1',
     attrs: ['dim', 'r', 'g', 'b', 'strobe'],
     zr: [22, 22],
     z0: 22,
@@ -17,6 +20,9 @@ export const STATIC_TYPES = {
   blinder: {
     name: 'Blinder 4L',
     model: 'strike4',
+    // GDTF name and mode unverified: no official MVR sample holds this product.
+    gdtfSpec: 'Chauvet Professional@STRIKE 4.gdtf',
+    gdtfMode: '6CH',
     attrs: ['dim', 'r', 'g', 'b'],
     zr: [60, 60],
     z0: 60,
@@ -32,6 +38,9 @@ export const STATIC_TYPES = {
   strobe: {
     name: 'Strobe',
     model: 'wtf',
+    // GDTF name and mode unverified: no official MVR sample holds this product.
+    gdtfSpec: 'Robe Lighting@WTF!.gdtf',
+    gdtfMode: 'Mode 1',
     attrs: ['dim', 'strobe', 'r', 'g', 'b'],
     zr: [90, 90],
     z0: 90,
@@ -47,6 +56,9 @@ export const STATIC_TYPES = {
   profile: {
     name: 'Profile',
     model: 's4',
+    // GDTF name and mode unverified: no official MVR sample holds this product.
+    gdtfSpec: 'ETC@Source Four LED Series 2 Lustr.gdtf',
+    gdtfMode: 'Direct',
     attrs: ['dim', 'r', 'g', 'b', 'gobo', 'grot'],
     zr: [26, 26],
     z0: 26,
@@ -60,6 +72,8 @@ export const STATIC_TYPES = {
   // The venue draws the screen, so it has no model and no size; it uses gobo/grot as content mode and speed.
   screen: {
     name: 'LED Screen',
+    gdtfSpec: 'LUMA DESK@LED Screen.gdtf',
+    gdtfMode: 'Default',
     attrs: ['dim', 'r', 'g', 'b', 'gobo', 'grot'],
     zr: [0, 0],
     z0: 0,

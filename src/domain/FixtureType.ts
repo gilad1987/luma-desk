@@ -12,6 +12,17 @@ export interface FixtureType {
   readonly name: string;
   /** The key of the procedural 3D model builder; the LED screen has none because the venue draws it. */
   readonly model?: string;
+  /**
+   * The GDTF file name of the real product this type copies (`Manufacturer@Model.gdtf`). The desk embeds no GDTF, so
+   * an MVR export names the file a console fetches from GDTF-Share, and an import maps that name back to this type.
+   * Each type's table entry says whether its name and mode were checked against a real GDTF file.
+   */
+  readonly gdtfSpec?: string;
+  /**
+   * The DMX mode of `gdtfSpec` that the export names, because the channel layout a console patches depends on it. The
+   * MVR spec requires it to match a `DMXMode` name in that GDTF file.
+   */
+  readonly gdtfMode?: string;
   /** The channels this type has, in channel order. */
   readonly attrs: readonly AttrName[];
   /** The zoom range in degrees; a fixed-beam type has min equal to max. */

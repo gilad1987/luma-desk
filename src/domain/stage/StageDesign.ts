@@ -1,5 +1,7 @@
 import type { Mount, PanTilt } from '../Fixture';
 import type { FixtureTypeId } from '../FixtureType';
+import type { DmxPatch } from './DmxPatch';
+import type { MvrDesignInfo } from './mvr';
 import type { StageTruss } from './trussTypes';
 import type { FixtureRole, Quat, SceneryPart, StageSource, VenueKind, Vec3 } from './types';
 
@@ -64,6 +66,8 @@ export interface StageFixture {
   readonly rotation?: Quat;
   readonly fixed?: PanTilt;
   readonly pixel?: { readonly p: Vec3; readonly tan: Vec3; readonly len: number };
+  /** The DMX patch from an MVR import; absent when the fixture is not patched or the design is not imported. */
+  readonly patch?: DmxPatch;
 }
 
 /**
@@ -84,6 +88,6 @@ export interface StageDesign {
   readonly trusses: readonly StageTruss[];
   /** Array order is rig build order. */
   readonly fixtures: readonly StageFixture[];
-  // G4 slot: MVR adds `readonly mvr?: MvrDesignInfo` from src/domain/stage/mvr.ts. Stage Builder does NOT define it.
-  // Every edit copies a design with `{ ...d, field }`, so the field survives edits.
+  /** MVR facts of an imported design (G4). Every edit copies a design with `{ ...d, field }`, so it survives edits. */
+  readonly mvr?: MvrDesignInfo;
 }

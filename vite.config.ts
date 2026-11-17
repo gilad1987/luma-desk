@@ -11,5 +11,7 @@ export default defineConfig({
   test: {
     // Unit tests live in tests/unit/; Playwright owns tests/e2e/, so Vitest must not pick up those specs.
     include: ['tests/unit/**/*.test.ts'],
+    // A focused `.only` would silently skip every other test, so it fails the run locally as it does in CI.
+    allowOnly: false,
   },
 });

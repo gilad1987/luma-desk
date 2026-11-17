@@ -4,3 +4,10 @@ node_modules/
 dist/
 test-results/
 playwright-report/
+
+# MVR shows are private or third-party content: never commit them (tests build synthetic files).
+*.mvr
+
+# Downloaded at test time (scripts/fetch-mvr-xsd.ts): the MVR schema has no licence, so it is never committed.
+.cache/
+*.xsd
