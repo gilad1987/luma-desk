@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Programmer } from '../../../../src/engine/Programmer';
 import { colorPad } from '../../../../src/ui/components/ColorPad';
 import { asReal } from '../fakes/asReal';
 import { FakeCanvas } from '../fakes/FakeElement';
@@ -32,7 +31,7 @@ describe('colorPad', () => {
     canvas.rect = { left: 0, top: 0, width: 3, height: 2 };
     canvas.offsetParent = dom.body;
     const programmer = programmerWith(targets);
-    colorPad(asReal<HTMLCanvasElement>(canvas), asReal<Programmer>(programmer));
+    colorPad(asReal<HTMLCanvasElement>(canvas), programmer);
     return { canvas, programmer };
   };
 
