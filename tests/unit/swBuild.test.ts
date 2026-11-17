@@ -8,11 +8,13 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 // Only a real production build, as CI runs it, proves that dist/sw.js can install the app.
 
 const root = resolve(import.meta.dirname, '../..');
-const outDir = mkdtempSync(join(tmpdir(), 'sw-build-'));
+let outDir = '';
 let worker = '';
 let page = '';
 
 beforeAll(async () => {
+  outDir = mkdtempSync(join(tmpdir(), 'sw-build-'));
+  // Vitest sets NODE_ENV to 'test' and Vite reads production mode from it; build what `npm run build` ships
   vi.stubEnv('NODE_ENV', 'production');
   await build({ root, configFile: join(root, 'vite.config.ts'), logLevel: 'silent', build: { outDir } });
   worker = readFileSync(join(outDir, 'sw.js'), 'utf8');
@@ -21,7 +23,7 @@ beforeAll(async () => {
 
 afterAll(() => {
   vi.unstubAllEnvs();
-  rmSync(outDir, { recursive: true, force: true });
+  if (outDir) rmSync(outDir, { recursive: true, force: true });
 });
 
 /** The shell list the plugin wrote in: the one JSON array of the minified worker that starts with './'. */
