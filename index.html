@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LUMA DESK — Stage Lighting Console</title>
-<meta name="description" content="grandMA-style stage lighting console with a 3D Sultan's Pool stage — 377 fixtures, band, orchestra and crowd. Runs in the browser.">
+<meta name="description" content="grandMA-style stage lighting console with a 3D Sultan's Pool stage — 405 fixtures, band, orchestra and crowd. Runs in the browser.">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0a0a0e">
 <link rel="icon" type="image/png" href="icons/favicon.png">
@@ -715,13 +715,18 @@ const ATTR = {
 const FEATS = [['dim', 'Dimmer'], ['pos', 'Position'], ['gobo', 'Gobo'], ['color', 'Color'], ['beam', 'Beam'], ['fx', 'Phaser']];
 const FEAT_ATTRS = { dim: ['dim'], pos: ['pan', 'tilt'], gobo: ['gobo', 'grot'], color: ['r', 'g', 'b'], beam: ['zoom', 'strobe'] };
 const MOVER = ['dim', 'pan', 'tilt', 'r', 'g', 'b', 'gobo', 'grot', 'zoom', 'strobe'];
+// model: the procedural 3D builder in BUILD (each one copies a real product, see the README rig table).
+// soft: beam edge softness (higher = softer). glowK: lens-glow size factor. tiltOnly: a moving bar with tilt but no pan.
 const TYPES = {
-  spot: { name: 'Spot', attrs: MOVER, zr: [7, 42], z0: 16, power: 1.0, moving: true, shape: 'mh', size: .72 },
-  beam: { name: 'Beam', attrs: MOVER, zr: [1.5, 6], z0: 2.6, power: 1.2, moving: true, shape: 'mh', size: .58 },
-  wash: { name: 'Wash', attrs: ['dim', 'pan', 'tilt', 'r', 'g', 'b', 'zoom', 'strobe'], zr: [10, 60], z0: 26, power: .9, moving: true, shape: 'wash', size: .72, beamK: .5 },
-  par: { name: 'LED Par', attrs: ['dim', 'r', 'g', 'b', 'strobe'], zr: [22, 22], z0: 22, power: .75, moving: false, shape: 'par', size: .5 },
-  blinder: { name: 'Blinder 4L', attrs: ['dim', 'r', 'g', 'b'], zr: [60, 60], z0: 60, power: 1.0, moving: false, shape: 'blinder', size: .85, defColor: [100, 62, 30], beamK: .35 },
-  strobe: { name: 'Strobe', attrs: ['dim', 'strobe', 'r', 'g', 'b'], zr: [90, 90], z0: 90, power: .9, moving: false, shape: 'strobe', size: 1.1, defColor: [92, 95, 100], beamK: .3 },
+  spot: { name: 'Spot', model: 'forte', attrs: MOVER, zr: [7, 42], z0: 16, power: 1.0, moving: true, shape: 'mh', size: .72 },
+  beam: { name: 'Beam', model: 'megapointe', attrs: MOVER, zr: [1.5, 6], z0: 2.6, power: 1.2, moving: true, shape: 'mh', size: .58 },
+  wash: { name: 'Wash', model: 'spiider', attrs: ['dim', 'pan', 'tilt', 'r', 'g', 'b', 'zoom', 'strobe'], zr: [10, 60], z0: 26, power: .9, moving: true, shape: 'wash', size: .72, beamK: .5, soft: 2.6 },
+  par: { name: 'LED Par', model: 'parfect', attrs: ['dim', 'r', 'g', 'b', 'strobe'], zr: [22, 22], z0: 22, power: .75, moving: false, shape: 'par', size: .5, soft: 2.6 },
+  blinder: { name: 'Blinder 4L', model: 'strike4', attrs: ['dim', 'r', 'g', 'b'], zr: [60, 60], z0: 60, power: 1.0, moving: false, shape: 'blinder', size: .85, defColor: [100, 62, 30], beamK: .35, soft: 3, glowK: 2.2 },
+  strobe: { name: 'Strobe', model: 'wtf', attrs: ['dim', 'strobe', 'r', 'g', 'b'], zr: [90, 90], z0: 90, power: .9, moving: false, shape: 'strobe', size: 1.1, defColor: [92, 95, 100], beamK: .3, soft: 3, glowK: 1.8 },
+  bar: { name: 'LED Bar', model: 'tetra2', attrs: ['dim', 'tilt', 'r', 'g', 'b', 'zoom', 'strobe'], zr: [4, 45], z0: 20, power: .8, moving: true, tiltOnly: true, shape: 'bar', size: 1.3, beamK: .6, soft: 2.4, glowK: 1.3 },
+  follow: { name: 'Follow Spot', model: 'forteFS', attrs: MOVER, zr: [5, 55], z0: 9, power: 1.1, moving: true, shape: 'mh', size: .72 },
+  profile: { name: 'Profile', model: 's4', attrs: ['dim', 'r', 'g', 'b', 'gobo', 'grot'], zr: [26, 26], z0: 26, power: .8, moving: false, shape: 'profile', size: .6, defColor: [100, 86, 66], soft: 1.3 },
   screen: { name: 'LED Screen', attrs: ['dim', 'r', 'g', 'b', 'gobo', 'grot'], zr: [0, 0], z0: 0, power: 1, moving: false, shape: 'screen' },
 };
 const SCREEN_MODES = ['Solid', 'Gradient', 'Bars', 'Plasma', 'Pulse', 'Grid', 'Waves', 'Sparkle'];
@@ -787,6 +792,14 @@ const ANG = []; for (const sx of [-1, 1]) for (const z of [-5.5, -12, -17.5]) AN
       (t.z === -12 ? sp : bl).push({ x: p.x, y: p.y - .78, z: p.z, pix: { p: p.clone().add(new V3(0, -.27, .26)), tan: u, len: L / 6 * .96 } }); } }
   const put = (list, id0, type) => list.sort((a, b) => a.x - b.x || b.z - a.z).forEach((o, k) => { addFix(id0 + k, type, o.x, o.y, o.z, 'hang').pix = o.pix; });
   put(bl, 1401, 'beam'); put(sp, 1501, 'spot'); }
+/* follow spots (Robe FORTE FS) on the front truss, in gaps between spots 101-120 that keep 1 m clear of the blinders; a RoboSpot station prop stands at FOH */
+[2, 6, 12, 16].forEach((gap, k) => addFix(1901 + k, 'follow', -20 + 40 / 19 * (gap + .5), TR.front.y - .75, TR.front.z, 'hang'));
+/* moving LED bars (Robe Tetra2) as footlights along the downstage edge; tilt only */
+row(2101, 12, 'bar', -17, 17, DECK + .25 * TYPES.bar.size, STAGE.z1 - .3, 'floor');   // tilt axis .25 units above the base bottom
+/* static profiles (ETC Source Four) on the side ladders, between the washes; each left unit has a mirror unit on the right */
+{ let id = 2201; for (const sx of [-1, 1]) for (const z of [-3, -9, -15]) for (const y of [7.25, 11.75]) {
+  const f = addFix(id++, 'profile', sx * 23.6, y, z, 'hang', { pan: 0, tilt: 0 }), a = aimAt(f, sx * 8, DECK + 1.5, z);
+  f.fixed.pan = f.vis.pan = a.pan; f.fixed.tilt = f.vis.tilt = a.tilt; } }
 
 
 const range = (a, b) => fixtures.filter(f => f.id >= a && f.id <= b).map(f => f.id);
@@ -803,6 +816,8 @@ function dirFrom(f, pan, tilt, out) {
 }
 function aimAt(f, tx, ty, tz) {
   const d = new V3(tx, ty, tz).sub(f.pos).normalize();
+  // tilt-only bar: no pan, so it can only sweep in its own Y-Z plane (dirFrom with pan 0); aim at the target's projection on that plane
+  if (f.T.tiltOnly) return { pan: 0, tilt: +clamp(Math.atan2(d.z, f.mount === 'floor' ? d.y : -d.y) / D2R, -95, 95).toFixed(1) };
   let t = Math.acos(clamp(f.mount === 'floor' ? d.y : -d.y, -1, 1)) / D2R;
   let p = Math.atan2(d.x, d.z) / D2R;
   if (p > 90) { p -= 180; t = -t; } else if (p < -90) { p += 180; t = -t; }
@@ -1255,17 +1270,38 @@ a*=smoothstep(3.,26.,length(vV));vec3 hp=vW*.16+vec3(uTime*.05,uTime*.025,-uTime
 /* --- fixture visuals --- */
 const pickables = [];
 const darkTrim = new THREE.MeshStandardMaterial({ color: 0x0c0c0e, metalness: .4, roughness: .6 });
+// lens faces, one per model; drawn white on black and tinted by the fixture colour (lensMat.color) at runtime
 const LENS_TEX = (() => {
-  const mk = (draw) => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.fillStyle = '#000'; x.fillRect(0, 0, 128, 128); draw(x); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
+  const mk = (draw, w = 128, h = 128) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.fillStyle = '#000'; x.fillRect(0, 0, w, h); draw(x, w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
   const disc = (x, cx, cy, r, inner = '#fff') => { const g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, inner); g.addColorStop(.65, 'rgba(255,255,255,.85)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill(); };
-  return {
-    spot: mk(x => { disc(x, 64, 64, 62); x.strokeStyle = 'rgba(0,0,0,.35)'; x.lineWidth = 3; for (const r of [22, 40, 56]) { x.beginPath(); x.arc(64, 64, r, 0, 7); x.stroke(); } }),
-    beam: mk(x => { const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, '#fff'); g.addColorStop(.25, '#fff'); g.addColorStop(.3, 'rgba(255,255,255,.35)'); g.addColorStop(1, 'rgba(255,255,255,.08)'); x.fillStyle = g; x.beginPath(); x.arc(64, 64, 63, 0, 7); x.fill(); }),
-    wash: mk(x => { const pts = [[0, 0]]; for (let ring = 1; ring <= 2; ring++) for (let k = 0; k < ring * 6; k++) { const a = k / (ring * 6) * Math.PI * 2; pts.push([Math.cos(a) * ring * 24, Math.sin(a) * ring * 24]); } for (const [px, py] of pts) disc(x, 64 + px, 64 + py, 11); }),
-    par: mk(x => { const pts = [[0, 0]]; for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; pts.push([Math.cos(a) * 34, Math.sin(a) * 34]); } for (const [px, py] of pts) disc(x, 64 + px, 64 + py, 16); }),
-    blinder: mk(x => { for (const px of [34, 94]) for (const py of [34, 94]) disc(x, px, py, 27); }),
-    strobe: mk(x => { for (let i = 0; i < 12; i++) { x.fillStyle = 'rgba(255,255,255,.95)'; x.fillRect(6 + i * 10, 30, 7, 68); } }),
+  const hex = (x, cx, cy, r) => { x.beginPath(); for (let k = 0; k < 6; k++) { const a = (k + .5) / 6 * Math.PI * 2; x.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); } x.closePath(); };
+  const L = {
+    // Robe FORTE: one large 180 mm front lens, with faint rings from the zoom optics behind it
+    forte: mk(x => { disc(x, 64, 64, 62); x.strokeStyle = 'rgba(0,0,0,.28)'; x.lineWidth = 2; for (const r of [16, 30, 44, 56]) { x.beginPath(); x.arc(64, 64, r, 0, 7); x.stroke(); } }),
+    // Robe MegaPointe: the hot spot of the short-arc lamp in a deep, dark lens
+    megapointe: mk(x => { const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, '#fff'); g.addColorStop(.25, '#fff'); g.addColorStop(.3, 'rgba(255,255,255,.35)'); g.addColorStop(1, 'rgba(255,255,255,.08)'); x.fillStyle = g; x.beginPath(); x.arc(64, 64, 63, 0, 7); x.fill(); }),
+    // Robe Spiider: a centre cell and 18 hexagonal cells in two rings, black ribs between the domed lenses
+    spiider: mk(x => { const d = 25;
+      for (let q = -2; q <= 2; q++) for (let r = -2; r <= 2; r++) { if (Math.abs(q + r) > 2) continue; const cx = 64 + d * (q + r / 2), cy = 64 + d * r * Math.sqrt(3) / 2;
+        const g = x.createRadialGradient(cx - 2, cy - 3, 0, cx, cy, 14); g.addColorStop(0, '#fff'); g.addColorStop(.5, 'rgba(255,255,255,.85)'); g.addColorStop(1, 'rgba(255,255,255,.3)'); x.fillStyle = g; hex(x, cx, cy, 13); x.fill(); }
+      x.globalCompositeOperation = 'destination-in'; x.beginPath(); x.arc(64, 64, 63, 0, 7); x.fill(); }),
+    // Robe ParFect 150: 7 multichip cells
+    parfect: mk(x => { const pts = [[0, 0]]; for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; pts.push([Math.cos(a) * 34, Math.sin(a) * 34]); } for (const [px, py] of pts) disc(x, 64 + px, 64 + py, 16); }),
+    // Chauvet STRIKE 4: one warm cup (the model maps it on each of its 4 cups): faceted reflector behind a wire grid
+    strike4: mk(x => { const g = x.createRadialGradient(64, 64, 0, 64, 64, 62); g.addColorStop(0, '#fff'); g.addColorStop(.7, 'rgba(255,244,214,.9)'); g.addColorStop(1, 'rgba(255,226,170,.45)'); x.fillStyle = g; x.beginPath(); x.arc(64, 64, 62, 0, 7); x.fill();
+      x.strokeStyle = 'rgba(0,0,0,.2)'; x.lineWidth = 2; for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; x.beginPath(); x.moveTo(64, 64); x.lineTo(64 + Math.cos(a) * 62, 64 + Math.sin(a) * 62); x.stroke(); }
+      x.strokeStyle = 'rgba(0,0,0,.6)'; x.lineWidth = 1.5; for (let i = 8; i < 128; i += 10) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, 128); x.moveTo(0, i); x.lineTo(128, i); x.stroke(); }
+      x.globalCompositeOperation = 'destination-in'; x.beginPath(); x.arc(64, 64, 62, 0, 7); x.fill(); }),
+    // Robe WTF!: two panels of tiny white strobe cups, with the warm amber blinder strip across the middle
+    wtf: mk(x => { x.fillStyle = 'rgba(255,255,255,.92)'; for (const [y0, y1] of [[6, 52], [76, 122]]) for (let y = y0 + 3; y < y1; y += 5.5) for (let i = 0, cx = 5; cx < 252; cx += 5.5, i++) { x.beginPath(); x.arc(cx + (Math.round(y) % 2 ? 2.7 : 0), y, 2.1, 0, 7); x.fill(); }
+      x.fillStyle = '#ffae3c'; x.fillRect(8, 59, 240, 10); x.fillStyle = '#ffe2a8'; for (let cx = 10; cx < 246; cx += 4) x.fillRect(cx, 61, 2, 6); }, 256, 128),
+    // Robe Tetra2: 18 rounded cells in one row, in two groups of 9
+    tetra2: mk(x => { for (let i = 0; i < 18; i++) { const cx = 10.5 + i * 13.3 + (i >= 9 ? 3 : 0), g = x.createRadialGradient(cx, 14, 0, cx, 16, 12); g.addColorStop(0, '#fff'); g.addColorStop(.6, 'rgba(255,255,255,.85)'); g.addColorStop(1, 'rgba(255,255,255,.35)');
+      x.fillStyle = g; x.beginPath(); if (x.roundRect) x.roundRect(cx - 5.6, 4, 11.2, 24, 4); else x.rect(cx - 5.6, 4, 11.2, 24); x.fill(); } }, 256, 32),
+    // ETC Source Four: one hard-edged lens
+    s4: mk(x => { const g = x.createRadialGradient(64, 64, 0, 64, 64, 60); g.addColorStop(0, '#fff'); g.addColorStop(.85, 'rgba(255,255,255,.9)'); g.addColorStop(1, 'rgba(255,255,255,.4)'); x.fillStyle = g; x.beginPath(); x.arc(64, 64, 60, 0, 7); x.fill(); }),
   };
+  L.forteFS = L.forte; return L;
 })();
 /* real spot lights: the brightest fixtures hitting the stage light performers & scenery (3 with soft shadows) */
 const KEY_N = 12, KEY_SH = 4, keyLights = [];
@@ -1274,59 +1310,215 @@ for (let i = 0; i < KEY_N; i++) { const L = new THREE.SpotLight(0xffffff, 0, 0, 
   scene.add(L); scene.add(L.target); keyLights.push(L); }
 const UP = new V3(0, 1, 0), DOWN = new V3(0, -1, 0);
 const cylG = new THREE.CylinderGeometry(1, 1, 1, 18), boxG = new THREE.BoxGeometry(1, 1, 1), circG = new THREE.CircleGeometry(1, 20), planeG = new THREE.PlaneGeometry(1, 1), poolG = new THREE.PlaneGeometry(2, 2);
+/* --- fixture models: one procedural builder per real product (TYPES[...].model) ---
+   Geometry is in fixture units (buildVis scales the fixture group by T.size) and is built once per model, then shared by every
+   fixture of that model. Parts of one material are merged into one mesh and fine details (screens, vents, lens cells) are canvas
+   textures, so each fixture costs only a few draw calls. All models are built in the hang orientation: base up, head below,
+   tilt axis at the group origin, lens facing -Y. Floor movers are turned over by buildVis; static floor units flip their stand. */
+const _m4 = new THREE.Matrix4(), _q4 = new THREE.Quaternion(), _eu = new THREE.Euler(), _pv = new V3(), _sv = new V3();
+// a transformed, non-indexed copy of a primitive, ready to merge (scale, then rotate XYZ, then move)
+function part(geo, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1, rx = 0, ry = 0, rz = 0) {
+  const g = geo.index ? geo.toNonIndexed() : geo.clone();
+  return g.applyMatrix4(_m4.compose(_pv.set(x, y, z), _q4.setFromEuler(_eu.set(rx, ry, rz)), _sv.set(sx, sy, sz)));
+}
+// joins parts into one geometry (position, normal, uv); BufferGeometryUtils is not vendored and this is all the models need
+function merge(parts) {
+  let n = 0; for (const p of parts) n += p.attributes.position.count;
+  const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2); let o = 0;
+  for (const p of parts) { const a = p.attributes; pos.set(a.position.array, o * 3); nor.set(a.normal.array, o * 3); if (a.uv) uv.set(a.uv.array, o * 2); o += a.position.count; p.dispose(); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  g.computeBoundingSphere(); return g;
+}
+const Bx = (x, y, z, w, h, d, rx = 0, ry = 0, rz = 0) => part(boxG, x, y, z, w, h, d, rx, ry, rz);
+const Cy = (x, y, z, r, h, rx = 0, ry = 0, rz = 0) => part(cylG, x, y, z, r, h, r, rx, ry, rz);                 // cylinder, axis Y before rotation
+const CyX = (x, y, z, r, len) => Cy(x, y, z, r, len, 0, 0, Math.PI / 2);                                       // cylinder along X (tilt hubs, knobs)
+// a revolved profile around Y; list the [radius, y] points from front (-y) to rear (+y) so the faces point outward
+const lathe = (pts, seg = 28) => part(new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg));
+const sphG = new THREE.SphereGeometry(1, 8, 6), torG = new THREE.TorusGeometry(1, .12, 6, 20);
+const canvasTex = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
+const ventSlots = (x, x0, y0, w, h, n) => { x.fillStyle = '#2a2a30'; x.fillRect(x0, y0, w, h); x.fillStyle = '#060607'; for (let i = 0; i < n; i++) x.fillRect(x0 + 3, y0 + 3 + i * (h - 6) / n, w - 6, (h - 6) / n * .55); };
+// front of a Robe base: vents either side of the RNS2 colour screen (ROBE splash) and its 4 menu buttons
+const panelMat = new THREE.MeshBasicMaterial({ map: canvasTex(256, 64, x => {
+  x.fillStyle = '#121215'; x.fillRect(0, 0, 256, 64); ventSlots(x, 6, 8, 74, 48, 8); ventSlots(x, 176, 8, 74, 48, 8);
+  x.fillStyle = '#050506'; x.fillRect(88, 6, 80, 52); const g = x.createLinearGradient(0, 10, 0, 50); g.addColorStop(0, '#1d3f7a'); g.addColorStop(1, '#0b1730'); x.fillStyle = g; x.fillRect(92, 10, 50, 40);
+  x.fillStyle = '#fff'; x.font = 'bold 13px Arial'; x.textAlign = 'center'; x.fillText('ROBE', 116, 35); x.fillStyle = '#e03030'; x.fillRect(135, 28, 3, 3);
+  x.fillStyle = '#3a3a40'; for (let i = 0; i < 4; i++) x.fillRect(148, 12 + i * 10, 14, 6); }) });
+const ventMat = new THREE.MeshStandardMaterial({ color: 0xa0a0a8, metalness: .5, roughness: .5, map: canvasTex(64, 64, x => { ventSlots(x, 0, 0, 64, 64, 9); }) });
+const aluMat = new THREE.MeshStandardMaterial({ color: 0xb4b8c0, metalness: .85, roughness: .32 });
+const MODEL_GEO = {};
+const geoOf = (key, make) => MODEL_GEO[key] || (MODEL_GEO[key] = make());
+// Robe moving heads (FORTE, FORTE FS, MegaPointe, Spiider) share the base and the yoke design; they differ in the head
+const robeBase = () => geoOf('robeBase', () => ({   // rounded base with recessed side handles, feet and the truss clamp
+  body: merge([Bx(0, .83, 0, .84, .26, .70), Bx(0, .83, 0, 1.0, .26, .54), ...[-1, 1].flatMap(sx => [-1, 1].map(sz => Cy(sx * .42, .83, sz * .27, .08, .26)))]),
+  trim: merge([...[-1, 1].map(sx => Bx(sx * .505, .83, 0, .03, .08, .42)), ...[-1, 1].flatMap(sx => [-1, 1].map(sz => Cy(sx * .38, .975, sz * .24, .045, .03))), Bx(0, .985, 0, .62, .03, .12), Cy(0, 1.03, 0, .09, .12)]),
+}));
+// thick U yoke: bearing, cross-member, arms with rounded ends at the tilt axis, angled inner corners, outer covers with grip lines
+const robeYoke = ax => ({
+  yoke: merge([Cy(0, .02, 0, .2, .06), Bx(0, -.03, 0, ax * 2 + .12, .09, .34), ...[-1, 1].flatMap(sx => [
+    Bx(sx * ax, -.33, 0, .12, .62, .34), CyX(sx * ax, -.66, 0, .17, .12), Bx(sx * (ax - .04), -.075, 0, .1, .1, .32, 0, 0, Math.PI / 4), Bx(sx * (ax + .085), -.28, 0, .05, .42, .28)])]),
+  yokeTrim: merge([-1, 1].flatMap(sx => [CyX(sx * (ax + .075), -.66, 0, .11, .03), ...[0, 1, 2].map(k => Bx(sx * (ax + .112), -.2, -.06 + k * .06, .012, .12, .025))])),
+});
+const ROBE_HEADS = {
+  // FORTE: long barrel, wider body around the tilt axis, ribbed rear underside, stepped front bezel around the 180 mm lens
+  forte: { ax: .43, lensR: .235, lensY: .772, lensOff: .78, geo: fs => ({
+    head: merge([lathe([[.26, -.72], [.30, -.70], [.30, -.42], [.315, -.30], [.33, -.15], [.335, .05], [.33, .2], [.31, .32], [.27, .40], [.18, .44], [0, .45]])]),
+    headTrim: merge([lathe([[.235, -.78], [.30, -.78], [.30, -.765], [.325, -.755], [.325, -.69], [.305, -.68]]), ...[.12, .17, .22, .27].map(y => Cy(0, y, 0, .345, .014)),
+      // FORTE FS: the RoboSpot camera on top of the barrel, next to the lens
+      ...(fs ? [Bx(-.13, -.5, .40, .12, .26, .12), Cy(-.13, -.645, .40, .045, .04), Bx(-.13, -.47, .345, .06, .1, .03)] : [])]) }) },
+  // MegaPointe: short, fat head; deep lens inside a thick front ring; vent grilles on the head sides
+  megapointe: { ax: .51, lensR: .27, lensY: .445, lensOff: .53, geo: () => ({
+    head: merge([lathe([[.36, -.40], [.40, -.37], [.41, -.2], [.41, .1], [.39, .24], [.33, .33], [.2, .37], [0, .38]])]),
+    headTrim: merge([lathe([[.27, -.53], [.40, -.53], [.42, -.50], [.42, -.40], [.40, -.37]]), lathe([[.27, -.44], [.27, -.53]])]),   // ring, then its inner wall (listed rear to front: faces inward)
+    vents: merge([Bx(0, .06, .405, .30, .26, .02), Bx(0, .06, -.405, .30, .26, .02)]) }) },
+  // Spiider: wide, short drum; the front is all honeycomb lens (texture); grooves round the drum
+  spiider: { ax: .62, lensR: .48, lensY: .30, lensOff: .305, geo: () => ({
+    head: merge([lathe([[.50, -.27], [.52, -.24], [.525, -.1], [.52, .03], [.49, .10], [.41, .15], [.24, .18], [0, .19]], 32)]),
+    headTrim: merge([lathe([[.47, -.305], [.525, -.305], [.535, -.29], [.535, -.25], [.52, -.24]], 32), ...[-.16, -.12, -.08].map(y => Cy(0, y, 0, .53, .012))]) }) },
+};
+ROBE_HEADS.forteFS = { ...ROBE_HEADS.forte };
+const robePanel = (c, par, y, z, w, h) => { const p = c.mk(planeG, panelMat, par); p.position.set(0, y, z); p.scale.set(w, h, 1); if (c.floor) p.rotation.z = Math.PI; return p; };  // keep the screen upright on floor units
+function robeMover(f, c) {
+  const H = ROBE_HEADS[f.T.model], G = geoOf(f.T.model, () => ({ ...H.geo(f.T.model === 'forteFS'), ...robeYoke(H.ax) })), BS = robeBase();
+  const base = c.mk(BS.body, c.bodyMat, c.g); c.mk(BS.trim, darkTrim, c.g); robePanel(c, c.g, .83, .351, .96, .22);
+  const yoke = new THREE.Group(); yoke.position.y = .66; c.g.add(yoke); c.mk(G.yoke, c.bodyMat, yoke); c.mk(G.yokeTrim, darkTrim, yoke);
+  const tiltG = new THREE.Group(); tiltG.position.y = -.66; yoke.add(tiltG);
+  const head = c.mk(G.head, c.bodyMat, tiltG); c.mk(G.headTrim, darkTrim, tiltG); if (G.vents) c.mk(G.vents, ventMat, tiltG);
+  const lens = c.mk(circG, c.lensMat, tiltG); lens.rotation.x = Math.PI / 2; lens.position.y = -H.lensY; lens.scale.setScalar(H.lensR);
+  return { head, lens, lensOff: H.lensOff, yoke, tiltG, pick: [base, head] };
+}
+// static units: c.st is the stand (bracket/yoke, turned to the fixed pan; flipped on the floor), c.aim holds the tilting head
+const flatLens = (c, y, w, h) => { const l = c.mk(planeG, c.lensMat, c.aim); l.rotation.x = Math.PI / 2; l.position.y = y; l.scale.set(w, h, 1); return l; };
+const BUILD = {
+  forte: robeMover, forteFS: robeMover, megapointe: robeMover, spiider: robeMover,
+  // Robe WTF!: wide 2:1 box head between two rounded side towers, base with screen on top
+  wtf(f, c) {
+    const G = geoOf('wtf', () => ({
+      base: merge([Bx(0, .44, 0, .56, .12, .40), Bx(0, .35, 0, 1.24, .07, .30), ...[-1, 1].flatMap(sx => [Bx(sx * .57, .17, 0, .1, .36, .34), CyX(sx * .57, 0, 0, .17, .1)])]),
+      baseTrim: merge([...[-1, 1].map(sx => Bx(sx * .285, .44, 0, .02, .06, .26)), ...[-1, 1].map(sx => CyX(sx * .63, 0, 0, .1, .025))]),
+      head: merge([Bx(0, 0, 0, 1.0, .24, .48), Bx(0, .15, 0, .88, .08, .40)]),
+      headTrim: merge([...[-1, 1].map(sz => Bx(0, -.125, sz * .235, 1.02, .035, .035)), ...[-1, 1].map(sx => Bx(sx * .495, -.125, 0, .035, .035, .48)), ...[-.3, 0, .3].map(x => Bx(x, .2, 0, .02, .02, .36))]),
+    }));
+    const base = c.mk(G.base, c.bodyMat, c.st); c.mk(G.baseTrim, darkTrim, c.st); robePanel(c, c.st, .44, .201, .50, .11);
+    const head = c.mk(G.head, c.bodyMat, c.aim); c.mk(G.headTrim, darkTrim, c.aim);
+    return { head, lens: flatLens(c, -.13, .94, .42), lensOff: .13, pick: [base, head] };
+  },
+  // Chauvet STRIKE 4: four round cups on an X-shaped plate, wire grids (lens texture), U-bracket with clamp
+  strike4(f, c) {
+    const cups = [[-.23, -.23], [.23, -.23], [-.23, .23], [.23, .23]];
+    const G = geoOf('strike4', () => ({
+      head: merge([Bx(0, .02, 0, .40, .26, .40), ...cups.map(([x, z]) => Cy(x, 0, z, .2, .32))]),
+      headTrim: merge(cups.map(([x, z]) => part(torG, x, -.16, z, .19, .19, .19, Math.PI / 2))),
+      lens: merge(cups.map(([x, z]) => part(circG, x, -.165, z, .18, .18, 1, Math.PI / 2))),
+      stand: merge([...[-1, 1].map(sx => Bx(sx * .5, .25, 0, .04, .5, .1)), Bx(0, .5, 0, 1.04, .04, .1), Cy(0, .64, 0, .045, .26), ...[-1, 1].map(sx => CyX(sx * .53, 0, 0, .06, .04))]),
+    }));
+    c.mk(G.stand, darkTrim, c.st);
+    const head = c.mk(G.head, c.bodyMat, c.aim); c.mk(G.headTrim, darkTrim, c.aim);
+    return { head, lens: c.mk(G.lens, c.lensMat, c.aim), lensOff: .17, pick: [head] };
+  },
+  // Robe ParFect 150: static cylinder with cooling rings, rear handle, 4-leaf barndoor, U-bracket (a floor stand when on the deck)
+  parfect(f, c) {
+    const G = geoOf('parfect', () => ({
+      head: merge([lathe([[.33, -.45], [.34, -.42], [.34, .2], [.31, .32], [.22, .38], [0, .39]])]),
+      headTrim: merge([lathe([[.29, -.475], [.355, -.475], [.355, -.43], [.34, -.42]]), ...[0, .05, .1, .15].map(y => Cy(0, y, 0, .35, .018)), Bx(0, .45, 0, .05, .05, .36), ...[-1, 1].map(sz => Bx(0, .41, sz * .16, .05, .07, .05))]),
+      doors: merge([...[-1, 1].map(sz => Bx(0, -.61, sz * .42, .62, .30, .015, -sz * .44, 0, 0)), ...[-1, 1].map(sx => Bx(sx * .42, -.61, 0, .015, .30, .55, 0, 0, sx * .44))]),
+      stand: merge([...[-1, 1].map(sx => Bx(sx * .40, .23, 0, .035, .46, .14)), Bx(0, .46, 0, .835, .035, .14), ...[-1, 1].map(sx => CyX(sx * .43, 0, 0, .07, .05))]),
+    }));
+    c.mk(G.stand, darkTrim, c.st);
+    const head = c.mk(G.head, c.bodyMat, c.aim); c.mk(G.headTrim, darkTrim, c.aim); c.mk(G.doors, aluMat, c.aim);
+    const lens = c.mk(circG, c.lensMat, c.aim); lens.rotation.x = Math.PI / 2; lens.position.y = -.47; lens.scale.setScalar(.29);
+    return { head, lens, lensOff: .48, pick: [head] };
+  },
+  // ETC Source Four: finned lamp housing at the rear, shutter barrel with 4 handles, lens tube, colour-frame holder; yoke + C-clamp
+  s4(f, c) {
+    const G = geoOf('s4', () => ({
+      head: merge([lathe([[.14, -.62], [.15, -.60], [.15, -.22], [.21, -.20], [.21, .02], [.25, .08], [.25, .22], [.20, .30], [.10, .36], [.10, .44], [0, .45]])]),
+      headTrim: merge([...[.1, .14, .18, .22].map(y => Cy(0, y, 0, .265, .014)), ...[0, 1, 2, 3].map(k => { const a = (k + .5) * Math.PI / 2; return Bx(Math.sin(a) * .26, -.1, Math.cos(a) * .26, .03, .03, .11, 0, a, 0); }),
+        ...[-1, 1].map(sz => Bx(0, -.63, sz * .165, .36, .025, .03)), ...[-1, 1].map(sx => Bx(sx * .165, -.63, 0, .03, .025, .36)), Bx(0, .5, 0, .05, .1, .05)]),
+      stand: merge([...[-1, 1].map(sx => Bx(sx * .32, .27, 0, .035, .6, .08)), Bx(0, .57, 0, .675, .035, .08), ...[-1, 1].map(sx => CyX(sx * .36, 0, 0, .06, .06)), Bx(0, .65, 0, .1, .12, .08), Cy(0, .76, 0, .025, .14)]),
+    }));
+    c.mk(G.stand, darkTrim, c.st);
+    const head = c.mk(G.head, c.bodyMat, c.aim); c.mk(G.headTrim, darkTrim, c.aim);
+    const lens = c.mk(circG, c.lensMat, c.aim); lens.rotation.x = Math.PI / 2; lens.position.y = -.62; lens.scale.setScalar(.14);
+    return { head, lens, lensOff: .64, pick: [head] };
+  },
+  // Robe Tetra2: long base with screen and vents, two end pivots, a tilting bar head with 18 cells (no pan)
+  tetra2(f, c) {
+    const G = geoOf('tetra2', () => ({
+      base: merge([Bx(0, .20, 0, 1.0, .10, .14), ...[-1, 1].flatMap(sx => [Bx(sx * .475, .08, 0, .05, .2, .12), CyX(sx * .475, 0, 0, .06, .05)])]),
+      baseTrim: merge([...[-1, 1].flatMap(sx => [-1, 1].map(sz => Bx(sx * .42, .257, sz * .045, .06, .015, .03))), ...[-1, 1].map(sx => Bx(sx * .3, .2, .071, .2, .07, .004))]),
+      head: merge([Bx(0, 0, 0, .9, .10, .13), Bx(0, .06, 0, .86, .03, .1)]),
+      headTrim: merge([...[-1, 1].map(sz => Bx(0, -.05, sz * .064, .9, .02, .012)), ...[-1, 0, 1].map(sx => Bx(sx * .445, -.05, 0, .012, .02, .13))]),
+    }));
+    const base = c.mk(G.base, c.bodyMat, c.g); c.mk(G.baseTrim, darkTrim, c.g); robePanel(c, c.g, .2, .0715, .36, .09);
+    const yoke = new THREE.Group(); c.g.add(yoke); const tiltG = new THREE.Group(); yoke.add(tiltG);   // pivots are fixed to the base: the yoke never pans
+    const head = c.mk(G.head, c.bodyMat, tiltG); c.mk(G.headTrim, darkTrim, tiltG);
+    const lens = c.mk(planeG, c.lensMat, tiltG); lens.rotation.x = Math.PI / 2; lens.position.y = -.052; lens.scale.set(.87, .115, 1);
+    return { head, lens, lensOff: .055, yoke, tiltG, pick: [base, head] };
+  },
+};
 function buildVis(f) {
   const T = f.T;
   if (T.shape === 'screen') { screenMesh.userData.fix = f; pickables.push(screenMesh); f.vo = { screen: true }; return; }
-  const s = T.size, g = new THREE.Group(); g.position.copy(f.pos); scene.add(g);
+  const s = T.size, floor = f.mount === 'floor', g = new THREE.Group(); g.position.copy(f.pos); g.scale.setScalar(s); scene.add(g);
+  if (T.moving && floor) g.rotation.z = Math.PI;   // floor movers stand on their base
   const bodyMat = new THREE.MeshStandardMaterial({ color: 0x232328, metalness: .55, roughness: .38, emissive: 0x000000 });
-  const lensMat = new THREE.MeshBasicMaterial({ color: 0x050505, side: THREE.DoubleSide, toneMapped: false, map: LENS_TEX[T.shape === 'mh' ? (f.type === 'beam' ? 'beam' : 'spot') : T.shape] });
+  const lensMat = new THREE.MeshBasicMaterial({ color: 0x050505, side: THREE.DoubleSide, toneMapped: false, map: LENS_TEX[T.model] });
   const pivot = new THREE.Group(); g.add(pivot);
-  let head, lensOff, lens, yoke = null, tiltG = null;
-  const M = (geo, mat, par, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); o.scale.set(sx, sy, sz); par.add(o); return o; };
-  if (T.moving) {
-    if (f.mount === 'floor') g.rotation.z = Math.PI;
-    const wide = T.shape === 'wash', r = wide ? s * .5 : f.type === 'beam' ? s * .36 : s * .42;
-    const base = M(boxG, bodyMat, g, 0, s * .82, 0, s * 1.05, s * .3, s * .82); base.userData.fix = f; pickables.push(base);
-    M(boxG, darkTrim, g, 0, s * .82, s * .415, s * .5, s * .12, .01);                 // display panel
-    M(cylG, darkTrim, g, 0, s * 1.02, 0, s * .1, s * .14, s * .1);                    // clamp spigot
-    yoke = new THREE.Group(); yoke.position.y = s * .66; g.add(yoke);
-    M(cylG, bodyMat, yoke, 0, 0, 0, s * .34, s * .05, s * .34);
-    const ax = r + s * .1;
-    for (const sx of [-1, 1]) { M(boxG, bodyMat, yoke, sx * ax, -s * .33, 0, s * .1, s * .7, s * .3); M(cylG, darkTrim, yoke, sx * (ax - s * .06), -s * .66, 0, s * .12, s * .03, s * .12).rotation.z = Math.PI / 2; }
-    M(boxG, bodyMat, yoke, 0, -s * .02, 0, ax * 2 + s * .1, s * .06, s * .3);
-    tiltG = new THREE.Group(); tiltG.position.y = -s * .66; yoke.add(tiltG);
-    head = M(cylG, bodyMat, tiltG, 0, 0, 0, r, s * .9, r);
-    M(boxG, darkTrim, tiltG, 0, s * .5, 0, r * 1.3, s * .14, r * 1.3);               // rear heat sink
-    for (let i = 0; i < 4; i++) M(boxG, darkTrim, tiltG, 0, s * (.1 + i * .09) - s * .1, 0, r * 2.05, s * .025, r * 2.05).visible = !wide; // cooling fins
-    const bez = new THREE.Mesh(new THREE.TorusGeometry(1, .09, 8, 28), darkTrim); bez.rotation.x = Math.PI / 2; bez.position.y = -s * .45; bez.scale.setScalar(r * .95); tiltG.add(bez);
-    lensOff = s * .46; lens = new THREE.Mesh(circG, lensMat); lens.scale.setScalar(r * .9);
-    lens.rotation.x = Math.PI / 2; lens.position.y = -lensOff; tiltG.add(lens);
-  } else if (T.shape === 'par') {
-    head = M(cylG, bodyMat, pivot, 0, 0, 0, s * .5, s * .55, s * .5); M(boxG, bodyMat, pivot, 0, s * .3, 0, s * .6, s * .1, s * .6);
-    for (const sx of [-1, 1]) M(boxG, darkTrim, g, sx * s * .58, s * .1, 0, s * .06, s * .5, s * .2);
-    lensOff = s * .28; lens = new THREE.Mesh(circG, lensMat); lens.scale.setScalar(s * .46);
-  } else if (T.shape === 'blinder') {
-    head = M(boxG, bodyMat, pivot, 0, 0, 0, s * 1.05, s * .32, s * 1.05); M(boxG, darkTrim, pivot, 0, s * .2, 0, s * .9, s * .08, s * .9);
-    lensOff = s * .17; lens = new THREE.Mesh(planeG, lensMat); lens.scale.set(s * 1, s * 1, 1);
-  } else {
-    head = M(boxG, bodyMat, pivot, 0, 0, 0, s * 1.25, s * .26, s * .44); M(boxG, darkTrim, pivot, 0, s * .16, 0, s * 1.1, s * .06, s * .3);
-    lensOff = s * .14; lens = new THREE.Mesh(planeG, lensMat); lens.scale.set(s * 1.15, s * .36, 1);
-  }
-  if (!T.moving) { lens.rotation.x = Math.PI / 2; lens.position.y = -lensOff; pivot.add(lens); }
-  head.userData.fix = f; pickables.push(head);
+  // statics: pivot gets the shortest-arc rotation DOWN -> aim each frame, which rolls the head by -pan; aim.rotation.y = pan undoes it
+  let aim = null, st = null;
+  if (!T.moving) { const pan = (f.fixed ? f.fixed.pan : 0) * D2R; aim = new THREE.Group(); aim.rotation.y = pan; pivot.add(aim); st = new THREE.Group(); st.rotation.set(0, pan, floor ? Math.PI : 0); g.add(st); }
+  const mk = (geo, mat, par) => { const o = new THREE.Mesh(geo, mat); par.add(o); return o; };
+  const b = BUILD[T.model](f, { g, aim, st, bodyMat, lensMat, mk, floor });
+  for (const m of b.pick) { m.userData.fix = f; pickables.push(m); }
   let pix = null;
   if (f.pix) { pix = new THREE.Mesh(boxG, new THREE.MeshBasicMaterial({ color: 0x000000, toneMapped: false })); pix.position.copy(f.pix.p);
     pix.quaternion.setFromUnitVectors(new V3(1, 0, 0), f.pix.tan); pix.scale.set(f.pix.len, .07, .07); scene.add(pix); }
-  const bu = { uColor: { value: new THREE.Color() }, uInt: { value: 0 }, uHaze: hazeU, uGobo: { value: 0 }, uGRot: { value: 0 }, uLen: { value: 30 }, uEnd: { value: 0 }, uTime: timeU, uSoft: { value: T.shape === 'wash' || T.shape === 'par' ? 2.6 : T.shape === 'blinder' || T.shape === 'strobe' ? 3 : 1.6 } };
+  const bu = { uColor: { value: new THREE.Color() }, uInt: { value: 0 }, uHaze: hazeU, uGobo: { value: 0 }, uGRot: { value: 0 }, uLen: { value: 30 }, uEnd: { value: 0 }, uTime: timeU, uSoft: { value: T.soft ?? 1.6 } };
   const beam = new THREE.Mesh(beamGeo, new THREE.ShaderMaterial({ uniforms: bu, vertexShader: BEAM_VS, fragmentShader: BEAM_FS, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false }));
   beam.frustumCulled = false; scene.add(beam);
   const pool = new THREE.Mesh(poolG, new THREE.MeshBasicMaterial({ map: goboTex[0], transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, polygonOffset: true, polygonOffsetFactor: -2 }));
   scene.add(pool);
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
   scene.add(glow);
-  f.vo = { g, pivot, head, lens, lensOff, bodyMat, lensMat, beam, bu, pool, glow, poolTex: [], s, yoke, tiltG, flip: f.mount === 'floor', pix };
+  f.vo = { g, pivot, head: b.head, lens: b.lens, lensOff: b.lensOff * s, bodyMat, lensMat, beam, bu, pool, glow, poolTex: [], s, yoke: b.yoke || null, tiltG: b.tiltG || null, flip: floor, pix };
 }
 fixtures.forEach(buildVis);
+
+/* --- scenery props (not patched): Antari HZ-500 hazers upstage, and the RoboSpot station that runs the follow spots --- */
+const puffs = [];
+{ // HZ-500: black road case with aluminium edges, ball corners, butterfly latches, handle; the nozzle opening and lid flap on top
+  const caseMat = new THREE.MeshStandardMaterial({ color: 0x141417, roughness: .55, metalness: .2 });
+  const body = merge([Bx(0, .18, 0, .5, .34, .36), Bx(0, .365, -.04, .16, .02, .1), Bx(0, .40, -.11, .17, .01, .12, -.6, 0, 0)]);
+  const alu = merge([...[.01, .35, .28].flatMap(y => [-1, 1].map(sz => Bx(0, y, sz * .18, .52, .02, .02))), ...[.01, .35].flatMap(y => [-1, 1].map(sx => Bx(sx * .25, y, 0, .02, .02, .38))),
+    ...[-1, 1].flatMap(sx => [-1, 1].map(sz => Bx(sx * .25, .18, sz * .18, .02, .36, .02))), ...[.01, .35].flatMap(y => [-1, 1].flatMap(sx => [-1, 1].map(sz => part(sphG, sx * .25, y, sz * .18, .028, .028, .028)))),
+    ...[-1, 1].map(sx => Bx(sx * .14, .28, .186, .07, .07, .01)), Bx(0, .15, .186, .14, .07, .012)]);
+  const puffTex = canvasTex(64, 64, x => { for (let k = 0; k < 7; k++) { const cx = 32 + (Math.random() - .5) * 18, cy = 32 + (Math.random() - .5) * 18, r = 14 + Math.random() * 12, g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
+    g.addColorStop(0, 'rgba(255,255,255,.35)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); } });
+  for (const [x, z] of [[-20.6, -15.6], [20.6, -15.6], [-12.1, -19.3], [12.1, -19.3]]) {
+    const g = new THREE.Group(); g.position.set(x, DECK, z); g.add(new THREE.Mesh(body, caseMat), new THREE.Mesh(alu, aluMat)); scene.add(g);
+    for (let k = 0; k < 3; k++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: puffTex, color: 0xc4c8d2, transparent: true, depthWrite: false, opacity: 0 })); sp.visible = false; scene.add(sp); puffs.push({ sp, x, z, ph: k / 3 }); }
+  }
+}
+// a soft puff of haze rises from each hazer; its density follows the Haze master
+function updateProps(now) {
+  const h = hazeU.value;
+  for (const p of puffs) { p.sp.visible = h > .01; if (!p.sp.visible) continue;
+    const k = (now * .16 + p.ph) % 1, sc = (.5 + k * 2.4) * (.6 + h * .6);
+    p.sp.position.set(p.x + Math.sin(now * .4 + p.ph * 6) * .2 * k, DECK + .85 + k * 2.2, p.z - k * .6); p.sp.scale.set(sc, sc, 1);
+    p.sp.material.opacity = h * .55 * Math.sin(Math.PI * k); }
+}
+{ // RoboSpot BaseStation on a flight case at FOH: pan/tilt handles, fader panel, hooded monitor, clipboard; hidden with the FOH riser in the MA view
+  const m = new THREE.MeshStandardMaterial({ color: 0x232328, roughness: .5, metalness: .4 });
+  const body = merge([Bx(0, .275, 0, .7, .55, .5), Bx(0, .63, 0, .62, .16, .45), Cy(0, .77, 0, .14, .12), Bx(0, .9, 0, .5, .14, .22), Bx(0, 1.0, .05, .38, .05, .2, .35, 0, 0),
+    ...[-1, 1].map(sx => CyX(sx * .42, .9, .06, .03, .34)), Bx(0, 1.12, -.02, .06, .14, .06), Bx(0, 1.3, -.02, .62, .38, .06), Bx(0, 1.5, .09, .66, .02, .24), ...[-1, 1].map(sx => Bx(sx * .32, 1.3, .09, .02, .38, .24)),
+    Bx(-.55, 1.25, .02, .26, .36, .02, 0, .35, 0)]);
+  const scr = canvasTex(128, 72, x => { x.fillStyle = '#04081a'; x.fillRect(0, 0, 128, 72); x.fillStyle = '#10142a'; x.fillRect(0, 54, 128, 18);
+    for (let i = 0; i < 6; i++) { const bx = 14 + i * 20, g = x.createLinearGradient(bx, 0, 64, 60); g.addColorStop(0, 'rgba(120,170,255,.9)'); g.addColorStop(1, 'rgba(60,110,255,0)'); x.fillStyle = g; x.beginPath(); x.moveTo(bx - 2, 0); x.lineTo(bx + 2, 0); x.lineTo(64 + (i - 2.5) * 6, 58); x.lineTo(64 + (i - 2.5) * 4, 58); x.fill(); }
+    x.fillStyle = '#e8eeff'; x.fillRect(62, 46, 4, 10); });
+  const g = new THREE.Group(); g.position.set(3.0, 5.0, 47.3); g.add(new THREE.Mesh(body, m)); scene.add(g);
+  const sc = new THREE.Mesh(planeG, new THREE.MeshBasicMaterial({ map: scr })); sc.position.set(0, 1.3, .012); sc.scale.set(.56, .32, 1); g.add(sc);
+  g.visible = fohRig.length ? fohRig[0].visible : true; fohRig.push(g);
+}
 
 /* ====================================================================
    SHOW DATA: groups, presets, executors, programmer
@@ -1355,6 +1547,7 @@ function defaultGroups() {
   G('Everything', fixtures.filter(f => f.type !== 'screen').map(f => f.id));
   G('Ring Beams', range(1201, 1299)); G('Ring Washes', range(1301, 1399)); G('Angled Beams', range(1401, 1499)); G('Angled Spots', range(1501, 1599));
   G('Ring Odd', range(1201, 1299).filter((_, i) => i % 2 === 0)); G('Ring Even', range(1201, 1299).filter((_, i) => i % 2 === 1)); G('All Angled', range(1401, 1599)); G('Tower Beams', range(1601, 1699)); G('Tower Washes', range(1701, 1799)); G('Audience Washes', range(1801, 1899)); G('Delay Towers', range(1813, 1818));
+  G('LED Bars', range(2101, 2199)); G('Follow Spots', range(1901, 1999)); G('Profiles', range(2201, 2299));   // 35-37: append only, the demo show uses group numbers
   return g;
 }
 const COLORS = [['White', 100, 100, 100], ['Warm', 100, 80, 55], ['CTO', 100, 58, 22], ['Red', 100, 0, 0], ['Orange', 100, 32, 0], ['Amber', 100, 52, 0], ['Yellow', 100, 88, 0], ['Lime', 55, 100, 0],
@@ -1492,6 +1685,7 @@ function computeOutput(now) {
       if (ft === 'pos' && T.moving) { o.pan += fxTmp.dp; o.tilt += fxTmp.dt; }
       if (ft === 'dim' && has(f, 'dim')) o.dim = fxTmp.dim * s.lv;
       if (ft === 'color' && has(f, 'r')) { o.r = fxTmp.r; o.g = fxTmp.g; o.b = fxTmp.b; } }
+    if (T.tiltOnly) o.pan = 0;   // a bar has no pan axis: never let a stray pan value turn its beam out of its tilt plane
     if (highlight && f.sel) { o.dim = 100; o.r = o.g = o.b = 100; o.strobe = 0; o.gobo = f.type === 'screen' ? 0 : 0; }
     o.dim *= blackout ? 0 : gm;
   }
@@ -1533,7 +1727,7 @@ function updateVisuals(now, dt) {
     else { v.pan = o.pan; v.tilt = o.tilt; }
     v.gang += o.grot * dt * .05;
     dirFrom(f, v.pan, v.tilt, tmpD);
-    if (vo.tiltG) { vo.yoke.rotation.y = (vo.flip ? -1 : 1) * v.pan * D2R; vo.tiltG.rotation.x = -v.tilt * D2R; } else vo.pivot.quaternion.setFromUnitVectors(DOWN, tmpD);
+    if (vo.tiltG) { vo.yoke.rotation.y = T.tiltOnly ? 0 : (vo.flip ? -1 : 1) * v.pan * D2R; vo.tiltG.rotation.x = -v.tilt * D2R; } else vo.pivot.quaternion.setFromUnitVectors(DOWN, tmpD);
     const col = [o.r / 100, o.g / 100, o.b / 100];
     vo.bodyMat.emissive.setHex(f.sel ? 0x7a5a00 : 0x000000);
     vo.lensMat.color.setRGB(.03 + col[0] * I * 3, .03 + col[1] * I * 3, .03 + col[2] * I * 3);
@@ -1576,7 +1770,7 @@ function updateVisuals(now, dt) {
     tU.subVectors(camDir, tmpP); const dist = tU.length(); tU.divideScalar(dist);
     const facing = Math.max(0, tmpD.dot(tU)), coneCos = Math.cos(Math.max(zoom, 8) / 2 * D2R * 1.6);
     const into = facing > coneCos ? Math.pow((facing - coneCos) / (1 - coneCos), 2) : 0;
-    const gs = vo.s * (1.1 + 4.5 * into) * Math.sqrt(I) * (T.shape === 'blinder' ? 2.2 : T.shape === 'strobe' ? 1.8 : 1);
+    const gs = vo.s * (1.1 + 4.5 * into) * Math.sqrt(I) * (T.glowK ?? 1);
     gl.scale.set(gs, gs, 1);
     const gI = (.3 + .75 * into) * I;
     gl.material.color.setRGB(col[0] * gI, col[1] * gI, col[2] * gI);
@@ -1760,9 +1954,11 @@ $$('[data-view]').forEach(b => b.onclick = () => setView(b.dataset.view));
 
 /* pools */
 let presetTab = 4;
+const GROUP_SLOTS = 48;   // a full grid: 6 x 8 in Desk/Classic, 12 x 4 in the MA layout
+const NEW_GROUPS = ['LED Bars', 'Follow Spots', 'Profiles'];
 function renderPools() {
   const gp = $('#groupPool'); gp.innerHTML = '';
-  for (let n = 1; n <= 36; n++) {
+  for (let n = 1; n <= GROUP_SLOTS; n++) {
     const g = groups[n], d = el('div', 'slot grp' + (g ? '' : ' empty'), `<span class="n">${n}</span><span class="t">${g ? g.name : '—'}</span>`);
     if (g) d.title = `${g.ids.length} fixtures`;
     d.onclick = ev => { if (storeMode) { storeGroup(n); setStore(false); return; } if (!g) return; setSel([...g.ids], ev.shiftKey ? 'add' : 'replace'); log(`Group ${n} "${g.name}" (${g.ids.length})`, 'ok'); };
@@ -2103,6 +2299,8 @@ function serialize() {
 }
 function loadShow(d) {
   groups = d.groups || defaultGroups(); presets = defaultPresets();
+  // shows saved before the LED Bars / Follow Spots / Profiles groups existed: add them, but only into slots that are still empty
+  if (d.groups) { const dg = defaultGroups(); for (const n in dg) if (NEW_GROUPS.includes(dg[n].name) && !groups[n]) groups[n] = dg[n]; }
   for (const t in d.presets || {}) for (const s in d.presets[t]) presets[t][s] = d.presets[t][s];
   execs.forEach((e, i) => { execOff(e); const x = (d.execs || [])[i] || {}; e.name = x.name || ''; e.cues = x.cues || []; e.level = x.level ?? 0; e.cache = {}; });
   bpm = d.bpm || 120; hazeU.value = d.haze ?? .62; $('#haze').value = hazeU.value * 100;
@@ -2330,7 +2528,7 @@ function loop(t) {
   requestAnimationFrame(loop);
   const dt = Math.min((t - last) / 1000, .1); last = t; const now = t / 1000;
   crowdU.uBeat.value = (now - beatOrigin) * bpm / 60 * Math.PI; crowdU.uJump.value = auto.pulse === 'audio' && song.an ? .3 + autoPump : 1;
-  songSync(); autoTick(now); stepFades(now); computeOutput(now); updateVisuals(now, dt); animPerformers(now);
+  songSync(); autoTick(now); stepFades(now); computeOutput(now); updateVisuals(now, dt); updateProps(now); animPerformers(now);
   controls.update();
   if (glowOn) composer.render(); else renderer.render(scene, camera);
   drawOverlay();
@@ -2368,7 +2566,7 @@ const STYLES = {
   orchestral: { name: 'Orchestral', he: 'פוקוס על התזמורת, חם ואלגנטי', fade: 4, bars: 16, pal: [['Amber', 'Blue'], ['CTO', 'Congo'], ['Warm', 'Lavender'], ['Amber', 'Lt Blue']], pos: ['skyFan', 'screen'], fxPos: [], fxDim: [], gobos: [2, 7, 1], calm: true, orch: true, strobe: false, blinders: false, screen: [1, 0, 4], sections: ['verse', 'chorus'] },
   cinematic: { name: 'Cinematic', he: 'בימים לשמיים, נשימה איטית', fade: 2, bars: 8, pal: [['White', 'Blue'], ['Lt Blue', 'Congo'], ['CTO', 'Blue']], pos: ['skyFan', 'screen', 'tunnel', 'vOut'], fxPos: ['tilt', 'pan'], fxDim: ['dimSaw', 'dimSine'], rate: [.25, .5], strobe: false, blinders: true, screen: [1, 4, 6], sections: ['build', 'chorus'] },
 };
-const AG = { audW: range(1801, 1899), towB: range(1601, 1699), towW: range(1701, 1799), ring: range(1201, 1299), rwash: range(1301, 1399), angB: range(1401, 1499), angS: range(1501, 1599), foh: range(101, 199), t2: range(201, 299), t3: range(301, 399), t4: range(401, 499), back: range(501, 599), tow: range(601, 699), floor: range(701, 799), fwash: range(1001, 1099), pars: range(1101, 1199), blind: range(801, 899), strobe: range(901, 999) };
+const AG = { audW: range(1801, 1899), towB: range(1601, 1699), towW: range(1701, 1799), ring: range(1201, 1299), rwash: range(1301, 1399), angB: range(1401, 1499), angS: range(1501, 1599), foh: range(101, 199), t2: range(201, 299), t3: range(301, 399), t4: range(401, 499), back: range(501, 599), tow: range(601, 699), floor: range(701, 799), fwash: range(1001, 1099), pars: range(1101, 1199), blind: range(801, 899), strobe: range(901, 999), bars: range(2101, 2199), follow: range(1901, 1999), prof: range(2201, 2299) };
 const auto = { on: false, style: 'edm', energy: .85, master: 1, bars: 0, pulse: 'off', strobes: true, hits: true, screen: true, take: true, secIdx: 0, lastBar: null, sec: '', changeAt: 0 };
 function genLook(S, sec) {
   const vals = {}, fx = [];
@@ -2386,6 +2584,12 @@ function genLook(S, sec) {
   set(AG.audW, (f, k, n) => ({ ...PFN.crowd(f, k, n), ...(big ? COL('White') : c2), dim: L(big ? 95 : S.calm ? 25 : 45), zoom: 50, strobe: sec === 'drop' && S.strobe && auto.strobes ? 50 : 0 }));
   set(AG.towW, (f, k, n) => ({ ...PFN[S.calm || S.orch ? 'band' : pickR(['band', 'audience', 'center'])](f, k, n), ...(k % 2 ? c1 : c2), dim: L(S.calm ? 40 : 60), zoom: 30 }));
   set(AG.fwash, (f, k, n) => ({ ...PFN[sec === 'verse' || S.calm ? 'down' : 'vOut'](f, k, n), ...c1, dim: L(sec === 'verse' || S.calm ? 35 : 62), zoom: 20 }));
+  // footlight bars: a tight colour curtain straight up on big sections, otherwise a soft wash back onto the band
+  set(AG.bars, (f, k) => ({ tilt: big ? 6 : -32, ...(big && k % 2 ? c2 : c1), dim: L(big ? 90 : 45), zoom: big ? 6 : 30 }));
+  if ((sec === 'build' || sec === 'drop') && S.fxPos.length) fx.push({ type: 'tilt', rate: pickR(S.rate || [1]), size: FXT.tilt.size, spread: 360, ids: [...AG.bars] });
+  // follow spots stay on the lead singer; profiles add a side wash
+  set(AG.follow, (f, k, n) => ({ ...PFN.singer(f, k, n), ...COL('Warm'), dim: L(big ? 85 : 55), zoom: big ? 7 : 11, gobo: 0 }));
+  set(AG.prof, (f, k) => ({ ...(k % 2 ? c1 : c2), dim: L(S.calm ? 55 : 35) }));
   const gob = pickR(S.gobos || [1, 2, 3, 4, 5, 7]);
   if (S.calm || !big) set(AG.foh, (f, k, n) => ({ ...PFN[S.orch && k % 2 ? 'orch' : 'singer'](f, k, n), ...COL('Warm'), dim: L(72), gobo: S.calm ? (S.gobos ? gob : 0) : gob, zoom: S.calm ? 11 : 13, grot: S.calm ? 0 : 8 }));
   else set(AG.foh, (f, k, n) => ({ ...PFN[pickR(['audience', 'cross', 'fanAud'])](f, k, n), ...COL('White'), dim: L(82), gobo: gob, zoom: 14, grot: pickR([-30, 20, 40]) }));
@@ -2530,10 +2734,11 @@ const K = k => `<kbd>${k}</kbd>`, CD = c => `<code>${c}</code>`;
 const RIG_TABLE = [['101–120', 'Spot', 'טראס קדמי (FOH)'], ['201–230', 'Beam', 'טראס 2'], ['301–330', 'Wash', 'טראס 3'], ['401–420', 'Spot', 'טראס 4'], ['501–530', 'Beam', 'טראס אחורי'],
   ['601–624', 'Wash', 'מגדלי צד (טורים)'], ['701–740', 'Beam', 'רצפה, ירכתי הבמה'], ['801–816', 'Blinder', 'טראס קדמי, לקהל'], ['901–920', 'Strobe', 'טראס 3'], ['1001–1016', 'Wash', 'רצפה, קדמת הבמה'],
   ['1101–1120', 'LED Par', 'רצפה, מתחת למסך'], ['1201–1224', 'Beam', 'הטבעת החיצונית (עיגול)'], ['1301–1312', 'Wash', 'הטבעת הפנימית'], ['1401–1424', 'Beam', 'תרסות זוויתיות'], ['1501–1512', 'Spot', 'תרסות זוויתיות (אמצעיות)'],
-  ['1601–1610', 'Beam', 'ראש עמודי התאורה על הבמה'], ['1701–1710', 'Wash', 'אמצע עמודי התאורה'], ['1801–1812', 'Wash', 'תאורת קהל, טראס קדמי'], ['1813–1818', 'Wash', 'מגדלי דיליי בקהל'], ['2001', 'LED Screen', 'מסך LED (ומסכי הצד)']];
+  ['1601–1610', 'Beam', 'ראש עמודי התאורה על הבמה'], ['1701–1710', 'Wash', 'אמצע עמודי התאורה'], ['1801–1812', 'Wash', 'תאורת קהל, טראס קדמי'], ['1813–1818', 'Wash', 'מגדלי דיליי בקהל'], ['1901–1904', 'Follow Spot', 'טראס קדמי, בין הספוטים; עמדת RoboSpot ב־FOH'],
+  ['2101–2112', 'LED Bar', 'רצפה, קדמת הבמה (Tilt בלבד)'], ['2201–2212', 'Profile', 'סולמות הצד, קבועים'], ['2001', 'LED Screen', 'מסך LED (ומסכי הצד)']];
 const GUIDE = [
  { t: 'התחלה מהירה', h: () => `
-  <p>LUMA DESK היא קונסולת תאורה בסגנון grandMA עם במה וירטואלית בתלת־ממד בבריכת הסולטן: 377 גופים, להקה, תזמורת וקהל. בעמוד הזה, תוך 5 דקות, תבנה ותקליט לוק ראשון ותריץ אותו.</p>
+  <p>LUMA DESK היא קונסולת תאורה בסגנון grandMA עם במה וירטואלית בתלת־ממד בבריכת הסולטן: 405 גופים, להקה, תזמורת וקהל. בעמוד הזה, תוך 5 דקות, תבנה ותקליט לוק ראשון ותריץ אותו.</p>
   <h3>הרצת הדמו</h3>
   <ol class="steps"><li>מופע דמו כבר טעון באקזקיוטר 1 (Main Show). לחץ ${K('רווח')} או על כפתור ה־<b>GO +</b> הירוק הגדול למטה מימין, ו־Cue אחרי Cue ירוץ.</li>
   <li>החלף זוויות מצלמה מהשורה העליונה: <b>FOH</b>, <b>Wide</b>, <b>Audience</b>, <b>Drums</b>, <b>Old City</b>…</li></ol>
@@ -2605,8 +2810,8 @@ const GUIDE = [
   <table><tr><th>פקודה</th><th>מה היא עושה</th></tr>
   <tr><td>${CD('Fixture 101 Thru 120')}</td><td>בחירת טווח. אפשר גם בלי המילה Fixture.</td></tr><tr><td>${CD('Group 3 + Group 9')}</td><td>חיבור קבוצות.</td></tr><tr><td>${CD('Group 13 - 701 Thru 720')}</td><td>הורדה מהבחירה.</td></tr>
   <tr><td>${CD('At 75')} · ${CD('@ 75')} · ${CD('Full')} · ${CD('Zero')}</td><td>Dimmer לבחירה.</td></tr><tr><td>${CD('Group 2 At Full')}</td><td>בחירה ועוצמה בפקודה אחת.</td></tr>
-  <tr><td>${CD('Preset 4.10')}</td><td>Preset מספר 10 מסוג Color.</td></tr><tr><td>${CD('Store Cue 5 Fade 2')}</td><td>הקלטה.</td></tr><tr><td>${CD('Store Group 35')} · ${CD('Store Preset 2.30')}</td><td>שמירת קבוצה או Preset.</td></tr>
-  <tr><td>${CD('Label Cue 5 Drop')} · ${CD('Label Group 35 Front')} · ${CD('Label Exec 4 Solo')}</td><td>שמות.</td></tr><tr><td>${CD('Exec 3')}</td><td>בחירת אקזקיוטר.</td></tr>
+  <tr><td>${CD('Preset 4.10')}</td><td>Preset מספר 10 מסוג Color.</td></tr><tr><td>${CD('Store Cue 5 Fade 2')}</td><td>הקלטה.</td></tr><tr><td>${CD('Store Group 40')} · ${CD('Store Preset 2.30')}</td><td>שמירת קבוצה או Preset.</td></tr>
+  <tr><td>${CD('Label Cue 5 Drop')} · ${CD('Label Group 40 Front')} · ${CD('Label Exec 4 Solo')}</td><td>שמות.</td></tr><tr><td>${CD('Exec 3')}</td><td>בחירת אקזקיוטר.</td></tr>
   <tr><td>${CD('Go')} · ${CD('Go-')} · ${CD('Go Exec 2')}</td><td>הפעלה.</td></tr><tr><td>${CD('Goto Cue 4')}</td><td>קפיצה ל־Cue.</td></tr><tr><td>${CD('Off')} · ${CD('Off Exec 2')}</td><td>כיבוי.</td></tr>
   <tr><td>${CD('Fade 3')}</td><td>זמן פייד ל־Cue הנוכחי.</td></tr><tr><td>${CD('Delete Cue 4')}</td><td>מחיקה.</td></tr><tr><td>${CD('Clear')} · ${CD('ClearAll')}</td><td>ניקוי.</td></tr><tr><td>${CD('Highlight')} · ${CD('Blackout')}</td><td>הפעלה וכיבוי.</td></tr></table>` },
  { t: 'קיצורים', h: () => `
@@ -2615,7 +2820,7 @@ const GUIDE = [
   <tr><td>דאבל־קליק</td><td>על ערך: הקלדה. על Group, Preset, Cue או אקזקיוטר: שינוי שם. על פיידר: 0 או 100.</td></tr></table>
   <h3>MIDI</h3><p>לחץ <b>MIDI</b> ואשר. CC 1–10 שולטים בפיידרים 1–10, CC 0 ב־GM, ו־Notes 36–45 הם GO לאקזקיוטרים 1–10. ייתכן שהדפדפן יחסום MIDI בתוך העמוד הזה.</p>` },
  { t: 'הריג והקבוצות', h: () => `
-  <p>377 גופים בבריכת הסולטן. מספרי הגופים לפי מיקום:</p>
+  <p>405 גופים בבריכת הסולטן. מספרי הגופים לפי מיקום:</p>
   <table><tr><th>מספרים</th><th>סוג</th><th>מיקום</th></tr>${RIG_TABLE.map(r => `<tr><td><code>${r[0]}</code></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>
   <h3>קבוצות מוכנות</h3><table>${Object.entries(defaultGroups()).map(([n, g]) => `<tr><td><code>Group ${n}</code></td><td>${g.name}</td><td style="color:var(--mut)">${g.ids.length} גופים</td></tr>`).join('')}</table>` },
  { t: 'שמירה וביצועים', h: () => `
@@ -2885,7 +3090,7 @@ try { const s = localStorage.getItem(LS); if (s) { loadShow(JSON.parse(s)); load
 if (!loaded) buildDemo();
 try { if (!localStorage.getItem('lumadesk-guide-seen')) setTimeout(() => openGuide(0), 600); } catch (e) { }
 requestAnimationFrame(loop);
-window.__desk = { renderer, THREE, perf: performers, prog, applyPreset, runCmd, execs, setView, FX, sel: () => sel, execGo, gotoCue };
+window.__desk = { renderer, THREE, perf: performers, prog, applyPreset, runCmd, execs, setView, FX, sel: () => sel, execGo, gotoCue, scene, camera, controls, fixtures, puffs, groups: () => groups };
 </script>
 </body>
 </html>
