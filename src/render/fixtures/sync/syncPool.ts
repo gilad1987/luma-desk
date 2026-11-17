@@ -27,20 +27,21 @@ export function syncPool(frame: BeamFrame, gob: number, goboTextures: readonly T
     pl.material.map = tx;
     pl.material.needsUpdate = true;
   }
-  const { I, col, L, tz } = frame,
-    T = v.fixture.T,
-    r = L * tz,
+  const { intensity, col, length, tz } = frame,
+    spec = v.fixture.T,
+    r = length * tz,
     n = hit.normal;
-  const pI = ((I * T.power * 0.3) / (1 + r * 0.1)) * (n === SCREEN_NORMAL ? 0.45 : L > 24 ? 0.45 : 1);
-  pl.material.color.setRGB(col[0] * pI, col[1] * pI, col[2] * pI);
+  const poolIntensity =
+    ((intensity * spec.power * 0.3) / (1 + r * 0.1)) * (n === SCREEN_NORMAL ? 0.45 : length > 24 ? 0.45 : 1);
+  pl.material.color.setRGB(col[0] * poolIntensity, col[1] * poolIntensity, col[2] * poolIntensity);
   addPoolContributions(frame, n, out);
 }
 
 /** Places the pool at the hit, offset along the normal by a per-fixture step so overlapping pools do not z-fight. */
 function placePool(frame: BeamFrame, hit: SurfaceHit): void {
-  const { visual: v, dir, origin, L, tz } = frame;
+  const { visual: v, dir, origin, length, tz } = frame;
   const pl = v.pool,
-    r = L * tz,
+    r = length * tz,
     n = hit.normal,
     cosA = Math.abs(dir.dot(n));
   tU.copy(dir).addScaledVector(n, -dir.dot(n));
@@ -51,7 +52,7 @@ function placePool(frame: BeamFrame, hit: SurfaceHit): void {
   pl.quaternion.setFromRotationMatrix(basis);
   pl.position
     .copy(origin)
-    .addScaledVector(dir, L)
+    .addScaledVector(dir, length)
     .addScaledVector(n, 0.015 + (v.fixture.id % 7) * 0.002);
   pl.scale.set(r / Math.max(cosA, 0.22), r, 1);
 }

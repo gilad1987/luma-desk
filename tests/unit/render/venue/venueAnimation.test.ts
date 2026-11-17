@@ -38,12 +38,12 @@ describe('render/venue per-frame updates', () => {
   it('colourLedStrip matches the legacy strip colour', () => {
     const strip = new Mesh(new BoxGeometry(), new MeshBasicMaterial());
     const o = { r: 80, g: 30, b: 55 },
-      I = 0.7;
-    colourLedStrip(strip, o, I);
+      intensity = 0.7;
+    colourLedStrip(strip, o, intensity);
     const expected = new MeshBasicMaterial().color.setRGB(
-      (o.r / 100) * I * 2,
-      (o.g / 100) * I * 2,
-      (o.b / 100) * I * 2,
+      (o.r / 100) * intensity * 2,
+      (o.g / 100) * intensity * 2,
+      (o.b / 100) * intensity * 2,
     );
     expect(strip.material.color.toArray()).toEqual(expected.toArray());
   });

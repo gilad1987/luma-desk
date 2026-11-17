@@ -15,8 +15,8 @@ export const DOWN = new Vector3(0, -1, 0);
 export function syncPose(v: LightVisual, o: Readonly<AttrValues>, dt: number, dir: Vector3): void {
   const p = v.pose,
     f = v.fixture,
-    T = f.T;
-  if (T.moving) {
+    spec = f.T;
+  if (spec.moving) {
     const k = 1 - Math.exp(-dt * 9);
     p.pan += (outputValue(o, 'pan') - p.pan) * k;
     p.tilt += (outputValue(o, 'tilt') - p.tilt) * k;
@@ -27,7 +27,7 @@ export function syncPose(v: LightVisual, o: Readonly<AttrValues>, dt: number, di
   p.gang += outputValue(o, 'grot') * dt * 0.05;
   dirFrom(f, p.pan, p.tilt, dir);
   if (v.joints) {
-    v.joints.yoke.rotation.y = T.tiltOnly ? 0 : (v.flip ? -1 : 1) * p.pan * D2R;
+    v.joints.yoke.rotation.y = spec.tiltOnly ? 0 : (v.flip ? -1 : 1) * p.pan * D2R;
     v.joints.tiltG.rotation.x = -p.tilt * D2R;
   } else v.pivot.quaternion.setFromUnitVectors(DOWN, dir);
 }

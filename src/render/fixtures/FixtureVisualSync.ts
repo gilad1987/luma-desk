@@ -28,13 +28,13 @@ export interface FixtureVisualSyncDeps {
 
 /** The strobe shutter: open 22 % of each period, at 1 to 23 Hz. */
 function gatedIntensity(o: Readonly<AttrValues>, now: number): number {
-  let I = clamp(outputValue(o, 'dim') / 100, 0, 1);
+  let intensity = clamp(outputValue(o, 'dim') / 100, 0, 1);
   const strobe = outputValue(o, 'strobe');
   if (strobe > 0.5) {
     const hz = 1 + (strobe / 100) * 22;
-    I *= (now * hz) % 1 < 0.22 ? 1 : 0;
+    intensity *= (now * hz) % 1 < 0.22 ? 1 : 0;
   }
-  return I;
+  return intensity;
 }
 
 /**
@@ -57,34 +57,42 @@ export class FixtureVisualSync {
     this.#deps.lights.reset();
     for (const v of this.#deps.visuals) {
       const o = v.fixture.out,
-        I = gatedIntensity(o, now);
-      if (v.kind === 'screen') syncScreen(this.#deps.screen, this.#deps.beamTime, o, I, now);
-      else this.#syncLight(v, o, I, dt);
+        intensity = gatedIntensity(o, now);
+      if (v.kind === 'screen') {
+        syncScreen(this.#deps.screen, o, intensity, now);
+        // the beam haze-noise time moves only with a screen, as in the legacy code: no screen, still haze
+        this.#deps.beamTime.value = now;
+      } else this.#syncLight(v, o, intensity, dt);
     }
   }
 
-  #syncLight(v: LightVisual, o: Readonly<AttrValues>, I: number, dt: number): void {
+  #syncLight(v: LightVisual, o: Readonly<AttrValues>, intensity: number, dt: number): void {
     const deps = this.#deps,
       f = v.fixture,
-      T = f.T,
+      spec = f.T,
       dir = this.#dir;
     syncPose(v, o, dt, dir);
     const col: RgbTriple = [outputValue(o, 'r') / 100, outputValue(o, 'g') / 100, outputValue(o, 'b') / 100];
     v.bodyMat.emissive.setHex(deps.selection.has(f.id) ? 0x7a5a00 : 0x000000);
-    v.lensMat.color.setRGB(0.03 + col[0] * I * 3, 0.03 + col[1] * I * 3, 0.03 + col[2] * I * 3);
-    if (v.pix) v.pix.material.color.setRGB(0.02 + col[0] * I * 2.2, 0.02 + col[1] * I * 2.2, 0.02 + col[2] * I * 2.2);
-    const on = I > 0.004;
+    v.lensMat.color.setRGB(0.03 + col[0] * intensity * 3, 0.03 + col[1] * intensity * 3, 0.03 + col[2] * intensity * 3);
+    if (v.pix)
+      v.pix.material.color.setRGB(
+        0.02 + col[0] * intensity * 2.2,
+        0.02 + col[1] * intensity * 2.2,
+        0.02 + col[2] * intensity * 2.2,
+      );
+    const on = intensity > 0.004;
     v.beam.visible = v.pool.visible = v.glow.visible = on;
     if (!on) return;
     const origin = this.#origin.copy(f.pos).addScaledVector(dir, v.lensOff + 0.02);
-    const zoom = clamp(outputValue(o, 'zoom'), T.zr[0], T.zr[1]),
+    const zoom = clamp(outputValue(o, 'zoom'), spec.zr[0], spec.zr[1]),
       tz = Math.tan((zoom / 2) * D2R);
     const hit = hitSurface(origin, dir),
-      L = hit ? hit.t : 85;
-    const frame = { visual: v, o, I, col, dir, origin, zoom, tz, hit, L };
+      length = hit ? hit.t : 85;
+    const frame = { visual: v, o, intensity, col, dir, origin, zoom, tz, hit, length };
     const gob = syncBeam(frame);
     syncPool(frame, gob, deps.goboTextures, deps.lights);
-    if (f.type === 'blinder') deps.lights.addBlinder(I);
+    if (f.type === 'blinder') deps.lights.addBlinder(intensity);
     syncGlow(frame, this.#camera);
   }
 }

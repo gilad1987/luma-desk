@@ -14,7 +14,7 @@ const traceHex = (x: CanvasRenderingContext2D, cx: number, cy: number, r: number
 export const MOVER_LENS_FACES = {
   // Robe FORTE: one large 180 mm front lens, with faint rings from the zoom optics behind it
   forte: (x) => {
-    fillLensDisc(x, 64, 64, 62);
+    fillLensDisc(x, [64, 64], 62);
     x.strokeStyle = 'rgba(0,0,0,.28)';
     x.lineWidth = 2;
     for (const r of [16, 30, 44, 56]) {

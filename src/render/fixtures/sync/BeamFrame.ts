@@ -9,7 +9,7 @@ export interface BeamFrame {
   readonly visual: LightVisual;
   readonly o: Readonly<AttrValues>;
   /** Strobe-gated intensity, 0..1. */
-  readonly I: number;
+  readonly intensity: number;
   readonly col: RgbTriple;
   /** Beam direction (unit). */
   readonly dir: Vector3;
@@ -21,7 +21,7 @@ export interface BeamFrame {
   readonly tz: number;
   readonly hit: SurfaceHit | null;
   /** Beam length: to the hit, or 85 when it hits nothing. */
-  readonly L: number;
+  readonly length: number;
 }
 
 /** An output value; the merger fills every attribute before the first frame, so the 0 fallback never applies. */

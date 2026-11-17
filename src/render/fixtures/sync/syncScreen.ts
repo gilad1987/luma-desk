@@ -19,28 +19,18 @@ export interface ScreenTargets {
   readonly strip: { readonly material: { readonly color: Color } };
 }
 
-/**
- * Drives the screen from its fixture output (gobo = content mode, grot = speed). It also advances the beam
- * haze-noise time: the legacy code did that only here, so the haze stands still in a rig without a screen.
- */
-export function syncScreen(
-  targets: ScreenTargets,
-  beamTime: SharedUniform,
-  o: Readonly<AttrValues>,
-  I: number,
-  now: number,
-): void {
+/** Drives the screen from its fixture output (gobo = content mode, grot = speed). */
+export function syncScreen(targets: ScreenTargets, o: Readonly<AttrValues>, intensity: number, now: number): void {
   const r = outputValue(o, 'r'),
     g = outputValue(o, 'g'),
     b = outputValue(o, 'b');
   const u = targets.uniforms;
-  u.uDim.value = I;
+  u.uDim.value = intensity;
   u.uCol.value.setRGB(r / 100, g / 100, b / 100);
   u.uMode.value = Math.round(outputValue(o, 'gobo'));
   u.uSpd.value = outputValue(o, 'grot');
   u.uT.value = now;
-  beamTime.value = now;
   targets.light.color.setRGB(r / 100, g / 100, b / 100);
-  targets.light.intensity = I * 9;
-  targets.strip.material.color.setRGB((r / 100) * I * 2, (g / 100) * I * 2, (b / 100) * I * 2);
+  targets.light.intensity = intensity * 9;
+  targets.strip.material.color.setRGB((r / 100) * intensity * 2, (g / 100) * intensity * 2, (b / 100) * intensity * 2);
 }

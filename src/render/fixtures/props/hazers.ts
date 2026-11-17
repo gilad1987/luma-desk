@@ -41,19 +41,19 @@ export function buildHazers(scene: Object3D, { prims, materials }: ModelKit): Ha
   const { box, sphereGeo } = prims;
   const caseMat = new MeshStandardMaterial({ color: 0x141417, roughness: 0.55, metalness: 0.2 });
   const body = merge([
-    box(0, 0.18, 0, 0.5, 0.34, 0.36),
-    box(0, 0.365, -0.04, 0.16, 0.02, 0.1),
-    box(0, 0.4, -0.11, 0.17, 0.01, 0.12, -0.6, 0, 0),
+    box([0, 0.18, 0], [0.5, 0.34, 0.36]),
+    box([0, 0.365, -0.04], [0.16, 0.02, 0.1]),
+    box([0, 0.4, -0.11], [0.17, 0.01, 0.12], [-0.6, 0, 0]),
   ]);
   const alu = merge([
-    ...[0.01, 0.35, 0.28].flatMap((y) => [-1, 1].map((sz) => box(0, y, sz * 0.18, 0.52, 0.02, 0.02))),
-    ...[0.01, 0.35].flatMap((y) => [-1, 1].map((sx) => box(sx * 0.25, y, 0, 0.02, 0.02, 0.38))),
-    ...[-1, 1].flatMap((sx) => [-1, 1].map((sz) => box(sx * 0.25, 0.18, sz * 0.18, 0.02, 0.36, 0.02))),
+    ...[0.01, 0.35, 0.28].flatMap((y) => [-1, 1].map((sz) => box([0, y, sz * 0.18], [0.52, 0.02, 0.02]))),
+    ...[0.01, 0.35].flatMap((y) => [-1, 1].map((sx) => box([sx * 0.25, y, 0], [0.02, 0.02, 0.38]))),
+    ...[-1, 1].flatMap((sx) => [-1, 1].map((sz) => box([sx * 0.25, 0.18, sz * 0.18], [0.02, 0.36, 0.02]))),
     ...[0.01, 0.35].flatMap((y) =>
-      [-1, 1].flatMap((sx) => [-1, 1].map((sz) => part(sphereGeo, sx * 0.25, y, sz * 0.18, 0.028, 0.028, 0.028))),
+      [-1, 1].flatMap((sx) => [-1, 1].map((sz) => part(sphereGeo, [sx * 0.25, y, sz * 0.18], [0.028, 0.028, 0.028]))),
     ),
-    ...[-1, 1].map((sx) => box(sx * 0.14, 0.28, 0.186, 0.07, 0.07, 0.01)),
-    box(0, 0.15, 0.186, 0.14, 0.07, 0.012),
+    ...[-1, 1].map((sx) => box([sx * 0.14, 0.28, 0.186], [0.07, 0.07, 0.01])),
+    box([0, 0.15, 0.186], [0.14, 0.07, 0.012]),
   ]);
   const puffTex = srgbCanvasTexture(64, 64, paintPuff);
   const puffs: HazePuff[] = [];

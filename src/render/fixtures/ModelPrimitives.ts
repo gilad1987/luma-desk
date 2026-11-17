@@ -9,7 +9,7 @@ import {
   Vector2,
   type BufferGeometry,
 } from 'three';
-import { part } from './modelGeometry';
+import { part, type AxisTriple } from './modelGeometry';
 
 /** One [radius, y] point of a revolved profile. */
 export type ProfilePoint = readonly [radius: number, y: number];
@@ -27,17 +27,17 @@ export class ModelPrimitives {
   readonly sphereGeo = new SphereGeometry(1, 8, 6);
   readonly torusGeo = new TorusGeometry(1, 0.12, 6, 20);
 
-  /** A box of size w x h x d centred at (x, y, z). */
-  readonly box = (x: number, y: number, z: number, w: number, h: number, d: number, rx = 0, ry = 0, rz = 0) =>
-    part(this.boxGeo, x, y, z, w, h, d, rx, ry, rz);
+  /** A box of the given size centred at `position`, turned by `rotation` (radians, XYZ). */
+  readonly box = (position: AxisTriple, size: AxisTriple, rotation?: AxisTriple) =>
+    part(this.boxGeo, position, size, rotation);
 
-  /** A cylinder of radius r and height h, axis Y before rotation. */
-  readonly cylinder = (x: number, y: number, z: number, r: number, h: number, rx = 0, ry = 0, rz = 0) =>
-    part(this.cylinderGeo, x, y, z, r, h, r, rx, ry, rz);
+  /** A cylinder of `radius` and `height` centred at `position`, axis Y before `rotation`. */
+  readonly cylinder = (position: AxisTriple, radius: number, height: number, rotation?: AxisTriple) =>
+    part(this.cylinderGeo, position, [radius, height, radius], rotation);
 
   /** A cylinder along X (tilt hubs, knobs). */
-  readonly cylinderX = (x: number, y: number, z: number, r: number, len: number) =>
-    this.cylinder(x, y, z, r, len, 0, 0, Math.PI / 2);
+  readonly cylinderX = (position: AxisTriple, radius: number, length: number) =>
+    this.cylinder(position, radius, length, [0, 0, Math.PI / 2]);
 
   /** A profile revolved around Y; list points front (-y) to rear (+y) so the faces point outward. */
   readonly lathe = (pts: readonly ProfilePoint[], seg = 28): BufferGeometry =>

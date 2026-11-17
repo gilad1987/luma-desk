@@ -12,7 +12,12 @@ export interface ModelMaterials {
   readonly alu: MeshStandardMaterial;
 }
 
-const ventSlots = (x: CanvasRenderingContext2D, x0: number, y0: number, w: number, h: number, n: number): void => {
+/** `n` dark vent slots in a grey frame; the area is a canvas rect (x, y, width, height). */
+const ventSlots = (
+  x: CanvasRenderingContext2D,
+  [x0, y0, w, h]: readonly [x: number, y: number, width: number, height: number],
+  n: number,
+): void => {
   x.fillStyle = '#2a2a30';
   x.fillRect(x0, y0, w, h);
   x.fillStyle = '#060607';
@@ -23,8 +28,8 @@ const ventSlots = (x: CanvasRenderingContext2D, x0: number, y0: number, w: numbe
 const paintRobePanel = (x: CanvasRenderingContext2D): void => {
   x.fillStyle = '#121215';
   x.fillRect(0, 0, 256, 64);
-  ventSlots(x, 6, 8, 74, 48, 8);
-  ventSlots(x, 176, 8, 74, 48, 8);
+  ventSlots(x, [6, 8, 74, 48], 8);
+  ventSlots(x, [176, 8, 74, 48], 8);
   x.fillStyle = '#050506';
   x.fillRect(88, 6, 80, 52);
   const g = x.createLinearGradient(0, 10, 0, 50);
@@ -55,7 +60,7 @@ export function createModelMaterials(trim: MeshStandardMaterial): ModelMaterials
     metalness: 0.5,
     roughness: 0.5,
     map: srgbCanvasTexture(64, 64, (x) => {
-      ventSlots(x, 0, 0, 64, 64, 9);
+      ventSlots(x, [0, 0, 64, 64], 9);
     }),
   });
   const alu = new MeshStandardMaterial({ color: 0xb4b8c0, metalness: 0.85, roughness: 0.32 });
