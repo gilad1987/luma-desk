@@ -4,12 +4,11 @@ import { buildRig } from '../../../src/domain/rig';
 import type { LookOptions } from '../../../src/autoshow/AutoSettings';
 import { LookGenerator } from '../../../src/autoshow/LookGenerator';
 import type { Section } from '../../../src/autoshow/sections';
-import { STYLES, type AutoStyleId } from '../../../src/autoshow/styles';
+import { STYLE_IDS, STYLES, type AutoStyleId } from '../../../src/autoshow/styles';
 import { he } from '../../../src/i18n/he';
 import { genLook, LEGACY_STYLES, legacyEnv } from './oracle/legacyGenLook';
 
 const rig = buildRig();
-const STYLE_IDS = Object.keys(STYLES) as AutoStyleId[];
 const SECTIONS: readonly Section[] = ['groove', 'verse', 'chorus', 'hook', 'build', 'drop', 'intro'];
 const SEEDS = [1, 2, 3, 7, 42, 99, 1234, 20261117];
 // default panel, low energy with strobes and screen off, full energy with the screen off
