@@ -2,8 +2,9 @@ import { Color, PointLight, Vector3 } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clamp } from '../../../../src/core';
 import { FixtureVisualSync } from '../../../../src/render/fixtures';
-import { LightFrame } from '../../../../src/render/SceneLightsFrame';
-import { buildFixtureScene, stubCanvasDocument } from './buildFixtureScene';
+import { LightFrame } from '../../../../src/render/lights/LightFrame';
+import { buildFixtureScene } from './buildFixtureScene';
+import { stubCanvasDocument } from '../stubCanvasDocument';
 
 afterEach(() => vi.unstubAllGlobals());
 

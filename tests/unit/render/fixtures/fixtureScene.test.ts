@@ -1,7 +1,8 @@
 import { NoColorSpace, SRGBColorSpace } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { withSeededRandom } from '../seededRandom';
-import { buildFixtureScene, stubCanvasDocument, uuidTrace } from './buildFixtureScene';
+import { buildFixtureScene, uuidTrace } from './buildFixtureScene';
+import { stubCanvasDocument } from '../stubCanvasDocument';
 
 afterEach(() => vi.unstubAllGlobals());
 

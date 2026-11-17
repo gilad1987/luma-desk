@@ -1,5 +1,5 @@
 import type { Vector3 } from 'three';
-import type { Fixture } from '../domain/Fixture';
+import type { Fixture } from '../../domain/Fixture';
 
 /** A linear RGB triple on 0..1, the colour form the fixture sync computes per fixture. */
 export type RgbTriple = readonly [r: number, g: number, b: number];
@@ -49,10 +49,14 @@ export class LightFrame {
   /** Sum of blinder intensities; they light the whole audience. */
   blinders = 0;
   readonly keyCandidates: KeyLightCandidate[] = [];
+  /** Every sum, built once so `reset` allocates nothing per frame. */
+  private readonly sums: readonly RgbSum[] = [this.stage, ...this.zones];
 
   /** Starts a new frame. */
   reset(): void {
-    for (const sum of [this.stage, ...this.zones]) {
+    for (let i = 0; i < this.sums.length; i++) {
+      const sum = this.sums[i];
+      if (!sum) continue;
       sum.r = 0;
       sum.g = 0;
       sum.b = 0;

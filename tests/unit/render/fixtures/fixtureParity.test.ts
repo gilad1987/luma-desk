@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { withSeededRandom } from '../seededRandom';
-import { buildFixtureScene, createFixtureStage, stubCanvasDocument } from './buildFixtureScene';
+import { buildFixtureScene, createFixtureStage } from './buildFixtureScene';
+import { stubCanvasDocument } from '../stubCanvasDocument';
 import { snapshotFixtureScene } from './fixtureSnapshot';
 
 /*

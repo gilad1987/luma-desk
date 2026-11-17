@@ -1,6 +1,6 @@
 import type { Object3D } from 'three';
 import type { Fixture } from '../../domain/Fixture';
-import type { FixturePicker } from '../FixturePicker';
+import type { FixturePicker } from '../picking/FixturePicker';
 import { createFixtureBody } from './fixtureBody';
 import { createFixtureLightObjects, type LightObjectKit } from './fixtureLightObjects';
 import type { FixtureModelTable } from './FixtureModels';

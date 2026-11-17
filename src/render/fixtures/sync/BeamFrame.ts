@@ -1,8 +1,8 @@
 import type { Vector3 } from 'three';
 import type { AttrValues } from '../../../domain/attributes';
 import type { LightVisual } from '../FixtureVisual';
-import type { RgbTriple } from '../../SceneLightsFrame';
-import type { SurfaceHit } from '../../SurfaceHit';
+import type { RgbTriple } from '../../lights/LightFrame';
+import type { SurfaceHit } from '../../surface/SurfaceHit';
 
 /** One lit fixture in the current frame, as the beam, pool and glow updates read it. */
 export interface BeamFrame {

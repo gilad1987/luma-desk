@@ -1,5 +1,5 @@
 import { BoxGeometry, ConeGeometry, CylinderGeometry, SphereGeometry, type Material, type Object3D } from 'three';
-import { terrH } from '../../domain/audienceTerrain';
+import { terrainHeight } from '../../domain/audienceTerrain';
 import { addMesh } from '../shared';
 import type { JerusalemStone } from './JerusalemStone';
 
@@ -13,7 +13,7 @@ const CITADEL_Z = -62;
 export function buildTowerOfDavid(scene: Object3D, stone: JerusalemStone, trim: Material): void {
   const cx = CITADEL_X,
     cz = CITADEL_Z,
-    cb = terrH(cx, cz) - 3;
+    cb = terrainHeight(cx, cz) - 3;
   addMesh(scene, new BoxGeometry(16, 22, 16), stone.floodlit(16, 22), { position: [cx, cb + 11, cz] });
   const minaret = stone.floodlit(4, 20),
     mx = cx + 4,

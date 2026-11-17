@@ -1,6 +1,6 @@
 import { Matrix4, Vector3, type Texture } from 'three';
-import type { LightFrame } from '../../SceneLightsFrame';
-import { SCREEN_NORMAL, type SurfaceHit } from '../../SurfaceHit';
+import type { LightFrame } from '../../lights/LightFrame';
+import { SCREEN_NORMAL, type SurfaceHit } from '../../surface/SurfaceHit';
 import type { BeamFrame } from './BeamFrame';
 import { addPoolContributions } from './poolContributions';
 

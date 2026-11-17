@@ -1,7 +1,6 @@
 import type { Vector3 } from 'three';
-import { hitDeck, hitPoolFloor, hitScreen, hitTerraces, type SurfaceHit } from './SurfaceHitPlanes';
-
-export { SCREEN_NORMAL, type SurfaceHit } from './SurfaceHitPlanes';
+import type { SurfaceHit } from './SurfaceHit';
+import { hitDeck, hitPoolFloor, hitScreen, hitTerraces } from './surfacePlanes';
 
 /** The ground hit of a downward ray; the pool floor counts only when neither the deck nor the terraces were hit. */
 function hitGround(origin: Vector3, direction: Vector3, hasTierHit: boolean): SurfaceHit | null {
@@ -14,7 +13,7 @@ function hitGround(origin: Vector3, direction: Vector3, hasTierHit: boolean): Su
 /**
  * Where a fixture beam lands: audience terraces, stage deck, pool floor or LED screen. The fixture sync places the
  * beam pool there and sorts hits into stage, audience and key-light contributions by the normal's identity
- * (`UP`, `TIER_N` or `SCREEN_NORMAL`).
+ * (`UP`, `TERRACE_NORMAL` or `SCREEN_NORMAL`).
  *
  * Quirk kept (02 §4.8, index.html:1700–1706): a deck hit replaces a terrace hit even when the terrace is nearer;
  * the legacy `(!best || t < best.t)` floor test was always true there and is left out with no effect.

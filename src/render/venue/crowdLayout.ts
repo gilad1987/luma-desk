@@ -1,4 +1,4 @@
-import { VEN } from '../../domain/audienceTerrain';
+import { AUDIENCE_TERRAIN } from '../../domain/audienceTerrain';
 
 /** One audience member's feet position and posture: 1 standing on the pool floor, 0 seated on a terrace. */
 export type CrowdSpot = readonly [x: number, y: number, z: number, standing: 0 | 1];
@@ -24,16 +24,16 @@ const isAisle = (x: number, z: number): boolean =>
 export function layOutCrowd(): CrowdLayout {
   const chairs: [number, number][] = [];
   const spots: CrowdSpot[] = [];
-  for (let z = 8.4; z < VEN.Z1 - 0.8; z += 1.02)
-    for (let x = -VEN.X + 1.2; x <= VEN.X - 1.2; x += 0.6) {
+  for (let z = 8.4; z < AUDIENCE_TERRAIN.Z1 - 0.8; z += 1.02)
+    for (let x = -AUDIENCE_TERRAIN.X + 1.2; x <= AUDIENCE_TERRAIN.X - 1.2; x += 0.6) {
       if (isAisle(x, z)) continue;
       chairs.push([x, z]);
       if (Math.random() < 0.93) spots.push([x, 0.3, z - 0.05, 1]);
     }
-  for (let k = 0; k < VEN.STEPS; k++)
-    for (let x = -VEN.X + 1; x <= VEN.X - 1; x += 0.6) {
+  for (let k = 0; k < AUDIENCE_TERRAIN.STEPS; k++)
+    for (let x = -AUDIENCE_TERRAIN.X + 1; x <= AUDIENCE_TERRAIN.X - 1; x += 0.6) {
       if (Math.abs(x) < 1.1 || Math.random() < 0.25) continue;
-      spots.push([x, (k + 1) * VEN.RISE + 0.05, VEN.Z1 + k * VEN.RUN + 0.62, 0]);
+      spots.push([x, (k + 1) * AUDIENCE_TERRAIN.RISE + 0.05, AUDIENCE_TERRAIN.Z1 + k * AUDIENCE_TERRAIN.RUN + 0.62, 0]);
     }
   return { chairs, spots };
 }

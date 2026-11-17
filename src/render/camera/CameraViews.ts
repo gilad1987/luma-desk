@@ -1,15 +1,15 @@
 import { PerspectiveCamera, Vector3 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { FohRig } from './CameraViewsFohRig';
-import { VIEWS } from './CameraViewsTable';
-import { tweenCamera } from './CameraViewsTween';
+import { FohRig } from './FohRig';
+import { tweenCamera } from './tweenCamera';
+import { VIEWS, type CameraView, type ViewName } from './viewTable';
 
 /** What the camera needs from the UI, passed in so render never reads or writes UI DOM. */
 export interface CameraViewsOptions {
   /** Whether the MA desk layout is active; FOH then means the operator's eye behind the console. */
   readonly isMaLayout: () => boolean;
   /** Called when an animated view change starts, so the UI can mark the active view button. */
-  readonly onViewChanged: (view: string) => void;
+  readonly onViewChanged: (view: ViewName) => void;
 }
 
 /**
@@ -23,7 +23,7 @@ export class CameraViews {
   /** Venue builders register the FOH riser, desk and RoboSpot station here. */
   readonly fohRig = new FohRig();
   private readonly options: CameraViewsOptions;
-  private current = 'foh';
+  private current: ViewName = 'foh';
 
   constructor(canvas: HTMLCanvasElement, options: CameraViewsOptions) {
     this.options = options;
@@ -34,7 +34,7 @@ export class CameraViews {
   }
 
   /** The last view set by name (`foh` also in the MA layout); the layout switch re-applies FOH with it. */
-  get currentView(): string {
+  get currentView(): ViewName {
     return this.current;
   }
 
@@ -44,13 +44,12 @@ export class CameraViews {
   }
 
   /**
-   * Moves to a named view, at once or with a 700 ms tween. An unknown name does nothing. Only the animated path
-   * reports the change, as in the legacy code where the instant path returned before the button update.
+   * Moves to a named view, at once or with a 700 ms tween. Only the animated path reports the change, as in the
+   * legacy code where the instant path returned before the button update.
    */
-  setView(view: string, isInstant = false): void {
+  setView(view: ViewName, isInstant = false): void {
     const ma = view === 'foh' && this.options.isMaLayout();
-    const next = VIEWS[ma ? 'fohMa' : view];
-    if (!next) return;
+    const next: CameraView = VIEWS[ma ? 'fohMa' : view];
     this.current = view;
     this.fohRig.setVisible(!ma);
     this.camera.fov = next.fov ?? 46;

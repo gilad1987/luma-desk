@@ -1,7 +1,7 @@
 import type { Vector3 } from 'three';
 import { clamp } from '../../../core';
 import { UP } from '../../../domain/venue';
-import type { LightFrame } from '../../SceneLightsFrame';
+import type { LightFrame } from '../../lights/LightFrame';
 import type { BeamFrame } from './BeamFrame';
 
 /**

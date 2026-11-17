@@ -3,9 +3,9 @@
  */
 import { Object3D, PerspectiveCamera, Vector3 } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { FohRig } from '../../../../src/render/CameraViewsFohRig';
-import { smoothstep01, tweenCamera } from '../../../../src/render/CameraViewsTween';
-import { queuedAnimationFrames } from './fakeElements';
+import { FohRig } from '../../../../src/render/camera/FohRig';
+import { smoothstep01, tweenCamera } from '../../../../src/render/camera/tweenCamera';
+import { queuedAnimationFrames } from './queuedAnimationFrames';
 
 afterEach(() => {
   vi.unstubAllGlobals();

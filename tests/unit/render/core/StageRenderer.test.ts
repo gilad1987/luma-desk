@@ -4,12 +4,12 @@
  */
 import { PerspectiveCamera, Scene } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { StageRenderer, type StageRendererParts } from '../../../../src/render/StageRenderer';
-import { fakeViewer } from './fakeElements';
+import { StageRenderer, type StageRendererParts } from '../../../../src/render/stage/StageRenderer';
+import { fakeCanvas } from '../fakeCanvas';
 
 function stage(): { renderer: StageRenderer; parts: StageRendererParts; calls: string[] } {
   const calls: string[] = [];
-  const parts = {
+  const parts: StageRendererParts = {
     renderer: {
       setSize: vi.fn(() => calls.push('renderer.setSize')),
       render: vi.fn(() => calls.push('renderer.render')),
@@ -23,8 +23,8 @@ function stage(): { renderer: StageRenderer; parts: StageRendererParts; calls: s
       resize: vi.fn(() => calls.push('overlay.resize')),
       draw: vi.fn(() => calls.push('overlay')),
     },
-    viewer: fakeViewer(800, 400),
-  } as unknown as StageRendererParts;
+    viewer: fakeCanvas({ clientWidth: 800, clientHeight: 400 }),
+  };
   return { renderer: new StageRenderer(parts), parts, calls };
 }
 

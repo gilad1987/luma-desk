@@ -1,16 +1,17 @@
 /**
  * PostFx sizing and render forwarding with a fake renderer. The bloom look is owned by the screenshot suite.
  */
-import { PerspectiveCamera, Scene, Vector2, type WebGLRenderer } from 'three';
+import { PerspectiveCamera, Scene, Vector2, WebGLRenderer } from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { PostFx } from '../../../../src/render/PostFx';
+import { PostFx } from '../../../../src/render/stage/PostFx';
 
-const fakeRenderer = {
+/** A real WebGLRenderer prototype with no GL context behind it; EffectComposer only reads its size and ratio. */
+const fakeRenderer: WebGLRenderer = Object.assign(Object.create(WebGLRenderer.prototype) as WebGLRenderer, {
   getPixelRatio: () => 1,
   getSize: (target: Vector2) => target.set(640, 360),
-} as unknown as WebGLRenderer;
+});
 
 afterEach(() => vi.restoreAllMocks());
 

@@ -55,11 +55,11 @@ export class ViewportPicking {
   #release(ev: PointerEvent): void {
     const press = this.#press;
     if (!press) return;
-    const { canvas, picker, fixtures, selection, bus, controls } = this.#deps;
+    const { canvas, picker, camera, fixtures, selection, bus, controls } = this.#deps;
     const moved = Math.hypot(ev.clientX - press.x, ev.clientY - press.y);
     if (press.box && moved > CLICK_SLOP_PX) {
       const box = boxBetween(press.x, press.y, ev.clientX, ev.clientY);
-      const hits = fixturesInBox(fixtures, picker, canvas.getBoundingClientRect(), box);
+      const hits = fixturesInBox(fixtures, camera, canvas.getBoundingClientRect(), box);
       selection.set(
         hits.map((f) => f.id),
         'add',

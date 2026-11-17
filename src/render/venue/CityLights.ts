@@ -1,11 +1,13 @@
 import { BufferAttribute, BufferGeometry, Points, PointsMaterial, type Object3D } from 'three';
-import { terrH, VEN } from '../../domain/audienceTerrain';
+import { terrainHeight, AUDIENCE_TERRAIN } from '../../domain/audienceTerrain';
 
 const MAX_LIGHTS = 2600;
 
 /** True where no house may stand: the venue bowl, the wall ridges and the Mount Zion compound. */
 const isKeptClear = (x: number, z: number): boolean =>
-  (Math.abs(x) < VEN.X + 18 && z > -40 && z < VEN.Z1 + VEN.STEPS * VEN.RUN + 14) ||
+  (Math.abs(x) < AUDIENCE_TERRAIN.X + 18 &&
+    z > -40 &&
+    z < AUDIENCE_TERRAIN.Z1 + AUDIENCE_TERRAIN.STEPS * AUDIENCE_TERRAIN.RUN + 14) ||
   (Math.abs(x) > 55 && Math.abs(x) < 95 && z > -100 && z < 125) ||
   (x > 95 && x < 135 && z > -45 && z < 0);
 
@@ -21,7 +23,7 @@ export function buildCityLights(scene: Object3D): void {
     const x = (Math.random() - 0.5) * 440,
       z = 20 + (Math.random() - 0.5) * 440;
     if (isKeptClear(x, z)) continue;
-    const h = terrH(x, z);
+    const h = terrainHeight(x, z);
     pos.set([x, h + 1 + Math.random() * 6, z], n * 3);
     const w = Math.random();
     col.set(w < 0.7 ? [1, 0.72, 0.4] : [0.85, 0.9, 1], n * 3);

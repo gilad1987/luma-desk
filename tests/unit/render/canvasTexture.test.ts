@@ -17,7 +17,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe('drawCanvas', () => {
   it('sizes the canvas, then paints it with its 2D context and size', () => {
     const context = {};
-    const canvas = fakeCanvas(context);
+    const canvas = fakeCanvas({ context });
     vi.stubGlobal('document', { createElement: () => canvas });
     const paint = vi.fn((_: CanvasRenderingContext2D, w: number, h: number) => expect([w, h]).toEqual([64, 32]));
     expect(drawCanvas(64, 32, paint)).toBe(canvas);
@@ -26,7 +26,7 @@ describe('drawCanvas', () => {
   });
 
   it('fails loudly when the browser gives no 2D context', () => {
-    vi.stubGlobal('document', { createElement: () => fakeCanvas(null) });
+    vi.stubGlobal('document', { createElement: () => fakeCanvas({ context: null }) });
     expect(() => drawCanvas(8, 8, () => undefined)).toThrow('no 2D canvas context');
   });
 });
