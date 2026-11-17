@@ -20,18 +20,23 @@ export interface RestoreShowDeps {
 export function restoreShow({ storage, serializer, execs, demo }: RestoreShowDeps): void {
   let loaded = false;
   try {
-    const saved = storage.saved();
-    if (saved) {
-      serializer.load(JSON.parse(saved) as ShowFileInput);
-      loaded = execs.some((e) => e.cues.length);
-      const first = execs[0];
-      if (loaded && first?.cues.length) {
-        first.goto(0, 0);
-        if (!first.level) first.level = 1;
-      }
-    }
+    loaded = loadSaved(storage, serializer, execs);
   } catch {
     // unreadable storage or a broken save: the demo below replaces it
   }
   if (!loaded) demo.load();
+}
+
+/** Loads the saved show and starts executor 1; false when nothing is saved or the save holds no cue. */
+function loadSaved(storage: ShowStorage, serializer: ShowSerializer, execs: readonly Executor[]): boolean {
+  const saved = storage.saved();
+  if (!saved) return false;
+  serializer.load(JSON.parse(saved) as ShowFileInput);
+  const loaded = execs.some((e) => e.cues.length);
+  const first = execs[0];
+  if (loaded && first?.cues.length) {
+    first.goto(0, 0);
+    if (!first.level) first.level = 1;
+  }
+  return loaded;
 }

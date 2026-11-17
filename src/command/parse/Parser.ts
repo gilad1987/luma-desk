@@ -69,10 +69,14 @@ export class Parser {
    * The merge state advances here because a selection that fails to run aborts the whole line anyway.
    */
   #select(source: SelectionSource): Statement {
-    const merge: SelectionMerge =
-      this.#merge === 'replace' && !this.#selected ? 'replace' : this.#merge === 'sub' ? 'sub' : 'add';
+    const merge = this.#nextMerge();
     this.#selected = true;
     this.#merge = 'replace';
     return { kind: 'select', source, merge };
+  }
+
+  #nextMerge(): SelectionMerge {
+    if (this.#merge === 'replace' && !this.#selected) return 'replace';
+    return this.#merge === 'sub' ? 'sub' : 'add';
   }
 }

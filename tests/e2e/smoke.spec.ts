@@ -39,7 +39,7 @@ test('command line selects and sets fixtures', async ({ page }) => {
   for (const id of s.sel) expect(s.prog[id]).toEqual({ dim: 100 });
   await stepFrames(desk);
   const dims = await page.evaluate(() =>
-    window.__desk.fixtures.filter((f) => f.id >= 201 && f.id <= 230).map((f) => f.out.dim),
+    window.__desk.fixtures.filter((f) => f.id >= 201 && f.id <= 230).map((f) => f.out['dim']),
   );
   expect(new Set(dims)).toEqual(new Set([100]));
 });

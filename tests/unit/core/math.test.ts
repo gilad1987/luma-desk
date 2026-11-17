@@ -4,6 +4,7 @@ import { PARITY_INPUTS_SMALL, parityMismatches, triples } from './parityInputs.t
 
 // Reference oracles: the original one-liners from index.html (48a3b63, lines 687-689),
 // formatted by Prettier, with types added only.
+// eslint-disable-next-line no-nested-ternary -- the oracle is the original one-liner, kept verbatim as the reference
 const clampOracle = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 const lerpOracle = (a: number, b: number, t: number) => a + (b - a) * t;
 const deepOracle = (o: unknown): unknown => JSON.parse(JSON.stringify(o));

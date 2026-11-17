@@ -2,7 +2,12 @@ import type { Cue } from '../../engine/CueList';
 import type { DemoKit } from './demoKit';
 
 /** Cues 6-9 of the demo song, Rainbow Bridge to Outro. */
-export function closingCues({ vals, group, color, aimed, phaser, screen }: DemoKit): Cue[] {
+export function closingCues(kit: DemoKit): Cue[] {
+  return [...bridgeCues(kit), ...dropCues(kit)];
+}
+
+/** Cues 6-7: the rainbow bridge and the blue breakdown. */
+function bridgeCues({ vals, group, color, aimed, phaser, screen }: DemoKit): Cue[] {
   return [
     {
       num: 6,
@@ -33,6 +38,12 @@ export function closingCues({ vals, group, color, aimed, phaser, screen }: DemoK
       ]),
       fx: [phaser('dimChase', group(7), { rate: 1, spread: 360 })],
     },
+  ];
+}
+
+/** Cues 8-9: the strobing drop and the warm outro. */
+function dropCues({ vals, group, color, aimed, phaser, screen }: DemoKit): Cue[] {
+  return [
     {
       num: 8,
       name: 'DROP!',

@@ -4,6 +4,16 @@ import { Fixture, type Mount, type PanTilt } from '../Fixture';
 import type { FixtureTypeId } from '../FixtureType';
 import { Rig } from './Rig';
 
+/** One fixture at one point, as {@link RigBuilder.add} places it. */
+export interface PlaceOptions {
+  readonly id: number;
+  readonly type: FixtureTypeId;
+  readonly at: readonly [x: number, y: number, z: number];
+  readonly mount: Mount;
+  /** The rigged pan/tilt of a static unit; absent or undefined for a moving one. */
+  readonly fixed?: PanTilt | undefined;
+}
+
 /** One evenly spaced row of identical fixtures, the way the truss, deck and audience areas lay theirs out. */
 export interface RowOptions {
   /** The id of the first fixture; the rest of the row counts up from it. */
@@ -26,9 +36,9 @@ export interface RowOptions {
 export class RigBuilder {
   readonly #fixtures: Fixture[] = [];
 
-  /** Adds one fixture at a position; `fixed` is the rigged pan/tilt of a static unit. */
-  add(id: number, type: FixtureTypeId, x: number, y: number, z: number, mount: Mount, fixed?: PanTilt): Fixture {
-    const fixture = new Fixture(id, type, new Vector3(x, y, z), mount, fixed ?? null);
+  /** Adds one fixture at a position. */
+  add({ id, type, at: [x, y, z], mount, fixed }: PlaceOptions): Fixture {
+    const fixture = new Fixture({ id, type, pos: new Vector3(x, y, z), mount, fixed: fixed ?? null });
     this.#fixtures.push(fixture);
     return fixture;
   }
@@ -41,7 +51,7 @@ export class RigBuilder {
     const ids: number[] = [];
     for (let i = 0; i < count; i++) {
       const x = count === 1 ? (x0 + x1) / 2 : lerp(x0, x1, i / (count - 1));
-      ids.push(this.add(firstId + i, type, x, y, z, mount, fixed ? { ...fixed } : undefined).id);
+      ids.push(this.add({ id: firstId + i, type, at: [x, y, z], mount, fixed: fixed ? { ...fixed } : undefined }).id);
     }
     return ids;
   }

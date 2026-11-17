@@ -15,5 +15,5 @@ export function addDeckFixtures(rig: RigBuilder): void {
     mount: 'floor',
     fixed: { pan: 0, tilt: -12 },
   });
-  rig.add(2001, 'screen', 0, (SCREEN.y0 + SCREEN.y1) / 2, SCREEN.z, 'wall');
+  rig.add({ id: 2001, type: 'screen', at: [0, (SCREEN.y0 + SCREEN.y1) / 2, SCREEN.z], mount: 'wall' });
 }

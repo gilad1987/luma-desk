@@ -9,6 +9,7 @@ import type { AttrOutput } from './resetOutput';
  * level; a dimmer phaser replaces the dimmer (scaled by its executor's level); a colour phaser replaces RGB. `sample`
  * is scratch space reused across fixtures to avoid an allocation per phaser.
  */
+// eslint-disable-next-line @typescript-eslint/max-params -- per-frame path: an options object would allocate per fixture
 export function applyPhasers(
   f: Fixture,
   o: AttrOutput,

@@ -1,4 +1,4 @@
-import type { AttrValues } from '../domain/attributes';
+import type { AttrValues, Feature } from '../domain/attributes';
 import { FEAT_ATTRS } from '../domain/attributes';
 import type { EngineBus } from './events';
 import type { PresetPools, PresetType } from './presetTypes';
@@ -40,8 +40,7 @@ export class PresetLibrary {
     for (const id of ids) {
       const v = vals[id];
       if (!v) continue;
-      const o: AttrValues = {};
-      for (const ft of feats) for (const a of FEAT_ATTRS[ft]) if (v[a] != null) o[a] = v[a];
+      const o = featureValues(v, feats);
       if (Object.keys(o).length) fix[id] = o;
     }
     if (!Object.keys(fix).length) {
@@ -60,4 +59,11 @@ export class PresetLibrary {
     this.#bus.emit('poolsChanged', undefined);
     this.#bus.emit('showChanged', undefined);
   }
+}
+
+/** The values of `v` that belong to `feats`, in feature order; unset and null values are left out. */
+function featureValues(v: AttrValues, feats: readonly Feature[]): AttrValues {
+  const o: AttrValues = {};
+  for (const ft of feats) for (const a of FEAT_ATTRS[ft]) if (v[a] != null) o[a] = v[a];
+  return o;
 }
