@@ -26,8 +26,8 @@ No install and no build step. Works offline once loaded, and can be installed as
 | **The crowd gets lit**: every beam that lands in the audience colors the people under it. | **Sultan's Pool**: seated crowd, stone terraces, and the floodlit Old City walls with the Tower of David. |
 | ![Old City walls on both sides](docs/screenshots/old-city-walls.png) | ![Band and drum kit](docs/screenshots/band.png) |
 | **Jerusalem's walls on both sides** of the valley, with a gate on the right and the Tower of David on the left. | **8-piece band** with a full drum kit on the riser. |
-| ![30-piece orchestra](docs/screenshots/orchestra.png) | ![30-piece orchestra](docs/screenshots/orchestra.png) | |
-| **30-piece orchestra** on three tiers of risers. | |
+| ![30-piece orchestra](docs/screenshots/orchestra.png) | ![grandMA-style console](docs/screenshots/programmer.png) |
+| **30-piece orchestra** on three tiers of risers. | **Programmer**: feature keys, encoders and on-screen tools. |
 
 ## Features
 
