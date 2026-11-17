@@ -15,7 +15,7 @@ function bindCheck(id: string, set: (on: boolean) => void): void {
  * Wires the sliders, selects and checkboxes to the auto-show settings. Energy starts a new look only when the slider
  * is released (`change`); every other control takes effect on the next look.
  */
-export function wireAutoSettings(auto: AutoShow): void {
+export function wireAutoSettings(auto: Pick<AutoShow, 'settings' | 'on' | 'newLook'>): void {
   const s = auto.settings;
   const energy = byId('aEnergy', HTMLInputElement),
     master = byId('aMaster', HTMLInputElement);

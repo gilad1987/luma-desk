@@ -9,7 +9,7 @@ import type { Modal } from '../../shared';
 /** What the Show File dialog saves, copies and loads. */
 export interface ShowFileDeps {
   readonly bus: EngineBus;
-  readonly modal: Modal;
+  readonly modal: Pick<Modal, 'open' | 'close'>;
   readonly rig: Rig;
   readonly serializer: Pick<ShowSerializer, 'serialize'>;
   readonly storage: Pick<ShowStorage, 'persist'>;

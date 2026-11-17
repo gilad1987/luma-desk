@@ -4,7 +4,7 @@ import { createElement } from '../../shared';
 import type { FeatureTab } from './encoderList';
 
 /** Whether the programmer holds anything of a feature: the dot (`.has`) on its tab. */
-function featureHasValues(feat: FeatureTab, programmer: Programmer): boolean {
+function featureHasValues(feat: FeatureTab, programmer: Pick<Programmer, 'fxList' | 'vals'>): boolean {
   if (feat === 'fx') return programmer.fxList.length > 0;
   return Object.values(programmer.vals).some((vals) => FEAT_ATTRS[feat].some((a) => vals[a] != null));
 }
@@ -34,7 +34,7 @@ export class FeatureTabs {
   }
 
   /** Marks the tabs whose feature the programmer holds (fast tick). */
-  paintDots(programmer: Programmer): void {
+  paintDots(programmer: Pick<Programmer, 'fxList' | 'vals'>): void {
     for (const [k, b] of this.#buttons) b.classList.toggle('has', featureHasValues(k, programmer));
   }
 }

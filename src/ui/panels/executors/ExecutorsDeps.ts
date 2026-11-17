@@ -15,11 +15,11 @@ export interface ExecutorsDeps {
   readonly bus: EngineBus;
   readonly state: AppState;
   readonly store: StoreModeGuard;
-  readonly programmer: Programmer;
-  readonly pool: ExecutorPool;
+  readonly programmer: Pick<Programmer, 'storeCue'>;
+  readonly pool: Pick<ExecutorPool, 'execs' | 'go' | 'flashPress' | 'flashRelease' | 'setLevel'>;
   readonly tempo: Tempo;
   readonly clock: Clock;
-  readonly modal: Modal;
+  readonly modal: Pick<Modal, 'rename'>;
   readonly autoShow: HudAutoShow;
 }
 

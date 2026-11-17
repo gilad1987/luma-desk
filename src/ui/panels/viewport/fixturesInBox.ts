@@ -20,12 +20,12 @@ export function boxBetween(ax: number, ay: number, bx: number, by: number): Clie
  * a depth above 1 (behind the camera or past the far plane) never counts.
  */
 export function fixturesInBox(
-  fixtures: readonly Fixture[],
+  fixtures: readonly Pick<Fixture, 'id' | 'pos'>[],
   camera: Camera,
   rect: ScreenRect,
   box: ClientBox,
-): Fixture[] {
-  const hits: Fixture[] = [];
+): Pick<Fixture, 'id' | 'pos'>[] {
+  const hits: Pick<Fixture, 'id' | 'pos'>[] = [];
   const p: ScreenPoint = { x: 0, y: 0, ndcX: 0, ndcY: 0, depth: 0 };
   for (const f of fixtures) {
     projectToScreen(camera, f.pos, rect, p);

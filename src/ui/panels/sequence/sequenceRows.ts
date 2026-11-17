@@ -1,7 +1,10 @@
 import type { Executor } from '../../../engine/Executor';
 
+/** The executor members the picker and the cue table read. */
+type SequenceView = Pick<Executor, 'name' | 'cues' | 'cur' | 'on'>;
+
 /** The executor picker: one option per executor with its name and cue count; the selected executor is preselected. */
-export function execOptions(execs: readonly Executor[], selExec: number): string {
+export function execOptions(execs: readonly SequenceView[], selExec: number): string {
   return execs
     .map(
       (e, i) =>
@@ -11,7 +14,7 @@ export function execOptions(execs: readonly Executor[], selExec: number): string
 }
 
 /** The row class: `cur` on the live cue, `nxt` on the one GO+ plays next (only while the executor runs). */
-function rowClass(e: Executor, i: number): string {
+function rowClass(e: SequenceView, i: number): string {
   if (i === e.cur) return 'cur';
   return e.on && i === (e.cur + 1) % e.cues.length ? 'nxt' : '';
 }
@@ -21,7 +24,7 @@ function rowClass(e: Executor, i: number): string {
  * Cue names are not escaped (quirk Q11). The old page appended the hint row with `innerHTML +=`, which re-parsed the
  * table and put the hint row in a second `<tbody>`; the explicit bodies give that same DOM without the re-parse.
  */
-export function cueTable(e: Executor): string {
+export function cueTable(e: SequenceView): string {
   const rows = e.cues.map((c, i) => {
     const nf = Object.keys(c.vals).length,
       nx = c.fx.length;

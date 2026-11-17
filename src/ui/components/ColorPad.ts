@@ -19,7 +19,7 @@ function paintHueField(c: HTMLCanvasElement): void {
  * Turns `c` into a colour picker: a click or drag sets full-value hue and saturation on the colour targets, which
  * are fixed at pointer-down. Without colour targets it does not capture. Used in `#encExtra` and on `#tsCol`.
  */
-export function colorPad(c: HTMLCanvasElement, programmer: Programmer): void {
+export function colorPad(c: HTMLCanvasElement, programmer: Pick<Programmer, 'set' | 'colorTargets'>): void {
   paintHueField(c);
   let pickIds: number[] = [],
     map: BoxMap | undefined;

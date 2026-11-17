@@ -1,47 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { EventBus } from '../../../../../src/core';
-import { AppState } from '../../../../../src/engine/AppState';
-import type { EngineEvents, EngineMessage } from '../../../../../src/engine/events';
-import { SequencePanel } from '../../../../../src/ui/panels/sequence/SequencePanel';
-import type { SequenceDeps } from '../../../../../src/ui/panels/sequence/SequenceDeps';
-import type { SideTab } from '../../../../../src/ui/panels/side/sideTabsMarkup';
-import { asReal } from '../../fakes/asReal';
-import { FakeButton } from '../../fakes/FakeButton';
-import { FakeElement } from '../../fakes/FakeElement';
-import { FakeHost } from '../../fakes/FakeHost';
-import { FakeDom } from '../../fakes/installFakeDom';
-
-/** An executor with only what the pane reads: its cues (by number), the current index and the run state. */
-const exec = (nums: readonly number[], cur: number) => ({
-  name: 'Wash',
-  cues: nums.map((num) => ({ num, name: `Q${num}`, fade: 2, vals: {}, fx: [] })),
-  cur,
-  on: cur >= 0,
-});
-
-function mount(e: ReturnType<typeof exec>, tab: SideTab = 'seq') {
-  const dom = new FakeDom();
-  vi.stubGlobal('HTMLSelectElement', FakeElement);
-  dom.add('seqSel');
-  const table = dom.add('seqTable', new FakeHost());
-  for (const id of ['seqGo', 'seqBack', 'seqDel']) dom.add(id, new FakeButton());
-  const bus = new EventBus<EngineEvents>(),
-    messages: EngineMessage[] = [];
-  bus.on('message', (m) => messages.push(m));
-  const runCommand = vi.fn(),
-    go = vi.fn();
-  const deps = {
-    bus,
-    state: new AppState(bus),
-    execs: [e],
-    pool: { go },
-    runCommand,
-    sideTab: () => tab,
-  } as unknown as SequenceDeps;
-  const panel = new SequencePanel(asReal<HTMLElement>(new FakeHost()), deps);
-  const click = (id: string): void => dom.get(id).onclick?.({ target: null });
-  return { panel, table, messages, runCommand, go, click };
-}
+import { exec, mount } from './sequenceFakes';
 
 describe('SequencePanel (same behaviour as the original sequence pane)', () => {
   afterEach(() => vi.unstubAllGlobals());

@@ -8,15 +8,21 @@ import type { Tempo } from '../../../engine/Tempo';
 import type { ShowStorage } from '../../../show/ShowStorage';
 import type { SideTab } from '../side/sideTabsMarkup';
 
+/** The part of the auto-show the pane starts, stops, restyles and reports. */
+export type AutoShowControl = Pick<
+  AutoShow,
+  'on' | 'section' | 'settings' | 'style' | 'barsPerLook' | 'selectStyle' | 'start' | 'stop' | 'newLook'
+>;
+
 /** What the Auto Show pane drives: the auto-show and its song, and the executors its looks are saved into. */
 export interface AutoShowDeps {
   readonly bus: EngineBus;
-  readonly auto: AutoShow;
+  readonly auto: AutoShowControl;
   /** The generator "build cue list" draws its looks from; the same one the auto-show plays from. */
   readonly looks: LookGenerator;
-  readonly song: SongPlayer;
+  readonly song: Pick<SongPlayer, 'load' | 'toggle'>;
   readonly tempo: Tempo;
-  readonly pool: ExecutorPool;
+  readonly pool: Pick<ExecutorPool, 'execs' | 'autoExec'>;
   readonly state: AppState;
   readonly storage: Pick<ShowStorage, 'persist'>;
   /** The visible side pane; the section line and the status repaint only while it is the auto pane. */

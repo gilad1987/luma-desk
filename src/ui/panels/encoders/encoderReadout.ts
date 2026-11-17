@@ -18,7 +18,7 @@ const NOTHING: EncoderReadout = { value: null, programmed: false, enabled: false
 export function encoderReadout(
   attr: EncoderAttr,
   selected: readonly Fixture[],
-  programmer: Programmer,
+  programmer: Pick<Programmer, 'phasersOnSelection' | 'vals'>,
 ): EncoderReadout {
   if (isPhaserParam(attr)) {
     const phaser = programmer.phasersOnSelection()[0];

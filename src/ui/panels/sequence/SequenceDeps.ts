@@ -11,10 +11,10 @@ export interface SequenceDeps {
   readonly bus: EngineBus;
   readonly state: AppState;
   readonly execs: readonly Executor[];
-  readonly pool: ExecutorPool;
-  readonly programmer: Programmer;
+  readonly pool: Pick<ExecutorPool, 'go'>;
+  readonly programmer: Pick<Programmer, 'storeCue'>;
   readonly store: StoreModeGuard;
-  readonly modal: Modal;
+  readonly modal: Pick<Modal, 'rename' | 'number'>;
   /** Runs a command line exactly as typed, so a delete gives the same feedback as `Delete Cue n`. */
   readonly runCommand: (raw: string) => void;
   /** The visible side pane; the table repaints only while it is the sequence. */
