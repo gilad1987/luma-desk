@@ -5,12 +5,9 @@ import { EventBus, type Clock } from '../../../../../src/core';
 import { AppState } from '../../../../../src/engine/AppState';
 import type { EngineEvents } from '../../../../../src/engine/events';
 import { Executor } from '../../../../../src/engine/Executor';
-import type { ExecutorPool } from '../../../../../src/engine/ExecutorPool';
-import type { Programmer } from '../../../../../src/engine/Programmer';
 import { Tempo } from '../../../../../src/engine/Tempo';
-import { StoreModeGuard, type Modal } from '../../../../../src/ui/shared';
+import { StoreModeGuard } from '../../../../../src/ui/shared';
 import type { ExecutorsDeps } from '../../../../../src/ui/panels/executors/ExecutorsDeps';
-import { asReal } from '../../fakes/asReal';
 
 /** A clock the test sets: `seconds` for fades and beats, a fixed `nowMs` for tap tempo. */
 export class FakeClock implements Clock {
@@ -29,16 +26,17 @@ export function executorsFakes() {
   const pool = { execs, go: vi.fn(), flashPress: vi.fn(), flashRelease: vi.fn(), setLevel: vi.fn() };
   const programmer = { storeCue: vi.fn() };
   const modal = { rename: vi.fn() };
-  const autoShow = { on: false, style: STYLES.edm, section: '' as Section | '', barsPerLook: () => 4 };
+  const section: Section | '' = '';
+  const autoShow = { on: false, style: STYLES.edm, section, barsPerLook: () => 4 };
   const deps: ExecutorsDeps = {
     bus,
     state,
     store: new StoreModeGuard(state),
-    programmer: asReal<Programmer>(programmer),
-    pool: asReal<ExecutorPool>(pool),
+    programmer,
+    pool,
     tempo,
     clock,
-    modal: asReal<Modal>(modal),
+    modal,
     autoShow,
   };
   return { deps, state, clock, tempo, execs, pool, programmer, modal, autoShow };

@@ -1,7 +1,8 @@
 /**
- * Hands a test fake to code typed against a DOM or engine type. This is the one cast of the UI fakes: a fake has only
- * the members the code under test touches, so it cannot satisfy the full declared type, and classes with `#private`
- * fields are nominal. Every test goes through here instead of writing its own `as unknown as`.
+ * Hands a DOM element fake (a `FakeElement`, its style or a fake event target) to code typed against the real DOM
+ * type. It is an unchecked cast, kept only because the DOM interfaces are too large to fake whole. Never use it for
+ * engine, domain or other app objects: type their Deps field as a `Pick` of the members the UI uses and pass a typed
+ * plain object or a real instance instead.
  */
 export function asReal<T>(fake: object): T {
   return fake as T;
