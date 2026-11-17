@@ -1,0 +1,10 @@
+<div id="execs"></div>
+    <div id="master">
+      <div class="mGo">
+        <div class="sx">Selected exec: <b id="mSelName">1</b></div>
+        <button id="goBig">GO +</button>
+        <div class="mRow"><button id="goBack">GO −</button><button id="pauseBtn">PAUSE</button><button id="boBtn">B.O.</button></div>
+        <div class="mRow"><button id="tapBtn">TAP</button><div id="bpmBox" style="display:flex;align-items:center;justify-content:center">120 BPM</div><button id="offBtn">OFF</button></div>
+      </div>
+      <div class="gm"><span class="lb">GM</span><div class="fader" id="gmFader"><div class="ff"></div><div class="cap"></div></div><span class="lb" id="gmVal">100</span></div>
+    </div>
