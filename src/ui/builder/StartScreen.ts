@@ -16,7 +16,10 @@ export interface StartScreenDeps {
   readonly choose: (design: StageDesign) => void;
 }
 
-/** The two-step start of a builder visit: a template card, then a venue card (plan §2: templates, then venue). */
+/**
+ * The two-step start of a builder visit: a template card, then a venue card (plan §2: templates, then venue). The
+ * venue step has a Back button, so a wrong template pick does not force a Cancel of the whole visit.
+ */
 export class StartScreen {
   readonly #root: HTMLElement;
   readonly #deps: StartScreenDeps;
@@ -37,6 +40,7 @@ export class StartScreen {
   #pickTemplate(id: TemplateId): void {
     const design = id === 'sultans-pool' ? this.#deps.builtIn : createTemplate(id);
     this.#root.innerHTML = venueCardsMarkup;
+    requireChild(this.#root, '[data-start="back"]').onclick = () => this.show();
     for (const kind of VENUE_KINDS) {
       requireChild(this.#root, `[data-venue="${kind}"]`).onclick = () => this.#deps.choose(setVenue(design, kind));
     }

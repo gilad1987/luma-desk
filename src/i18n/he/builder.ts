@@ -29,4 +29,5 @@ export const builder = {
     blackBox: 'אולם שחור וסגור, בלי נוף מסביב.',
     openField: 'שטח פתוח עם קהל.',
   },
+  startBack: 'חזרה לבחירת במה להתחלה',
 } as const;

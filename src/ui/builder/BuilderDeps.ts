@@ -19,7 +19,12 @@ export interface BuilderDeps extends EditorSessionDeps {
   readonly keys: KeySource;
   /** The renderer's console height; the builder sets 0, so the 3D view gets the space the hidden console had. */
   readonly setConsoleHeight: (px: number) => void;
-  /** Re-runs the desk layout fit, after the builder hides the console and after it shows it again. */
+  /**
+   * Re-runs the desk layout fit, after the builder hides the console and after it shows it again. The fit sets the
+   * console height, so the builder calls it before `setConsoleHeight(0)`. Wiring step: while the builder is open, the
+   * app must stop the fit (for example on a window resize) from restoring the console height, or the 3D view shrinks
+   * under the builder screen.
+   */
   readonly fitLayout: () => void;
   /** Mounts the tool tabs and the top view on enter; returns their disposer, called on exit. */
   readonly mountTools: (slots: BuilderSlots, session: EditorSession) => () => void;

@@ -29,12 +29,17 @@ export const templateCardsMarkup = step(
   TEMPLATE_IDS.map((id) => card('template', id, TEMPLATE_CARDS[id])),
 );
 
-/** Step 2 of the start screen: one card per venue, in `VENUE_KINDS` order. */
-export const venueCardsMarkup = step(
-  'Choose a venue',
-  he.builder.start.venueHelp,
-  VENUE_KINDS.map((kind) => card('venue', kind, VENUE_CARDS[kind])),
-);
+/** The way from step 2 back to the template cards. */
+const backMarkup = `<button class="start-back" data-start="back" title="${he.builder.startBack}">Back</button>`;
+
+/** Step 2 of the start screen: the Back button, then one card per venue, in `VENUE_KINDS` order. */
+export const venueCardsMarkup =
+  backMarkup +
+  step(
+    'Choose a venue',
+    he.builder.start.venueHelp,
+    VENUE_KINDS.map((kind) => card('venue', kind, VENUE_CARDS[kind])),
+  );
 
 function step(title: string, help: string, cards: readonly string[]): string {
   return `<h2>${title}</h2><p class="start-help" dir="rtl">${help}</p><div class="start-cards">${cards.join('')}</div>`;

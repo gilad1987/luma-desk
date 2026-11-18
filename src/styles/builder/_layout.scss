@@ -1,7 +1,8 @@
-// Builder mode (src/ui/builder/BuilderMode.ts). `body.builder` hides the top bar and both consoles; `section.builder`
-// lies over the 3D view: the bar on top, the tools at the inline start, the top view at the inline end. The middle
-// cell lets pointer events through, so the 3D view still orbits under it.
-body.builder {
+// Builder mode (src/ui/builder/BuilderMode.ts). `body.is-building` hides the top bar and both consoles; the host
+// `section.builder` lies over the 3D view: the bar on top, the tools at the inline start, the top view at the inline
+// end. The middle cell lets pointer events through, so the 3D view still orbits under it. The two classes differ, so
+// no `.builder` rule styles <body>.
+body.is-building {
   #top,
   #console,
   #maConsole {
