@@ -57,6 +57,15 @@ describe('StageGroups', () => {
     expect(groups.all[38]).toBe(mine);
   });
 
+  it('keeps a group stored over an installed default, even with the same ids', () => {
+    const { service, groups } = setup();
+    service.apply(festival, 'builder');
+    groups.store(1, groups.all[1]?.ids ?? []);
+    const mine = groups.all[1];
+    service.apply(createTemplate('theatre'), 'builder');
+    expect(groups.all[1]).toBe(mine);
+  });
+
   it('leaves the pool to the loader on a show load, then compares the next change with the loaded stage', () => {
     const { service, groups, others } = setup();
     const before = groups.all;
