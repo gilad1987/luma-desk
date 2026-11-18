@@ -53,10 +53,12 @@ describe('findOversizedFiles', () => {
 
 describe('isLineChecked', () => {
   it('selects the hand-written markup, styles, shaders and workflows', () => {
-    expect(['a.css', 'a.scss', 'a.glsl', 'index.html', 'deploy.yml'].every(isLineChecked)).toBe(true);
+    const paths = ['a.css', 'a.scss', 'a.glsl', 'index.html', 'deploy.yml'];
+    expect(paths.filter(isLineChecked)).toEqual(paths);
   });
 
   it('skips TypeScript and the JSON and PNG baselines', () => {
-    expect(['a.ts', 'tests/golden/rig.json', 'tests/e2e/__screenshots__/a.png'].some(isLineChecked)).toBe(false);
+    const paths = ['a.ts', 'tests/golden/rig.json', 'tests/e2e/__screenshots__/a.png'];
+    expect(paths.filter(isLineChecked)).toEqual([]);
   });
 });
