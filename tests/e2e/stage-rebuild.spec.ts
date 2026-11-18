@@ -23,6 +23,8 @@ async function applyAndMeasure(page: Page, desk: JSHandle<DeskTestApi>, id: stri
 test('the festival stage changes the GPU counts without a leak, and the built-in stage restores the boot counts', async ({
   page,
 }) => {
+  // full stage rebuilds under SwiftShader: 2.1 min at a load of about 80, over the suite's 120 s limit
+  test.slow();
   const errors = collectErrors(page);
   const desk = await bootApp(page);
   const boot = await measure(page, desk);
