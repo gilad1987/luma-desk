@@ -9,6 +9,15 @@ describe('SceneryRegistry', () => {
     expect(Object.values(registry)).toEqual([]);
   });
 
+  it('draws no Object3D id while it is created, registers and hides a part', () => {
+    const objects = [new Object3D(), new Object3D()];
+    const before = new Object3D().id;
+    const registry = new SceneryRegistry();
+    registry.register('band', ...objects);
+    registry.setVisible('band', false);
+    expect(new Object3D().id).toBe(before + 1);
+  });
+
   it('hides and shows only the objects of the part it is told', () => {
     const registry = new SceneryRegistry();
     const [crowdA, crowdB, band] = [new Object3D(), new Object3D(), new Object3D()];
