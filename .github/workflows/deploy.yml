@@ -26,9 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-        with:
-          # unit tests read the original page with `git show 48a3b63:index.html`, so the history must be there
-          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           # the Node version of local work (.nvmrc); it runs scripts/*.ts with built-in type stripping
@@ -78,8 +75,8 @@ jobs:
     permissions:
       pages: write
       id-token: write
-    # no job-level concurrency: the workflow group already runs one main run at a time, and a job group with the
-    # same name as the workflow group would deadlock (GitHub cancels such a job)
+    # no job-level concurrency: the workflow group already runs one main run at a time. Do not add one: a job group
+    # named like the workflow group would deadlock.
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
