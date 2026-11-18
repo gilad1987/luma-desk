@@ -4,8 +4,8 @@ Adopted from budget-app; the project rules (docs/rules/code.md, "Project rules")
 code.md. The source references (`doc:80-83`, `test:41-51`, ...) point at budget-app's `.cursor/rules/`.
 
 Not linted yet, so checked in review until a later change adds the rule: T8, T11, T15, T20, T22, T23, T25 and I5.
-I1 (Hebrew literals only in `src/i18n/`) is linted (`eslint/i18nRules.ts`). T14 is linted only by Vitest `allowOnly: false`
-and Playwright `forbidOnly: true`.
+I1 (Hebrew literals only in `src/i18n/`) is linted (`eslint/i18nRules.ts`). T14 is linted only by Vitest
+`allowOnly: false` and Playwright `forbidOnly: true`.
 
 ### 1.1 Documentation (TSDoc, README, ADR, docs/)
 
@@ -24,7 +24,8 @@ and Playwright `forbidOnly: true`.
   Example: `* Emits \`cueStored\` and \`showChanged\`. Gets \`Rig\` and \`EventBus\` from main.ts.`
 - **D5. Kept-on-purpose behaviour points at its record.** Code that keeps an original quirk has a one-line comment
   that names the `docs/known-quirks.md` entry and the original source line. [review] Source: doc:117-130 (business
-  rule cites its regulation). Example: `// Quirk kept: gobo is always 0 here (known-quirks.md, index.html@48a3b63:1491).`
+  rule cites its regulation). Example:
+  `// Quirk kept: gobo is always 0 here (known-quirks.md, index.html@48a3b63:1491).`
 - **D6. Temporary code has an owner and an exit.** `TODO`/`FIXME` carry a phase or date and the reason:
   `// TODO(phase-6): remove when main.ts stops reading this global.` The auditor rejects one without both. [review]
   (ESLint `no-warning-comments` can only ban the words, not check the format.) Source: doc:132-144, doc:298.
@@ -89,7 +90,8 @@ order'`. [lint] ESLint `no-restricted-syntax` on
   its own `bootApp(page, { show, layout })` storage. [review] Source: test:210-211, test:644-649.
 - **T14. A kept quirk is pinned, not skipped.** The test asserts the quirky behaviour, its title ends in `(quirk)`,
   and a comment names the known-quirks.md entry. No `.skip`, `.todo`, `.fails`, `.only`. [lint] ESLint
-  `no-restricted-syntax` on `MemberExpression[object.name=/^(it|test|describe)$/][property.name=/^(only|skip|todo|fails)$/]`;
+  `no-restricted-syntax` on
+  `MemberExpression[object.name=/^(it|test|describe)$/][property.name=/^(only|skip|todo|fails)$/]`;
   plus Vitest `test.allowOnly: false` in `vite.config.ts` and Playwright `forbidOnly: true` in
   `playwright.config.ts`. Source: test:147-150, test:160-162.
 
@@ -156,24 +158,24 @@ order'`. [lint] ESLint `no-restricted-syntax` on
 
 The locale is the folder `src/i18n/he/`: one file per area, joined by `src/i18n/he/index.ts`.
 
-- **I1. Every script Hebrew string lives in `src/i18n/he/`.** Static markup Hebrew stays in `index.html` (D3);
-  English console terms stay inline (D4). [lint] ESLint `no-restricted-syntax` on `Literal[value=/[֐-׿]/]` and
-  `TemplateElement[value.raw=/[֐-׿]/]` for `src/**/*.ts`, with `src/i18n/**` excluded (`eslint/i18nRules.ts`;
-  `src/main.ts` stays exempt in `eslint/legacyRules.ts` until Phase 6 rewrites it). Source: i18n:9-12 (one source
-  of truth, the build fails on a gap).
+- **I1. Every Hebrew string lives in `src/i18n/he/`.** That covers script text and the static markup, which the
+  panels render from TypeScript templates (decision 27 replaces decision 15). English console terms stay inline
+  (decision 16). [lint] ESLint `no-restricted-syntax` with two selectors, `Literal[value=/[֐-׿]/]` and
+  `TemplateElement:matches([value.cooked=/[֐-׿]/], [value.raw=/[֐-׿]/])`, for `src/**/*.ts`, with `src/i18n/**`
+  excluded (`eslint/i18nRules.ts`). Source: i18n:9-12 (one source of truth, the build fails on a gap).
 - **I2. A missing key fails the build.** `he` is a typed `as const` object read by property (`he.toast.noSelection`),
   never by a computed string key, so `tsc` refuses a key that does not exist. [lint] `npm run typecheck`.
   Source: i18n:40-49.
 - **I3. Group keys by reach, not by origin.** Keys used by one module live under that module's group
   (`he.autoshow.styles`); a string used by 2+ modules moves to `he.common` in the same change. [review]
   Source: i18n:14-38.
-- **I4. Text with values is a function in `src/i18n/he/`.** `noSelectionApplied: (n: number) => \`…${n} הגופים…\``. Keep
-the exact original string for parity (no `Intl.PluralRules` or rewording during the refactor). After the
-refactor, a count message may use Hebrew plural forms (`one`/`two`/`many`/`other`). [review]
-  Source: i18n:51-57 (adapted: no i18next).
-- **I5. `src/i18n/he/` imports nothing from the app.** It is pure data, so Playwright specs can import it (T26). [lint]
-  ESLint `no-restricted-imports` patterns `['../*', './*']` for `src/i18n/**`. Source: test:588-589 (e2e imports
-  only the locale file).
+- **I4. Text with values is a function in `src/i18n/he/`.**
+  `noSelectionApplied: (n: number) => \`…${n} הגופים…\``. Keep the exact original string for parity (no
+`Intl.PluralRules` or rewording during the refactor). After the refactor, a count message may use Hebrew plural
+forms (`one`/`two`/`many`/`other`). [review] Source: i18n:51-57 (adapted: no i18next).
+- **I5. `src/i18n/` imports nothing from outside `src/i18n/`.** It is pure data, so Playwright specs can import it
+  (T26). Imports inside the folder, such as `src/i18n/he/index.ts` joining its area files, are allowed. [review]
+  Source: test:588-589 (e2e imports only the locale file).
 - **I6. Delete a key with its last use.** Before you delete, search for every reference (`rg "he\.toast\.x\b" src`),
   because a key can be passed through a table. [review] Source: i18n:59-75.
 - **I7. Do not translate what the platform formats.** Times, numbers and percent go through `toLocale*`/`Intl` with

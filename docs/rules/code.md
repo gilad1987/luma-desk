@@ -12,6 +12,8 @@ the case goes to `docs/known-quirks.md`.
 - **Senior quality bar.** Professional, clean, easy-to-maintain code that follows the plan in `docs/plan/`.
 - **Layers, one way:** core <- domain <- engine <- command/show/autoshow/audio; render/ui -> engine. The engine never
   imports render, ui or the DOM. [lint] `eslint/layerRules.ts`
+- **The wiring sits on top:** `src/app/` may import every layer, and no `src/` layer except `src/main.ts` imports
+  `src/app`. [lint] `eslint/layerRules.ts` (`APP_WIRING`)
 - **Small, focused files and classes:** one main export per file. Names say what a thing is. No clever code.
 - **No duplication:** each hotspot is removed by ONE shared abstraction. No copy-paste between modules.
 - **Strict types:** no `any`, no non-null `!` to hide a real gap, no `@ts-ignore`. Model the domain with types
@@ -23,8 +25,7 @@ the case goes to `docs/known-quirks.md`.
 - **100 lines per file, hard.** Every file: `src/`, tests, configs, `build/`, `sw.ts`, CSS/SCSS, GLSL (Markdown
   excluded), measured after Prettier. [lint] ESLint `max-lines` for .ts, `npm run check:lines` for .css/.scss/.glsl.
   Split by responsibility, never by cutting a file in half; never pack code to fit.
-- **All TypeScript.** No .js, .mjs or .cjs file anywhere (`vendor/` is deleted). Configs are .ts; GLSL stays
-  .glsl loaded with `?raw`. [lint] `npm run check:no-js`
+- **All TypeScript.** No .js, .mjs or .cjs file anywhere. Configs are .ts; GLSL stays .glsl loaded with `?raw`. [lint] `npm run check:no-js`
 - **Shared folders only where needed:** code goes to a shared folder only when 2 or more modules use it, at the lowest
   level that fits: `src/core/` (app-wide pure helpers and types), `<layer>/shared/`, `tests/shared/`. A shared folder
   obeys the layer rules and has an `index.ts` that exports only its public API. No `utils.ts`, `helpers.ts`,

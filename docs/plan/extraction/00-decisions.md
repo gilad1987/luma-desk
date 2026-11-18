@@ -32,7 +32,30 @@
 ## Decisions recorded during integration (Phase 6-8)
 
 25. Decision 23 is implemented in Phase 6 by gating on `?test`: `window.__desk` exists only with `?test`, not only `__desk.test`. `installTestHook()` (`src/app/testHook/installTestHook.ts`) returns at once when `readDeskClock()` (`src/app/testHook/deskClock.ts`) finds no `window.__deskClock`, and the `<head>` block in `index.html` sets that clock only when the URL starts with `?test`. So the clock block is the one `?test` check of the app.
-26. `__desk.perf` and `__desk.puffs` are not part of the parity API: no spec or unit test reads them (`grep -rn "perf\b\|puffs" tests` finds nothing). The original published `perf: performers` and `puffs` (`index.html@48a3b63:3093`). The ported `src/main.ts` publishes `perf: venue.performers`, which has a new shape (`readonly Performer[]`, `src/render/venue/Venue.ts`), and no `puffs`. The test hook of the composition root publishes only `setView`, `fixtures` and `test`, the members the specs read.
-27. FIX-1 overrides decision 15 (D3): `index.html` is a shell of at most 100 lines (`docs/plan/extraction/index-shell.html`). The panels render their static markup from TypeScript templates, and the Hebrew in that markup comes from `src/i18n/he/`, as script Hebrew already does (rule I1).
+26. `window.__desk` is no longer a console API. The original published it on every page (`index.html@48a3b63:3093`)
+    with `renderer`, `THREE`, `perf`, `prog`, `applyPreset`, `runCmd`, `execs`, `setView`, `FX`, `sel`, `execGo`,
+    `gotoCue`, `scene`, `camera`, `controls`, `fixtures`, `puffs` and `groups`. Now it does not exist on a normal page;
+    under `?test` it holds only `setView`, `fixtures` and `test` (decision 25,
+    `src/app/testHook/installTestHook.ts`), the members the specs read. Dropped: `renderer`, `THREE`, `perf`, `prog`,
+    `applyPreset`, `runCmd`, `execs`, `FX`, `sel`, `execGo`, `gotoCue`, `scene`, `camera`, `controls`, `puffs` and
+    `groups`. No spec or unit test reads a dropped member. A user who typed `__desk` in the console no longer finds
+    it; that is the one user-visible change of this decision.
+27. The Phase 6 integration overrides decision 15 (D3): `index.html` is a shell of at most 100 lines
+    (`docs/plan/extraction/index-shell.html`). The panels render their static markup from TypeScript templates, and
+    the Hebrew in that markup comes from `src/i18n/he/`, as script Hebrew already does (rule I1). Decision 15 kept
+    the markup in `index.html` for an exact first paint. The markup and its text stay the same:
+    `tests/unit/ui/layouts/shellMarkup.test.ts` compares the templates with the original page, and `src/main.ts`
+    inserts the shell as its first statement, before it builds any object or asks for a frame, so every DOM check
+    and screenshot sees the same page. What changes is the time before the script runs: the page then shows only the
+    background, where the original already showed the static panels.
 28. One layout-prefs store: `src/show/LayoutPrefs.ts` reads and writes `lumadesk-layout2` for every layout. `src/ui/layouts/layoutStorage.ts` and its test are removed; `tests/unit/show/layoutPrefs.test.ts` and `tests/unit/ui/layouts/layoutPrefsParity.test.ts` pin the reads (known quirks D7, D9).
 29. Shared test code is split by runtime: `tests/shared/dom/` (the fake DOM for Vitest), `tests/shared/legacy/` (`legacyMarkup`, the markup of the original page) and `tests/shared/e2e/` (Playwright page helpers), each behind its own `index.ts`, so a Vitest unit never loads `@playwright/test` (rule T25).
+30. The random stream is re-baselined once, in Phase 6 (commit `4cc51d2`). The original exposed `__desk.THREE`
+    (`import * as THREE`), which kept all of three.js in the bundle, including 4 module-level objects whose
+    constructors draw a uuid from `Math.random`. Decisions 23 and 26 drop `THREE` from the hook, so tree-shaking drops
+    those objects: 16 fewer seeded draws at script start (84 -> 68). The crowd layout branches on random values, so the
+    venue build then draws 6 more; the boot total goes from 277539 to 277529 (-10). The random-calls golden
+    (`tests/golden/random-calls.json`) and the 9 screenshot baselines are re-recorded. Proof that nothing else moved:
+    a temporary import that kept the three.js namespace alive passed 35/35 against the old baselines. No user sees
+    the change: `Math.random` is seeded only under `?test` (the `<head>` block of `index.html`), so a normal page
+    gets a new random crowd on every load, as before.

@@ -138,7 +138,7 @@ npm run preview   # serve dist/ as GitHub Pages would
 
 `npm ci` also installs the git hooks (`prepare`); the pre-commit hook runs ESLint and Prettier on the staged files.
 
-Checks (CI runs all except `npm run test:screenshots`):
+Checks (CI runs `typecheck`, `lint`, `test`, `build` and `test:e2e:ci`; the others are for local use):
 
 ```bash
 npm run typecheck   # tsc over the app, tests, configs and the service worker

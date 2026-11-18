@@ -108,7 +108,7 @@ moves, restructurings that keep behavior and make the code dramatically smaller,
 - Thin wrappers, identity abstractions, one-implementation interfaces that are not boundaries.
 - `any`, `!`, casts or optional params that muddy the contract.
 - Copy-paste instead of the canonical owner; a new `utils.ts`; deep imports past a shared `index.ts`.
-- "Temporary" branches likely to become permanent debt; new entries in `LEGACY_UNTIL_PHASE_6`.
+- "Temporary" branches likely to become permanent debt; any new lint exemption list or file-level rule switch-off.
 - Undisposed GPU resources, per-frame allocation, listeners that outlive their panel.
 - A changed localStorage key, show shape, golden file or screenshot baseline without a stated reason.
 

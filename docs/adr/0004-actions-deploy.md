@@ -2,6 +2,8 @@
 
 - Status: Accepted (the Pages switch waits for the merge, see decision 4)
 - Date: 2026-11-17
+- Revised 2026-11-18: the Playwright suite without the `@screenshot` tests runs in CI. It was a rejected alternative
+  before; decision 1 (steps 6 to 8) and decision 3 now adopt it.
 - Scope: `.github/workflows/deploy.yml`, the repository's Pages settings
 
 ## Context
@@ -24,7 +26,8 @@ of a build is easy to get wrong: an old `dist/`, a build from uncommitted files,
    4. `npm run typecheck`, `npm run lint`, `npm test`
    5. `npm run build`
    6. Chromium for Playwright, from `actions/cache` (key: runner OS and Playwright version) or
-      `npx playwright install --with-deps chromium` on a cache miss
+      `npx playwright install --with-deps chromium` on a cache miss; on a cache hit,
+      `npx playwright install-deps chromium` installs only the system libraries
    7. `npm run test:e2e:ci` against `dist/` served by `npm run preview` (`WEB_SERVER_CMD`)
    8. on failure only: `actions/upload-artifact` with `playwright-report/` and `test-results/`, kept 7 days
    9. on `main` only: `actions/upload-pages-artifact` with `path: dist`

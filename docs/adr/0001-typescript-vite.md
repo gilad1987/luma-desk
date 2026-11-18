@@ -111,4 +111,5 @@ Costs and risks:
 - `npm run typecheck` runs `tsc -b` over the three projects; CI runs it on every pull request (ADR 0004).
 - Bundled three.js 0.160.0 renders like the vendored r160: `tests/e2e/screenshots.spec.ts` compares nine views with
   baselines recorded from the original app.
-- Not verified here: a build after `vendor/` is deleted (Phase 6).
+- `vendor/` and the import map are deleted (Phase 6); `npm run build` succeeds without them, and the parity suite
+  runs against that build.

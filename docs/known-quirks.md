@@ -518,12 +518,14 @@ Groups:
 ### D9. An unknown stored `deskMode` is used as it is
 
 - Source: `index.html:3080` (`deskMode = L.deskMode || 'ma'`)
-- Lives in: `src/show/LayoutPrefs.ts` (`textOr`), `src/ui/layouts/LayoutManager.ts` (writes it into `#layoutSel`)
+- Lives in: `src/show/LayoutPrefs.ts` (`textOr`) and `LayoutManager.restore` (`src/ui/layouts/LayoutManager.ts`,
+  writes it into `#layoutSel`)
 - What it does: a stored text that is not `ma`, `desk` or `classic` is kept. The layout select gets that value, so
-  it shows no option, and the page is drawn in the classic layout. Only an empty value falls back to `ma`. A stored
-  value that is not text now falls back to `ma` too (section L).
+  it shows no option, and the page is drawn in the classic layout. Only an empty value falls back to `ma`.
+- Accepted change: a stored `deskMode` or `deskZoom` that is not a string now gives `ma` or `auto` (section L).
 - Why kept: `lumadesk-layout2` compatibility and DOM parity.
-- Pinned by: `tests/unit/ui/layouts/layoutPrefsParity.test.ts` ("keeps an unknown saved layout name ...").
+- Pinned by: `tests/unit/ui/layouts/layoutPrefsParity.test.ts` ("keeps an unknown saved layout name ...", and the
+  non-string case).
 - Future fix: accept only the three known names and fall back to `ma`.
 
 ## E. Auto Show and audio
@@ -985,12 +987,14 @@ unreachable from the UI or crashed in the original too.
   `TypeError` in the event handler; the message had no effect. The new code skips the message. A short message
   (fewer than 3 bytes) still reads the missing bytes as `NaN`, as before (`src/io/midiMessage.ts`).
 - Why kept: the original only crashed on this path; a real device always sends data.
-- Pinned by: no test for the `null` case.
+- Pinned by: `tests/unit/io/Midi.test.ts` (the test that names J4; its title ends in "(quirk)").
 
 ## K. Test mode (`?test`)
 
 ### K1. Test mode freezes the clock and frames, but not timers
 
+- Source: none. The `?test` block was added in the refactor (`index.html@48a3b63` has no test mode), so K1 records
+  test infrastructure, not kept behavior.
 - Lives in: the `?test` block in the `<head>` of `index.html`
 - What it does: with `?test`, `performance.now()` and `Date` return a frozen time that moves only on
   `__desk.test.advance(ms)`, `requestAnimationFrame` callbacks run only on `frames(n)`, and `Math.random` is
@@ -1008,16 +1012,16 @@ The show and layout readers now check the type of each field they read (`src/sho
 `src/show/LayoutPrefs.ts`). A field of the wrong type counts as missing, so the default applies. This changes the
 result only for a save with wrong types. No save written by any desk version is affected: every writer stores the
 right types, and `JSON.stringify` turns `NaN` into `null`, which gives the same default as before (`null || 120`,
-`null ?? 0.62`, `null ?? 0`). Pinned by: `tests/unit/show/showFileInput.test.ts` and
-`tests/unit/show/layoutPrefs.test.ts`.
+`null ?? 0.62`, `null ?? 0`). Pinned by: `tests/unit/show/showFileInput.test.ts` (show rows) and
+`tests/unit/ui/layouts/layoutPrefsParity.test.ts` (layout row).
 
-| Saved value                                                 | Original (`index.html@48a3b63`)                                       | Now                     |
-| ----------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------- |
-| `bpm` or `haze` not a number                                | used as it was (`d.bpm \|\| 120`, `d.haze ?? .62`, line 2306)         | default (120, 0.62)     |
-| executor `name`, `level` or `cues` of the wrong type        | used as it was (line 2305)                                            | default (`''`, 0, `[]`) |
-| `groups` or `presets` a non-empty string or other primitive | threw part-way in strict mode, e.g. `{ groups: 7 }` (lines 2301-2304) | ignored                 |
-| `execs` an object with number keys                          | read by index (`(d.execs \|\| [])[i]`)                                | ignored                 |
-| `deskMode` or `deskZoom` in the layout not text             | used as it was (`L.deskMode \|\| 'ma'`, line 3080)                    | `ma` / `auto`           |
+| Saved value                                                | Original (`index.html@48a3b63`)                                       | Now                     |
+| ---------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------- |
+| `bpm` or `haze` not a number                               | used as it was (`d.bpm \|\| 120`, `d.haze ?? .62`, line 2306)         | default (120, 0.62)     |
+| executor `name`, `level` or `cues` of the wrong type       | used as it was (line 2305)                                            | default (`''`, 0, `[]`) |
+| `groups` a truthy primitive, or `presets` a non-empty text | threw part-way in strict mode, e.g. `{ groups: 7 }` (lines 2301-2304) | ignored                 |
+| `execs` an object with number keys                         | read by index (`(d.execs \|\| [])[i]`)                                | ignored                 |
+| `deskMode` or `deskZoom` in the layout not text            | used as it was (`L.deskMode \|\| 'ma'`, line 3080)                    | `ma` / `auto`           |
 
 Notes:
 
