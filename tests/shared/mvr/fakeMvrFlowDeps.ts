@@ -74,6 +74,7 @@ export function fakeMvrFlowDeps(design: StageDesign = BUILT_IN_DESIGN): FakeMvrF
     toasts.push(text);
   };
   const fullScenery = { ...scenery, setHiddenLayers: sceneryHide, dispose: named('dispose') };
-  const deps: MvrFlowDeps = { stage, store, scenery: fullScenery, prompt, toast, modal: () => modal };
+  const cancelBuilder = named('cancelBuilder');
+  const deps: MvrFlowDeps = { stage, store, scenery: fullScenery, prompt, toast, modal: () => modal, cancelBuilder };
   return { deps, calls, toasts, stage, scenery, sceneryHide, prompt, modal, store };
 }

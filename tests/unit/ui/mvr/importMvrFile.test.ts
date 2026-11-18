@@ -23,7 +23,7 @@ function setup() {
     apply: (design: StageDesign, cause: Exclude<RigChangeCause, 'boot'>) =>
       void applied.push({ design, cause, storedThen: db.records.size }),
   };
-  return { db, deps: { store, stage }, applied };
+  return { db, deps: { store, stage, cancelBuilder: () => {} }, applied };
 }
 
 describe('importMvrFile', () => {

@@ -13,6 +13,11 @@ type MvrParser = Pick<typeof MvrModule, 'importMvr' | 'MvrError'>;
 export interface MvrImportDeps {
   readonly store: Pick<MvrStore, 'put' | 'delete'>;
   readonly stage: Pick<StageService, 'apply'>;
+  /**
+   * Cancels an open Stage Builder session; a no-op when it is closed. It runs right before the apply, as for a show
+   * load: the builder's Cancel and Done re-apply its own stage, so they must not come after the import.
+   */
+  readonly cancelBuilder: () => void;
   readonly loadParser?: () => Promise<MvrParser>;
 }
 
@@ -48,6 +53,7 @@ export async function importMvrFile(
     if (hash !== null) await deps.store.delete(hash);
     return { kind: 'failed', message: error.message };
   }
+  deps.cancelBuilder();
   deps.stage.apply(result.design, 'import');
   return { kind: 'imported', result, stored: hash !== null };
 }

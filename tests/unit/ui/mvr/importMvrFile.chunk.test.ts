@@ -14,9 +14,12 @@ describe('importMvrFile chunk load', () => {
     const db = new FakeIndexedDb();
     const store = new MvrStore(db.factory, globalThis.crypto.subtle);
     const apply = vi.fn();
+    const cancelBuilder = vi.fn();
     const loadParser = (): Promise<never> => Promise.reject(new Error(chunkError));
     const file = { name: 'show.mvr', bytes: new TextEncoder().encode('bytes') };
-    await expect(importMvrFile(file, { store, stage: { apply }, loadParser })).rejects.toThrow(chunkError);
+    const deps = { store, stage: { apply }, cancelBuilder, loadParser };
+    await expect(importMvrFile(file, deps)).rejects.toThrow(chunkError);
+    expect(cancelBuilder).not.toHaveBeenCalled();
     expect(db.records.size).toBe(0);
     expect(apply).not.toHaveBeenCalled();
   });

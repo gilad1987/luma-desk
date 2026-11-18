@@ -45,11 +45,11 @@ describe('importPickedMvr', () => {
     expect(flow.calls).toEqual([]);
   });
 
-  it('applies, hides the prompt, draws the scenery, then opens the summary over a closed modal', async () => {
+  it('cancels the builder, applies, hides the prompt, draws the scenery, then opens the summary', async () => {
     page();
     const flow = fakeMvrFlowDeps();
     await importPickedMvr(goodFile(), flow.deps);
-    expect(flow.calls).toEqual(['load', 'apply', 'prompt.hide', 'show', 'modal.open']);
+    expect(flow.calls).toEqual(['load', 'cancelBuilder', 'apply', 'prompt.hide', 'show', 'modal.open']);
     expect(flow.toasts).toEqual([]);
   });
 
@@ -84,7 +84,7 @@ describe('importPickedMvr', () => {
     const flow = fakeMvrFlowDeps();
     flow.stage.apply.mockImplementationOnce(() => (flow.stage.design = flow.deps.stage.builtIn));
     await importPickedMvr(goodFile(), flow.deps);
-    expect(flow.calls).toEqual(['load']);
+    expect(flow.calls).toEqual(['load', 'cancelBuilder']);
   });
 
   it('opens no summary when the stage changed while the scenery was drawn', async () => {
@@ -95,6 +95,6 @@ describe('importPickedMvr', () => {
       return Promise.resolve([]);
     });
     await importPickedMvr(goodFile(), flow.deps);
-    expect(flow.calls).toEqual(['load', 'apply', 'prompt.hide']);
+    expect(flow.calls).toEqual(['load', 'cancelBuilder', 'apply', 'prompt.hide']);
   });
 });

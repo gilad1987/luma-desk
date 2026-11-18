@@ -23,6 +23,7 @@ function setup() {
   const deps: MvrImportDeps = {
     store: { put: (bytes) => real.put(bytes), delete: (hash) => (deleted.push(hash), real.delete(hash)) },
     stage: { apply: () => void (applies += 1) },
+    cancelBuilder: () => {},
   };
   return { db, deps, deleted, applies: () => applies };
 }

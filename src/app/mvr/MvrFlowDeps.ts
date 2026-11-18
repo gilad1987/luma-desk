@@ -1,4 +1,5 @@
 import type { StageService } from '../../engine/stage/StageService';
+import type { MvrImportDeps } from '../../ui/panels/mvr/importMvrFile';
 import type { MvrMissingPrompt } from '../../ui/panels/mvr/MvrMissingPrompt';
 import type { Modal } from '../../ui/shared';
 import type { LazyMvrStage } from './LazyMvrStage';
@@ -13,4 +14,9 @@ export interface MvrFlowDeps {
   readonly toast: (text: string) => void;
   /** The shared modal; the panels build it after `wireMvr`, so the flows read it when they run. */
   readonly modal: () => Pick<Modal, 'open' | 'close' | 'isOpen'>;
+  /**
+   * Cancels an open Stage Builder session. Each flow calls it only when its apply will happen, right before it, so a
+   * file that is not a usable MVR keeps the session, and a load queued before the builder opened still cancels it.
+   */
+  readonly cancelBuilder: MvrImportDeps['cancelBuilder'];
 }

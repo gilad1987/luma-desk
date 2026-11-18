@@ -23,6 +23,8 @@ export interface MvrWiringDeps {
   readonly stage: MvrFlowDeps['stage'] & Pick<StageService, 'cause'>;
   /** The shared modal; the panels build it after `wireMvr`, so it is read when a flow runs. */
   readonly modal: MvrFlowDeps['modal'];
+  /** The Stage Builder's cancel; the builder is built after the panels, so it is read when a flow applies. */
+  readonly cancelBuilder: MvrFlowDeps['cancelBuilder'];
   /** Saves an exported file; defaults to the browser download, tests pass a recorder (the page has no download). */
   readonly download?: MvrExportOut['download'];
 }
@@ -49,7 +51,14 @@ const messageOf = (error: unknown): string => (error instanceof Error ? error.me
  * stage follower (`followStage`) keeps the scenery and the prompt on the current stage. It creates no three.js object
  * until the first MVR load.
  */
-export function wireMvr({ bus, scene, stage, modal, download = downloadBlob }: MvrWiringDeps): MvrWiring {
+export function wireMvr({
+  bus,
+  scene,
+  stage,
+  modal,
+  cancelBuilder,
+  download = downloadBlob,
+}: MvrWiringDeps): MvrWiring {
   const toast = (text: string): void => bus.emit('message', { kind: 'toast', text });
   const queue = new MvrLoadQueue((error) => toast(messageOf(error)));
   const actions: MvrActions = {
@@ -59,7 +68,7 @@ export function wireMvr({ bus, scene, stage, modal, download = downloadBlob }: M
   };
   const prompt = new MvrMissingPrompt(actions);
   const scenery = new LazyMvrStage(scene);
-  const deps: MvrFlowDeps = { stage, store: openMvrStore(), scenery, prompt, toast, modal };
+  const deps: MvrFlowDeps = { stage, store: openMvrStore(), scenery, prompt, toast, modal, cancelBuilder };
   const restore = (design: StageDesign): void => queue.run(() => restoreStoredMvr(deps, design));
   followStage({ bus, stage, scenery, prompt, restore });
   return {

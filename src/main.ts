@@ -35,7 +35,9 @@ const { execs } = pool;
 const render = wireRender(engine);
 const files = createShowFiles({ ...engine, execs });
 const auto = createAutoShow(engine);
-const mvr = wireMvr({ bus, scene: render.scene, stage, modal: () => panels.modal });
+// a show load and an MVR load cancel the same builder session; the builder is built after the panels
+const cancelBuilder = (): void => builder.exit(false);
+const mvr = wireMvr({ bus, scene: render.scene, stage, modal: () => panels.modal, cancelBuilder });
 
 const panels = wirePanels({
   engine,
@@ -45,7 +47,7 @@ const panels = wirePanels({
   layoutMode: () => layout.mode(),
   guideOrTourOpen: () => guide.isOpen() || tour.isActive(),
   mvr: mvr.actions,
-  builder: { isOpen: () => builder.isOpen, cancel: () => builder.exit(false) },
+  builder: { isOpen: () => builder.isOpen, cancel: cancelBuilder },
 });
 // a getter: box selection reads the current rig at each drag, so it follows every stage change
 new ViewportPicking({
