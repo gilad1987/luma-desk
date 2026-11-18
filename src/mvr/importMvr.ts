@@ -1,17 +1,16 @@
 import { MvrArchive } from './archive/MvrArchive';
-import { toStageDesign, type DesignResult } from './design/toStageDesign';
-import { applyLumaData, type LumaApplied } from './import/applyLumaData';
+import { toStageDesign } from './design/toStageDesign';
 import { placeBodies } from './import/placeBodies';
 import { meshBytes } from './import/meshBytes';
 import { readLumaData } from './import/readLumaData';
 import { resolveFixtures } from './import/resolveFixtures';
 import { summarize } from './import/summarize';
-import { LUMA_MESH_PREFIX, type LumaStageData } from './luma/lumaData';
+import { withLumaData, withoutLumaMeshes } from './import/withLumaData';
 import type { Aabb } from './math/Aabb';
 import { meshBounds } from './mesh/meshBounds';
 import type { MvrImport } from './MvrImport';
-import { MvrError, type MvrWarning, type MvrWarningCode } from './MvrWarning';
-import type { MeshPlacement, MvrScene } from './scene/MvrScene';
+import { MvrError, type MvrWarning } from './MvrWarning';
+import type { MeshPlacement } from './scene/MvrScene';
 import { walkScene } from './scene/walkScene';
 import { parseXml } from './xml/parseXml';
 
@@ -26,16 +25,6 @@ export interface MvrImportOptions {
   readonly fileHash?: string;
 }
 
-/**
- * The scene without the desk's own `luma_*` meshes when the file holds luma data. The desk rebuilds those stage parts
- * from that data, so drawing the meshes too would show the stage twice and give beams two copies of every surface.
- * Other tools have no luma data and draw the meshes, which is why the export writes them.
- */
-function withoutLumaMeshes(scene: MvrScene, luma: LumaStageData | undefined): MvrScene {
-  if (!luma) return scene;
-  return { ...scene, placements: scene.placements.filter((placement) => !placement.file.startsWith(LUMA_MESH_PREFIX)) };
-}
-
 /** Local bounds of every distinct mesh file; a file that cannot be read gets no entry and a warning. */
 function readMeshBoxes(
   archive: MvrArchive,
@@ -48,19 +37,6 @@ function readMeshBoxes(
     if (box) boxes.set(file, box);
   }
   return boxes;
-}
-
-/**
- * The design step's result with the luma data applied. The luma data rebuilds the stage parts, so a file without any
- * mesh still shows a whole stage and its `no-geometry` warning would be noise; stored hidden layers replace the
- * hall rule's, so its `hidden-layers` line would name layers that are not hidden.
- */
-function withLumaData(result: DesignResult, luma: LumaStageData | undefined): LumaApplied {
-  if (!luma) return result;
-  const applied = applyLumaData(result.design, luma);
-  const noise: readonly MvrWarningCode[] = luma.hiddenLayers ? ['no-geometry', 'hidden-layers'] : ['no-geometry'];
-  const designWarnings = result.warnings.filter((warning) => !noise.includes(warning.code));
-  return { design: applied.design, warnings: [...designWarnings, ...applied.warnings] };
 }
 
 /** The synchronous import; `importMvr` wraps it so a thrown `MvrError` becomes a rejected promise. */

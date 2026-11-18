@@ -12,7 +12,7 @@ export type FittedViews = Pick<CameraViews, 'fitTo' | 'setView' | 'currentView'>
 /** The desk render that a shown MVR scenery adds to: the camera views and the boxes beams land on. */
 export interface MvrDeskRender {
   readonly views: FittedViews;
-  readonly surfaceHit: Pick<SurfaceHit, 'setSurfaces'>;
+  readonly surfaceHit: Pick<SurfaceHit, 'setSurfaces' | 'setVenue'>;
 }
 
 /**
@@ -44,7 +44,8 @@ export class MvrSceneryFit {
     if (!this.#geometry) return;
     this.#design = design;
     const { views, surfaceHit } = this.#render;
-    surfaceHit.setSurfaces(mvrSurfaces(design, this.#geometry), design.venue.kind);
+    surfaceHit.setVenue(design.venue.kind);
+    surfaceHit.setSurfaces(mvrSurfaces(design, this.#geometry));
     const box = mvrCameraBounds(design, this.#geometry);
     views.fitTo(
       box,

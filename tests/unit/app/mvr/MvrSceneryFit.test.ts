@@ -23,7 +23,7 @@ const GEOMETRY: MvrGeometry = {
 /** A fit over fake camera views in the FOH view and fake beam surfaces. */
 function sceneryFit() {
   const views = { fitTo: vi.fn(), setView: vi.fn(), currentView: 'foh' as const };
-  const surfaceHit = { setSurfaces: vi.fn() };
+  const surfaceHit = { setSurfaces: vi.fn(), setVenue: vi.fn() };
   return { fit: new MvrSceneryFit({ views, surfaceHit }), surfaceHit, views };
 }
 
@@ -32,7 +32,8 @@ describe('MvrSceneryFit beam surfaces', () => {
     const { fit, surfaceHit } = sceneryFit();
     const design = createTemplate('theatre');
     fit.fit(design, GEOMETRY);
-    expect(surfaceHit.setSurfaces).toHaveBeenCalledWith(mvrSurfaces(design, GEOMETRY), design.venue.kind);
+    expect(surfaceHit.setSurfaces).toHaveBeenCalledWith(mvrSurfaces(design, GEOMETRY));
+    expect(surfaceHit.setVenue).toHaveBeenCalledWith(design.venue.kind);
     expect(mvrSurfaces(design, GEOMETRY)).toContainEqual(GEOMETRY.surfaces[0]);
   });
 
@@ -41,7 +42,8 @@ describe('MvrSceneryFit beam surfaces', () => {
     fit.fit(createTemplate('theatre'), GEOMETRY);
     const edited = createTemplate('festival');
     fit.refit(edited);
-    expect(surfaceHit.setSurfaces).toHaveBeenLastCalledWith(mvrSurfaces(edited, GEOMETRY), edited.venue.kind);
+    expect(surfaceHit.setSurfaces).toHaveBeenLastCalledWith(mvrSurfaces(edited, GEOMETRY));
+    expect(surfaceHit.setVenue).toHaveBeenLastCalledWith(edited.venue.kind);
     fit.forget();
     fit.refit(edited);
     expect(surfaceHit.setSurfaces).toHaveBeenCalledTimes(2);
@@ -55,7 +57,8 @@ describe('MvrSceneryFit beam surfaces', () => {
     fit.fit(design, GEOMETRY);
     fit.hide(['hall']);
     const hidden = { ...design, mvr: { ...design.mvr, hiddenLayers: ['hall'] } } as StageDesign;
-    expect(surfaceHit.setSurfaces).toHaveBeenLastCalledWith(mvrSurfaces(hidden, GEOMETRY), hidden.venue.kind);
+    expect(surfaceHit.setSurfaces).toHaveBeenLastCalledWith(mvrSurfaces(hidden, GEOMETRY));
+    expect(surfaceHit.setVenue).toHaveBeenLastCalledWith(hidden.venue.kind);
     expect(views.fitTo).toHaveBeenLastCalledWith(mvrCameraBounds(hidden, GEOMETRY), expect.anything());
     expect(views.setView).toHaveBeenCalledTimes(2);
   });
@@ -64,5 +67,6 @@ describe('MvrSceneryFit beam surfaces', () => {
     const { fit, surfaceHit } = sceneryFit();
     fit.refit(createTemplate('theatre'));
     expect(surfaceHit.setSurfaces).not.toHaveBeenCalled();
+    expect(surfaceHit.setVenue).not.toHaveBeenCalled();
   });
 });

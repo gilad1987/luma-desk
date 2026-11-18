@@ -6,8 +6,9 @@ import { isStartingShow } from '../../../src/show/startingShow/isStartingShow';
 import { sameFixtureIds } from '../../../src/show/startingShow/sameFixtureIds';
 import { importedSourceOf, startingShowWorld, type showWorld } from '../../shared';
 
-const reload = (world: ReturnType<typeof showWorld>): void =>
+const reload = (world: ReturnType<typeof showWorld>): void => {
   world.serializer.load(JSON.parse(world.json()) as unknown);
+};
 
 describe('isStartingShow (the "unchanged demo show" rule)', () => {
   it('holds for an empty show and for the demo of the stage it was built for, also after a reload', () => {
