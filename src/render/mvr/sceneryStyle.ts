@@ -1,4 +1,5 @@
 import { MeshStandardMaterial, Texture, type Material } from 'three';
+import { MissingTexture } from './MissingTexture';
 
 /**
  * The desk's dark stage material (sRGB). CAD writers colour scenery by class (white, beige, pure green, cyan,
@@ -7,9 +8,12 @@ import { MeshStandardMaterial, Texture, type Material } from 'three';
  */
 const STAGE_DARK = 0x17171b;
 
-/** Whether the material draws a picture the designer chose (a banner, a print) rather than a CAD class colour. */
+/**
+ * Whether the material draws a picture the designer chose (a banner, a print) rather than a CAD class colour. A
+ * picture the archive lacks (`MissingTexture`) counts as none.
+ */
 function isTextured(material: Material): boolean {
-  return 'map' in material && material.map instanceof Texture;
+  return 'map' in material && material.map instanceof Texture && !(material.map instanceof MissingTexture);
 }
 
 /**

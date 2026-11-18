@@ -33,6 +33,15 @@ function readOffset(raw: object): Vec3 | undefined {
   return value === undefined ? [0, 0, 0] : new Reader().vec3({ offset: value }, 'offset', '');
 }
 
+/** The hidden layers to spread into the data: none when absent, `undefined` when they are not a list of uuids. */
+function readHiddenLayers(raw: object): { readonly hiddenLayers?: readonly string[] } | undefined {
+  const value: unknown = 'hiddenLayers' in raw ? raw.hiddenLayers : undefined;
+  if (value === undefined) return {};
+  const r = new Reader();
+  const hiddenLayers = r.list({ hiddenLayers: value }, 'hiddenLayers', '', r.str);
+  return hiddenLayers === undefined || r.errors.length > 0 ? undefined : { hiddenLayers };
+}
+
 /** One link's footprint: channels checked like a stored show's (`parseFootprint`), spec and mode as text. */
 function readFootprint(r: Reader, parent: Raw, key: Key, at: string): LinkFootprint | undefined {
   const o = r.obj(parent, key, at);
@@ -73,11 +82,12 @@ export function readLumaData(doc: Document): LumaStageData | undefined {
   const source = { kind: 'mvr', name: '' };
   const parsed = parseStageDesign({ ...raw, v: STAGE_DESIGN_VERSION, source, fixtures: lumaStandIns(raw) });
   const footprints = readFootprints(raw);
-  if (!parsed.ok || offset === undefined || footprints === undefined) return undefined;
+  const hidden = readHiddenLayers(raw);
+  if (!parsed.ok || offset === undefined || footprints === undefined || hidden === undefined) return undefined;
   const { venue, scenery, deck, screens, risers, trusses, fixtures } = parsed.design;
   const links = fixtures.map((fixture): FixtureLink => {
     const footprint = footprints.get(fixture.id);
     return footprint === undefined ? linkOf(fixture) : { ...linkOf(fixture), footprint };
   });
-  return { venue, scenery, deck, screens, risers, trusses, offset, links };
+  return { venue, scenery, deck, screens, risers, trusses, offset, links, ...hidden };
 }

@@ -7,6 +7,7 @@
 import { DoubleSide, MeshPhongMaterial, MeshStandardMaterial, Texture } from 'three';
 import { describe, expect, it } from 'vitest';
 import { MaterialPool } from '../../../../src/render/mvr/MaterialPool.ts';
+import { MissingTexture } from '../../../../src/render/mvr/MissingTexture.ts';
 import { styleScenery } from '../../../../src/render/mvr/sceneryStyle.ts';
 
 const DARK = 0x17171b;
@@ -39,5 +40,13 @@ describe('styleScenery', () => {
     const styled = styleScenery(metal);
     expect(styled).toBe(metal);
     expect([metal.map, metal.metalness, metal.color.getHex()]).toEqual([map, 0, 0xffffff]);
+  });
+
+  it('reads a picture the archive lacks, cloned or not, as no texture', () => {
+    for (const map of [new MissingTexture(), new MissingTexture().clone()]) {
+      const styled = styleScenery(new MeshStandardMaterial({ color: 0xffffff, map }));
+      if (!(styled instanceof MeshStandardMaterial)) throw new Error('expected a standard material');
+      expect([styled.map, styled.color.getHex()]).toEqual([null, DARK]);
+    }
   });
 });

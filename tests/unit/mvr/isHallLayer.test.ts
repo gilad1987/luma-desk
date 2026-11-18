@@ -29,10 +29,40 @@ describe('isHallLayer name rule', () => {
   });
 });
 
+describe('isHallLayer structure words', () => {
+  it('hides a wall, floor or ceiling layer that reaches 4 m past the rig on one side', () => {
+    expect(hall(layer('Walls', plan(-10, 15, -5, 5.4)))).toBe(true);
+    expect(hall(layer('Floor', plan(-12, 12, -13, 1)))).toBe(true);
+    for (const name of ['Ceiling', 'Side wall', 'קירות', 'קיר', 'רצפה', 'תקרה']) {
+      expect(hall(layer(name, plan(-10, 10, -5, 9))), name).toBe(true);
+    }
+  });
+
+  it('keeps a structure layer that stays within 4 m of the rig', () => {
+    expect(hall(layer('Stage floor', plan(-9, 9, -4, 4)))).toBe(false);
+    expect(hall(layer('Back wall', plan(-12, 12, -7, -5)))).toBe(false);
+  });
+
+  it('keeps a structure layer that holds an LED surface or fixtures', () => {
+    expect(hall(layer('Side wall LED', plan(-30, 30, -5, 5), true))).toBe(false);
+    expect(hall(layer('LED wall', plan(-10, 10, -15, -5), true))).toBe(false);
+    expect(hall(layer('Floor lights', plan(-10, 10, -5, 12), true))).toBe(false);
+  });
+
+  it('judges no structure layer against a rig too small to give a scale', () => {
+    expect(hall(layer('Floor', plan(-20, 20, -20, 20)), pointBox([0, 5, 0]))).toBe(false);
+  });
+});
+
 describe('isHallLayer box rule', () => {
   it('hides a nameless layer that holds the rig on plan, is twice its area and reaches 4 m past it on two sides', () => {
     expect(hall(layer('Layer 7', plan(-10.5, 10.5, -9, 20)))).toBe(true);
     expect(hall(layer('Layer 8', plan(-16, 16, -7, 7)))).toBe(true);
+  });
+
+  it('keeps a low layer around the rig: a deck, a set and audience platforms below half the rig height', () => {
+    expect(hall(layer('Layer 9', { min: [-20, 0, -6], max: [20, 3.8, 34] }))).toBe(false);
+    expect(hall(layer('Layer 10', { min: [-20, 0, -6], max: [20, 4, 34] }))).toBe(true);
   });
 
   it('keeps a deck that reaches a little past the rig', () => {

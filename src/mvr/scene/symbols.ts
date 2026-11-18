@@ -2,14 +2,12 @@ import { multiply } from '../math/Mat4';
 import type { MvrWarning, MvrWarningCode } from '../MvrWarning';
 import { attr, childElement, childElements } from '../xml/elements';
 import type { BadMatrices } from './BadMatrices';
+import { EmptySymdefs } from './EmptySymdefs';
 import type { LocalMesh } from './LocalMesh';
 import { localMatrix } from './localMatrix';
 import type { MeshLimit } from './MeshLimit';
 
-/**
- * The deepest Symbol-in-Symdef nesting that is followed. Real files nest 2 levels, so 16 only stops a runaway file
- * before it blows the stack.
- */
+/** The deepest Symbol-in-Symdef nesting followed: real files nest 2 levels, so 16 only stops a runaway file. */
 const MAX_DEPTH = 16;
 
 /**
@@ -27,16 +25,17 @@ export class SymbolExpander {
   private readonly warnings: MvrWarning[];
   private readonly limit: MeshLimit;
   private readonly bad: BadMatrices;
+  private readonly empty: EmptySymdefs;
 
   /**
    * Indexes the `<Symdef>`s of `Scene > AUXData` by uuid, and reports problems into the walk's `warnings`. The mesh
-   * `limit` and the `bad` matrix count are the import's own, shared with the scene walk, so each counts once per
-   * import.
+   * `limit` and the `bad` matrix count are the import's own, shared with the scene walk, so each counts once.
    */
   constructor(auxData: Element | undefined, warnings: MvrWarning[], limit: MeshLimit, bad: BadMatrices) {
     this.warnings = warnings;
     this.limit = limit;
     this.bad = bad;
+    this.empty = new EmptySymdefs(warnings);
     for (const symdef of auxData ? childElements(auxData, 'Symdef') : []) {
       this.symdefs.set(attr(symdef, 'uuid') ?? '', symdef);
     }
@@ -78,6 +77,7 @@ export class SymbolExpander {
     if (!symdef) return this.skip('missing-symdef', 'A Symbol refers to a Symdef the file does not define.', uuid);
     if (this.open.has(uuid)) return this.skip('symbol-cycle', 'A Symdef contains itself; the loop is cut.', uuid);
     if (depth > MAX_DEPTH) return this.skip('symbol-depth', `Symbols nest deeper than ${MAX_DEPTH} levels.`, uuid);
+    if (this.empty.skips(symdef)) return [];
     const key = `${depth}:${uuid}`;
     const known = this.memo.get(key);
     if (known) return known;

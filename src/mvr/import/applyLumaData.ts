@@ -74,7 +74,7 @@ export interface LumaApplied {
  * fixtures' desk fields, so a desk design comes back as it was and not as a guessed MVR stage. An LED wall whose
  * driver is not a `screen` fixture of the file is dropped, because the rig needs that driver to light it and the
  * luma data reader could only check stand-ins; a `missing-screen-driver` warning tells the user. The stored MVR facts
- * take the restored types (`retype`).
+ * take the restored types (`retype`), and the stored hidden layers, when the data has them, replace the hall rule's.
  */
 export function applyLumaData(design: StageDesign, luma: LumaStageData): LumaApplied {
   const links = new Map(luma.links.map((link) => [link.id, splitLink(link)]));
@@ -89,6 +89,7 @@ export function applyLumaData(design: StageDesign, luma: LumaStageData): LumaApp
       ref: screen.id,
     }));
   const { venue, scenery, deck, risers, trusses } = luma;
-  const mvr = design.mvr && { mvr: retype(design.mvr, fixtures, links) };
+  const hidden = luma.hiddenLayers && { hiddenLayers: luma.hiddenLayers };
+  const mvr = design.mvr && { mvr: { ...retype(design.mvr, fixtures, links), ...hidden } };
   return { design: { ...design, venue, scenery, deck, screens, risers, trusses, fixtures, ...mvr }, warnings };
 }
