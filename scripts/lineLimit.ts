@@ -1,6 +1,6 @@
 /**
- * The 100-line limit for the files ESLint cannot see. ESLint `max-lines` covers .ts; CSS, SCSS and GLSL need this check,
- * and both must count the same way, so a file that passes one gate never fails the other.
+ * The 100-line limit for the files ESLint cannot see. ESLint `max-lines` covers .ts; CSS, SCSS and GLSL need this
+ * check, and both must count the same way, so a file that passes one gate never fails the other.
  */
 export const MAX_FILE_LINES = 100;
 

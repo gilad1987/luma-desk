@@ -4,8 +4,8 @@ import { STAGE } from '../../domain/venue';
 import { addMesh } from '../shared';
 
 /**
- * Builds the Hinnom valley hills around the pool: a 460 m grid shaped by `terrainHeight`, sunk under the bowl, with random
- * earth and olive-grove vertex colours (`Math.random` twice per vertex).
+ * Builds the Hinnom valley hills around the pool: a 460 m grid shaped by `terrainHeight`, sunk under the bowl, with
+ * random earth and olive-grove vertex colours (`Math.random` twice per vertex).
  */
 export function buildHills(scene: Object3D): void {
   const geometry = new PlaneGeometry(460, 460, 150, 150);

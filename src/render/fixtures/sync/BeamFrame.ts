@@ -1,7 +1,7 @@
 import type { Vector3 } from 'three';
 import type { AttrValues } from '../../../domain/attributes';
 import type { LightVisual } from '../FixtureVisual';
-import type { RgbTriple } from '../../lights/LightFrame';
+import type { Rgb01 } from '../../../core';
 import type { SurfaceHit } from '../../surface/SurfaceHit';
 
 /** One lit fixture in the current frame, as the beam, pool and glow updates read it. */
@@ -10,7 +10,7 @@ export interface BeamFrame {
   readonly o: Readonly<AttrValues>;
   /** Strobe-gated intensity, 0..1. */
   readonly intensity: number;
-  readonly col: RgbTriple;
+  readonly col: Rgb01;
   /** Beam direction (unit). */
   readonly dir: Vector3;
   /** Beam start, just in front of the lens. */

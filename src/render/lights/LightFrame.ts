@@ -1,8 +1,6 @@
 import type { Vector3 } from 'three';
+import type { Rgb01 } from '../../core';
 import type { Fixture } from '../../domain/Fixture';
-
-/** A linear RGB triple on 0..1, the colour form the fixture sync computes per fixture. */
-export type RgbTriple = readonly [r: number, g: number, b: number];
 
 /** The three audience zones, left to right; one tuple slot per zone light. */
 export type ZoneIndex = 0 | 1 | 2;
@@ -22,7 +20,7 @@ export interface KeyLightCandidate {
   readonly fixture: Fixture;
   readonly score: number;
   readonly intensity: number;
-  readonly color: RgbTriple;
+  readonly color: Rgb01;
   readonly zoom: number;
   /** Distance from the fixture to the hit surface. */
   readonly length: number;
@@ -66,14 +64,14 @@ export class LightFrame {
   }
 
   /** Adds a stage-floor hit; the product order (colour x intensity x power) is kept for float parity. */
-  addStage(color: RgbTriple, intensity: number, power: number): void {
+  addStage(color: Rgb01, intensity: number, power: number): void {
     this.stage.r += color[0] * intensity * power;
     this.stage.g += color[1] * intensity * power;
     this.stage.b += color[2] * intensity * power;
   }
 
   /** Adds an audience hit at world x to its zone. */
-  addAudience(x: number, color: RgbTriple, weight: number): void {
+  addAudience(x: number, color: Rgb01, weight: number): void {
     const zone = this.zones[zoneIndexAt(x)];
     zone.r += color[0] * weight;
     zone.g += color[1] * weight;

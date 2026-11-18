@@ -1,4 +1,5 @@
 import { BufferAttribute, BufferGeometry, Euler, Matrix4, Quaternion, Vector3 } from 'three';
+import type { Vec3Tuple } from '../../core';
 
 const matrix = new Matrix4(),
   quaternion = new Quaternion(),
@@ -6,11 +7,8 @@ const matrix = new Matrix4(),
   offset = new Vector3(),
   size = new Vector3();
 
-/** An (x, y, z) triple: a position, a per-axis scale or XYZ Euler angles in radians. */
-export type AxisTriple = readonly [x: number, y: number, z: number];
-
-const ORIGIN: AxisTriple = [0, 0, 0];
-const UNIT_SCALE: AxisTriple = [1, 1, 1];
+const ORIGIN: Vec3Tuple = [0, 0, 0];
+const UNIT_SCALE: Vec3Tuple = [1, 1, 1];
 
 /**
  * A transformed, non-indexed copy of a primitive, ready to {@link merge}: scale, then rotate XYZ, then move.
@@ -18,9 +16,9 @@ const UNIT_SCALE: AxisTriple = [1, 1, 1];
  */
 export function part(
   geo: BufferGeometry,
-  position: AxisTriple = ORIGIN,
-  scale: AxisTriple = UNIT_SCALE,
-  rotation: AxisTriple = ORIGIN,
+  position: Vec3Tuple = ORIGIN,
+  scale: Vec3Tuple = UNIT_SCALE,
+  rotation: Vec3Tuple = ORIGIN,
 ): BufferGeometry {
   const g = geo.index ? geo.toNonIndexed() : geo.clone();
   return g.applyMatrix4(

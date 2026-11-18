@@ -18,7 +18,11 @@ const FACES: readonly (readonly [dr: number, dy: number, face: 'v' | 'h'])[] = [
   [0, 1, 'h'],
 ];
 
-/** One ring level: beam `radius` around the ring centre, height `y`, and the `spacing` between its chords. */
+/**
+ * One ring level (beam `radius` around the ring centre, height `y`, `spacing` between chords). It is a parameter, not
+ * a constant, because the rig hangs two rings of different size from one builder: the outer beam ring and the inner
+ * wash ring.
+ */
 export interface RingLevel {
   readonly radius: number;
   readonly y: number;

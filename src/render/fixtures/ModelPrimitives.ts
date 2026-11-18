@@ -9,7 +9,8 @@ import {
   Vector2,
   type BufferGeometry,
 } from 'three';
-import { part, type AxisTriple } from './modelGeometry';
+import type { Vec3Tuple } from '../../core';
+import { part } from './modelGeometry';
 
 /** One [radius, y] point of a revolved profile. */
 export type ProfilePoint = readonly [radius: number, y: number];
@@ -28,15 +29,15 @@ export class ModelPrimitives {
   readonly torusGeo = new TorusGeometry(1, 0.12, 6, 20);
 
   /** A box of the given size centred at `position`, turned by `rotation` (radians, XYZ). */
-  readonly box = (position: AxisTriple, size: AxisTriple, rotation?: AxisTriple): BufferGeometry =>
+  readonly box = (position: Vec3Tuple, size: Vec3Tuple, rotation?: Vec3Tuple): BufferGeometry =>
     part(this.boxGeo, position, size, rotation);
 
   /** A cylinder of `radius` and `height` centred at `position`, axis Y before `rotation`. */
-  readonly cylinder = (position: AxisTriple, radius: number, height: number, rotation?: AxisTriple): BufferGeometry =>
+  readonly cylinder = (position: Vec3Tuple, radius: number, height: number, rotation?: Vec3Tuple): BufferGeometry =>
     part(this.cylinderGeo, position, [radius, height, radius], rotation);
 
   /** A cylinder along X (tilt hubs, knobs). */
-  readonly cylinderX = (position: AxisTriple, radius: number, length: number): BufferGeometry =>
+  readonly cylinderX = (position: Vec3Tuple, radius: number, length: number): BufferGeometry =>
     this.cylinder(position, radius, length, [0, 0, Math.PI / 2]);
 
   /** A profile revolved around Y; list points front (-y) to rear (+y) so the faces point outward. */

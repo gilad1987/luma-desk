@@ -1,5 +1,5 @@
 import { Vector3 } from 'three';
-import { lerp } from '../../core';
+import { lerp, type Vec3Tuple } from '../../core';
 import { Fixture, type Mount, type PanTilt } from '../Fixture';
 import type { FixtureTypeId } from '../FixtureType';
 import { Rig } from './Rig';
@@ -8,7 +8,7 @@ import { Rig } from './Rig';
 export interface PlaceOptions {
   readonly id: number;
   readonly type: FixtureTypeId;
-  readonly at: readonly [x: number, y: number, z: number];
+  readonly at: Vec3Tuple;
   readonly mount: Mount;
   /** The rigged pan/tilt of a static unit; absent or undefined for a moving one. */
   readonly fixed?: PanTilt | undefined;

@@ -1,10 +1,11 @@
 import { Mesh, type BufferGeometry, type Material, type Object3D } from 'three';
+import type { Vec3Tuple } from '../../core';
 
 /** Where a new mesh sits in its parent's space; a missing field keeps three's default (origin, no rotation). */
 export interface MeshPlacement {
-  readonly position?: readonly [x: number, y: number, z: number];
+  readonly position?: Vec3Tuple;
   /** Euler angles in radians, XYZ order. */
-  readonly rotation?: readonly [x: number, y: number, z: number];
+  readonly rotation?: Vec3Tuple;
 }
 
 /**

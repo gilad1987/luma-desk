@@ -1,8 +1,8 @@
 import { Vector3, type Texture } from 'three';
-import { clamp, D2R } from '../../core';
+import { clamp, D2R, type Rgb01 } from '../../core';
 import type { AttrValues } from '../../domain/attributes';
 import type { Selection } from '../../engine/Selection';
-import type { LightFrame, RgbTriple } from '../lights/LightFrame';
+import type { LightFrame } from '../lights/LightFrame';
 import type { SharedUniform } from './BeamMaterial';
 import type { FixtureVisual, LightVisual } from './FixtureVisual';
 import { hitSurface } from '../surface/hitSurface';
@@ -72,7 +72,7 @@ export class FixtureVisualSync {
       spec = f.T,
       dir = this.#dir;
     syncPose(v, o, dt, dir);
-    const col: RgbTriple = [outputValue(o, 'r') / 100, outputValue(o, 'g') / 100, outputValue(o, 'b') / 100];
+    const col: Rgb01 = [outputValue(o, 'r') / 100, outputValue(o, 'g') / 100, outputValue(o, 'b') / 100];
     v.bodyMat.emissive.setHex(deps.selection.has(f.id) ? 0x7a5a00 : 0x000000);
     v.lensMat.color.setRGB(0.03 + col[0] * intensity * 3, 0.03 + col[1] * intensity * 3, 0.03 + col[2] * intensity * 3);
     if (v.pix)

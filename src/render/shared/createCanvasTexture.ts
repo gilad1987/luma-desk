@@ -15,7 +15,9 @@ export interface CanvasTextureOptions {
   readonly anisotropy?: number;
 }
 
-/** Wraps a painted canvas in a three.js texture with explicit settings, so no call site changes a setting by accident. */
+/**
+ * Wraps a painted canvas in a three.js texture with explicit settings, so no call site changes a setting by accident.
+ */
 export function createCanvasTexture(canvas: HTMLCanvasElement, options: CanvasTextureOptions): CanvasTexture {
   const texture = new CanvasTexture(canvas);
   if (options.wrap !== undefined) {

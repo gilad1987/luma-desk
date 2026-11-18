@@ -9,7 +9,10 @@ const CHAIR_LEGS: readonly (readonly [x: number, z: number])[] = [
   [0.2, 0.2],
 ];
 
-/** How a player stands or sits: `hip` is the hip height, lower when seated. */
+/**
+ * How a player stands or sits. `hip` comes from the caller, not from `seated` here, because the torso, head, arms and
+ * instrument are placed from the same hip height.
+ */
 export interface Posture {
   readonly seated: boolean;
   readonly hip: number;

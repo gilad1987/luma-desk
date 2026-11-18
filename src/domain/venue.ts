@@ -42,7 +42,9 @@ export const TOWZ = [4.8, -20.6] as const;
 /** The circular truss: centre, outer beam radius `R`, inner wash ring radius `r2` at height `y2`. */
 export const RING = { x: 0, y: 17, z: -9, R: 9, r2: 5.2, y2: 18.2 } as const;
 
-/** The standing light towers on the deck as [x, z, height], sorted left to right then upstage first: that is id order. */
+/**
+ * The standing light towers on the deck as [x, z, height], sorted left to right then upstage first: that is id order.
+ */
 export const TOWERS: readonly (readonly [x: number, z: number, height: number])[] = [
   ...[4.5, 11, 18].flatMap((x): [number, number, number][] => [
     [-x, -16.8, 7.5],
