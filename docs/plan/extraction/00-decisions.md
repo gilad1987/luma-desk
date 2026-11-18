@@ -52,8 +52,8 @@
 29. Shared test code is split by runtime: `tests/shared/dom/` (the fake DOM for Vitest), `tests/shared/legacy/` (`legacyMarkup`, the markup of the original page) and `tests/shared/e2e/` (Playwright page helpers), each behind its own `index.ts`, so a Vitest unit never loads `@playwright/test` (rule T25).
 30. The random stream is re-baselined once, in Phase 6 (commit `4cc51d2`). The original and the port before Phase 6
     exposed `__desk.THREE` (`import * as THREE`); in the bundled port this kept all of three.js, including 4
-    module-level objects whose constructors draw a uuid from `Math.random`. Decisions 23 and 26 drop `THREE` from the hook, so tree-shaking drops
-    those objects: 16 fewer seeded draws at script start (84 -> 68). The crowd layout branches on random values, so the
+    module-level objects whose constructors draw a uuid from `Math.random`. Decisions 23 and 26 drop `THREE` from
+    the hook, so tree-shaking drops those objects: 16 fewer seeded draws at script start (84 -> 68). The crowd layout branches on random values, so the
     venue build then draws 6 more; the boot total goes from 277539 to 277529 (-10). The random-calls golden
     (`tests/golden/random-calls.json`) and the 9 screenshot baselines are re-recorded. Proof that nothing else moved:
     a temporary import that kept the three.js namespace alive passed 35/35 against the old baselines. No user sees
