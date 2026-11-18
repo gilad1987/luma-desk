@@ -1,12 +1,22 @@
 import type { StageService } from '../../../engine/stage/StageService';
 import type { MvrStore } from '../../../io/mvrStore';
+import type * as MvrModule from '../../../mvr';
 import type { MvrImport } from '../../../mvr';
 
-/** What the import needs from the desk; main.ts passes the real store and stage service. */
+/** The part of the parser chunk the import uses. */
+type MvrParser = Pick<typeof MvrModule, 'importMvr' | 'MvrError'>;
+
+/**
+ * What the import needs from the desk; main.ts passes the real store and stage service. `loadParser` defaults to the
+ * lazy chunk; tests pass one that rejects, to prove a chunk that does not load stores nothing.
+ */
 export interface MvrImportDeps {
   readonly store: Pick<MvrStore, 'put' | 'delete'>;
   readonly stage: Pick<StageService, 'apply'>;
+  readonly loadParser?: () => Promise<MvrParser>;
 }
+
+const loadMvrChunk = (): Promise<MvrParser> => import('../../../mvr');
 
 /**
  * How an import ended. `failed`: the file is not a usable MVR (`MvrError`); the stage is unchanged and `message` is
@@ -28,7 +38,7 @@ export async function importMvrFile(
   file: { readonly name: string; readonly bytes: Uint8Array<ArrayBuffer> },
   deps: MvrImportDeps,
 ): Promise<MvrImportOutcome> {
-  const { importMvr, MvrError } = await import('../../../mvr');
+  const { importMvr, MvrError } = await (deps.loadParser ?? loadMvrChunk)();
   const hash = await deps.store.put(file.bytes);
   let result: MvrImport;
   try {
