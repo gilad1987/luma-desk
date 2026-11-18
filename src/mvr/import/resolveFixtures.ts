@@ -1,15 +1,16 @@
 import type { FixtureTypeId } from '../../domain/FixtureType';
 import type { MvrArchive } from '../archive/MvrArchive';
 import type { ResolvedFixture } from '../design/DesignInput';
-import { classifyType } from '../gdtf/classifyType';
 import type { GdtfInfo } from '../gdtf/GdtfInfo';
 import { breakFootprint } from '../gdtf/breakFootprint';
 import { modeChannels } from '../gdtf/modeChannels';
 import type { MvrWarning } from '../MvrWarning';
 import { patchFromAddresses } from '../patch/address';
 import type { MvrFixtureRecord } from '../scene/MvrScene';
+import { classifyFixture, type FixtureClass } from './classifyFixture';
 import { fallbackType } from './fallbackType';
 import { readGdtfTable } from './gdtfTable';
+import { typeGuessWarnings } from './typeGuessWarnings';
 
 /** The scene's `<Fixture>` elements after the GDTF and patch steps, split into desk fixtures and objects. */
 export interface ResolvedRig {
@@ -25,6 +26,12 @@ export interface ResolvedRig {
   readonly patchWarnings: readonly MvrWarning[];
 }
 
+/** What the GDTF step decides for one fixture: a `FixtureClass` plus the resolved mode and its DMX footprint. */
+interface TypeAndMode extends FixtureClass {
+  readonly mode: string;
+  readonly footprint?: number;
+}
+
 /**
  * The type, mode and footprint of one fixture; without a usable GDTF the mode is kept as the scene names it. Mode
  * warnings are kept once per GDTF file and requested mode (the first fixture names it), because a show often gives
@@ -34,14 +41,14 @@ function typeAndMode(
   record: MvrFixtureRecord,
   info: GdtfInfo | undefined,
   modeWarnings: Map<string, MvrWarning>,
-): { readonly type: FixtureTypeId | 'object'; readonly mode: string; readonly footprint?: number } {
-  if (info === undefined) return { type: fallbackType(record.gdtfSpec), mode: record.gdtfMode };
+): TypeAndMode {
+  if (info === undefined) return { type: fallbackType(record.gdtfSpec), fromName: false, mode: record.gdtfMode };
   const result = modeChannels(info, record.gdtfMode, record.uuid);
   const key = `${info.fileName}\n${record.gdtfMode}`;
   for (const warning of result.warnings) if (!modeWarnings.has(key)) modeWarnings.set(key, warning);
   const footprint = breakFootprint(result.channels);
-  const type = classifyType(info, result.channels);
-  return { type, mode: result.mode, ...(footprint === undefined ? {} : { footprint }) };
+  const kind = classifyFixture(info, result.channels, [record.gdtfSpec, info.name, record.name]);
+  return { ...kind, mode: result.mode, ...(footprint === undefined ? {} : { footprint }) };
 }
 
 /**
@@ -58,16 +65,18 @@ export function resolveFixtures(archive: MvrArchive, records: readonly MvrFixtur
   const patchWarnings: MvrWarning[] = [];
   const fixtures: ResolvedFixture[] = [];
   const objectUuids: string[] = [];
+  const guesses = new Map<FixtureTypeId, number>();
   for (const record of records) {
-    const { type, ...identity } = typeAndMode(record, table.infos.get(record.gdtfSpec), modeWarnings);
+    const { type, fromName, ...identity } = typeAndMode(record, table.infos.get(record.gdtfSpec), modeWarnings);
     if (type === 'object') {
       objectUuids.push(record.uuid);
       continue;
     }
+    if (fromName) guesses.set(type, (guesses.get(type) ?? 0) + 1);
     const { patch, warnings } = patchFromAddresses(record.addresses, record.uuid);
     patchWarnings.push(...warnings);
     fixtures.push({ record, type, gdtfName: record.gdtfSpec, ...identity, ...(patch ? { patch } : {}) });
   }
-  const gdtfWarnings = [...table.warnings, ...modeWarnings.values()];
+  const gdtfWarnings = [...table.warnings, ...modeWarnings.values(), ...typeGuessWarnings(guesses)];
   return { fixtures, objectUuids, missingGdtfCount: table.missingCount, gdtfWarnings, patchWarnings };
 }
