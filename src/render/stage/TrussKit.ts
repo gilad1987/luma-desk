@@ -1,6 +1,6 @@
 import { CylinderGeometry, Group, MeshBasicMaterial, Vector3, type Material, type Object3D } from 'three';
-import type { Vec3Tuple } from '../../core';
-import { ROOF, UP } from '../../domain/venue';
+import type { Vec3 } from '../../domain/stage/types';
+import { UP } from '../../domain/venue';
 import { addMesh } from '../shared';
 
 /** The four chords of a square box truss, as corner signs. */
@@ -20,7 +20,8 @@ const LACING: readonly (readonly [x: number, z: number, aboutX: boolean])[] = [
 
 /**
  * The shared parts of the rig steel: one thin unit tube (every chord, diagonal and chain is this tube, scaled), the
- * truss aluminium and the dark chain material. Sharing one geometry keeps thousands of truss meshes cheap.
+ * truss aluminium and the dark chain material. Sharing one geometry keeps thousands of truss meshes cheap, and the
+ * stage scene keeps one kit for its whole life, so a rebuild never frees or recreates these three resources.
  */
 export class TrussKit {
   readonly tube = new CylinderGeometry(0.03, 0.03, 1, 6);
@@ -32,11 +33,16 @@ export class TrussKit {
     this.steel = steel;
   }
 
+  /** The resources every build shares; a rebuild must not dispose them. */
+  get shared(): readonly (CylinderGeometry | Material)[] {
+    return [this.tube, this.chainMaterial, this.steel];
+  }
+
   /**
    * Adds a straight box truss from `a` to `b` with `spacing` between chords: 4 chords, then zig-zag lacing on all
    * four faces, in one group turned along the truss.
    */
-  addSection(parent: Object3D, a: Vec3Tuple, b: Vec3Tuple, spacing: number): Group {
+  addSection(parent: Object3D, a: Vec3, b: Vec3, spacing: number): Group {
     const s = spacing,
       A = new Vector3(...a),
       B = new Vector3(...b),
@@ -66,9 +72,9 @@ export class TrussKit {
     return section;
   }
 
-  /** Adds a chain motor line from the roof down to the height `bottom` at (x, z). */
-  addChain(parent: Object3D, x: number, bottom: number, z: number): void {
-    const chain = addMesh(parent, this.tube, this.chainMaterial, { position: [x, (ROOF + bottom) / 2, z] });
-    chain.scale.set(0.7, ROOF - bottom, 0.7);
+  /** Adds a chain motor line from the grid height `top` down to the point `at`. */
+  addChain(parent: Object3D, [x, bottom, z]: Vec3, top: number): void {
+    const chain = addMesh(parent, this.tube, this.chainMaterial, { position: [x, (top + bottom) / 2, z] });
+    chain.scale.set(0.7, top - bottom, 0.7);
   }
 }

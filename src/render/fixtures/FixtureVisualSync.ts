@@ -10,19 +10,15 @@ import { outputValue } from './sync/BeamFrame';
 import { LightSync, type BeamSurface } from './sync/LightSync';
 import { syncScreen, type ScreenTargets } from './sync/syncScreen';
 
-/** Inputs of the frame update; the screen targets and the light frame come from venue and render core. */
+/** Inputs of the frame update; the visuals and their screen targets come later, through `setVisuals`. */
 export interface FixtureVisualSyncDeps {
-  /** In fixture array order. */
-  readonly visuals: readonly FixtureVisual[];
   readonly selection: Pick<Selection, 'has'>;
-  /** The boot rig's one LED screen, driven by every screen fixture of `visuals`; a rebuild uses `setVisuals`. */
-  readonly screen: ScreenTargets;
   /** The beams' shared haze-noise time. */
   readonly beamTime: SharedUniform;
   readonly goboTextures: readonly Texture[];
   /** Render core's per-frame light aggregate; the integrator feeds it to the scene and key lights after update. */
   readonly lights: LightFrame;
-  /** Where beams land; without it, the venue's fixed surfaces (`hitSurface`). */
+  /** Where beams land (the stage's `SurfaceHit`); without it, the venue's fixed surfaces (`hitSurface`). */
   readonly surface?: BeamSurface;
 }
 
@@ -47,7 +43,7 @@ function targetsOf(screens: ReadonlyMap<number, ScreenTargets>, v: ScreenVisual)
 /**
  * Per-frame update of every fixture visual from the engine output (legacy `updateVisuals` up to the end of its
  * fixture loop). It resets and fills the render core light frame; render core turns it into the scene lights.
- * The visual list and the screen targets change on a rig rebuild ({@link setVisuals}); the rest stays.
+ * It starts with no visuals; the visual list and the screen targets come with each rig build ({@link setVisuals}).
  */
 export class FixtureVisualSync {
   readonly #beamTime: SharedUniform;
@@ -61,8 +57,6 @@ export class FixtureVisualSync {
     this.#beamTime = deps.beamTime;
     this.#lights = lights;
     this.#light = new LightSync({ selection, goboTextures, lights, surface });
-    const screens = deps.visuals.filter((v) => v.kind === 'screen').map((v) => [v.fixture.id, deps.screen] as const);
-    this.setVisuals(deps.visuals, new Map(screens));
   }
 
   /**

@@ -1,3 +1,4 @@
+import type { WebGLRenderer } from 'three';
 import type { AutoShow } from '../../autoshow/AutoShow';
 import type { CommandRunner } from '../../command/CommandRunner';
 import type { AppState } from '../../engine/AppState';
@@ -25,6 +26,8 @@ export interface TestHookDeps {
   readonly merger: Pick<OutputMerger, 'compute'>;
   readonly autoShow: Pick<AutoShow, 'modulation'>;
   readonly runner: Pick<CommandRunner, 'run'>;
+  /** `renderMemory` reads its GPU resource counts. */
+  readonly renderer: Pick<WebGLRenderer, 'info'>;
   /** The current console layout (`deskMode`), owned by the layout area. */
   readonly deskMode: () => LayoutMode;
 }

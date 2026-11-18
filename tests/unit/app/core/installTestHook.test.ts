@@ -1,3 +1,4 @@
+import type { WebGLRenderer } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { wireEngine } from '../../../../src/app/boot/wireEngine';
 import type { DeskTestApi } from '../../../../src/app/testHook/installTestHook';
@@ -27,20 +28,19 @@ type DeskPage = { test: DeskTestApi; fixtures: unknown; setView: unknown } & Des
 function install(clock?: object) {
   const engine = wireEngine();
   const { groupLibrary: groups, presetLibrary: presets, pool, tempo, appState: state, programmer, selection } = engine;
-  const { rig } = engine.stage;
-  const execs = pool.execs;
+  const [rig, execs] = [engine.stage.rig, pool.execs];
   const serializer = new ShowSerializer({ rig, groups, presets, execs, tempo, state, programmer, selection });
   const dom = new FakeDom();
   dom.add('cmdFb');
   dom.add('toast');
   FakeObserver.all.length = 0;
   vi.stubGlobal('MutationObserver', FakeObserver);
-  const page: { __deskClock?: object; __desk?: DeskPage } = {};
-  if (clock) page.__deskClock = clock;
+  const page: { __deskClock?: object; __desk?: DeskPage } = clock ? { __deskClock: clock } : {};
   vi.stubGlobal('window', page);
   const setView = vi.fn();
   const autoShow = { modulation: { pump: 1, hitUntil: 0 } };
-  installTestHook({ ...engine, setView, execs, serializer, deskMode: () => 'desk', autoShow });
+  const renderer = { info: { memory: { geometries: 3, textures: 1 } } } as unknown as Pick<WebGLRenderer, 'info'>;
+  installTestHook({ ...engine, setView, execs, serializer, deskMode: () => 'desk', autoShow, renderer });
   return { engine, dom, page, setView };
 }
 
@@ -56,7 +56,7 @@ describe('installTestHook', () => {
 
   it('keeps exactly the fields the specs read', () => {
     const { page, engine, setView } = install(fakeClock());
-    expect(Object.keys(page.__desk ?? {})).toEqual(['setView', 'fixtures', 'stage', 'applyTemplate', 'test']);
+    expect(Object.keys(page.__desk ?? {}).join()).toBe('setView,fixtures,stage,applyTemplate,renderMemory,test');
     expect(page.__desk?.fixtures).toBe(engine.stage.rig.fixtures);
     expect(page.__desk?.setView).toBe(setView);
   });
