@@ -14,9 +14,9 @@ export default defineConfig({
   timeout: 120_000,
   expect: {
     timeout: 30_000,
-    // Exact colours and no differing pixel. With the raster flag below and the style file, the run-to-run noise
-    // measured 0 pixels in 45 shots; either change alone let text flip by up to 8,244 pixels. Only the MA layout's
-    // CSS 3D console flips edge pixels between runs; screenshots.spec.ts gives those shots their own margin.
+    // Exact colours and no differing pixel. With the raster flag below and the style file, the desk and classic shots
+    // measured 0 differing pixels from run to run; either change alone let text flip by up to 8,244 pixels. The MA
+    // layout's CSS 3D console flipped up to 109 edge pixels, so screenshots.spec.ts gives its shots their own margin.
     toHaveScreenshot: { threshold: 0, maxDiffPixels: 0, stylePath: 'tests/shared/singleTextRaster.css' },
   },
   // a `.only` left in a commit would silently skip the rest of the suite
