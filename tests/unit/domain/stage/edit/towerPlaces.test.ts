@@ -17,6 +17,14 @@ const onTower = (at: Vec3): Vec3[] => {
   return addFixturesOnTruss(withTower, { trussId: 'tower-1', type: 'wash', count: 12 }).fixtures.map((f) => f.position);
 };
 
+/** The second batch of twelve washes on the same tower: it lands on the first, so it moves one lane. */
+const secondBatch = (at: Vec3): Vec3[] => {
+  const withTower = addPresetTruss({ ...sampleDesign(), trusses: [], fixtures: [] }, 'tower', at);
+  const once = addFixturesOnTruss(withTower, { trussId: 'tower-1', type: 'wash', count: 12 });
+  const twice = addFixturesOnTruss(once, { trussId: 'tower-1', type: 'wash', count: 12 });
+  return twice.fixtures.slice(12).map((f) => f.position);
+};
+
 describe('addFixturesOnTruss on a tower', () => {
   it('keeps all 12 fixtures of a 6 m tower at or above the tower base, spread to the top', () => {
     const ys = onTower([-4, 1, -2]).map((p) => p[1]);
@@ -33,6 +41,16 @@ describe('addFixturesOnTruss on a tower', () => {
     const places = onTower([0, 1, -2]);
     expect(new Set(places.map(([x, , z]) => rounded([x, z]).join(' ')))).toEqual(new Set(['0 -1.6']));
     expect(places.every(([x, , z]) => Math.hypot(x, z + 2) > 0.2)).toBe(true);
+  });
+
+  it('moves a second batch on a tower at x = 0 one more lane downstage, away from the column, not into it', () => {
+    expect(new Set(secondBatch([0, 1, -2]).map(([x, , z]) => rounded([x, z]).join(' ')))).toEqual(new Set(['0 -1.2']));
+  });
+
+  it('moves a second batch on a side tower one lane upstage, still 0.4 m toward the stage centre', () => {
+    expect(new Set(secondBatch([-4, 1, -2]).map(([x, , z]) => rounded([x, z]).join(' ')))).toEqual(
+      new Set(['-3.6 -2.4']),
+    );
   });
 
   it('steps downstage, never across x = 0, for a tower less than one step off the centre line', () => {

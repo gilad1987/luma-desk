@@ -25,7 +25,10 @@ export function buildVenueHeadless(): HeadlessVenue {
     const scene = new Scene();
     const firstChild = scene.children.length;
     const views = { fitTo: vi.fn(), setView: vi.fn(), currentView: 'foh' as const, fohRig: new FohRig() };
-    const stageScene = new StageScene({ scene, surfaces: { setSurfaces: vi.fn() }, views }, BUILT_IN_DESIGN);
+    const stageScene = new StageScene(
+      { scene, surfaces: { setSurfaces: vi.fn(), setVenue: vi.fn() }, views },
+      BUILT_IN_DESIGN,
+    );
     const venue = withSeededRandom(() => stageScene.buildVenue());
     return { scene, venue, firstChild, stageScene };
   } finally {

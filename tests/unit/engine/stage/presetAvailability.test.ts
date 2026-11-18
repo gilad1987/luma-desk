@@ -1,5 +1,5 @@
 /**
- * Owns G10 at the preset pool: `PresetLibrary.isAvailable` follows the current stage, the preset data stays, and
+ * Owns G10 at the preset pool: `PresetLibrary.missingTarget` follows the current stage, the preset data stays, and
  * applying an unavailable computed preset logs the missing part and changes nothing. Which preset needs which part is
  * owned by `presetTargets.test.ts`; how a preset applies on the built-in stage by the programmer parity tests.
  */
@@ -50,27 +50,16 @@ const setup = () => {
 describe('preset availability (G10)', () => {
   it('follows the stage: a ring preset is unavailable without a ring, the others stay, the data is kept', () => {
     const { service, presets } = setup();
-    const available = (): boolean[] => SLOTS.map(([t, s]) => presets.isAvailable(t, s));
     const missing = () => SLOTS.map(([t, s]) => presets.missingTarget(t, s));
-    const before = [available(), missing()];
+    const before = missing();
     service.apply(createTemplate('empty'), 'builder');
-    expect([before, [available(), missing()], presets.all]).toEqual([
-      [
-        [true, true, true, true],
-        [null, null, null, null],
-      ],
-      [
-        [false, true, true, true],
-        ['ring', null, null, null],
-      ],
-      pools(),
-    ]);
+    expect([before, missing(), presets.all]).toEqual([[null, null, null, null], ['ring', null, null, null], pools()]);
   });
 
   it('makes every preset available without a RigSource', () => {
     const library = new PresetLibrary(new EventBus<EngineEvents>());
     library.replace(pools());
-    expect(library.isAvailable(2, 5)).toBe(true);
+    expect(library.missingTarget(2, 5)).toBeNull();
   });
 
   it('applies the preset on a stage with a ring, and on one without logs the part and changes nothing', () => {

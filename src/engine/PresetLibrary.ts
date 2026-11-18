@@ -57,11 +57,6 @@ export class PresetLibrary {
     return this.#source === undefined ? PRESET_FNS : presetFnsOf(this.#source.frame);
   }
 
-  /** False when `missingTarget` names a part, so the pool view can hide the preset. */
-  isAvailable(type: PresetType, slot: number): boolean {
-    return this.missingTarget(type, slot) === null;
-  }
-
   /**
    * Records the programmer values of the pool's features for `ids` (the selection) as a per-fixture preset in
    * `slot`. Storing over a recorded preset keeps its name; anything else gets the default name. When no selected

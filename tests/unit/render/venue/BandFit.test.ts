@@ -54,4 +54,15 @@ describe('BandFit', () => {
     fit.fit(IDENTITY_FIT, null);
     expect(wedge.position.toArray()).toEqual([6, DECK + 0.25, STAGE.z1]);
   });
+
+  it('keeps a ground object (a sub) at its built y on a lower or a higher deck, and moves it in plan', () => {
+    const sub = new Object3D();
+    sub.position.set(20, 0.6, 3.4);
+    const fit = new BandFit([], [], [], [sub]);
+    fit.fit(deckFitOf({ ...wideDeck, height: DECK - 0.8 }), null);
+    expect(sub.position.y).toBe(0.6);
+    expect(sub.position.x).toBeCloseTo(40);
+    fit.fit(deckFitOf(wideDeck), null);
+    expect(sub.position.y).toBe(0.6);
+  });
 });

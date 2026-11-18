@@ -35,7 +35,8 @@ describe('StageScene', () => {
   it('sets the surfaces once at boot and leaves the camera alone', () => {
     const { surfaces, views, host } = bootStageScene(BUILT_IN_DESIGN);
     expect(surfaces.setSurfaces).toHaveBeenCalledTimes(1);
-    expect(surfaces.setSurfaces).toHaveBeenCalledWith(surfacesOf(BUILT_IN_DESIGN), 'sultans-pool');
+    expect(surfaces.setSurfaces).toHaveBeenCalledWith(surfacesOf(BUILT_IN_DESIGN));
+    expect(surfaces.setVenue.mock.calls).toEqual([['sultans-pool']]);
     expect(views.fitTo).not.toHaveBeenCalled();
     expect(views.setView).not.toHaveBeenCalled();
     const [fixtures, slots] = host.visuals.rebuild.mock.calls[0] as [Fixture[], Map<number, ScreenSlot>];
@@ -43,13 +44,15 @@ describe('StageScene', () => {
     expect([...slots.keys()]).toEqual([2001]);
   });
 
-  it('rebuilds with exactly one setSurfaces, then refits the views and hands over the rig', () => {
+  it('rebuilds with one setSurfaces after the new venue, then refits the views and hands over the rig', () => {
     const { surfaces, views, host, stage } = bootStageScene(BUILT_IN_DESIGN);
     const design = festivalStage(),
       fixtures = rigFromDesign(design).fixtures;
     stage.rebuild(design, fixtures);
     expect(surfaces.setSurfaces).toHaveBeenCalledTimes(2);
-    expect(surfaces.setSurfaces).toHaveBeenLastCalledWith(surfacesOf(design), 'open-field');
+    expect(surfaces.setSurfaces).toHaveBeenLastCalledWith(surfacesOf(design));
+    const [venueAt, surfacesAt] = [surfaces.setVenue, surfaces.setSurfaces].map((f) => f.mock.invocationCallOrder[1]);
+    expect([surfaces.setVenue.mock.lastCall, (venueAt ?? 0) < (surfacesAt ?? 0)]).toEqual([['open-field'], true]);
     expect(views.fitTo).toHaveBeenCalledWith(boundsOf(design));
     expect(views.setView).toHaveBeenCalledWith('top');
     expect(host.visuals.rebuild).toHaveBeenCalledTimes(2);

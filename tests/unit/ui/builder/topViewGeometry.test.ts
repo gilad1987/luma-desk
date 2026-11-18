@@ -43,6 +43,12 @@ describe('trussFootprint', () => {
     });
     expect(trussFootprint(ring)).toEqual({ kind: 'ring', centre: [0, 2], radius: 4 });
   });
+
+  it('makes the footprint of a truss once, however many frames draw it', () => {
+    const [front] = theatre.trusses;
+    if (!front) throw new Error('the theatre template has trusses');
+    expect(trussFootprint(front)).toBe(trussFootprint(front));
+  });
 });
 
 describe('pickAt', () => {

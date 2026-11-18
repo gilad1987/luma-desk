@@ -1,5 +1,5 @@
 /**
- * QA6: computed presets across a tour of stages in the wired engine: `isAvailable` follows each stage, an unavailable
+ * QA6: computed presets across a tour of stages in the wired engine: `missingTarget` follows each stage, an unavailable
  * preset refuses by command and changes nothing, the data survives, and the presets work again on the built-in stage.
  * Which preset needs which part is owned by `../presetTargets.test.ts`; the aimed values by the presetFnsOf tests.
  */
@@ -30,7 +30,7 @@ describe('computed presets across stages (QA6)', () => {
     const tour: readonly TemplateId[] = ['sultans-pool', 'empty', 'theatre', 'festival', 'sultans-pool'];
     const seen = tour.map((id) => {
       w.to(id);
-      return SLOTS.map((s) => w.presets.isAvailable(2, s));
+      return SLOTS.map((s) => w.presets.missingTarget(2, s) === null);
     });
     expect(seen).toEqual([
       [true, true, true, true],

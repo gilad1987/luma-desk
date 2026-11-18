@@ -8,6 +8,9 @@ import { highestTrussY } from '../../../../src/domain/stage/trussTop';
 import { placePaHang } from '../../../../src/render/venue/PaFit';
 import { buildPaHangs } from '../../../../src/render/venue/PaHangs';
 
+/** Float slack for a box that sits exactly on the deck: the lift and the box offset each round once. */
+const EPS = 1e-9;
+
 /** Builds the PA into a fresh scene and fits its hangs to `design`, as `StageVenue.apply` does. */
 function fitted(design: StageDesign) {
   const hangs = buildPaHangs(new Group(), new MeshStandardMaterial());
@@ -23,13 +26,17 @@ describe('placePaHang', () => {
     expect(built[0]).toEqual([-29, 21.5, 3]);
   });
 
-  it('hangs the festival PA under its highest truss and above its deck', () => {
+  it('hangs the festival PA 0.3 m under its highest truss underside, at its fitted plan place', () => {
     const festival = createTemplate('festival');
-    const { boxes } = fitted(festival);
-    for (const box of boxes) {
-      expect(box.max.y).toBeLessThanOrEqual(12);
-      expect(box.max.y).toBeGreaterThan(11);
+    const fit = deckFitOf(festival.deck);
+    const { hangs, boxes } = fitted(festival);
+    for (const [i, box] of boxes.entries()) {
+      // The mid and back trusses: 12 m less half their 0.52 m section is 11.74, less the 0.3 m gap.
+      expect(box.max.y).toBeCloseTo(11.44);
       expect(box.min.y).toBeGreaterThan(festival.deck.height);
+      const h = hangs[i];
+      expect(h?.group.position.x).toBeCloseTo((h?.x ?? 0) * fit.scaleX + fit.offsetX);
+      expect(h?.group.position.z).toBeCloseTo((h?.z ?? 0) * fit.scaleZ + fit.offsetZ);
     }
   });
 
@@ -44,5 +51,19 @@ describe('placePaHang', () => {
       expect(box.max.x).toBeLessThanOrEqual(empty.deck.x1);
       expect(box.max.z).toBeLessThanOrEqual(empty.deck.z1);
     }
+  });
+
+  it('stands the two hangs of each side a row apart in z', () => {
+    const { hangs } = fitted(createTemplate('empty'));
+    for (const side of [-1, 1]) {
+      const [outer, inner] = hangs.filter((h) => h.side === side).map((h) => h.group.position.z);
+      expect((outer ?? 0) - (inner ?? 0)).toBeCloseTo(1.6);
+    }
+  });
+
+  it('stands the PA on the deck when the highest truss is too low to hang it over the deck (theatre)', () => {
+    const theatre = createTemplate('theatre');
+    const { boxes } = fitted(theatre);
+    for (const box of boxes) expect(box.min.y).toBeGreaterThanOrEqual(theatre.deck.height - EPS);
   });
 });

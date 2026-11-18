@@ -19,4 +19,24 @@ describe('show stage field: default groups of the loaded stage', () => {
     world.service.apply(createTemplate('empty'), 'builder');
     expect(world.groups.all).toStrictEqual({});
   });
+
+  it('a show with the same custom stage swaps the pool without a rig change; the next change replaces its defaults', () => {
+    const world = stageWorld();
+    new StageGroups(world.bus, world.service, world.groups);
+    world.service.apply(createTemplate('festival'), 'builder');
+    world.serializer.load({ v: 1, stage: jsonRoundTrip(world.service.design) });
+    expect(world.service.cause).toBe('builder');
+    world.service.apply(createTemplate('empty'), 'builder');
+    expect(world.groups.all).toStrictEqual({});
+  });
+
+  it('a show without stage on the built-in stage swaps the pool; the next change gives the new stage defaults', () => {
+    const world = stageWorld();
+    new StageGroups(world.bus, world.service, world.groups);
+    world.service.apply(createTemplate('festival'), 'builder');
+    world.service.apply(world.service.builtIn, 'builder');
+    world.serializer.load({ v: 1 });
+    world.service.apply(createTemplate('theatre'), 'builder');
+    expect(world.groups.all).toStrictEqual(defaultPoolOf(world.service));
+  });
 });

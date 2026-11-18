@@ -13,7 +13,7 @@ import { stubCanvasDocument } from '../stubCanvasDocument';
 export function bootStageScene(design: StageDesign) {
   stubCanvasDocument();
   const scene = new Scene();
-  const surfaces = { setSurfaces: vi.fn() };
+  const surfaces = { setSurfaces: vi.fn(), setVenue: vi.fn() };
   const views = { fitTo: vi.fn(), setView: vi.fn(), currentView: 'top' as const, fohRig: new FohRig() };
   const visuals = { assertBuildable: vi.fn<(fixtures: readonly Fixture[]) => void>(), rebuild: vi.fn() };
   const host = { visuals, overlay: { setFixtures: vi.fn() }, screenLight: new PointLight() };

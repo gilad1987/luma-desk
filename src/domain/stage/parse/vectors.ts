@@ -15,7 +15,8 @@ export function toVec3(read: readonly number[] | undefined): Vec3 | undefined {
 /**
  * Normalizes a stored rotation, so every rotation in a design is a unit quaternion even after rounding in the JSON. A
  * quaternion that is already unit within `UNIT_TOLERANCE` is returned unchanged, so a design survives a save and load
- * exactly. A zero-length quaternion has no direction, so it goes to `fail` with the problem and its value.
+ * exactly. A zero-length quaternion has no direction, so it goes to `fail` with the problem and its value. So does one
+ * whose length overflows to Infinity: dividing by it would give a zero quaternion, which turns into NaN later.
  */
 export function toUnitQuat(
   read: readonly number[] | undefined,
@@ -25,6 +26,7 @@ export function toUnitQuat(
   if (x === undefined || y === undefined || z === undefined || w === undefined) return undefined;
   const length = Math.hypot(x, y, z, w);
   if (length <= MIN_QUAT_LENGTH) return fail(`zero-length quaternion [${x}, ${y}, ${z}, ${w}]`);
+  if (!Number.isFinite(length)) return fail(`quaternion too long to normalize [${x}, ${y}, ${z}, ${w}]`);
   if (Math.abs(length - 1) <= UNIT_TOLERANCE) return [x, y, z, w];
   return [x / length, y / length, z / length, w / length];
 }

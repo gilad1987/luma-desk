@@ -32,7 +32,8 @@ function riserRow(riser: StageRiser, run: RunEdit): HTMLElement {
   const name = document.createElement('span');
   name.textContent = `${riser.id}: ${riser.size[0]} x ${riser.size[2]} m`;
   row.appendChild(name);
-  row.appendChild(makeButton('Remove', he.builder.tools.removeRiser, () => run((d) => removeRiser(d, riser.id))));
+  const remove = (): void => run((d) => removeRiser(d, riser.id));
+  row.appendChild(makeButton('Remove', he.builder.tools.removeRiser, remove, `${riser.id} Remove`));
   return row;
 }
 

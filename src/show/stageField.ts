@@ -30,17 +30,19 @@ export function writeStage(deps: StageFieldDeps): { stage?: StageDesign } {
  * Applies the stage of a show before the groups load, so they come from the new rig. A show without `stage` means the
  * built-in design; a `stage` that does not parse means the built-in design plus one toast, and the rest of the show
  * still loads. It applies only when the design changes: an equal `stage` (the show the desk booted on) or a missing or
- * bad one on the built-in stage keeps the rig, because each apply rebuilds the scene and resets the caches.
+ * bad one on the built-in stage keeps the rig, because each apply rebuilds the scene and resets the caches. It returns
+ * `true` when it sent the bad-stage toast, so a caller that toasts after the load does not hide it.
  */
-export function readStage(raw: unknown, deps: StageFieldDeps): void {
+export function readStage(raw: unknown, deps: StageFieldDeps): boolean {
   const { service, badStage, toast } = deps;
   const result = stageOf(raw);
   if (result?.ok) {
     if (!isSameData(result.design, service.design)) service.apply(result.design, 'showLoad');
-    return;
+    return false;
   }
   if (!service.isBuiltIn) service.apply(service.builtIn, 'showLoad');
   if (result) toast({ kind: 'toast', text: badStage });
+  return result !== undefined;
 }
 
 /**

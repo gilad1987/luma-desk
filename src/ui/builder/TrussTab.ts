@@ -67,7 +67,7 @@ export class TrussTab {
 
   #trussButton(truss: StageTruss, isSelected: boolean): HTMLElement {
     const select = (): void => this.#session.select({ fixtures: [], trusses: [truss.id] });
-    const button = makeButton(truss.name, he.builder.tools.pickTruss, select);
+    const button = makeButton(truss.name, he.builder.tools.pickTruss, select, `truss ${truss.id}`);
     button.classList.add('truss-item');
     button.classList.toggle('is-selected', isSelected);
     button.ariaPressed = String(isSelected);

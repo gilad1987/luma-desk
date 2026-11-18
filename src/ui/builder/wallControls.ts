@@ -3,7 +3,8 @@ import type { StageDesign } from '../../domain/stage/StageDesign';
 import { he } from '../../i18n/he';
 import type { EditorSession } from './EditorSession';
 import type { RunEdit } from './ErrorText';
-import { makeCheckbox, makeHeading } from './formControls';
+import { makeCheckbox } from './checkbox';
+import { makeHeading } from './formControls';
 import { numberField } from './numberField';
 import { MIN_SIZE_M, SIZE_STEP_M } from './sizeLimits';
 
@@ -23,9 +24,13 @@ const WALL_FIELDS: readonly { key: keyof WallSize; label: string; title: string 
  */
 export function wallControls(d: StageDesign, session: Pick<EditorSession, 'edit'>, run: RunEdit): HTMLElement[] {
   const size = wallSizeOf(d);
-  const toggle = makeCheckbox('LED wall', he.builder.tools.ledWall, size !== null, (isOn) =>
-    run((draft) => setLedWall(draft, isOn ? NEW_WALL : null)),
-  );
+  const toggle = makeCheckbox({
+    label: 'LED wall',
+    key: 'ledWall',
+    title: he.builder.tools.ledWall,
+    isOn: size !== null,
+    onToggle: (isOn) => run((draft) => setLedWall(draft, isOn ? NEW_WALL : null)),
+  });
   if (!size) return [makeHeading('LED wall'), toggle];
   const fields = WALL_FIELDS.map(({ key, label, title }) =>
     numberField({

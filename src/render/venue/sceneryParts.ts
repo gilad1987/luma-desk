@@ -25,15 +25,16 @@ function appendedBy<T>(scene: Object3D, build: () => T): [T, Object3D[]] {
 /**
  * Builds the PA, then the backline, band and orchestra, and registers them all as the `band` scenery part. The PA
  * comes first, before the band layout spread starts counting, so the spread never moves it (legacy order). The PA
- * hangs go to the fit apart from the other objects, as they hang under the trusses instead of riding the deck.
+ * hangs go to the fit apart from the other objects, as they hang under the trusses instead of riding the deck; the
+ * rest of the PA, the subs, goes as ground objects, as they stand on the ground and not on the deck.
  */
 export function buildBandArea(scene: Object3D, materials: VenueMaterials, scenery: SceneryRegistry): BandArea {
   const [hangs, pa] = appendedBy(scene, () => buildPaHangs(scene, materials.dark));
   const [performers, band] = appendedBy(scene, () => buildBandStage(scene, materials));
   scenery.register('band', ...pa, ...band);
   const hung = new Set(hangs.map((h) => h.group));
-  const moved = [...pa.filter((o) => !hung.has(o)), ...band];
-  return { performers, band: new BandFit(moved, performers, hangs) };
+  const subs = pa.filter((o) => !hung.has(o));
+  return { performers, band: new BandFit(band, performers, hangs, subs) };
 }
 
 /** Builds the chairs and the audience on the venue's ground and registers them as the `crowd` scenery part. */

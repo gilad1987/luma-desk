@@ -49,6 +49,17 @@ Nine automatic lighting styles: **EDM, Techno, Rock, Pop, Hip-Hop, Mizrahi/Party
 
 ![Auto Show](docs/screenshots/auto-show.png)
 
+### 🏗 Stage Builder
+
+**Build Stage** in the top bar opens the Stage Builder. Start from a template (Empty stage, Theatre, Festival or the current Sultan's Pool rig) and a venue (Sultan's Pool, Black box or Open field), then edit the deck, risers, trusses, LED walls and fixtures in a top view. The 3D stage previews every edit live. **Done** keeps the new stage and its rig; **Cancel** puts the old one back. A custom stage is saved with the show.
+
+| Key                                              | Action                       |
+| ------------------------------------------------ | ---------------------------- |
+| `Ctrl`/`Cmd` + `Z`                               | Undo                         |
+| `Ctrl`/`Cmd` + `Shift` + `Z`, `Ctrl`/`Cmd` + `Y` | Redo                         |
+| `Ctrl`/`Cmd` + `D`                               | Duplicate the selected items |
+| `Delete` / `Backspace`                           | Delete the selected items    |
+
 ### 💡 The rig: 405 fixtures
 
 Every fixture is a 3D model of a real product:
