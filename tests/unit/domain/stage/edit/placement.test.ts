@@ -51,4 +51,9 @@ describe('moveTruss on whole millimetres', () => {
     const moved = moveTruss(sampleDesign(), PIPE.id, [1.2344, 0, -0.0006]);
     expect(moved.trusses[0]?.transform.position).toEqual([1.234, 7, -0.001]);
   });
+
+  it('returns the same design when the delta rounds back to the same place, so no empty undo step is made', () => {
+    const design = sampleDesign();
+    expect(moveTruss(design, PIPE.id, [0.0002, 0, 0])).toBe(design);
+  });
 });

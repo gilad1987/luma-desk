@@ -48,11 +48,13 @@ export function moveTruss(d: StageDesign, trussId: string, delta: Vec3): StageDe
   if (delta.every((v) => v === 0)) return d;
   const position = roundToMillimetre(addPoints(truss.transform.position, delta));
   const carry = (f: StageFixture): StageFixture => roundFixtureToMillimetre(shiftFixture(f, delta));
-  return {
+  const next: StageDesign = {
     ...d,
     trusses: d.trusses.map((t) => (t.id === trussId ? { ...t, transform: { ...t.transform, position } } : t)),
     fixtures: d.fixtures.map((f) => (f.trussId === trussId ? carry(f) : f)),
   };
+  // A sub-millimetre delta rounds back to the same place; returning `d` keeps that out of the undo history.
+  return isSameData(next, d) ? d : next;
 }
 
 /**

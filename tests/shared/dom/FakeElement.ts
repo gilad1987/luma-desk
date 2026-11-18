@@ -59,7 +59,8 @@ export class FakeElement {
     return child;
   }
   remove(): void {
-    this.parent?.children.splice(this.parent.children.indexOf(this), 1);
+    const at = this.parent?.children.indexOf(this) ?? -1;
+    if (at >= 0) this.parent?.children.splice(at, 1);
     this.parent = null;
   }
   /** As the DOM does: removes every child, then appends `children`. The builder panels re-render this way. */
