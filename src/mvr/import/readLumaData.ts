@@ -1,6 +1,8 @@
 import { parseStageDesign } from '../../domain/stage/parse/parseStageDesign';
 import { parseFootprint } from '../../domain/stage/parse/parseFootprint';
-import { allDefined, Reader } from '../../domain/stage/parse/readers';
+import type { Key } from '../../domain/stage/parse/fieldReader';
+import { allDefined, type Raw } from '../../domain/stage/parse/rawValues';
+import { Reader } from '../../domain/stage/parse/readers';
 import { STAGE_DESIGN_VERSION } from '../../domain/stage/StageDesign';
 import type { Vec3 } from '../../domain/stage/types';
 import { LUMA_DATA_VERSION, LUMA_PROVIDER, linkOf } from '../luma/lumaData';
@@ -28,17 +30,18 @@ function parseJson(text: string): unknown {
 /** The offset of the data: zero when absent, `undefined` when it is not three finite numbers. */
 function readOffset(raw: object): Vec3 | undefined {
   const value: unknown = 'offset' in raw ? raw.offset : undefined;
-  return value === undefined ? [0, 0, 0] : new Reader().vec3(value, 'offset');
+  return value === undefined ? [0, 0, 0] : new Reader().vec3({ offset: value }, 'offset', '');
 }
 
 /** One link's footprint: channels checked like a stored show's (`parseFootprint`), spec and mode as text. */
-function readFootprint(r: Reader, value: unknown, path: string): LinkFootprint | undefined {
-  const raw = r.obj(value, path);
-  if (raw === undefined) return undefined;
+function readFootprint(r: Reader, parent: Raw, key: Key, at: string): LinkFootprint | undefined {
+  const o = r.obj(parent, key, at);
+  if (o === undefined) return undefined;
+  const path = r.path(at, key);
   const footprint = {
-    channels: parseFootprint(r, raw['channels'], `${path}.channels`),
-    gdtfSpec: r.str(raw['gdtfSpec'], `${path}.gdtfSpec`),
-    gdtfMode: r.str(raw['gdtfMode'], `${path}.gdtfMode`),
+    channels: parseFootprint(r, o, 'channels', path),
+    gdtfSpec: r.str(o, 'gdtfSpec', path),
+    gdtfMode: r.str(o, 'gdtfMode', path),
   };
   return allDefined(footprint) ? footprint : undefined;
 }
@@ -50,7 +53,7 @@ function readFootprint(r: Reader, value: unknown, path: string): LinkFootprint |
 function readFootprints(raw: object): ReadonlyMap<unknown, LinkFootprint> | undefined {
   const r = new Reader();
   const entries = linkFootprints(raw).map(
-    ([id, value]) => [id, readFootprint(r, value, `links.${String(id)}.footprint`)] as const,
+    ([id, footprint]) => [id, readFootprint(r, { footprint }, 'footprint', `links.${String(id)}`)] as const,
   );
   if (r.errors.length > 0) return undefined;
   return new Map(entries.flatMap(([id, footprint]) => (footprint === undefined ? [] : [[id, footprint] as const])));

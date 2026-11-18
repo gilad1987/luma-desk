@@ -24,7 +24,7 @@ export interface PatchPlan {
 
 /** The fixture's stored patch when it is valid, read with the show-file reader so both accept the same ranges. */
 const validPatch = (fixture: StageFixture): DmxPatch | undefined =>
-  fixture.patch && parsePatch(new Reader(), fixture.patch, 'patch');
+  fixture.patch && parsePatch(new Reader(), { patch: fixture.patch }, 'patch', '');
 
 /** What `assign` counts while it fills `patches`. */
 interface Assigned {
