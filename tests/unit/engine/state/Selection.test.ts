@@ -56,6 +56,16 @@ describe('Selection', () => {
     expect(selection.has(99999)).toBe(false);
   });
 
+  it('selects the fixtures of a saved group whose ids are strings, as the original FX[id] lookup did', () => {
+    const { selection } = setup();
+    // as JSON.parse gives them from a hand-edited show file: saved shows are not validated on load
+    const saved = JSON.parse('{"name":"Front","ids":["103","101","abc"]}') as { ids: number[] };
+    selection.set(saved.ids);
+    expect(selection.ids).toEqual([103, 101]);
+    selection.set(saved.ids, 'sub');
+    expect(selection.ids).toEqual([]);
+  });
+
   it('toggle flips each id in turn, so a repeated id flips back', () => {
     const { selection } = setup();
     selection.set([101, 102]);
