@@ -63,7 +63,8 @@ test('a layer hidden in the import summary stays hidden in the saved show after 
   const errors = collectErrors(page);
   const desk = await bootApp(page);
   await pickMvrFile(page, desk, SYNTHETIC_MVR);
-  await page.locator('#mvrLayers input[type=checkbox]:not(.mvrLayerLed)').uncheck();
+  // the layer's own box: the LED mark and the Desk hall row's box are checkboxes in the same list
+  await page.locator('#mvrLayers input[type=checkbox]:not(.mvrLayerLed):not(#mvrHall)').uncheck();
   await waitForSavedStage(page, { kind: 'mvr', hiddenLayers: ['L1'] });
 
   await reloadDesk(page);
