@@ -1,6 +1,7 @@
 import { MvrArchive } from './archive/MvrArchive';
 import { toStageDesign, type DesignResult } from './design/toStageDesign';
 import { applyLumaData, type LumaApplied } from './import/applyLumaData';
+import { meshBytes } from './import/meshBytes';
 import { readLumaData } from './import/readLumaData';
 import { resolveFixtures } from './import/resolveFixtures';
 import { summarize } from './import/summarize';
@@ -78,6 +79,7 @@ function importNow(bytes: Uint8Array, options: MvrImportOptions): MvrImport {
   return {
     design: design.design,
     geometry: result.geometry,
+    meshes: meshBytes(archive, scene.placements),
     summary: summarize(scene, rig, noGeometry),
     warnings: [...scene.warnings, ...rig.gdtfWarnings, ...rig.patchWarnings, ...meshWarnings, ...design.warnings],
   };

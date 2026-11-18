@@ -39,6 +39,11 @@ export interface MvrSummary {
 export interface MvrImport {
   readonly design: StageDesign;
   readonly geometry: MvrGeometry;
+  /**
+   * Mesh bytes by archive file name, for every placement file the archive holds. Render parses them to draw the
+   * placements; it is the counterpart of `MvrExportOptions.meshes`, so an export's meshes come back under one name.
+   */
+  readonly meshes: ReadonlyMap<string, Uint8Array>;
   readonly summary: MvrSummary;
   /** Every problem the import survived, in the order the steps met them. */
   readonly warnings: readonly MvrWarning[];

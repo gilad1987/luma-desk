@@ -2,11 +2,12 @@ import type { StageDesign, StageScreen } from '../../domain/stage/StageDesign';
 import type { StageTruss } from '../../domain/stage/trussTypes';
 import type { Quat, SceneryPart, Vec3 } from '../../domain/stage/types';
 import { REST_ROTATION } from '../math/restRotation';
+import type { MeshShape } from './MeshShape';
 
-/** One stage object to write; `kind` and `id` name its mesh file and key its uuid, `part` picks its layer. */
+/** One stage object to write; `shape` names its mesh file, `shape.kind` and `id` key its uuid, `part` its layer. */
 export interface ObjectSpec {
   readonly tag: 'Truss' | 'SceneObject' | 'VideoScreen';
-  readonly kind: 'truss' | 'deck' | 'riser' | 'screen';
+  readonly shape: MeshShape;
   readonly part: SceneryPart;
   readonly id: string;
   readonly name: string;
@@ -16,7 +17,8 @@ export interface ObjectSpec {
 
 function trussSpec(truss: StageTruss): ObjectSpec {
   const { position, rotation = REST_ROTATION } = truss.transform;
-  return { tag: 'Truss', kind: 'truss', part: 'trusses', id: truss.id, name: truss.name, position, rotation };
+  const shape: MeshShape = { kind: 'truss', params: truss.params };
+  return { tag: 'Truss', shape, part: 'trusses', id: truss.id, name: truss.name, position, rotation };
 }
 
 /**
@@ -28,9 +30,11 @@ function deckSpecs({ deck, risers, scenery }: StageDesign): ObjectSpec[] {
   const base = { tag: 'SceneObject', part: 'deck', rotation: REST_ROTATION } as const;
   const centre: Vec3 = [(deck.x0 + deck.x1) / 2, 0, (deck.z0 + deck.z1) / 2];
   const raised = risers.map((riser): ObjectSpec => {
-    return { ...base, kind: 'riser', id: riser.id, name: `Riser ${riser.id}`, position: riser.at };
+    const shape: MeshShape = { kind: 'riser', size: riser.size };
+    return { ...base, shape, id: riser.id, name: `Riser ${riser.id}`, position: riser.at };
   });
-  return [{ ...base, kind: 'deck', id: 'deck', name: 'Deck', position: centre }, ...raised];
+  const deckShape: MeshShape = { kind: 'deck', size: [deck.x1 - deck.x0, deck.height, deck.z1 - deck.z0] };
+  return [{ ...base, shape: deckShape, id: 'deck', name: 'Deck', position: centre }, ...raised];
 }
 
 /** A turn of `yaw` radians about Y, the only rotation a side screen has. */
@@ -38,16 +42,19 @@ const yawRotation = (yaw: number): Quat => [0, Math.sin(yaw / 2), 0, Math.cos(ya
 
 /** The LED wall at the centre of its face, then its side screens, numbered from 1. */
 function screenSpecs(screen: StageScreen): ObjectSpec[] {
-  const base = { tag: 'VideoScreen', kind: 'screen', part: 'ledWall' } as const;
+  const base = { tag: 'VideoScreen', part: 'ledWall' } as const;
   const wall: Vec3 = [(screen.x0 + screen.x1) / 2, (screen.y0 + screen.y1) / 2, screen.z];
-  const sides = (screen.sides ?? []).map((side, index) => ({
+  const wallShape: MeshShape = { kind: 'screen', width: screen.x1 - screen.x0, height: screen.y1 - screen.y0 };
+  const sides = (screen.sides ?? []).map((side, index): ObjectSpec => ({
     ...base,
+    shape: { kind: 'screen', width: side.width, height: side.height },
     id: `${screen.id}-side-${index + 1}`,
     name: `Side screen ${screen.id} ${index + 1}`,
     position: side.at,
     rotation: yawRotation(side.yaw),
   }));
-  return [{ ...base, id: screen.id, name: `LED wall ${screen.id}`, position: wall, rotation: REST_ROTATION }, ...sides];
+  const name = `LED wall ${screen.id}`;
+  return [{ ...base, shape: wallShape, id: screen.id, name, position: wall, rotation: REST_ROTATION }, ...sides];
 }
 
 /**

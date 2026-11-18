@@ -7,6 +7,7 @@ import { fixtureXml } from './fixtureXml';
 import { gdtfIdentity } from './gdtfIdentity';
 import { writeLumaData } from './lumaUserData';
 import { stageObjects, type StageObject } from './stageObjects';
+import { writeSymdefs } from './symdefs';
 import { xmlElement } from './xmlWriter';
 
 /** The written `GeneralSceneDescription.xml` and the facts the export summary reports. */
@@ -52,7 +53,7 @@ export function writeScene(design: StageDesign): WrittenScene {
     const childList = xmlElement('ChildList', {}, children.get(layer.uuid) ?? []);
     return xmlElement('Layer', { uuid: layer.uuid, name: layer.name }, [childList]);
   });
-  const scene = xmlElement('Scene', {}, [xmlElement('Layers', {}, layerXml)]);
+  const scene = xmlElement('Scene', {}, [...writeSymdefs(objects, context), xmlElement('Layers', {}, layerXml)]);
   const root = xmlElement('GeneralSceneDescription', ROOT, [writeLumaData(design, context.offset), scene]);
   const specs = design.fixtures.map((fixture) => gdtfIdentity(fixture, design.mvr).spec);
   const gdtfSpecs = [...new Set(specs)].filter(Boolean);

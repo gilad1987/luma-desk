@@ -17,3 +17,5 @@ export { expectRigKept } from './mvr/expectRigKept';
 export { SAMPLES_DIR, sampleFiles, readSample } from './mvr/localSamples';
 export { importCounts, type ImportCounts } from './mvr/importCounts';
 export { mvrMatrix } from './mvr/mvrMatrix';
+export { meshScene, type TestPlacement } from './mvr/meshScene';
+export { exportRoundTrip, type ExportRoundTrip } from './mvr/exportRoundTrip';
