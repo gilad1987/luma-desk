@@ -31,6 +31,6 @@ ${MA_CONSOLE_MARKUP}
 <footer id="desk">${s.desk}</footer>
 </div>
 ${guideMarkup()}
-<div id="mvrMissingPrompt" class="mvrMissing" role="alert" hidden></div>
+<div id="mvrMissingPrompt" role="alert" hidden></div>
 <div id="modal"><div class="mbox" id="mbox"></div></div>
 <div id="toast"></div>`;

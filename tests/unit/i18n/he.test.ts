@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { he } from '../../../src/i18n/he';
 import type { GuideMarkup } from '../../../src/i18n/he/guideChapter';
+import { NEW_TEXT_AREAS } from '../../shared';
 
 /** The single-file page before the refactor: the source of truth for every Hebrew string. */
 const legacy = execFileSync('git', ['show', '48a3b63:index.html'], { encoding: 'utf8' });
@@ -51,8 +52,9 @@ const sourceForm: GuideMarkup = {
 
 describe('he', () => {
   it('holds only legacy strings, siblings in the legacy order, so two swapped values fail', () => {
-    // the MVR area (plan mvr-v2) is new text, so the legacy page has none of it
-    const groups = siblingGroups(Object.fromEntries(Object.entries(he).filter(([area]) => area !== 'mvr')));
+    const groups = siblingGroups(
+      Object.fromEntries(Object.entries(he).filter(([area]) => !NEW_TEXT_AREAS.includes(area))),
+    );
     expect(groups.flat().length).toBeGreaterThan(100);
     for (const group of groups) {
       const starts = offsetsOf(group[0] ?? '');

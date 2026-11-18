@@ -36,6 +36,7 @@ export class FakeElement {
   innerHTML = '';
   textContent = '';
   value = '';
+  hidden = false;
   offsetWidth = 0;
   offsetHeight = 0;
   clientLeft = 0;

@@ -10,15 +10,24 @@ import type { MvrStage, MvrStageInput } from '../../render/mvr/MvrStage';
 export class LazyMvrStage {
   readonly #scene: Pick<Scene, 'add'>;
   #stage: MvrStage | undefined;
+  #loading: Promise<MvrStage> | undefined;
 
   constructor(scene: Pick<Scene, 'add'>) {
     this.#scene = scene;
   }
 
-  /** Builds the scenery of `input` (see `MvrStage.show`); the first call adds the scenery group to the scene. */
+  /**
+   * Loads the scenery chunk and adds the scenery group to the scene, once. The flows call it before they change the
+   * stage, so a chunk that does not load (offline, a new deploy) rejects while the stage is still as it was. A failed
+   * load is forgotten, so the next MVR load tries the chunk again.
+   */
+  async load(): Promise<void> {
+    await this.#loaded();
+  }
+
+  /** Builds the scenery of `input` (see `MvrStage.show`), after `load`. */
   async show(input: MvrStageInput): Promise<readonly MeshFailure[]> {
-    this.#stage ??= await this.#create();
-    return this.#stage.show(input);
+    return (await this.#loaded()).show(input);
   }
 
   /** Shows every layer except these uuids; nothing to do before the first load. */
@@ -31,10 +40,19 @@ export class LazyMvrStage {
     this.#stage?.dispose();
   }
 
+  #loaded(): Promise<MvrStage> {
+    this.#loading ??= this.#create().catch((error: unknown) => {
+      this.#loading = undefined;
+      throw error;
+    });
+    return this.#loading;
+  }
+
   async #create(): Promise<MvrStage> {
     const { MvrStage } = await import('../../render/mvr/MvrStage');
     const stage = new MvrStage();
     this.#scene.add(stage.group);
+    this.#stage = stage;
     return stage;
   }
 }
