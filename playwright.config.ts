@@ -14,11 +14,10 @@ export default defineConfig({
   timeout: 120_000,
   expect: {
     timeout: 30_000,
-    // Exact colours, and at most 150 pixels may differ. With the raster flag below and the style file, the run-to-run
-    // noise measured 0 pixels in 45 shots; either change alone let text flip by up to 8,244 pixels. The margin covers
-    // the 109-pixel edge flip of the MA layout's CSS 3D console seen in those runs; a truss colour change differs by
-    // 6,000 pixels or more.
-    toHaveScreenshot: { threshold: 0, maxDiffPixels: 150, stylePath: 'tests/shared/singleTextRaster.css' },
+    // Exact colours and no differing pixel. With the raster flag below and the style file, the run-to-run noise
+    // measured 0 pixels in 45 shots; either change alone let text flip by up to 8,244 pixels. Only the MA layout's
+    // CSS 3D console flips edge pixels between runs; screenshots.spec.ts gives those shots their own margin.
+    toHaveScreenshot: { threshold: 0, maxDiffPixels: 0, stylePath: 'tests/shared/singleTextRaster.css' },
   },
   // a `.only` left in a commit would silently skip the rest of the suite
   forbidOnly: true,

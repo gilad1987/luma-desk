@@ -10,6 +10,9 @@ const WEB_FONTS = [
   ...[400, 500, 600, 700, 800].map((w) => `${w} 13px Inter`),
   ...[400, 600].map((w) => `${w} 13px "JetBrains Mono"`),
 ];
+// The MA layout's CSS 3D console flipped up to 109 edge pixels between runs, so its shots allow 150; the other views
+// measured 0 and keep the config's margin of 0. A truss colour change differs by 6,000 pixels or more.
+const MA_CONSOLE_EDGE_NOISE = 150;
 
 /**
  * The web fonts come over the network and arrive at a different moment on each run, so text anti-aliasing changed
@@ -30,7 +33,8 @@ for (const layout of LAYOUTS) {
       await waitForWebFonts(page);
       await page.evaluate((v) => window.__desk.setView(v, true), view);
       await stepFrames(desk, 500, 2);
-      await expect(page).toHaveScreenshot(`${layout}-${view}.png`);
+      const maxDiffPixels = layout === 'ma' ? MA_CONSOLE_EDGE_NOISE : 0;
+      await expect(page).toHaveScreenshot(`${layout}-${view}.png`, { maxDiffPixels });
     });
   }
 }
