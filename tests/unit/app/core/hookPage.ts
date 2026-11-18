@@ -42,7 +42,18 @@ export function installOnFakePage(clock?: object) {
   const autoShow = { modulation: { pump: 1, hitUntil: 0 } };
   const renderer = { info: { memory: { geometries: 3, textures: 1 } } } as unknown as Pick<WebGLRenderer, 'info'>;
   const mvrReady = vi.fn(() => Promise.resolve());
-  installTestHook({ ...engine, setView, execs, serializer, deskMode: () => 'desk', autoShow, renderer, mvrReady });
+  const mvrScenery = (): boolean => false;
+  installTestHook({
+    ...engine,
+    setView,
+    execs,
+    serializer,
+    deskMode: () => 'desk',
+    autoShow,
+    renderer,
+    mvrReady,
+    mvrScenery,
+  });
   return { engine, dom, page, setView, mvrReady };
 }
 

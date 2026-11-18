@@ -32,6 +32,8 @@ export interface MvrWiring {
   readonly ready: () => Promise<void>;
   /** Queues the boot restore of a saved MVR stage; call it after the show restore. */
   readonly restore: () => void;
+  /** The test hook's `mvrScenery()`: true while the scenery shows the layers of a file. */
+  readonly hasScenery: () => boolean;
 }
 
 /** The message of any error, for the toast of a failed load or export. */
@@ -53,8 +55,9 @@ export function wireMvr({ bus, scene, stage, modal, download = downloadBlob }: M
     exportMvr: () => queue.run(() => exportStageMvr(stage.design, { toast, download })),
   };
   const prompt = new MvrMissingPrompt(actions);
-  const deps: MvrFlowDeps = { stage, store: openMvrStore(), scenery: new LazyMvrStage(scene), prompt, toast, modal };
+  const scenery = new LazyMvrStage(scene);
+  const deps: MvrFlowDeps = { stage, store: openMvrStore(), scenery, prompt, toast, modal };
   const restore = (): void => queue.run(() => restoreStoredMvr(deps));
-  followStage({ bus, stage, scenery: deps.scenery, prompt, restore });
-  return { actions, ready: () => queue.ready(), restore };
+  followStage({ bus, stage, scenery, prompt, restore });
+  return { actions, ready: () => queue.ready(), restore, hasScenery: () => scenery.hasScenery };
 }

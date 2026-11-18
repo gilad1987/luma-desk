@@ -64,6 +64,8 @@ export interface DeskTestApi {
    * that file, not an older load. Resolved at once when no load ran.
    */
   mvrReady(): Promise<void>;
+  /** True while the MVR scenery shows the layers of a file; the 3D view itself says nothing a spec can read. */
+  mvrScenery(): boolean;
 }
 
 /** window.__desk.stage(): the fixture count and the design's source and venue kinds. */

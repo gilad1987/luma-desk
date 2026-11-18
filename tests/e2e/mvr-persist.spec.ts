@@ -57,6 +57,7 @@ test('a reload restores the MVR rig from IndexedDB', async ({ page }) => {
 });
 
 test('without the stored file a reload still builds the rig and asks for the file again', async ({ page }) => {
+  const errors = collectErrors(page);
   let desk = await bootApp(page);
   await pickMvrFile(page, desk, SYNTHETIC_MVR);
   const imported = await readMvrStage(desk);
@@ -78,4 +79,5 @@ test('without the stored file a reload still builds the rig and asks for the fil
   await expect(page.locator('#mvrMissingPrompt')).toContainText(SYNTHETIC_MVR.name);
   expect(await readMvrStage(desk)).toEqual(imported);
   expect(await liveRigIds(page)).toEqual([101, 102]);
+  expect(errors).toEqual([]);
 });
