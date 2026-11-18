@@ -37,8 +37,8 @@ In short:
 
 ## Git hooks
 
-husky runs `.husky/pre-commit`, which runs lint-staged (`lint-staged.config.ts`): ESLint `--fix` and Prettier on the
-staged files, the line check for CSS/GLSL, the no-JS check for JS files. Commit only with the hook active; never
+husky runs `.husky/pre-commit`, which runs lint-staged (`lint-staged.config.ts`): Prettier, then ESLint `--fix`, on
+the staged files, the line check for CSS/GLSL/HTML/YAML, the no-JS check for JS files. Commit only with the hook active; never
 `--no-verify`.
 
 All worktrees of this repository share one git config, so `core.hooksPath` is the relative path `.husky/_` in every

@@ -23,7 +23,8 @@ the case goes to `docs/known-quirks.md`.
 - **TSDoc on every exported symbol** that tells WHY (technical-prose skill). No comments that repeat the code.
 - **Behaviour does not change.** Prove it with the parity suite, not with words.
 - **100 lines per file, hard.** Every file: `src/`, tests, configs, `build/`, `sw.ts`, CSS/SCSS, GLSL (Markdown
-  excluded), measured after Prettier. [lint] ESLint `max-lines` for .ts, `npm run check:lines` for .css/.scss/.glsl.
+  excluded), measured after Prettier. [lint] ESLint `max-lines` for .ts, `npm run check:lines` for
+  .css/.scss/.glsl/.html/.yml (the frozen `tests/shared/legacy/original-index.html` is exempt).
   Split by responsibility, never by cutting a file in half; never pack code to fit.
 - **All TypeScript.** No .js, .mjs or .cjs file anywhere. Configs are .ts; GLSL stays .glsl loaded with `?raw`.
   [lint] `npm run check:no-js`
