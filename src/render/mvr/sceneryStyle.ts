@@ -1,5 +1,7 @@
 import { Color, MeshStandardMaterial, SRGBColorSpace, Texture, type Material } from 'three';
+import { hasFileLook } from './materialClass';
 import { MissingTexture } from './MissingTexture';
+import { recordTone } from './sceneryTone';
 
 /**
  * Stage lightness range (sRGB) of untextured scenery. CAD writers colour scenery for the drawing (white, beige, pure
@@ -12,19 +14,22 @@ const DARKEST = 0.1;
 const LIGHTEST = 0.36;
 const SATURATION = 0.35;
 
-const WHITE = new Color(0xffffff);
-
 /**
  * Whether the material draws a picture the designer chose (a banner, a print) rather than a CAD class colour. A
  * picture the archive lacks (`MissingTexture`) counts as none.
  */
-function isTextured(material: Material): boolean {
+export function isTextured(material: Material): boolean {
   return 'map' in material && material.map instanceof Texture && !(material.map instanceof MissingTexture);
+}
+
+/** The colour `material` has in its file; white when it has none, as a mesh with no colour draws. */
+function fileColor(material: Material): Color {
+  return 'color' in material && material.color instanceof Color ? material.color : new Color(0xffffff);
 }
 
 /** The file colour of `material` moved into the stage range; white when the material has no colour. */
 function stageColor(material: Material): Color {
-  const file = 'color' in material && material.color instanceof Color ? material.color : WHITE;
+  const file = fileColor(material);
   const { h, s, l } = file.getHSL({ h: 0, s: 0, l: 0 }, SRGBColorSpace);
   return new Color().setHSL(h, s * SATURATION, DARKEST + l * (LIGHTEST - DARKEST), SRGBColorSpace);
 }
@@ -34,6 +39,8 @@ function stageColor(material: Material): Color {
  * into the stage range (`stageColor`; the file's own material is freed), so parts of one colour pool into one
  * material; textured parts keep their picture. A textured standard material gets metalness 0: exporters write
  * metalness 1, and a full metal reflects only its environment, which the scene does not have, so it would draw black.
+ * A material with values a writer chose (`hasFileLook`) is kept as it is: file data beats a guess. The file colour's
+ * tone stays readable (`toneOf`) for the class look a placement picks later (`SceneryLooks`).
  * It runs before `MaterialPool.adopt`, so the pool keys on the styled look, and LED surfaces never come here: they
  * draw with their own material.
  */
@@ -42,8 +49,10 @@ export function styleScenery(material: Material): Material {
     if (material instanceof MeshStandardMaterial && material.envMap === null) material.metalness = 0;
     return material;
   }
+  if (hasFileLook(material)) return recordTone(material, fileColor(material));
   const { side, transparent, opacity } = material;
   const color = stageColor(material);
+  const tone = fileColor(material);
   material.dispose();
-  return new MeshStandardMaterial({ color, roughness: 1, metalness: 0, side, transparent, opacity });
+  return recordTone(new MeshStandardMaterial({ color, roughness: 1, metalness: 0, side, transparent, opacity }), tone);
 }
