@@ -1,7 +1,7 @@
 import type { Vector3 } from 'three';
+import type { Rgb01 } from '../../../core';
 import type { AttrValues } from '../../../domain/attributes';
 import type { LightVisual } from '../FixtureVisual';
-import type { Rgb01 } from '../../../core';
 import type { SurfaceHit } from '../../surface/SurfaceHit';
 
 /** One lit fixture in the current frame, as the beam, pool and glow updates read it. */

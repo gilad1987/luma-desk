@@ -19,8 +19,8 @@ export function boxBetween(ax: number, ay: number, bx: number, by: number): Clie
 }
 
 /**
- * The fixtures whose position projects through `camera` inside `box`, sorted by id. `rect` is the canvas's client rect; a fixture with
- * a depth above 1 (behind the camera or past the far plane) never counts.
+ * The fixtures whose position projects through `camera` inside `box`, sorted by id. `rect` is the canvas's client rect;
+ * a fixture with a depth above 1 (behind the camera or past the far plane) never counts.
  */
 export function fixturesInBox(
   fixtures: readonly Pick<Fixture, 'id' | 'pos'>[],

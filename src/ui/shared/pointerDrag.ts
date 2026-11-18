@@ -6,7 +6,9 @@ export interface DragHandlers {
   start(ev: PointerEvent): void;
   /** Runs for each move while this element holds the capture. */
   move(ev: PointerEvent): void;
-  /** Knobs, faders and the level wheel cancel the default on pointer down (no text selection, no scroll); pads do not. */
+  /**
+   * Knobs, faders and the level wheel cancel the default on pointer down (no text selection, no scroll); pads do not.
+   */
   readonly preventDefault?: boolean;
 }
 
