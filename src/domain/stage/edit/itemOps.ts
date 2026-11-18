@@ -3,7 +3,7 @@ import type { Vec3 } from '../types';
 import { appendCopies } from './copies';
 import { newTrussId } from './ids';
 import { patchedFixtures } from './patchedFixtures';
-import { isSameData } from './sameData';
+import { isSameData } from '../sameData';
 import { moveTruss, shiftFixture } from './trussOps';
 
 /** The fixture fields the property panel edits; the id stays, because groups and cues point at it. */
