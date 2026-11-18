@@ -50,12 +50,12 @@ test('an added truss, undone, leaves the chosen stage as Done keeps it', async (
   await bootApp(page);
   await openAndChoose(page, 'theatre');
   const trusses = page.locator('.builder-tools .truss-item');
-  // the panels render on the next task after an edit, so the counts are awaited, not read once
-  const before = await trusses.count();
   await addTruss(page);
-  await expect(trusses).toHaveCount(before + 1);
+  // the panels render on the next task after an edit: the new truss in the property panel shows that render is done
+  await expect(page.locator('.prop-panel').getByLabel('X (m)')).toBeVisible();
+  const added = await trusses.count();
   await page.locator('[data-edit="undo"]').click();
-  await expect(trusses).toHaveCount(before);
+  await expect(trusses).toHaveCount(added - 1);
   await page.locator('[data-builder="done"]').click();
   // `source` names the last apply (the preview, then Done), not the design, so the check leaves it out
   const { count, venue } = await stageInfo(page);
