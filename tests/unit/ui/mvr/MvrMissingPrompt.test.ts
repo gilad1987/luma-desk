@@ -5,7 +5,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { he } from '../../../../src/i18n/he';
 import { MvrMissingPrompt } from '../../../../src/ui/panels/mvr/MvrMissingPrompt';
-import { FakeDom, FakeFileInput } from '../../../shared/dom';
+import { FakeDom, FakeElement, FakeFileInput } from '../../../shared/dom';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -14,8 +14,8 @@ const NAME = '<b>x</b>.mvr';
 /** The prompt on a page with its slot and the ids its markup brings. */
 function setup() {
   const dom = new FakeDom();
-  const slot = dom.add('mvrMissingPrompt');
-  slot.hidden = true;
+  // the shared fake has no `hidden`: the slot gets its own, so the test reads what the prompt writes
+  const slot = dom.add('mvrMissingPrompt', Object.assign(new FakeElement(), { hidden: true }));
   const input = dom.add('mvrMissingFile', new FakeFileInput());
   const close = dom.add('mvrMissingClose');
   const importFile = vi.fn();

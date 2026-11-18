@@ -1,4 +1,3 @@
-import type { WebGLRenderer } from 'three';
 import { vi } from 'vitest';
 import { wireEngine } from '../../../../src/app/boot/wireEngine';
 import type { DeskTestApi } from '../../../../src/app/testHook/installTestHook';
@@ -20,7 +19,7 @@ export class FakeObserver {
   }
 }
 
-type DeskPage = { test: DeskTestApi; fixtures: unknown; setView: unknown } & DeskStageApi;
+type DeskPage = { test: DeskTestApi; fixtures: unknown; setView: unknown; renderMemory: () => unknown } & DeskStageApi;
 
 /**
  * The hook over a real engine and serializer, on a fake page whose window holds `clock` (or no clock at all). The
@@ -40,7 +39,7 @@ export function installOnFakePage(clock?: object) {
   vi.stubGlobal('window', page);
   const setView = vi.fn();
   const autoShow = { modulation: { pump: 1, hitUntil: 0 } };
-  const renderer = { info: { memory: { geometries: 3, textures: 1 } } } as unknown as Pick<WebGLRenderer, 'info'>;
+  const renderer = { info: { memory: { geometries: 3, textures: 1 } } };
   const mvrReady = vi.fn(() => Promise.resolve());
   const mvrScenery = (): boolean => false;
   installTestHook({

@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { guideMarkup } from '../../../../src/ui/guide/guideMarkup';
@@ -7,6 +6,7 @@ import { DESK_CONSOLE_MARKUP } from '../../../../src/ui/layouts/deskConsoleMarku
 import { MA_CONSOLE_MARKUP } from '../../../../src/ui/layouts/maConsoleMarkup';
 import { encodersMarkup } from '../../../../src/ui/panels/encoders/encodersMarkup';
 import { topBarMarkup } from '../../../../src/ui/panels/top/topBarMarkup';
+import { legacyPage } from '../../../shared/legacy';
 
 /** Elements that are block-level in these fragments (no stylesheet makes any of them inline). */
 const BLOCK = 'div|section|nav|header|main|aside|footer|h2|h4|p';
@@ -29,7 +29,7 @@ function renderEquivalent(html: string): string {
 }
 
 const page = readFileSync('index.html', 'utf8');
-const legacySource = execFileSync('git', ['show', '48a3b63:index.html'], { encoding: 'utf8' });
+const legacySource = legacyPage();
 const legacy = renderEquivalent(legacySource);
 
 describe('shell markup', () => {

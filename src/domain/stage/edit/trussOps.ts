@@ -4,6 +4,7 @@ import type { StageTruss } from '../trussTypes';
 import type { Vec3 } from '../types';
 import { newTrussId } from './ids';
 import { checkFinite, checkParserAccepts } from './inputChecks';
+import { roundFixtureToMillimetre, roundToMillimetre } from './millimetres';
 import { isSameData } from '../sameData';
 
 /** The truss kinds the builder offers as presets; `roof` comes only from templates and imports. */
@@ -35,8 +36,9 @@ export function addPresetTruss(d: StageDesign, preset: TrussPreset, position: Ve
 
 /**
  * Moves a truss and every fixture linked to it by the same delta. Fixture positions are absolute (plan §3.1), so the
- * parent link holds only because this op moves the children too; other fixtures stay where they are.
- * A zero delta returns `d` itself, so History adds no undo step.
+ * parent link holds only because this op moves the children too; other fixtures stay where they are. The truss and
+ * its fixtures are stored rounded to 1 mm (`roundToMillimetre`), so a typed or dragged target is stored as sent.
+ * A zero delta, or one that rounds back to the stored millimetres, returns `d` itself, so History adds no undo step.
  * @throws RangeError when the truss is missing, so a stale selection shows up instead of doing nothing, or when
  * `delta` is not finite.
  */
@@ -44,12 +46,14 @@ export function moveTruss(d: StageDesign, trussId: string, delta: Vec3): StageDe
   const truss = findTruss(d, trussId);
   checkFinite('moveTruss', 'delta', delta);
   if (delta.every((v) => v === 0)) return d;
-  const position = addPoints(truss.transform.position, delta);
-  return {
+  const position = roundToMillimetre(addPoints(truss.transform.position, delta));
+  const carry = (f: StageFixture): StageFixture => roundFixtureToMillimetre(shiftFixture(f, delta));
+  const next: StageDesign = {
     ...d,
     trusses: d.trusses.map((t) => (t.id === trussId ? { ...t, transform: { ...t.transform, position } } : t)),
-    fixtures: d.fixtures.map((f) => (f.trussId === trussId ? shiftFixture(f, delta) : f)),
+    fixtures: d.fixtures.map((f) => (f.trussId === trussId ? carry(f) : f)),
   };
+  return isSameData(next, d) ? d : next;
 }
 
 /**

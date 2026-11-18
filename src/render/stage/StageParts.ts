@@ -12,11 +12,14 @@ export class StageParts {
   readonly #disposer = new Disposer();
   #roots: Object3D[] = [];
 
-  /** Runs `build` and records every child it appended to `parent`. */
+  /** Runs `build` and records every child it appended to `parent`, also when it throws: no part escapes a dispose. */
   capture(parent: Object3D, build: () => void): void {
     const from = parent.children.length;
-    build();
-    this.#roots.push(...parent.children.slice(from));
+    try {
+      build();
+    } finally {
+      this.#roots.push(...parent.children.slice(from));
+    }
   }
 
   /** Takes every recorded object out of the scene and disposes what it owns, except the `shared` resources. */

@@ -21,6 +21,11 @@ export interface PanelsDeps {
   readonly guideOrTourOpen: () => boolean;
   /** The MVR row of the Show File dialog; `wireMvr` builds it before the panels. */
   readonly mvr: MvrActions;
+  /**
+   * The Stage Builder, built after the panels: while it is open the page keys do nothing, and a show load cancels it
+   * first, so neither Done nor Cancel can later overwrite the loaded show's stage.
+   */
+  readonly builder: { readonly isOpen: () => boolean; readonly cancel: () => void };
 }
 
 /** {@link PanelsDeps} with the dialog and store-mode services that every panel after the top bar takes. */

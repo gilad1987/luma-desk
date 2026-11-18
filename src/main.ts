@@ -16,6 +16,7 @@ import { UiTickScheduler } from './app/loop/UiTickScheduler';
 import { wireMvr } from './app/mvr/wireMvr';
 import { installTestHook } from './app/testHook/installTestHook';
 import { FpsClock } from './app/ui/FpsClock';
+import { wireBuilder } from './app/ui/wireBuilder';
 import { wirePanels } from './app/ui/wirePanels';
 import { createAutoShow } from './app/uix/createAutoShow';
 import { createShowFiles } from './app/uix/createShowFiles';
@@ -44,6 +45,7 @@ const panels = wirePanels({
   layoutMode: () => layout.mode(),
   guideOrTourOpen: () => guide.isOpen() || tour.isActive(),
   mvr: mvr.actions,
+  builder: { isOpen: () => builder.isOpen, cancel: () => builder.exit(false) },
 });
 // a getter: box selection reads the current rig at each drag, so it follows every stage change
 new ViewportPicking({
@@ -56,12 +58,7 @@ new ViewportPicking({
 wireMidi(engine);
 render.stageRenderer.observeViewer();
 
-const { guide, tour } = wireGuide({
-  stage,
-  sideTabs: panels.sideTabs,
-  isMa: () => layout.mode() === 'ma',
-  guideFlag: files.guideFlag,
-});
+const { guide, tour } = wireGuide({ ...files, ...panels, stage, isMa: () => layout.mode() === 'ma' });
 byId('helpBtn').onclick = () => guide.open(0);
 wireAppFeatures({ ...engine, canvas: render.canvas, songPlayer: auto.songPlayer, guide });
 
@@ -72,7 +69,10 @@ const layout = wireLayout({
   execs,
   storeMode: panels.store,
   layoutPrefs: files.layoutPrefs,
+  builderOpen: () => builder.isOpen,
 });
+// before restore: the restore refits the console, and the refit asks whether the builder is open
+const builder = wireBuilder({ ...engine, ...render, fitLayout: () => layout.fit() });
 layout.restore();
 
 const fps = new FpsClock();

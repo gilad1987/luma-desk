@@ -25,9 +25,14 @@ export interface CuePanesDeps extends UiServices {
   readonly selection: Selection;
   readonly runner: Pick<CommandRunner, 'run'>;
   readonly sideTabs: Pick<SideTabs, 'current'>;
-  readonly fixtures: readonly SheetFixture[];
-  /** The current stage design; the sheet reads its DMX patch and GDTF modes on each repaint. */
-  readonly stageDesign: () => StageDesign;
+  /**
+   * The stage: the sheet lists its current rig, rebuilds its rows on `rigChanged`, and reads the current design's DMX
+   * patch and GDTF modes on each repaint.
+   */
+  readonly stage: {
+    readonly rig: { readonly fixtures: readonly SheetFixture[] };
+    readonly design: StageDesign;
+  };
 }
 
 /** The two polled panes: each repaints on the slow tick only while its tab shows. */
@@ -53,12 +58,17 @@ export function wireCuePanes(deps: CuePanesDeps): CuePanes {
     runCommand: (raw) => deps.runner.run(raw),
     sideTab,
   });
+  const { stage } = deps;
   const sheet = new SheetPanel(deps.side, {
-    fixtures: deps.fixtures,
+    // a getter: the rows list the current rig, so they follow every stage change
+    get fixtures() {
+      return stage.rig.fixtures;
+    },
     programmer: deps.programmer,
     selection: deps.selection,
     sideTab,
-    stageDesign: deps.stageDesign,
+    stageDesign: () => stage.design,
   });
+  deps.bus.on('rigChanged', () => sheet.rebuild());
   return { sequence, sheet };
 }

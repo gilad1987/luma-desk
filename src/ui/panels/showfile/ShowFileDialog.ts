@@ -2,7 +2,7 @@ import { defaultPoolOf } from '../../../engine/stage/defaultPool';
 import { he } from '../../../i18n/he';
 import { byId } from '../../dom';
 import { wireMvrButtons } from '../mvr/wireMvrButtons';
-import type { NewShow, ShowFileDeps } from './ShowFileDeps';
+import type { ShowFileDeps, ShowToLoad } from './ShowFileDeps';
 import { showFileMarkup } from './showFileMarkup';
 import { wireShowImport } from './wireShowImport';
 
@@ -11,7 +11,7 @@ import { wireShowImport } from './wireShowImport';
  * means the built-in one) and the default pool names only fixtures of the rig on screen. The built-in stage gives the
  * old `{ groups }` show.
  */
-function newShowOf(stage: ShowFileDeps['stage']): NewShow {
+function newShowOf(stage: ShowFileDeps['stage']): ShowToLoad {
   const groups = defaultPoolOf(stage);
   return stage.isBuiltIn ? { groups } : { groups, stage: stage.design };
 }

@@ -11,7 +11,7 @@ import { EditorSession } from '../../../../src/ui/builder/EditorSession.ts';
 import { FixtureTab } from '../../../../src/ui/builder/FixtureTab.ts';
 import { asReal, FakeDom, type FakeElement } from '../../../shared/dom';
 import { fakeStage } from './fakeStage.ts';
-import { button, change, click, control, shownErrors } from './toolsDom.ts';
+import { button, change, click, control, prop, shownErrors } from './toolsDom.ts';
 
 describe('FixtureTab', () => {
   let session: EditorSession, root: FakeElement, start: StageDesign;
@@ -65,15 +65,28 @@ describe('FixtureTab', () => {
     expect([roles.length, new Set(roles), session.draft.fixtures.length]).toEqual([12, new Set(['blinder']), 6]);
   });
 
-  it('does not send an invalid count, and shows the domain text of a refused one', () => {
+  it('disables Add while the count is out of range or not whole, and uses no stale count', () => {
     change(control(root, 'Count'), '0');
-    const invalid = shownErrors(root);
+    const outOfRange = [shownErrors(root).length, prop(button(root, 'Add fixtures'), 'disabled')];
     change(control(root, 'Count'), '2.5');
     add();
-    expect([invalid.length, session.canUndo, shownErrors(root)]).toEqual([
-      1,
+    const fraction = [prop(button(root, 'Add fixtures'), 'disabled'), session.canUndo];
+    change(control(root, 'Count'), '3');
+    const enabled = prop(button(root, 'Add fixtures'), 'disabled');
+    add();
+    expect([outOfRange, fraction, enabled, session.draft.fixtures.length]).toEqual([
+      [1, true],
+      [true, false],
       false,
-      [expect.stringContaining('addFixtures: count must be >= 1, got 2.5') as unknown],
+      3,
     ]);
+  });
+
+  it('enables Add again after any edit re-renders the tab, with the last valid count', () => {
+    change(control(root, 'Count'), '0');
+    session.edit((d) => addPresetTruss(d, 'tower', [0, 0, 0]));
+    const isDisabled = prop(button(root, 'Add fixtures'), 'disabled') === true;
+    add();
+    expect([isDisabled, session.draft.fixtures.length]).toEqual([false, 6]);
   });
 });

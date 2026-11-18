@@ -1,12 +1,10 @@
 import type { Texture, Vector3 } from 'three';
-import { clamp } from '../../core';
-import type { AttrValues } from '../../domain/attributes';
 import type { Selection } from '../../engine/Selection';
 import type { LightFrame } from '../lights/LightFrame';
 import type { SharedUniform } from './BeamMaterial';
 import type { FixtureVisual, ScreenVisual } from './FixtureVisual';
 import { hitSurface } from '../surface/hitSurface';
-import { outputValue } from './sync/BeamFrame';
+import { gatedIntensity } from './sync/gatedIntensity';
 import { LightSync, type BeamSurface } from './sync/LightSync';
 import { syncScreen, type ScreenTargets } from './sync/syncScreen';
 
@@ -20,17 +18,6 @@ export interface FixtureVisualSyncDeps {
   readonly lights: LightFrame;
   /** Where beams land (the stage's `SurfaceHit`); without it, the venue's fixed surfaces (`hitSurface`). */
   readonly surface?: BeamSurface;
-}
-
-/** The strobe shutter: open 22 % of each period, at 1 to 23 Hz. */
-function gatedIntensity(o: Readonly<AttrValues>, now: number): number {
-  let intensity = clamp(outputValue(o, 'dim') / 100, 0, 1);
-  const strobe = outputValue(o, 'strobe');
-  if (strobe > 0.5) {
-    const hz = 1 + (strobe / 100) * 22;
-    intensity *= (now * hz) % 1 < 0.22 ? 1 : 0;
-  }
-  return intensity;
 }
 
 /** @throws Error when a screen fixture has no targets: its output would drive nothing. */

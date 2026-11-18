@@ -33,6 +33,7 @@ function openDialog() {
     demo,
     showLoaded: vi.fn(),
     mvr: { importFile: vi.fn(), loadDemoRig: vi.fn(), exportMvr: vi.fn() },
+    cancelBuilder: vi.fn(),
   });
   const click = (id: string): void => dom.get(id).onclick?.({ target: null });
   return { engine, open: () => click('fileBtn'), click };

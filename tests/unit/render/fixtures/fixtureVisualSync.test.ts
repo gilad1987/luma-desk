@@ -60,6 +60,19 @@ describe('FixtureVisualSync', () => {
     expect(beam.time.value).toBe(2.5);
   });
 
+  it('gives each key-light candidate its own colour, though the sync reuses its colour buffer per fixture', () => {
+    const { visuals, sync, lights } = setup();
+    const movers = visuals.filter((v) => v.kind === 'light' && v.fixture.T.moving && v.fixture.T.shape !== 'blinder');
+    const [red, blue] = movers;
+    if (!red || !blue) throw new Error('rig has fewer than two movers');
+    Object.assign(red.fixture.out, { dim: 100, strobe: 0, pan: 0, tilt: 0, r: 100, g: 0, b: 0, zoom: 20, gobo: 0 });
+    Object.assign(blue.fixture.out, { dim: 100, strobe: 0, pan: 0, tilt: 0, r: 0, g: 0, b: 100, zoom: 20, gobo: 0 });
+    sync.update(1, 0.016, new Vector3());
+    const colorOf = (v: (typeof movers)[number]) => lights.keyCandidates.find((c) => c.fixture === v.fixture)?.color;
+    expect(colorOf(red)).toEqual([1, 0, 0]);
+    expect(colorOf(blue)).toEqual([0, 0, 1]);
+  });
+
   it('gates the strobe: open for 22 % of each period', () => {
     const { visuals, sync } = setup();
     const v = visuals.find((x) => x.kind === 'light');

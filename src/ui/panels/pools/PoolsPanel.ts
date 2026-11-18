@@ -23,7 +23,7 @@ export class PoolsPanel {
   readonly #presetTabs: HTMLElement;
   readonly #presetPool: HTMLElement;
 
-  /** Renders the Pools pane at the end of `host` (`#side`, after the tab bar) and subscribes to `poolsChanged`. */
+  /** Renders the Pools pane at the end of `host` (`#side`, after the tab bar); repaints on `poolsChanged`/`rigChanged`. */
   constructor(host: HTMLElement, deps: PoolsDeps) {
     this.#deps = deps;
     host.insertAdjacentHTML('beforeend', poolsMarkup);
@@ -31,6 +31,8 @@ export class PoolsPanel {
     this.#presetTabs = byId('presetTabs');
     this.#presetPool = byId('presetPool');
     deps.bus.on('poolsChanged', () => this.render());
+    // a stage change can make other presets unavailable (G10); a show load repaints through the app's `showLoaded`
+    deps.bus.on('rigChanged', () => this.render());
   }
 
   /** Rebuilds every slot and tab from the pools. */

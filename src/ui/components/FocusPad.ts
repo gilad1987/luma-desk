@@ -1,6 +1,6 @@
 import type { Rig } from '../../domain/rig/Rig';
 import { aimAt } from '../../domain/aim';
-import { DECK, STAGE } from '../../domain/venue';
+import type { StageFrame } from '../../domain/stage/StageFrame';
 import type { EngineBus } from '../../engine/events';
 import type { Programmer } from '../../engine/Programmer';
 import { toastSelectFirst } from '../../engine/programmerActions/toastSelectFirst';
@@ -17,6 +17,11 @@ export interface FocusPadDeps {
   readonly programmer: Pick<Programmer, 'set'>;
   readonly rig: Pick<Rig, 'get'>;
   readonly aimHeight: AimHeight;
+  /**
+   * The current stage's focus frame, read at each aim: a built or loaded stage moves and raises the deck, so the
+   * fixed venue `STAGE`/`DECK` would aim at the wrong height. For the built-in stage the deck equals them.
+   */
+  readonly frame: () => Pick<StageFrame, 'deck'>;
 }
 
 /**
@@ -25,10 +30,11 @@ export interface FocusPadDeps {
  */
 function aimSelection(deps: FocusPadDeps, scale: PadScale, point: PadPoint): void {
   const { selection, programmer, rig } = deps;
+  const { deck } = deps.frame();
   const x = scale.invX(point[0]),
     z = scale.invZ(point[1]);
-  const isOnStage = x > STAGE.x0 && x < STAGE.x1 && z > STAGE.z0 && z < STAGE.z1;
-  const y = (isOnStage ? DECK : 0) + deps.aimHeight.value;
+  const isOnStage = x > deck.x0 && x < deck.x1 && z > deck.z0 && z < deck.z1;
+  const y = (isOnStage ? deck.height : 0) + deps.aimHeight.value;
   selection.ids.forEach((id) => {
     const f = rig.get(id);
     if (!f?.T.moving) return;

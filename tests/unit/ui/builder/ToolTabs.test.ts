@@ -8,9 +8,12 @@ import { asReal, FakeDom, FakeElement } from '../../../shared/dom';
 import { click, descendants, prop } from './toolsDom.ts';
 
 describe('ToolTabs', () => {
-  let root: FakeElement, panels: FakeElement[];
+  let root: FakeElement, panels: FakeElement[], direction: string;
   beforeEach(() => {
     new FakeDom();
+    direction = 'ltr';
+    const tablistOnly = (el: FakeElement) => ({ direction: el.className === 'tool-tablist' ? direction : 'none' });
+    vi.stubGlobal('getComputedStyle', tablistOnly);
     panels = [new FakeElement(), new FakeElement(), new FakeElement()];
     const labels = ['Stage', 'Trusses', 'Fixtures'];
     const tabs = new ToolTabs(labels.map((label, i) => ({ label, title: 'help', panel: asReal(panels[i] ?? {}) })));
@@ -65,8 +68,8 @@ describe('ToolTabs', () => {
     ]);
   });
 
-  it('flips the arrow keys in a right-to-left page, so Left is the next tab', () => {
-    Object.assign(document, { dir: 'rtl' });
+  it('flips the arrow keys when the tablist is laid out right to left, so Left is the next tab', () => {
+    direction = 'rtl';
     press(0, 'ArrowLeft');
     expect(state()[0]).toEqual(['false', 'true', 'false']);
   });

@@ -76,4 +76,6 @@ export const builder = {
     name: 'שם הטראס',
     trussRole: 'התפקיד של גופים חדשים שנוספים לטראס הזה',
   },
+  /** The title of the top-bar button that opens the builder. */
+  openTitle: 'בניית במה: עריכת הבמה, הטראסים וגופי התאורה',
 } as const;

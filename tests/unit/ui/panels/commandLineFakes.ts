@@ -12,6 +12,8 @@ export function commandLineDeps() {
   const bus = new EventBus<EngineEvents>();
   const state = new AppState(bus);
   const go = vi.fn<ExecutorPool['go']>();
+  /** Set `building` to stand for an open Stage Builder. */
+  const flags = { building: false };
   const deps: CommandLineDeps = {
     bus,
     state,
@@ -25,6 +27,7 @@ export function commandLineDeps() {
     lightIds: () => [],
     fanToggled: vi.fn(),
     guideOrTourOpen: () => false,
+    builderOpen: () => flags.building,
   };
-  return { deps, state, go };
+  return { deps, state, go, flags };
 }

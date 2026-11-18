@@ -41,6 +41,12 @@ describe('TrussTab', () => {
     expect(session.draft).toEqual(addPresetTruss(start, 'tower', [x0 - 1, 0, (z0 + z1) / 2]));
   });
 
+  it('stands a new goalpost on the deck top', () => {
+    click(button(root, 'Goalpost'));
+    const at: [number, number, number] = [(x0 + x1) / 2, start.deck.height, (z0 + z1) / 2];
+    expect([start.deck.height > 0, session.draft]).toEqual([true, addPresetTruss(start, 'goalpost', at)]);
+  });
+
   it('selects a truss from the list', () => {
     click(button(root, 'Circle'));
     click(button(root, 'Goalpost'));

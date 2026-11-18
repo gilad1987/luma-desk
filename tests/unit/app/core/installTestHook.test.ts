@@ -14,6 +14,7 @@ describe('installTestHook', () => {
     expect(Object.keys(page.__desk ?? {}).join()).toBe('setView,fixtures,stage,applyTemplate,renderMemory,test');
     expect(page.__desk?.fixtures).toBe(engine.stage.rig.fixtures);
     expect(page.__desk?.setView).toBe(setView);
+    expect(page.__desk?.renderMemory()).toEqual({ geometries: 3, textures: 1 });
   });
 
   it('reads fixtures from the stage at each access, so they follow a template change', () => {

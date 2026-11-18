@@ -13,7 +13,8 @@ export type RenderHandles = StageHandles &
 
 /**
  * Builds the whole three.js side after the engine: stage, fixture visuals, then the renderer that draws them with
- * the fixture-id overlay, and subscribes the stage scene to `rigChanged` (after the engine listeners). The page must already hold `#c`, `#ov` and `#viewer` (index.html).
+ * the fixture-id overlay, and subscribes the stage scene to `rigChanged` (after the engine listeners). The page must
+ * already hold `#c`, `#ov` and `#viewer` (index.html).
  */
 export function wireRender(engine: Pick<EngineHandles, 'stage' | 'selection' | 'appState' | 'bus'>): RenderHandles {
   const { selection, appState, bus } = engine;

@@ -50,6 +50,7 @@ export function rigWorld() {
     state,
     clock,
     bus,
+    source: service,
   });
   const lines = recordEvents(bus);
   /** Applies a template; `sultans-pool` means the built-in design object itself, so `isBuiltIn` turns true. */

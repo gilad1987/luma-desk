@@ -1,10 +1,10 @@
-import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { he } from '../../../src/i18n/he';
+import { legacyPage } from '../../shared/legacy';
 import { legacyAreas } from './legacyAreas';
 
 /** The single-file page before the refactor: the source of truth for every Hebrew string. */
-const legacy = execFileSync('git', ['show', '48a3b63:index.html'], { encoding: 'utf8' });
+const legacy = legacyPage();
 
 /**
  * Each named string by its path in `he`, with the exact legacy code around it (`{}` marks the string). The order test

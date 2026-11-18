@@ -10,7 +10,7 @@ import { indexFx, type FxIndex, type PhaserInstance, type PhaserType } from './s
  * `fxList` and `fx` are public API: the panels and the Playwright test hook (`window.__desk.test.state()`) read them.
  * Clearing replaces the three objects, so readers look them up each time instead of keeping them. The rules of each
  * operation live in `programmerActions/`, one file each; a method here only hands that rule this programmer and its
- * collaborators.
+ * collaborators. On `rigChanged` it drops the fixtures the new rig lacks (see {@link actions.pruneToRig}).
  */
 export class Programmer {
   /** Values per fixture id; a fixture with no value left has no key. */
@@ -25,6 +25,7 @@ export class Programmer {
 
   constructor(deps: ProgrammerDeps) {
     this.#deps = deps;
+    deps.bus.on('rigChanged', () => actions.pruneToRig(this, deps));
   }
 
   /** Sets one attribute of one fixture (see {@link actions.setValue}). */

@@ -20,6 +20,11 @@ export interface ShowFileDialogDeps {
   readonly showLoaded: () => void;
   /** The MVR row's actions, from `wireMvr`. */
   readonly mvr: ShowFileDeps['mvr'];
+  /**
+   * Cancels an open Stage Builder session; a no-op when it is closed. Every load calls it first: the builder's Cancel
+   * re-applies the stage it started from, so it must run before the load applies the show's stage, not after.
+   */
+  readonly cancelBuilder: () => void;
 }
 
 /**
@@ -27,7 +32,7 @@ export interface ShowFileDialogDeps {
  * runs the "ui" repaint hook right after the serializer, before the dialog closes, in the original order.
  */
 export function wireShowFileDialog(deps: ShowFileDialogDeps): ShowFileDialog {
-  const { serializer, demo, showLoaded } = deps;
+  const { serializer, demo, showLoaded, cancelBuilder } = deps;
   return new ShowFileDialog({
     bus: deps.bus,
     modal: deps.modal,
@@ -36,11 +41,13 @@ export function wireShowFileDialog(deps: ShowFileDialogDeps): ShowFileDialog {
     storage: deps.showStorage,
     demo: {
       load: () => {
+        cancelBuilder();
         demo.load();
         showLoaded();
       },
     },
     loadShow: (show) => {
+      cancelBuilder();
       serializer.load(show);
       showLoaded();
     },

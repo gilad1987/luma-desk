@@ -1,9 +1,9 @@
-import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { viewerMarkup } from '../../../../src/ui/layouts/viewerMarkup';
 import { cueHudMarkup } from '../../../../src/ui/panels/executors/cueHudMarkup';
+import { legacyPage } from '../../../shared/legacy';
 
-const legacy = execFileSync('git', ['show', '48a3b63:index.html'], { encoding: 'utf8' });
+const legacy = legacyPage();
 const open = '<section id="viewer">';
 const legacyViewer = legacy.slice(
   legacy.indexOf(open) + open.length,
