@@ -8,6 +8,8 @@ playwright-report/
 tests/golden/
 tests/fixtures/
 tests/e2e/__screenshots__/
+# The original page (index.html at 48a3b63): the markup and Hebrew oracles compare against its exact bytes
+tests/shared/legacy/original-index.html
 docs/screenshots/
 
 package-lock.json
