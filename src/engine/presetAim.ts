@@ -1,4 +1,4 @@
-import type { BandPoint } from '../domain/stage/StageFrame';
+import type { BandPoint, StageFrame } from '../domain/stage/StageFrame';
 import { BAND_PTS, DECK, RING, SCREEN } from '../domain/venue';
 
 /**
@@ -10,7 +10,7 @@ export interface PresetAim {
   /** The deck surface height. */
   readonly deckY: number;
   /** The ring centre in plan view and its radius `R`. */
-  readonly ring: { readonly x: number; readonly z: number; readonly R: number };
+  readonly ring: Pick<NonNullable<StageFrame['ring']>, 'x' | 'z' | 'R'>;
   /** The z of the LED screen plane. */
   readonly screenZ: number;
   /** Never empty: the `band` preset cycles through it. */

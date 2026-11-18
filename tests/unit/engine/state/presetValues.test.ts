@@ -19,24 +19,24 @@ describe('presetValues', () => {
     for (const pool of Object.values(pools))
       for (const preset of Object.values(pool))
         rig.fixtures.forEach((f, k) => {
-          expect(presetValues(preset, f, k % 24, 24)).toEqual(presetValsOracle(preset, f, k % 24, 24));
+          expect(presetValues(preset, f, { k: k % 24, n: 24 })).toEqual(presetValsOracle(preset, f, k % 24, 24));
         });
   });
 
   it('returns the global preset object itself, not a copy', () => {
     const preset: Preset = { name: 'Full', kind: 'global', vals: { dim: 100 } };
-    expect(presetValues(preset, fixture(101), 0, 1)).toBe(preset.vals);
+    expect(presetValues(preset, fixture(101), { k: 0, n: 1 })).toBe(preset.vals);
   });
 
   it('returns the recorded values of the fixture, or undefined when the preset has none for it', () => {
     const preset: Preset = { name: 'Color 1', kind: 'fix', fix: { 101: { r: 5 } } };
-    expect(presetValues(preset, fixture(101), 0, 2)).toBe(preset.fix[101]);
-    expect(presetValues(preset, fixture(102), 1, 2)).toBeUndefined();
+    expect(presetValues(preset, fixture(101), { k: 0, n: 2 })).toBe(preset.fix[101]);
+    expect(presetValues(preset, fixture(102), { k: 1, n: 2 })).toBeUndefined();
   });
 
   it('applies nothing for a hand-edited recorded preset without fix, as the original did', () => {
     const broken = JSON.parse('{"name":"x","kind":"fix"}') as Preset;
-    expect(presetValues(broken, fixture(101), 0, 1)).toBe(presetValsOracle(broken, fixture(101), 0, 1));
-    expect(presetValues(broken, fixture(101), 0, 1)).toBeUndefined();
+    expect(presetValues(broken, fixture(101), { k: 0, n: 1 })).toBe(presetValsOracle(broken, fixture(101), 0, 1));
+    expect(presetValues(broken, fixture(101), { k: 0, n: 1 })).toBeUndefined();
   });
 });

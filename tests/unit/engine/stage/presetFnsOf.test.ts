@@ -14,7 +14,7 @@ import { PRESET_FNS, type PresetFnName } from '../../../../src/engine/presetFunc
 import { presetFnsOf } from '../../../../src/engine/stage/presetFnsOf';
 
 const rig = buildRig();
-const names = Object.keys(PRESET_FNS) as PresetFnName[];
+const names: readonly PresetFnName[] = Object.keys(PRESET_FNS).filter((s): s is PresetFnName => s in PRESET_FNS);
 // the same selection sizes and indexes as the positionPresets oracle test
 const COUNTS = [1, 2, 7, 24];
 /** [k, n]: a single fixture and every index of a 7-fixture fan (every k % 2 and % 3 case). */
@@ -59,6 +59,17 @@ describe('presetFnsOf', () => {
     const [x, z] = [(deck.x0 + deck.x1) / 2, (deck.z0 + deck.z1) / 2];
     const hung = rig.fixtures.filter((f) => f.mount !== 'floor').slice(0, 5);
     expect(hung.map((f) => fns.ringCone(f, 0, 1))).toEqual(hung.map((f) => aimAt(f, x, deck.height, z)));
+  });
+
+  it('aims screen at the deck centre plane and band at one mark there when the stage has neither', () => {
+    const frame = frameOf(createTemplate('empty'));
+    const { deck } = frame;
+    const fns = presetFnsOf(frame);
+    const [x, z] = [(deck.x0 + deck.x1) / 2, (deck.z0 + deck.z1) / 2];
+    const some = rig.fixtures.slice(0, 40);
+    expect([frame.screen, frame.bandPoints]).toEqual([null, []]);
+    expect(some.map((f) => fns.screen(f, 0, 1))).toEqual(some.map((f) => aimAt(f, f.pos.x * 0.75, deck.height + 5, z)));
+    expect(some.map((f, k) => fns.band(f, k, 40))).toEqual(some.map((f) => aimAt(f, x, deck.height + 1.3, z)));
   });
 });
 

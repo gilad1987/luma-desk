@@ -10,7 +10,7 @@ import { AppState } from '../../../../src/engine/AppState';
 import type { EngineEvents } from '../../../../src/engine/events';
 import { ExecutorPool } from '../../../../src/engine/ExecutorPool';
 import { PresetLibrary } from '../../../../src/engine/PresetLibrary';
-import type { PresetPools } from '../../../../src/engine/presetTypes';
+import type { PresetPools, PresetType } from '../../../../src/engine/presetTypes';
 import { Programmer } from '../../../../src/engine/Programmer';
 import { Selection } from '../../../../src/engine/Selection';
 import { StageService } from '../../../../src/engine/stage/StageService';
@@ -24,6 +24,14 @@ const pools = (): PresetPools => ({
   4: {},
   5: {},
 });
+
+/** [pool, slot]: the ring preset, the deck preset, an empty slot and a colour preset. */
+const SLOTS: readonly (readonly [PresetType, number])[] = [
+  [2, 5],
+  [2, 6],
+  [2, 7],
+  [3, 1],
+];
 
 const setup = () => {
   const bus = new EventBus<EngineEvents>();
@@ -41,16 +49,21 @@ const setup = () => {
 describe('preset availability (G10)', () => {
   it('follows the stage: a ring preset is unavailable without a ring, the others stay, the data is kept', () => {
     const { service, presets } = setup();
-    const available = (): boolean[] =>
-      [
-        [2, 5],
-        [2, 6],
-        [2, 7],
-        [3, 1],
-      ].map(([t, s]) => presets.isAvailable(t as 2, s ?? 0));
-    const before = available();
+    const available = (): boolean[] => SLOTS.map(([t, s]) => presets.isAvailable(t, s));
+    const missing = () => SLOTS.map(([t, s]) => presets.missingTarget(t, s));
+    const before = [available(), missing()];
     service.apply(createTemplate('empty'), 'builder');
-    expect([before, available(), presets.all]).toEqual([[true, true, true, true], [false, true, true, true], pools()]);
+    expect([before, [available(), missing()], presets.all]).toEqual([
+      [
+        [true, true, true, true],
+        [null, null, null, null],
+      ],
+      [
+        [false, true, true, true],
+        ['ring', null, null, null],
+      ],
+      pools(),
+    ]);
   });
 
   it('makes every preset available without a RigSource', () => {

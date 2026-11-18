@@ -3,7 +3,7 @@ import { FEAT_ATTRS } from '../domain/attributes';
 import type { EngineBus } from './events';
 import type { PresetPools, PresetType } from './presetTypes';
 import { PRESET_TYPES, PT_FEAT } from './presetTypes';
-import { isPresetAvailable } from './stage/presetTargets';
+import { isPresetAvailable, PRESET_TARGETS, type PresetTarget } from './stage/presetTargets';
 import type { RigSource } from './stage/RigSource';
 
 /**
@@ -35,14 +35,19 @@ export class PresetLibrary {
   }
 
   /**
-   * False for a computed preset whose stage part (ring, screen, band) the current stage lacks (G10), so the pool view
-   * can hide it and applying it can refuse. Its data stays, for a later stage that has the part. Any other slot, an
-   * empty one included, is available; the stage is read at call time, so no cache waits for `rigChanged`.
+   * The stage part (ring, screen, band) that the computed preset in `slot` needs and the current stage lacks (G10), so
+   * applying it can refuse and name the part; null for any other slot, an empty one included. Its data stays, for a
+   * later stage that has the part. The stage is read at call time, so no cache waits for `rigChanged`.
    */
-  isAvailable(type: PresetType, slot: number): boolean {
+  missingTarget(type: PresetType, slot: number): PresetTarget | null {
     const pr = this.#presets[type][slot];
-    if (pr?.kind !== 'fn' || this.#source === undefined) return true;
-    return isPresetAvailable(pr.fn, this.#source.frame);
+    if (pr?.kind !== 'fn' || this.#source === undefined) return null;
+    return isPresetAvailable(pr.fn, this.#source.frame) ? null : PRESET_TARGETS[pr.fn];
+  }
+
+  /** False when `missingTarget` names a part, so the pool view can hide the preset. */
+  isAvailable(type: PresetType, slot: number): boolean {
+    return this.missingTarget(type, slot) === null;
   }
 
   /**

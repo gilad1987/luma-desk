@@ -1,6 +1,6 @@
 import type { StageFrame } from '../../domain/stage/StageFrame';
 import type { PresetAim } from '../presetAim';
-import { presetFnsFor, type PresetFnName } from '../presetFunctions';
+import { presetFnsAimedAt, type PresetFnName } from '../presetFunctions';
 import type { PresetFn } from '../positionPresets';
 
 /**
@@ -26,5 +26,5 @@ function aimOf(frame: StageFrame): PresetAim {
  * result until the next `rigChanged`.
  */
 export function presetFnsOf(frame: StageFrame): Readonly<Record<PresetFnName, PresetFn>> {
-  return presetFnsFor(aimOf(frame));
+  return presetFnsAimedAt(aimOf(frame));
 }
