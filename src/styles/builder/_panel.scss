@@ -1,0 +1,74 @@
+// The builder tool panel (src/ui/builder/mountTools.ts): the Stage, Trusses and Fixtures tabs over the property
+// panel. Every control is at least the touch target `.builder` sets (44 px, the desk runs on iPad).
+.builder-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block: 8px;
+  padding-inline: 10px;
+
+  .tool-tablist {
+    display: flex;
+    gap: 4px;
+  }
+  .tool-tab {
+    flex: 1;
+    &.is-active {
+      background: var(--acc);
+      color: var(--bg);
+    }
+  }
+  .tool-panel,
+  .prop-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    &[hidden] {
+      display: none;
+    }
+  }
+  .panel-heading {
+    margin-block: 8px 0;
+    font-size: 13px;
+    color: var(--mut);
+  }
+  .panel-hint {
+    margin-block: 0;
+    color: var(--mut);
+  }
+  .field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--builder-target);
+    input,
+    select {
+      flex: 1;
+      min-width: var(--builder-target);
+      min-height: var(--builder-target);
+    }
+    .is-invalid {
+      outline: 2px solid var(--prog);
+    }
+  }
+  .field-error {
+    flex-basis: 100%;
+    color: var(--prog);
+    font-size: 12px;
+  }
+  .item-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  button {
+    min-width: var(--builder-target);
+    min-height: var(--builder-target);
+    padding-inline: 10px;
+    &.is-selected {
+      outline: 2px solid var(--acc);
+    }
+  }
+}
