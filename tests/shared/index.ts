@@ -15,6 +15,7 @@ export { TRIANGLE_BYTES, triangleGlb, triangleGlbWithImage } from './mvr/triangl
 export { make3ds } from './mvr/make3ds';
 export { make3dsGroups, type TdsTestMaterial } from './mvr/make3dsGroups';
 export { makeFixtureRecord, makeScene } from './mvr/makeFixtureRecord';
+export { floorGrid, proxyAt, seatRows, wallGrid } from './mvr/makeProxyPlacements';
 export { expectRigKept } from './mvr/expectRigKept';
 export { SAMPLES_DIR, sampleFiles, readSample } from './mvr/localSamples';
 export { importCounts, type ImportCounts } from './mvr/importCounts';
