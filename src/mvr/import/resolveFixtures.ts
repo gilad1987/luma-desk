@@ -3,6 +3,7 @@ import type { MvrArchive } from '../archive/MvrArchive';
 import type { ResolvedFixture } from '../design/DesignInput';
 import type { GdtfInfo } from '../gdtf/GdtfInfo';
 import { breakFootprint } from '../gdtf/breakFootprint';
+import { gdtfBodySize } from '../gdtf/gdtfBodySize';
 import { modeChannels } from '../gdtf/modeChannels';
 import type { MvrWarning } from '../MvrWarning';
 import { patchFromAddresses } from '../patch/address';
@@ -24,12 +25,15 @@ export interface ResolvedRig {
   readonly gdtfWarnings: readonly MvrWarning[];
   /** Patch warnings in fixture order. */
   readonly patchWarnings: readonly MvrWarning[];
+  /** By fixture uuid: the overall size in metres its GDTF gives (`gdtfBodySize`); no entry when it gives none. */
+  readonly bodySizes: ReadonlyMap<string, number>;
 }
 
 /** What the GDTF step decides for one fixture: a `FixtureClass` plus the resolved mode and its DMX footprint. */
 interface TypeAndMode extends FixtureClass {
   readonly mode: string;
   readonly footprint?: number;
+  readonly bodySize?: number;
 }
 
 /**
@@ -49,7 +53,9 @@ function typeAndMode(
   for (const warning of result.warnings) if (!modeWarnings.has(key)) modeWarnings.set(key, warning);
   const footprint = breakFootprint(result.channels);
   const kind = classifyFixture(info, result.channels, [record.gdtfSpec, info.name, record.name]);
-  return { ...kind, mode: result.mode, ...(footprint === undefined ? {} : { footprint }) };
+  const bodySize = gdtfBodySize(info, result.mode, result.channels, record.gdtfSpec);
+  const sized = bodySize === undefined ? {} : { bodySize };
+  return { ...kind, mode: result.mode, ...(footprint === undefined ? {} : { footprint }), ...sized };
 }
 
 /**
@@ -67,17 +73,20 @@ export function resolveFixtures(archive: MvrArchive, records: readonly MvrFixtur
   const fixtures: ResolvedFixture[] = [];
   const objectUuids: string[] = [];
   const guesses = new Map<FixtureTypeId, number>();
+  const bodySizes = new Map<string, number>();
   for (const record of records) {
-    const { type, fromName, ...identity } = typeAndMode(record, table.infos.get(record.gdtfSpec), modeWarnings);
+    const kind = typeAndMode(record, table.infos.get(record.gdtfSpec), modeWarnings);
+    const { type, fromName, bodySize, ...identity } = kind;
     if (type === 'object') {
       objectUuids.push(record.uuid);
       continue;
     }
+    if (bodySize !== undefined) bodySizes.set(record.uuid, bodySize);
     if (fromName) guesses.set(type, (guesses.get(type) ?? 0) + 1);
     const { patch, warnings } = patchFromAddresses(record.addresses, record.uuid);
     patchWarnings.push(...warnings);
     fixtures.push({ record, type, gdtfName: record.gdtfSpec, ...identity, ...(patch ? { patch } : {}) });
   }
   const gdtfWarnings = [...table.warnings, ...modeWarnings.values(), ...typeGuessWarnings(guesses)];
-  return { fixtures, objectUuids, missingGdtfCount: table.missingCount, gdtfWarnings, patchWarnings };
+  return { fixtures, objectUuids, missingGdtfCount: table.missingCount, gdtfWarnings, patchWarnings, bodySizes };
 }

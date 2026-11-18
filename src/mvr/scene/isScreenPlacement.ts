@@ -37,8 +37,8 @@ const PART_WORDS: ReadonlySet<string> = new Set([
 /** Element tags that are steel by what they are, whatever their name or layer says. */
 const STEEL_KINDS: ReadonlySet<string> = new Set(['Truss', 'Support']);
 
-/** The names the rule reads: the element tag, the object, its innermost Symdef and its layer. */
-export type ScreenNames = Pick<MeshPlacement, 'kind' | 'name' | 'layerName' | 'symdef'>;
+/** What the rule reads: the element tag, the three names, and the two facts the import adds (`withScreenEvidence`). */
+export type ScreenNames = Pick<MeshPlacement, 'kind' | 'name' | 'layerName' | 'symdef' | 'display' | 'panel'>;
 
 /** Whether a name says LED surface: a screen word, and no word for a part that holds the screen. */
 function namesScreen(name: string): boolean {
@@ -52,14 +52,27 @@ function namesPart(name: string): boolean {
 }
 
 /**
- * Whether a placement draws as an emissive LED screen rather than as scenery. MVR has a `<VideoScreen>` element, but
- * writers often export an LED wall as a plain `SceneObject` and say what it is only in its own name, its Symdef's
- * name or its layer's name, so a screen word in any of them counts too. The object itself has the last word: a truss
- * or support, or an object or Symdef named as a part that holds or frames a screen, stays steel even on an LED layer.
+ * Whether a placement draws as an LED surface rather than as scenery. The file's data decides, strongest first:
+ * 1. An MVR `<VideoScreen>` element is a screen: the file says so.
+ * 2. A truss or support is steel, whatever its name or layer says.
+ * 3. An object whose GDTF holds a `Display` geometry is a screen (`display`).
+ * 4. A screen word in the object, Symdef or layer name counts only for a standing panel (`panel`), and never for an
+ *    object or Symdef named as a part that holds a screen (frame, bumper).
+ *
+ * Why a word alone is not enough: plots put the deck, the stairs and the backdrop solids of a video set on the layer
+ * named after the LED wall, and a layer name says where an object is filed, not what it is.
+ *
+ * What the rule cannot decide, and so draws as scenery: an LED wall exported as a plain object with no screen word
+ * anywhere; a curved LED wall and an LED floor that only a name word marks, because their boxes are those of a
+ * backdrop solid and of a deck. What it wrongly takes as a screen: a thin standing flat (a fascia, a banner) that
+ * only shares a layer with the LED wall. Without the two import facts (a placement straight from the scene walk)
+ * only rules 1 and 2 apply.
  */
 export function isScreenPlacement(placement: ScreenNames): boolean {
   if (placement.kind === 'VideoScreen') return true;
+  if (STEEL_KINDS.has(placement.kind)) return false;
+  if (placement.display === true) return true;
   const { name, symdef = '', layerName } = placement;
-  if (STEEL_KINDS.has(placement.kind) || namesPart(name) || namesPart(symdef)) return false;
+  if (placement.panel !== true || namesPart(name) || namesPart(symdef)) return false;
   return [name, symdef, layerName].some(namesScreen);
 }

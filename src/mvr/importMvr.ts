@@ -6,6 +6,7 @@ import { readLumaData } from './import/readLumaData';
 import { resolveFixtures } from './import/resolveFixtures';
 import { summarize } from './import/summarize';
 import { withLumaData, withoutLumaMeshes } from './import/withLumaData';
+import { withScreenEvidence } from './import/withScreenEvidence';
 import type { Aabb } from './math/Aabb';
 import { meshBounds } from './mesh/meshBounds';
 import type { MvrImport } from './MvrImport';
@@ -47,17 +48,18 @@ function importNow(bytes: Uint8Array, options: MvrImportOptions): MvrImport {
   const doc = parseXml(text);
   const luma = readLumaData(doc);
   const walked = walkScene(doc);
-  const scene = withoutLumaMeshes(walked, luma);
-  const rig = resolveFixtures(archive, scene.fixtures);
+  const bare = withoutLumaMeshes(walked, luma);
+  const rig = resolveFixtures(archive, bare.fixtures);
   const meshWarnings: MvrWarning[] = [];
-  const meshBoxes = readMeshBoxes(archive, scene.placements, (warning) => meshWarnings.push(warning));
+  const meshBoxes = readMeshBoxes(archive, bare.placements, (warning) => meshWarnings.push(warning));
+  const scene = withScreenEvidence(bare, meshBoxes, archive);
   const meshFiles = meshBytes(archive, scene.placements, (warning) => meshWarnings.push(warning));
   const fixed = luma ? { fixed: { offset: luma.offset, deck: luma.deck } } : {};
   const result = toStageDesign({ ...options, scene, fixtures: rig.fixtures, meshBoxes, ...fixed });
   const design = withLumaData(result, luma);
   const noGeometry = design.warnings.some((warning) => warning.code === 'no-geometry');
   return {
-    design: placeBodies(design.design),
+    design: placeBodies(design.design, rig.bodySizes),
     geometry: result.geometry,
     ...meshFiles,
     summary: summarize(walked, rig, noGeometry),

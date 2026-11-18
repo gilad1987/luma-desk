@@ -4,7 +4,7 @@
  * English ones; they live here because every Hebrew string of the source lives in the locale (rule I1).
  */
 export const mvrNameWords = {
-  /** "Screen" and "LED": a layer or object with one of them is an LED surface (`isScreenPlacement`). */
+  /** "Screen" and "LED": a standing panel with one of them in its names is an LED surface (`isScreenPlacement`). */
   screen: ['מסך', 'לד'],
   /** "Hall": a layer with it is the venue around the stage and starts hidden. */
   hall: ['אולם'],
