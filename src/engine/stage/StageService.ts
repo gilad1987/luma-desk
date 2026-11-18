@@ -1,12 +1,12 @@
 import type { Rig } from '../../domain/rig/Rig';
 import { rigFromDesign } from '../../domain/stage/deriveRig';
-import { isSameData } from '../../domain/stage/sameData';
 import type { StageDesign } from '../../domain/stage/StageDesign';
 import { frameOf, type StageFrame } from '../../domain/stage/StageFrame';
 import type { EngineBus } from '../events';
 import { RigAnnouncer } from './RigAnnouncer';
 import type { RigChangeCause } from './rigChanged';
 import type { RigSource } from './RigSource';
+import { isSameRig } from './sameRig';
 import type { StageServiceOptions } from './StageServiceOptions';
 
 /**
@@ -88,14 +88,9 @@ export class StageService implements RigSource {
   updateMeta(design: StageDesign): void {
     this.#announcer.checkIdle('updateMeta', 'a hiddenLayers change');
     if (!design.mvr) throw new Error('StageService.updateMeta: the design has no MVR data; use apply');
-    const sameRig = isSameData(rigData(design), rigData(this.#design));
+    const sameRig = isSameRig(design, this.#design);
     if (!sameRig) throw new Error('StageService.updateMeta: the design changes rig data; use apply');
     this.#design = design;
     this.#announcer.announceMeta();
   }
-}
-
-/** The design with the data `updateMeta` may change taken out, so the rest can be compared. */
-function rigData(design: StageDesign): StageDesign {
-  return design.mvr ? { ...design, mvr: { ...design.mvr, hiddenLayers: [] } } : design;
 }
