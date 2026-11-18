@@ -44,6 +44,17 @@ describe('TopView drag', () => {
     expect(session.draft.fixtures.find((f) => f.id === 101)?.position).toEqual([-4.7, 5.55, 2]);
   });
 
+  it('draws the drag as a preview of the moved selection before the drop', () => {
+    const { session, view, canvas, runFrames } = setup();
+    runFrames();
+    const preview = vi.spyOn(view, 'preview');
+    const [px, py] = view.transform.toCanvas(-5, 2);
+    canvas.onpointerdown?.(pointer(px, py));
+    canvas.onpointermove?.(pointer(px + view.transform.scale, py));
+    const op = preview.mock.calls[0]?.[0];
+    expect(op?.(session.draft).fixtures.find((f) => f.id === 101)?.position).toEqual([-4, 5.55, 2]);
+  });
+
   it('makes no edit for a click without a move', () => {
     const { session, view, canvas, runFrames } = setup();
     runFrames();
@@ -51,5 +62,17 @@ describe('TopView drag', () => {
     canvas.onpointerdown?.(pointer(px, py));
     canvas.onpointerup?.(pointer(px, py));
     expect([session.canUndo, session.selection.fixtures]).toEqual([false, [101]]);
+  });
+
+  it('makes no edit for a press that moves less than the drag threshold, even on an off-grid fixture', () => {
+    const { session, view, canvas, runFrames } = setup();
+    runFrames();
+    const offGrid = session.draft.fixtures.find((f) => f.id === 107);
+    if (offGrid?.position[2] !== 2.4) throw new Error('Theatre fixture 107 hangs at z 2.4, off the 0.5 m grid');
+    const [px, py] = view.transform.toCanvas(offGrid.position[0], offGrid.position[2]);
+    canvas.onpointerdown?.(pointer(px, py));
+    canvas.onpointermove?.(pointer(px + 1, py));
+    canvas.onpointerup?.(pointer(px + 1, py));
+    expect([session.canUndo, session.selection.fixtures]).toEqual([false, [107]]);
   });
 });

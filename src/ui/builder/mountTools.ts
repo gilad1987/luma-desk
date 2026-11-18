@@ -5,14 +5,16 @@ import { FixtureTab } from './FixtureTab';
 import { PropertyPanel } from './PropertyPanel';
 import { StageTab } from './StageTab';
 import { ToolTabs } from './ToolTabs';
+import { TopView, type TopViewDeps } from './TopView';
 import { TrussTab } from './TrussTab';
 
 /**
- * Mounts the tool tabs and the property panel into `slots.tools` (the `BuilderDeps.mountTools` contract) and returns
- * the one disposer that stops the session subscription and removes the DOM it added (U6). Every panel re-renders on
- * each session change and edits only through the session, so no panel reads or writes the stage itself.
+ * Mounts the tool tabs and the property panel into `slots.tools` and the top view into `slots.view` (the
+ * `BuilderDeps.mountTools` contract), and returns the one disposer that stops the session subscriptions, cancels a
+ * pending top view frame and removes the DOM it added (U6). Every panel re-renders on each session change and edits
+ * only through the session, so no panel reads or writes the stage itself.
  */
-export function mountTools(slots: BuilderSlots, session: EditorSession): () => void {
+export function mountTools(slots: BuilderSlots, session: EditorSession, view: TopViewDeps): () => void {
   const stage = new StageTab(session);
   const trusses = new TrussTab(session);
   const fixtures = new FixtureTab(session);
@@ -28,10 +30,12 @@ export function mountTools(slots: BuilderSlots, session: EditorSession): () => v
   root.appendChild(tabs.root);
   root.appendChild(props.root);
   slots.tools.appendChild(root);
+  const topView = new TopView(slots.view, session, view);
   const panels = [stage, trusses, fixtures, props];
   const stop = session.onChange(() => panels.forEach((panel) => panel.render()));
   return () => {
     stop();
+    topView.dispose();
     root.remove();
   };
 }

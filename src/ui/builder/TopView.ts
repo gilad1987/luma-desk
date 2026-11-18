@@ -3,8 +3,8 @@ import type { StageDesign } from '../../domain/stage/StageDesign';
 import { createElement } from '../shared';
 import type { EditOp, EditorSession } from './EditorSession';
 import { drawTopView } from './topViewDraw';
+import { TopViewCanvas } from './TopViewCanvas';
 import { TopViewInput } from './TopViewInput';
-import { readPalette } from './topViewPalette';
 import { fitTransform, type TopTransform } from './topViewTransform';
 
 /** What the top view needs from the app besides the session. */
@@ -24,6 +24,7 @@ export interface TopViewDeps {
  */
 export class TopView {
   readonly #canvas: HTMLCanvasElement;
+  readonly #box: TopViewCanvas;
   readonly #session: EditorSession;
   readonly #deps: TopViewDeps;
   readonly #input: TopViewInput;
@@ -34,6 +35,7 @@ export class TopView {
 
   constructor(slot: HTMLElement, session: EditorSession, deps: TopViewDeps) {
     this.#canvas = createElement('canvas', 'top-view');
+    this.#box = new TopViewCanvas(this.#canvas);
     slot.appendChild(this.#canvas);
     this.#session = session;
     this.#deps = deps;
@@ -71,15 +73,12 @@ export class TopView {
 
   #paint(): void {
     const canvas = this.#canvas;
-    if (canvas.offsetWidth > 0 && canvas.offsetHeight > 0) {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-    }
+    const palette = this.#box.fit();
     this.#transform = fitTransform(boundsOf(this.#session.draft), canvas);
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('top view: no 2D canvas context');
     const scene = { design: this.#shown(), selection: this.#session.selection, view: this.#transform };
-    drawTopView(ctx, { ...scene, palette: readPalette(canvas), size: canvas });
+    drawTopView(ctx, { ...scene, palette, size: canvas });
   }
 
   /** The preview of a drag, or the draft when there is none or the domain refuses it (the drop then reports it). */

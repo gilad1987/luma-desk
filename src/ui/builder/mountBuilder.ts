@@ -31,7 +31,7 @@ export function mountBuilder(host: HTMLElement, session: EditorSession, deps: Bu
     () => toolbar?.dispose(),
     () => badge.dispose(),
     listenBuilderKeys(deps.keys, (action) => toolbar?.run(action)),
-    deps.mountTools(slots, session),
+    deps.mountTools(slots, session, { ...deps.frames, report }),
   ];
   return () => disposers.forEach((dispose) => dispose());
 }

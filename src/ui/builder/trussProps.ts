@@ -1,15 +1,16 @@
-import { setTrussProps, type TrussPatch } from '../../domain/stage/edit/trussOps';
+import { moveTruss, setTrussProps, type TrussPatch } from '../../domain/stage/edit/trussOps';
 import type { StageTruss } from '../../domain/stage/trussTypes';
 import { FIXTURE_ROLES } from '../../domain/stage/types';
 import { he } from '../../i18n/he';
 import type { EditorSession } from './EditorSession';
 import { ErrorText } from './ErrorText';
 import { labelled, makeSelect, oneOf, ROLE_CHOICES } from './formControls';
-import { trussSizeFields } from './trussSizeFields';
+import { positionFields } from './positionFields';
 
 /**
- * The property fields of one truss: its id, name, the default role of fixtures added to it, and its sizes. Position
- * is not here: it moves through `moveTruss` in the top view (W4c), so the fixtures on it move along.
+ * The property fields of one truss: its id, name, the default role of fixtures added to it, and its position. A
+ * position field moves the truss through `moveTruss`, so the fixtures on it move along. Its
+ * sizes are in the Trusses tab only, so one size has one field on the screen.
  */
 export function trussProps(session: Pick<EditorSession, 'edit'>, truss: StageTruss): HTMLElement[] {
   const error = new ErrorText();
@@ -29,5 +30,8 @@ export function trussProps(session: Pick<EditorSession, 'edit'>, truss: StageTru
     value: truss.role,
     onPick: (value) => patch({ role: oneOf(FIXTURE_ROLES, value) }),
   });
-  return [id, labelled('Name', name), role, ...trussSizeFields(session, truss), error.root];
+  const position = positionFields(truss.transform.position, (delta) =>
+    session.edit((d) => moveTruss(d, truss.id, delta)),
+  );
+  return [id, labelled('Name', name), role, ...position, error.root];
 }
