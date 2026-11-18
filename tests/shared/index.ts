@@ -22,6 +22,8 @@ export { mvrMatrix } from './mvr/mvrMatrix';
 export { meshScene, type TestPlacement } from './mvr/meshScene';
 export { exportRoundTrip, type ExportRoundTrip } from './mvr/exportRoundTrip';
 export { exportedBoxes } from './mvr/exportedBoxes';
+export { RENDER_RIG_FIXTURES, renderStageMvr } from './mvr/renderStageMvr';
+export { measureFrames, quantile, type RenderMeasure, type RenderStats } from './mvr/renderStats';
 export { FakeIndexedDb } from './fakeIndexedDb';
 export { fakeMvrFlowDeps, type FakeMvrFlow } from './mvr/fakeMvrFlowDeps';
 export { MemoryStore } from './MemoryStore';

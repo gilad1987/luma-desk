@@ -1,4 +1,3 @@
-import type { WebGLRenderer } from 'three';
 import type { AutoShow } from '../../autoshow/AutoShow';
 import type { CommandRunner } from '../../command/CommandRunner';
 import type { AppState } from '../../engine/AppState';
@@ -10,6 +9,7 @@ import type { Selection } from '../../engine/Selection';
 import type { StageService } from '../../engine/stage/StageService';
 import type { ShowSerializer } from '../../show';
 import type { LayoutMode } from '../../ui/panels/layoutMode';
+import type { FrameStatsRenderer } from './frameStats';
 
 /** What the Playwright test API reads and drives; names follow the legacy main.ts variables. */
 export interface TestHookDeps {
@@ -26,10 +26,8 @@ export interface TestHookDeps {
   readonly merger: Pick<OutputMerger, 'compute'>;
   readonly autoShow: Pick<AutoShow, 'modulation'>;
   readonly runner: Pick<CommandRunner, 'run'>;
-  /** `renderMemory` reads its GPU resource counts; only those two, so a test can pass a plain object. */
-  readonly renderer: {
-    readonly info: { readonly memory: Pick<WebGLRenderer['info']['memory'], 'geometries' | 'textures'> };
-  };
+  /** `renderMemory` and `renderStats` read its info and the frame times wait on its context; a test passes a fake. */
+  readonly renderer: FrameStatsRenderer;
   /** The current console layout (`deskMode`), owned by the layout area. */
   readonly deskMode: () => LayoutMode;
   /** Resolves after the latest MVR load ended, with success or failure (the MVR load queue). */

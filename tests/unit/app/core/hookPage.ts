@@ -35,11 +35,23 @@ export function installOnFakePage(clock?: object) {
   dom.add('toast');
   FakeObserver.all.length = 0;
   vi.stubGlobal('MutationObserver', FakeObserver);
-  const page: { __deskClock?: object; __desk?: DeskPage } = clock ? { __deskClock: clock } : {};
+  // the frame stats wrap requestAnimationFrame, so the fake page has one
+  const requestAnimationFrame = vi.fn();
+  const page: { __deskClock?: object; __desk?: DeskPage; requestAnimationFrame: () => void } = clock
+    ? { __deskClock: clock, requestAnimationFrame }
+    : { requestAnimationFrame };
   vi.stubGlobal('window', page);
   const setView = vi.fn();
   const autoShow = { modulation: { pump: 1, hitUntil: 0 } };
-  const renderer = { info: { memory: { geometries: 3, textures: 1 } } };
+  const render = { frame: 0, calls: 0, triangles: 0, points: 0, lines: 0 };
+  const info = { memory: { geometries: 3, textures: 1 }, render, programs: null, autoReset: true };
+  // no frame runs in a unit test, so nothing asks for the GL context
+  const renderer = {
+    info,
+    getContext: (): never => {
+      throw new Error('no WebGL in a unit test');
+    },
+  };
   const mvrReady = vi.fn(() => Promise.resolve());
   const mvrScenery = (): boolean => false;
   installTestHook({
