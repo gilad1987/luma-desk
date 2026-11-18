@@ -48,10 +48,19 @@ describe('restoreStoredMvr', () => {
     expect(flow.toasts).toEqual([he.mvr.meshFailed('a.3ds, b.glb')]);
   });
 
-  it('does nothing for a queued design that is no longer the stage when the restore runs', async () => {
-    const flow = fakeMvrFlowDeps(savedMvr);
-    await restoreStoredMvr(flow.deps, { ...savedMvr });
+  it('does nothing when the stage holds another file by the time the queued restore runs', async () => {
+    const flow = fakeMvrFlowDeps({ ...savedMvr, source: { kind: 'mvr', name: 'Other.mvr', fileHash: 'h2' } });
+    await restoreStoredMvr(flow.deps, savedMvr);
     expect(flow.calls).toEqual([]);
+  });
+
+  it('draws the current design once when a builder edit of the same file came while the restore was queued', async () => {
+    const edited: StageDesign = { ...savedMvr, source: { kind: 'builder', name: 'Edit', fileHash: 'h' } };
+    const flow = fakeMvrFlowDeps(edited);
+    flow.store.get.mockResolvedValue(BYTES);
+    await restoreStoredMvr(flow.deps, savedMvr);
+    expect(flow.calls).toEqual(['load', 'show']);
+    expect(flow.scenery.show.mock.calls[0]?.[0].design).toBe(edited);
   });
 
   it('shows no prompt when the stage changed while the store was read', async () => {

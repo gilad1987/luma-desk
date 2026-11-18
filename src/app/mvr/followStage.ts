@@ -1,8 +1,8 @@
 import type { StageDesign } from '../../domain/stage/StageDesign';
-import type { StageSource } from '../../domain/stage/types';
 import type { EngineBus } from '../../engine/events';
 import type { StageService } from '../../engine/stage/StageService';
 import type { MvrFlowDeps } from './MvrFlowDeps';
+import { sameMvrFile } from './sameMvrFile';
 
 /** What the stage follower needs: the bus to listen on, the stage to read the cause from, and the MVR parts. */
 export interface StageFollowDeps {
@@ -13,13 +13,6 @@ export interface StageFollowDeps {
   /** Queues `restoreStoredMvr` of `design` in the MVR load queue, so it cannot draw over a later load. */
   readonly restore: (design: StageDesign) => void;
 }
-
-/**
- * True when both sources name the same MVR file. A builder edit copies the design with a new source that keeps the
- * file hash, and a show load parses a new object, so the hash decides; the same object covers a file not stored.
- */
-const sameFile = (shown: StageSource, next: StageSource): boolean =>
-  shown === next || (next.fileHash !== undefined && shown.fileHash === next.fileHash);
 
 /**
  * Makes the MVR scenery and the missing-file prompt follow every stage change: a show load, a template, the builder,
@@ -35,7 +28,7 @@ export function followStage({ bus, stage, scenery, prompt, restore }: StageFollo
     const previous = shown;
     shown = design.source;
     if (stage.cause === 'import') return;
-    if (design.mvr && sameFile(previous, design.source)) {
+    if (design.mvr && sameMvrFile(previous, design.source)) {
       scenery.setHiddenLayers(design.mvr.hiddenLayers);
       return;
     }
