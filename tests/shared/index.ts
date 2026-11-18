@@ -21,3 +21,4 @@ export { mvrMatrix } from './mvr/mvrMatrix';
 export { meshScene, type TestPlacement } from './mvr/meshScene';
 export { exportRoundTrip, type ExportRoundTrip } from './mvr/exportRoundTrip';
 export { exportedBoxes } from './mvr/exportedBoxes';
+export { FakeIndexedDb } from './fakeIndexedDb';
