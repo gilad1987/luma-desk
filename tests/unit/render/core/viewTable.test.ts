@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isViewName } from '../../../../src/app/boot/isViewName';
+import { isViewName } from '../../../../src/render/camera/viewTable';
 
 describe('isViewName', () => {
   it('accepts the camera views, including fohMa, which has no button', () => {

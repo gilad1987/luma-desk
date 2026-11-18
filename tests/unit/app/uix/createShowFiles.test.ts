@@ -1,17 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createShowFiles } from '../../../../src/app/uix/createShowFiles';
 import { PERSIST_DELAY_MS, STORAGE_KEYS } from '../../../../src/show';
+import { MemoryStore } from '../../../shared';
 import { engineParts } from './engineParts';
 
 /** Builds the show objects on a real engine; the page storage is stubbed afterwards, as it is read on each call. */
 function build(parts = engineParts()) {
   const files = createShowFiles({ ...parts, execs: parts.pool.execs }),
-    stored = new Map<string, string>();
-  vi.stubGlobal('localStorage', {
-    getItem: (key: string) => stored.get(key) ?? null,
-    setItem: (key: string, value: string) => stored.set(key, value),
-  });
-  return { files, stored };
+    store = new MemoryStore();
+  vi.stubGlobal('localStorage', store);
+  return { files, stored: store.items };
 }
 
 describe('createShowFiles', () => {

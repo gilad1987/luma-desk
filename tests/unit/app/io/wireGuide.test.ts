@@ -1,4 +1,6 @@
-/** Checks the guide wiring: the rig chapter lists the rig's default groups, the tour button and Escape (listener K3). */
+/**
+ * Checks the guide wiring: the rig chapter lists the rig's default groups, the tour button and Escape (listener K3).
+ */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { wireGuide } from '../../../../src/app/io/wireGuide';
 import { buildRig } from '../../../../src/domain/rig';

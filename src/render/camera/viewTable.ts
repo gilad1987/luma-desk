@@ -35,3 +35,9 @@ export const VIEWS = {
  * into it once, at the DOM edge, so a typo fails the typecheck instead of being ignored at run time.
  */
 export type ViewName = keyof typeof VIEWS;
+
+/**
+ * Whether a plain string from a view button or the test hook names a camera view. It asks for an own key, so an
+ * inherited name such as `toString` is not a view and moves no camera.
+ */
+export const isViewName = (view: string): view is ViewName => Object.hasOwn(VIEWS, view);

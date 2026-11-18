@@ -1,14 +1,12 @@
 import type { Scene, WebGLRenderer } from 'three';
 import { CameraViews } from '../../render/camera/CameraViews';
-import type { ViewName } from '../../render/camera/viewTable';
+import { isViewName, type ViewName } from '../../render/camera/viewTable';
 import { addEnvironmentLights } from '../../render/lights/addEnvironmentLights';
 import { SceneLights } from '../../render/lights/SceneLights';
 import { createStageGraphics } from '../../render/stage/createStageGraphics';
 import { PostFx } from '../../render/stage/PostFx';
 import { buildVenue, type Venue } from '../../render/venue/Venue';
 import { byId } from '../../ui/dom';
-import { isViewName } from './isViewName';
-
 /** The renderer, camera and venue: everything the fixture visuals hang in. */
 export interface StageHandles {
   readonly canvas: HTMLCanvasElement;

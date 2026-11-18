@@ -42,7 +42,8 @@ describe('saved layout parity', () => {
     expect(prefs.load(MA_SIZE)).toEqual({ deskMode: 'ma', deskZoom: 'auto', maSize: undefined });
   });
 
-  // the original (`L.deskMode || 'ma'`) kept 5 and true as they were; LayoutPrefs keeps text only
+  // the original (`L.deskMode || 'ma'`) kept 5 and true as they were; LayoutPrefs keeps text only. The accepted
+  // change is recorded with known quirk D9 in docs/known-quirks.md
   it('reads saved names that are not text as the MA console at auto zoom (accepted change)', () => {
     const { prefs } = prefsWith('{"deskMode":5,"deskZoom":true}');
     expect(prefs.load(MA_SIZE)).toEqual({ deskMode: 'ma', deskZoom: 'auto', maSize: undefined });
