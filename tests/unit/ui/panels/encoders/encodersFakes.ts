@@ -4,6 +4,8 @@ import { EventBus } from '../../../../../src/core';
 import type { AttrName } from '../../../../../src/domain/attributes';
 import { Fixture } from '../../../../../src/domain/Fixture';
 import type { FixtureTypeId } from '../../../../../src/domain/FixtureType';
+import { frameOf } from '../../../../../src/domain/stage/StageFrame';
+import { BUILT_IN_DESIGN } from '../../../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import { AppState } from '../../../../../src/engine/AppState';
 import type { EngineEvents } from '../../../../../src/engine/events';
 import type { PhaserInstance } from '../../../../../src/engine/shared';
@@ -58,6 +60,7 @@ export function encodersFakes(fixtures: readonly Fixture[]) {
     programmer,
     selection,
     rig,
+    frame: () => frameOf(BUILT_IN_DESIGN),
     modal: { number: vi.fn() },
     layoutMode: () => 'desk',
     aimHeight: new AimHeight(),

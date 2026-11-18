@@ -38,6 +38,7 @@ export function wireLayout(deps: LayoutDeps): LayoutHandles {
     programmer,
     rig: { get: (id) => stage.rig.get(id) },
     aimHeight: deps.aimHeight,
+    frame: () => stage.frame,
   });
   const layout = new LayoutManager(layoutHost(deps));
   const ma = new MaLayout({

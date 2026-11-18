@@ -1,4 +1,5 @@
 import type { Rig } from '../../domain/rig';
+import type { StageFrame } from '../../domain/stage/StageFrame';
 import type { AppState } from '../../engine/AppState';
 import type { EngineBus } from '../../engine/events';
 import type { Executor } from '../../engine/Executor';
@@ -22,7 +23,7 @@ export interface LayoutDeps {
   readonly bus: EngineBus;
   readonly programmer: Pick<Programmer, 'vals' | 'set' | 'colorTargets'>;
   readonly selection: Pick<Selection, 'ids'>;
-  readonly stage: { readonly rig: Pick<Rig, 'get'> };
+  readonly stage: { readonly rig: Pick<Rig, 'get'>; readonly frame: StageFrame };
   readonly aimHeight: AimHeight;
   readonly appState: Pick<AppState, 'selExec'>;
   readonly execs: readonly Pick<Executor, 'name'>[];
