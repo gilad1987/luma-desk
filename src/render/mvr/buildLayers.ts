@@ -64,7 +64,8 @@ export async function buildLayers(
   const layers = byLayerAndFile(geometry.placements);
   const files = [...new Set(geometry.placements.map((placement) => placement.file))];
   const screen = (source: Material): Material => library.screens.of(source);
-  const parts = { byFile: await loadParts(files, library, onProgress), screen };
+  const scenery = (source: Material, placement: MeshPlacement): Material => library.scenery.of(source, placement);
+  const parts = { byFile: await loadParts(files, library, onProgress), screen, scenery };
   const groups = new Map(
     [...layers].map(([uuid, layerFiles]) => [uuid, layerGroup(layerFiles, parts, geometry.offset)]),
   );
