@@ -15,7 +15,10 @@ export interface BpmResult {
 /** Samples per envelope frame. */
 const HOP = 512;
 
-/** A sample of a list, 0 past its end; NaN passes through, because the original read these samples unguarded. */
+/**
+ * A sample of a list. Every read below is in range, so `?? 0` only narrows the `noUncheckedIndexedAccess` type; NaN
+ * passes through, because the original read these samples unguarded.
+ */
 const at = (values: ArrayLike<number>, i: number): number => values[i] ?? 0;
 
 /** Rises in loudness per frame of a low-passed RMS envelope: where the beats hit. */
