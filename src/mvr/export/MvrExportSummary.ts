@@ -11,7 +11,7 @@ export interface MvrExportSummary {
   /** `<SceneObject>` and `<VideoScreen>` elements: deck, risers, LED walls and side screens. */
   readonly objects: number;
   readonly layers: number;
-  /** Mesh files the archive holds; empty until Part B renders them. */
+  /** Mesh files the archive holds; empty when the caller passed no meshes to `exportMvr`. */
   readonly geometryFiles: readonly string[];
   /** Problems the file keeps, such as overlapping patches; their messages are also in `notes`. */
   readonly warnings: readonly MvrWarning[];
@@ -36,15 +36,15 @@ function patchNotes({ patchPlan }: WrittenScene): string[] {
 }
 
 /**
- * The summary of a written scene. The notes say what the file lacks, because a console user opening it must know
- * that GDTF files come from GDTF-Share, which addresses are guesses and that object bodies are not in the archive yet.
+ * The summary of a written scene. The notes say what the file lacks and holds, because a console user opening it must
+ * know that GDTF files come from GDTF-Share, which addresses are guesses and whether the object bodies are included.
  */
 export function summarizeExport(scene: WrittenScene, geometryFiles: readonly string[]): MvrExportSummary {
   const trusses = scene.objects.filter((object) => object.tag === 'Truss').length;
   const notes = [
     `GDTF files are not included; get them from GDTF-Share: ${scene.gdtfSpecs.join(', ') || 'none needed'}.`,
     ...patchNotes(scene),
-    `Geometry files: ${geometryFiles.length > 0 ? geometryFiles.join(', ') : 'none (Part B)'}.`,
+    `Geometry files included: ${geometryFiles.length}.`,
   ];
   return {
     fixtures: scene.fixtures,

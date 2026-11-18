@@ -68,22 +68,23 @@ describe.each(TEMPLATE_IDS)('exportMvr of the %s template', (id) => {
 });
 
 describe('exportMvr meshes and notes', () => {
-  it('adds the given mesh files and names them in the summary instead of the Part B note', () => {
+  it('adds the given mesh files, lists them in the summary and counts them in the notes', () => {
     const mesh = new Uint8Array([1, 2, 3]);
     const { bytes, summary } = exportMvr(createTemplate('theatre'), {
       meshes: new Map([['luma_truss_front.glb', mesh]]),
     });
     expect([unzipSync(bytes)['luma_truss_front.glb'], summary.notes.at(-1)]).toStrictEqual([
       mesh,
-      'Geometry files: luma_truss_front.glb.',
+      'Geometry files included: 1.',
     ]);
   });
 
   it('tells the user that GDTF files come from GDTF-Share and that no geometry is included', () => {
-    const { notes } = exportMvr(createTemplate('theatre')).summary;
+    const { geometryFiles, notes } = exportMvr(createTemplate('theatre')).summary;
     expect([notes[0]?.startsWith('GDTF files are not included; get them from GDTF-Share: '), notes.at(-1)]).toEqual([
       true,
-      'Geometry files: none (Part B).',
+      'Geometry files included: 0.',
     ]);
+    expect(geometryFiles).toEqual([]);
   });
 });

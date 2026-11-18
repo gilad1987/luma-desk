@@ -1,12 +1,10 @@
 // @vitest-environment jsdom
 /**
- * Owns the import summary view model (counts with their `data-count` keys, offset, geometry line, warnings) and the
- * export flow (`<show name>.mvr`, unsafe characters replaced, bytes that import again).
+ * Owns the import summary view model: counts with their `data-count` keys, offset, geometry line, and the warnings
+ * of the import and of the mesh files three.js could not draw. The export flow is owned by exportMvrFile.test.ts.
  */
 import { describe, expect, it } from 'vitest';
-import { createTemplate } from '../../../../src/domain/stage/templates';
 import { importMvr, type MvrImport } from '../../../../src/mvr';
-import { exportMvrFile } from '../../../../src/ui/panels/mvr/exportMvrFile';
 import { importSummaryView } from '../../../../src/ui/panels/mvr/importSummaryView';
 import { makeGlb, makeMvr, sceneXml } from '../../../shared';
 
@@ -54,21 +52,5 @@ describe('importSummaryView', () => {
     expect(view.warnings.slice(result.warnings.length)).toEqual([
       'Mesh file truss.glb could not be drawn: Unexpected end',
     ]);
-  });
-});
-
-describe('exportMvrFile', () => {
-  const theatre = createTemplate('theatre');
-
-  it('names the file after the show, keeps Hebrew and replaces unsafe characters', async () => {
-    expect((await exportMvrFile(theatre, 'הופעה')).fileName).toBe('הופעה.mvr');
-    expect((await exportMvrFile(theatre, ' a/b:c ')).fileName).toBe('a_b_c.mvr');
-    expect((await exportMvrFile(theatre, '  ')).fileName).toBe('luma-desk.mvr');
-  });
-
-  it('gives bytes that import again with the same fixture count', async () => {
-    const file = await exportMvrFile(theatre, 'Show');
-    const back = await importMvr(file.bytes, { name: file.fileName });
-    expect(back.design.fixtures).toHaveLength(theatre.fixtures.length);
   });
 });
