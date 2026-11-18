@@ -23,9 +23,10 @@ function liveExecutor(id: number): Executor {
 describe('mergeExecutors and mergeProgrammer', () => {
   it('merge without Object.entries, so a frame builds no entry arrays', () => {
     const f = firstFixture();
-    const o = resetOutput(f);
+    const o = resetOutput(f),
+      active = [liveExecutor(f.id)];
     const entries = vi.spyOn(Object, 'entries');
-    const slots = mergeExecutors(f, o, [liveExecutor(f.id)], 1);
+    const slots = mergeExecutors(f, o, active, 1);
     mergeProgrammer(f, o, slots, { vals: { [f.id]: { tilt: 10 } }, fx: {} });
     expect(entries).not.toHaveBeenCalled();
   });
