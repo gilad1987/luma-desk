@@ -1,7 +1,7 @@
 import { boxMap, pointerDrag, type BoxMap } from '../shared';
 import type { EditOp, EditorSession } from './EditorSession';
-import { moveSelection, FINE_SNAP_M, SNAP_M, snappedDelta } from './topViewMove';
-import { pickAt, selectionAfterPick, type TopPick } from './topViewPick';
+import { FINE_SNAP_M, moveSelection, pastDragThreshold, SNAP_M, snappedTarget } from './topViewMove';
+import { pickAt, selectionAfterPick } from './topViewPick';
 import type { Point2, TopTransform } from './topViewTransform';
 
 /** What the input needs from the view: the transform it draws with, and the drag preview. */
@@ -10,9 +10,10 @@ export interface TopViewSurface {
   preview(op: EditOp | null): void;
 }
 
-/** One drag: where it started in world metres, the grabbed item and the move it would make on drop. */
+/** One press on an item: the canvas box read once, the press point, the grabbed item and the move it makes on drop. */
 interface Drag {
   readonly map: BoxMap;
+  readonly from: Point2;
   readonly start: Point2;
   readonly anchor: Point2;
   op: EditOp | null;
@@ -20,15 +21,15 @@ interface Drag {
 
 /**
  * The pointer on the top view: a click picks the nearest item (Shift adds), a drag moves the selection on the 0.5 m
- * grid (Alt: 0.1 m). The drag shows as a preview only and becomes one `session.edit` on drop, so one drag is one
- * undo step and the rig is not rebuilt per pointer move.
+ * grid (Alt: 0.1 m). A press becomes a drag only past `DRAG_THRESHOLD_PX`, so a click never moves an item. The drag
+ * shows as a preview only and becomes one `session.edit` on drop, so one drag is one undo step and the rig is not
+ * rebuilt per pointer move.
  */
 export class TopViewInput {
   readonly #canvas: HTMLCanvasElement;
   readonly #session: EditorSession;
   readonly #surface: TopViewSurface;
   readonly #report: (text: string) => void;
-  #grab: TopPick | null = null;
   #drag: Drag | null = null;
 
   constructor(canvas: HTMLCanvasElement, session: EditorSession, surface: TopViewSurface, report: (t: string) => void) {
@@ -36,11 +37,7 @@ export class TopViewInput {
     this.#session = session;
     this.#surface = surface;
     this.#report = report;
-    pointerDrag(canvas, {
-      accept: (ev) => this.#pick(ev),
-      start: (ev) => this.#start(ev),
-      move: (ev) => this.#move(ev),
-    });
+    pointerDrag(canvas, { accept: (ev) => this.#press(ev), start: () => undefined, move: (ev) => this.#move(ev) });
     canvas.onpointerup = () => this.#drop();
     canvas.onpointercancel = () => this.#end();
   }
@@ -53,28 +50,25 @@ export class TopViewInput {
     this.#canvas.onpointercancel = null;
   }
 
-  /** Selects what is under the pointer; only a hit starts a drag. */
-  #pick(ev: PointerEvent): boolean {
-    const at = this.#canvasPoint(boxMap(this.#canvas), ev);
-    this.#grab = pickAt(this.#session.draft, this.#surface.transform, at);
-    this.#session.select(selectionAfterPick(this.#session.selection, this.#grab, ev.shiftKey));
-    return this.#grab !== null;
-  }
-
-  #start(ev: PointerEvent): void {
-    if (!this.#grab) return;
+  /** Selects what is under the pointer; only a hit starts a drag. The canvas box is read once per press. */
+  #press(ev: PointerEvent): boolean {
     const map = boxMap(this.#canvas);
-    const start = this.#surface.transform.toWorld(...this.#canvasPoint(map, ev));
-    this.#drag = { map, start, anchor: this.#grab.anchor, op: null };
+    const at = this.#canvasPoint(map, ev);
+    const grab = pickAt(this.#session.draft, this.#surface.transform, at);
+    this.#session.select(selectionAfterPick(this.#session.selection, grab, ev.shiftKey));
+    if (!grab) return false;
+    const from: Point2 = [ev.clientX, ev.clientY];
+    this.#drag = { map, from, start: this.#surface.transform.toWorld(...at), anchor: grab.anchor, op: null };
+    return true;
   }
 
   #move(ev: PointerEvent): void {
     const drag = this.#drag;
-    if (!drag) return;
+    if (!drag || (drag.op === null && !pastDragThreshold(drag.from, ev))) return;
     const [x, z] = this.#surface.transform.toWorld(...this.#canvasPoint(drag.map, ev));
     const raw: Point2 = [x - drag.start[0], z - drag.start[1]];
-    const delta = snappedDelta(drag.anchor, raw, ev.altKey ? FINE_SNAP_M : SNAP_M);
-    drag.op = moveSelection(this.#session.selection, delta);
+    const [tx, tz] = snappedTarget(drag.anchor, raw, ev.altKey ? FINE_SNAP_M : SNAP_M);
+    drag.op = moveSelection(this.#session.selection, [tx - drag.anchor[0], 0, tz - drag.anchor[1]]);
     this.#surface.preview(drag.op);
   }
 
@@ -89,7 +83,6 @@ export class TopViewInput {
   #end(): void {
     if (this.#drag?.op) this.#surface.preview(null);
     this.#drag = null;
-    this.#grab = null;
   }
 
   #canvasPoint(map: BoxMap, ev: PointerEvent): Point2 {
