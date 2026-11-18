@@ -28,6 +28,8 @@ export class Executor {
   cache: Record<number, TrackedState> = {};
   /** True for the auto-show executor, whose level the auto-show pump modulates on beams and spots. */
   readonly auto: boolean;
+  /** Called at the end of every `goto` with the cue it started; `ExecutorPool.observeCues` sets it. */
+  onCue?: (cue: Cue) => void;
   readonly #clock: Clock;
 
   constructor(auto: boolean, clock: Clock) {
@@ -46,6 +48,7 @@ export class Executor {
     this.cur = i;
     this.on = true;
     this.lastGo = this.#clock.nowSeconds();
+    this.onCue?.(cueAt(this.cues, i));
   }
 
   off(): void {

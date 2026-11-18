@@ -50,3 +50,11 @@ export function cueAt(cues: readonly Cue[], i: number): Cue {
   if (cue === undefined) throw new RangeError(`No cue at index ${i} (list has ${cues.length})`);
   return cue;
 }
+
+/** The cue index one GO from `cur` in direction `dir` (1 or -1), wrapping past the last cue to the first and back. */
+export function stepCueIndex(cues: readonly Cue[], cur: number, dir: 1 | -1): number {
+  const n = cur + dir;
+  if (n >= cues.length) return 0;
+  if (n < 0) return cues.length - 1;
+  return n;
+}
