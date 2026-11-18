@@ -9,7 +9,7 @@ import {
   Vector2,
   type BufferGeometry,
 } from 'three';
-import type { Vec3Tuple } from '../shared';
+import type { Vec3Tuple } from '../../core';
 import { part } from './modelGeometry';
 
 /** One [radius, y] point of a revolved profile. */

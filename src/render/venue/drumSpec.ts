@@ -1,4 +1,4 @@
-import type { Vec3Tuple } from '../shared';
+import type { Vec3Tuple } from '../../core';
 
 /**
  * One drum of the kit (shell radius `r`, depth `d`, centre `at`, turn about x and z). The kit is a list of these, so

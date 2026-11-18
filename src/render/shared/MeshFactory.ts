@@ -1,5 +1,5 @@
 import { Mesh, type BufferGeometry, type Material, type Object3D } from 'three';
-import type { Vec3Tuple } from './Vec3Tuple';
+import type { Vec3Tuple } from '../../core';
 
 /** Where a new mesh sits in its parent's space; a missing field keeps three's default (origin, no rotation). */
 export interface MeshPlacement {

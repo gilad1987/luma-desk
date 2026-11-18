@@ -1,11 +1,12 @@
 import { SpotLight, type Scene } from 'three';
+import type { Vec3Tuple } from '../../core';
 
 /**
  * Adds the house lights: two warm spots from the back towers and a cool one over the front rows. Each target is
  * added to the scene right after its light, the legacy order.
  */
 export function addHouseLights(scene: Scene): readonly SpotLight[] {
-  const positions: readonly (readonly [x: number, y: number, z: number])[] = [
+  const positions: readonly Vec3Tuple[] = [
     [-34, 30, 96],
     [34, 30, 96],
     [0, 26, 5],

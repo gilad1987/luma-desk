@@ -1,9 +1,10 @@
+import type { Vec3Tuple } from '../../core';
 import { DECK } from '../../domain/venue';
 
 /** A named camera position: eye position, look-at target and an optional lens (default 46 degrees). */
 export interface CameraView {
-  readonly position: readonly [x: number, y: number, z: number];
-  readonly target: readonly [x: number, y: number, z: number];
+  readonly position: Vec3Tuple;
+  readonly target: Vec3Tuple;
   readonly fov?: number;
 }
 

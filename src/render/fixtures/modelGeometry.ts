@@ -1,5 +1,5 @@
 import { BufferAttribute, BufferGeometry, Euler, Matrix4, Quaternion, Vector3 } from 'three';
-import type { Vec3Tuple } from '../shared';
+import type { Vec3Tuple } from '../../core';
 
 const matrix = new Matrix4(),
   quaternion = new Quaternion(),

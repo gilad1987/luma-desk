@@ -6,4 +6,3 @@ export { createCanvasTexture } from './createCanvasTexture';
 export type { CanvasTextureOptions } from './createCanvasTexture';
 export { projectToScreen } from './projectToScreen';
 export type { ScreenPoint, ScreenRect } from './projectToScreen';
-export type { Vec3Tuple } from './Vec3Tuple';
