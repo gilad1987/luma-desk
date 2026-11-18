@@ -19,6 +19,8 @@ async function applyAndMeasure(page: Page, desk: JSHandle<DeskTestApi>, id: stri
 test('three venue switches keep the GPU counts per venue, and the built-in stage restores the boot counts', async ({
   page,
 }) => {
+  // seven full venue rebuilds under SwiftShader: 1.8 min at a load of 26, too close to the 2 min default
+  test.slow();
   const errors = collectErrors(page);
   const desk = await bootApp(page);
   const boot = await applyAndMeasure(page, desk, 'built-in');
