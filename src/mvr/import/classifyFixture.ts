@@ -28,13 +28,21 @@ function typeFromNames(names: readonly string[]): FixtureTypeId | undefined {
 }
 
 /**
- * Whether the name's type replaces the channels' type. A moving-head type needs pan and tilt in the channels, so a
- * fixture that cannot move never gets a moving body. Otherwise a generic GDTF always yields to the name, and a real
- * GDTF only when both types are static: its channels then cannot tell a par from a strobe, a blinder or a bar.
+ * The type the name suggests for this fixture: the word `profile` names the static ellipsoidal, but a profile whose
+ * channels pan is a moving profile, which the desk draws as its generic moving head.
+ */
+function namedFor(named: FixtureTypeId, fromChannels: FixtureTypeId): FixtureTypeId {
+  return named === 'profile' && pans(fromChannels) ? 'spot' : named;
+}
+
+/**
+ * Whether the name's type replaces the channels' type. A generic GDTF always yields to the name: a stand-in without
+ * pan and tilt cannot prove the fixture is static, so a "Wash" stub draws as a wash. A real GDTF yields only when
+ * both types are static: its channels then cannot tell a par from a strobe, a blinder or a bar, and a real GDTF that
+ * cannot move never gets a moving body.
  */
 function nameWins(named: FixtureTypeId, fromChannels: FixtureTypeId, generic: boolean): boolean {
-  if (pans(named) && !pans(fromChannels)) return false;
-  return generic || !pans(fromChannels);
+  return generic || (!pans(fromChannels) && !pans(named));
 }
 
 /**
@@ -50,7 +58,8 @@ export function classifyFixture(
 ): FixtureClass {
   const fromChannels = classifyType(info, channels);
   if (fromChannels === 'object') return { type: fromChannels, fromName: false };
-  const named = typeFromNames(names);
+  const word = typeFromNames(names);
+  const named = word === undefined ? undefined : namedFor(word, fromChannels);
   if (named === undefined || named === fromChannels) return { type: fromChannels, fromName: false };
   if (!nameWins(named, fromChannels, isGenericGdtf(channels))) return { type: fromChannels, fromName: false };
   return { type: named, fromName: true };

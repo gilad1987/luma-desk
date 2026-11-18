@@ -3,6 +3,7 @@ import { archiveName } from '../mesh/archiveName';
 import { glbModel } from '../mesh/glbModel';
 import { meshFormatOf } from '../mesh/meshFormatOf';
 import type { MvrWarning } from '../MvrWarning';
+import { byCount } from '../byCount';
 
 /** The URIs a GLB file names outside itself; none when it is not GLB 2.0 or its JSON is broken (bounds warned). */
 function externalUris(bytes: Uint8Array): readonly string[] {
@@ -15,7 +16,8 @@ function externalUris(bytes: Uint8Array): readonly string[] {
 
 /** One warning per missing URI, not per mesh file: a show often shares one texture across dozens of meshes. */
 function missingWarning(uri: string, files: ReadonlySet<string>): MvrWarning {
-  const message = `${files.size} mesh file(s) need "${uri}", which is not in the archive.`;
+  const needs = byCount(files.size, 'mesh file needs', 'mesh files need');
+  const message = `${files.size} ${needs} "${uri}", which is not in the MVR file.`;
   return { code: 'missing-mesh-resource', message, ref: uri };
 }
 

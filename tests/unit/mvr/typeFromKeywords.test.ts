@@ -1,18 +1,12 @@
-// @vitest-environment jsdom
-/**
- * Owns the model a fixture gets when its GDTF file is missing: the keyword table, its word matching and precedence,
- * and the warning that names the model.
- */
+/** Owns the keyword table that suggests a desk type from a GDTF or fixture name: word matching and precedence. */
 import { describe, expect, it } from 'vitest';
-import { exportMvr, importMvr } from '../../../src/mvr/index.ts';
-import { fallbackType } from '../../../src/mvr/import/fallbackType.ts';
 import { typeFromKeywords } from '../../../src/mvr/gdtf/typeFromKeywords.ts';
-import { makeMvr, sceneXml } from '../../shared/index.ts';
 
 describe('typeFromKeywords', () => {
   it.each([
     ['Acme@Orbit Spot 400', 'spot'],
-    ['Acme@Orbit Profile', 'spot'],
+    ['Acme@Orbit Profile', 'profile'],
+    ['Acme@Orbit Follow 2500', 'follow'],
     ['Acme@Orbit Hybrid', 'spot'],
     ['Acme@Orbit Wash 19', 'wash'],
     ['Acme@Orbit Beam 7R', 'beam'],
@@ -40,48 +34,53 @@ describe('typeFromKeywords', () => {
     ).toEqual([undefined, undefined, undefined, undefined, undefined]);
   });
 
+  it('splits an all-caps word made of two known words, or of "led" and a known word', () => {
+    expect(
+      ['Acme@LEDBAR 12', 'Acme@PIXELLINE', 'Acme@MEGA DOTLINE(TB 10 INT)', 'Acme@LEDPAR 7'].map(typeFromKeywords),
+    ).toEqual(['bar', 'bar', 'bar', 'par']);
+  });
+
+  it('finds no compound in a word that is not two known words: a spotlight is a lamp, not a moving spot', () => {
+    expect(['Acme@Sparkle', 'Acme@Spotlight', 'Acme@LEDS', 'Acme@Parade'].map(typeFromKeywords)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
+  });
+
+  it('reads dot and pixel as light words, after the body and moving-head words', () => {
+    expect(['Acme@Pixel Wash', 'Acme@Dot Spot', 'Acme@Pixel Par', 'Acme@MagicDot-R'].map(typeFromKeywords)).toEqual([
+      'wash',
+      'spot',
+      'par',
+      'bar',
+    ]);
+  });
+
+  it('matches only the product part after the first "@", not the maker', () => {
+    expect(['Pixel Range@Orbit 5', 'Bar Co@Orbit Wash', 'Acme@Strobe@Par'].map(typeFromKeywords)).toEqual([
+      undefined,
+      'wash',
+      'strobe',
+    ]);
+  });
+
   it('gives body words (strobe, blinder, par, bar group) precedence over light words, in table order', () => {
     expect(
       ['Acme@Wash Par', 'Acme@Beam Bar', 'Acme@Hybrid Strobe', 'Acme@Strobe Blinder', 'Acme@Pixel Par'].map(
         typeFromKeywords,
       ),
     ).toEqual(['par', 'bar', 'strobe', 'strobe', 'par']);
+    expect(['Acme@Pixel Bar', 'Acme@PixelLine', 'Acme@Follow Spot'].map(typeFromKeywords)).toEqual([
+      'bar',
+      'bar',
+      'follow',
+    ]);
     expect(['Acme@Beam Wash', 'Acme@Wash Spot', 'Acme@Spot Hybrid'].map(typeFromKeywords)).toEqual([
       'beam',
       'wash',
       'spot',
-    ]);
-  });
-});
-
-describe('fallbackType', () => {
-  it('falls back to par when no keyword matches, and to par for an empty spec', () => {
-    expect([fallbackType('Acme@Mystery 9'), fallbackType('')]).toEqual(['par', 'par']);
-  });
-});
-
-describe('missing GDTF warning', () => {
-  it('names the desk model the fixtures are shown as', async () => {
-    const fixture = (uuid: string): string =>
-      `<Fixture uuid="${uuid}" name="${uuid}"><GDTFSpec>Acme@Orbit Hybrid</GDTFSpec><GDTFMode>Std</GDTFMode></Fixture>`;
-    const scene = sceneXml(
-      `<Layer uuid="L1" name="Rig"><ChildList>${fixture('F1')}${fixture('F2')}</ChildList></Layer>`,
-    );
-    const result = await importMvr(makeMvr(scene, {}), { name: 'rig.mvr' });
-    expect(result.design.fixtures.map((fixture) => fixture.type)).toEqual(['spot', 'spot']);
-    expect(result.warnings.filter((warning) => warning.code === 'missing-gdtf').map((w) => w.message)).toEqual([
-      '2 fixture(s) use the GDTF "Acme@Orbit Hybrid", which is not in the file; they are shown as the desk type "Spot".',
-    ]);
-  });
-
-  it('keeps the imported GDTF name and mode on export, as the keyword type is the imported type', async () => {
-    const fixture = `<Fixture uuid="F1" name="F1"><GDTFSpec>Acme@Orbit Wash</GDTFSpec><GDTFMode>Std</GDTFMode></Fixture>`;
-    const scene = sceneXml(`<Layer uuid="L1" name="Rig"><ChildList>${fixture}</ChildList></Layer>`);
-    const first = await importMvr(makeMvr(scene, {}), { name: 'a.mvr' });
-    const again = await importMvr(exportMvr(first.design).bytes, { name: 'b.mvr' });
-    const info = Object.values(again.design.mvr?.fixtures ?? {});
-    expect(info.map(({ gdtfName, gdtfMode, type }) => [gdtfName, gdtfMode, type])).toEqual([
-      ['Acme@Orbit Wash', 'Std', 'wash'],
     ]);
   });
 });

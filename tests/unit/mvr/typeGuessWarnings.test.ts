@@ -10,12 +10,12 @@ describe('typeGuessWarnings', () => {
     expect(typeGuessWarnings(counts)).toEqual([
       {
         code: 'type-from-name',
-        message: '12 fixture(s) have a GDTF that does not tell their kind; they are shown as "Spot" from their name.',
+        message: '12 fixtures have a GDTF that does not tell their kind; they are shown as "Spot" from their name.',
         ref: 'spot',
       },
       {
         code: 'type-from-name',
-        message: '1 fixture(s) have a GDTF that does not tell their kind; they are shown as "Strobe" from their name.',
+        message: '1 fixture has a GDTF that does not tell its kind; it is shown as "Strobe" from its name.',
         ref: 'strobe',
       },
     ]);

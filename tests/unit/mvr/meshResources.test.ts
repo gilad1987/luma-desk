@@ -46,8 +46,8 @@ describe('importMvr meshResources', () => {
     const missing = result.warnings.filter((warning) => warning.code === 'missing-mesh-resource');
     expect(result.meshResources.size).toBe(0);
     expect(missing.map(({ ref, message }) => [ref, message])).toEqual([
-      ['gone.png', '2 mesh file(s) need "gone.png", which is not in the archive.'],
-      ['https://example.com/x.png', '1 mesh file(s) need "https://example.com/x.png", which is not in the archive.'],
+      ['gone.png', '2 mesh files need "gone.png", which is not in the MVR file.'],
+      ['https://example.com/x.png', '1 mesh file needs "https://example.com/x.png", which is not in the MVR file.'],
     ]);
   });
 
@@ -60,7 +60,7 @@ describe('importMvr meshResources', () => {
     );
     const missing = result.warnings.filter((warning) => warning.code === 'missing-mesh-resource');
     expect(missing.map((warning) => warning.message)).toEqual([
-      '30 mesh file(s) need "stone.png", which is not in the archive.',
+      '30 mesh files need "stone.png", which is not in the MVR file.',
     ]);
   });
 });

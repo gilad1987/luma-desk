@@ -41,9 +41,10 @@ describe('modeChannels', () => {
   });
 
   it('warns and gives no channels when the GDTF has no modes', () => {
-    const result = modeChannels(info(''), 'Std', 'fx-2');
-    expect(result).toMatchObject({ mode: '', channels: [] });
-    expect(result.warnings[0]?.code).toBe('unknown-mode');
+    const noModes = { mode: '', channels: [], warnings: [{ code: 'unknown-mode' }] };
+    expect(modeChannels(info(''), 'Std', 'fx-2')).toMatchObject(noModes);
+    const text = 'The file names no DMX mode for GDTF "f.gdtf"; the GDTF has no DMX modes, so the fixture gets no';
+    expect(modeChannels(info(''), '', 'fx-2').warnings[0]?.message).toBe(`${text} channels.`);
   });
 
   it('keeps a virtual Offset="" channel with an empty offset, after the patched ones', () => {

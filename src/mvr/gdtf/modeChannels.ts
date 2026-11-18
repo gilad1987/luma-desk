@@ -44,10 +44,11 @@ function byDmxSlot(a: GdtfChannel, b: GdtfChannel): number {
 
 /** The `unknown-mode` warning; a blank `modeName` means the file named no mode, not a mode the GDTF lacks. */
 function unknownMode(info: GdtfInfo, modeName: string, used: GdtfMode | undefined, ref: string): MvrWarning {
-  const fallback = used ? `the first mode "${used.name}" is used` : 'it has no DMX modes';
+  const fallback = used ? `the first mode "${used.name}" is used` : 'the fixture gets no channels';
+  const cause = used ? '' : 'the GDTF has no DMX modes, so ';
   const message =
     modeName.trim() === ''
-      ? `The file names no DMX mode for GDTF "${info.fileName}"; ${fallback}.`
+      ? `The file names no DMX mode for GDTF "${info.fileName}"; ${cause}${fallback}.`
       : `Mode "${modeName}" is not in GDTF "${info.fileName}", so ${fallback}.`;
   return { code: 'unknown-mode', message, ref };
 }

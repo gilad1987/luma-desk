@@ -44,7 +44,8 @@ function typeAndMode(
 ): TypeAndMode {
   if (info === undefined) return { type: fallbackType(record.gdtfSpec), fromName: false, mode: record.gdtfMode };
   const result = modeChannels(info, record.gdtfMode, record.uuid);
-  const key = `${info.fileName}\n${record.gdtfMode}`;
+  // modeChannels matches names after trimming, so "" and "  " (or "Std" and "Std ") give the same warning
+  const key = `${info.fileName}\n${record.gdtfMode.trim()}`;
   for (const warning of result.warnings) if (!modeWarnings.has(key)) modeWarnings.set(key, warning);
   const footprint = breakFootprint(result.channels);
   const kind = classifyFixture(info, result.channels, [record.gdtfSpec, info.name, record.name]);

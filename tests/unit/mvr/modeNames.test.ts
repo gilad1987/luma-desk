@@ -30,6 +30,18 @@ describe('GDTF names on import', () => {
     expect(design.fixtures[0]?.patch?.mode).toBe(MODE);
   });
 
+  it('warns once for a GDTF without modes when its fixtures name the mode as "" and as blanks', async () => {
+    const gdtf = makeGdtf({ geometries: '<Geometry Name="Body"/>', modes: '' });
+    const scene = sceneXml(
+      `<Layer uuid="L1" name="Rig"><ChildList>${fixture('Acme@Spot', '')}${fixture('Acme@Spot', '  ').replace(
+        /F1/g,
+        'F2',
+      )}</ChildList></Layer>`,
+    );
+    const { warnings } = await importMvr(makeMvr(scene, { 'Acme@Spot.gdtf': gdtf }), { name: 'x' });
+    expect(warnings.filter((w) => w.code === 'unknown-mode')).toHaveLength(1);
+  });
+
   it('still finds the GDTF file of an indented spec', async () => {
     const gdtf = makeGdtf({ geometries: '<Geometry Name="Body"/>', modes: gdtfMode('Std', []) });
     const { summary } = await importMvr(mvrOf('\n  Acme@Spot\n', 'Std', { 'Acme@Spot.gdtf': gdtf }), { name: 'x' });
