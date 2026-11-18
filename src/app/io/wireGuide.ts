@@ -1,5 +1,6 @@
 import type { Rig } from '../../domain/rig';
 import { defaultGroups } from '../../engine/defaultGroups';
+import type { GuideFlag } from '../../show';
 import { bindGuideEscape } from '../../ui/guide/bindGuideEscape';
 import { Guide } from '../../ui/guide/Guide';
 import { Tour } from '../../ui/guide/Tour';
@@ -12,6 +13,8 @@ export interface GuideWiringDeps {
   readonly rig: Rig;
   /** Whether the MA layout is on (`deskMode === 'ma'`); the layout area owns `deskMode`. */
   readonly isMa: () => boolean;
+  /** main.ts `guideFlag`: closing the guide marks it seen, and the first-run open asks it. */
+  readonly guideFlag: Pick<GuideFlag, 'seen' | 'markSeen'>;
 }
 
 /** The guide overlay, the tour and the tab switches other areas call. */
@@ -34,6 +37,7 @@ export function wireGuide(deps: GuideWiringDeps): GuideHandles {
   const guide = new Guide(
     () => defaultGroups(deps.rig),
     () => tour.start(),
+    deps.guideFlag,
   );
   const tour = new Tour(hooks);
   bindGuideEscape(guide, tour);

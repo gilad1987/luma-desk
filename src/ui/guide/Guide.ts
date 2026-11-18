@@ -1,9 +1,11 @@
 import { he } from '../../i18n/he';
 import type { GuideChapter, GuideMarkup } from '../../i18n/he/guideChapter';
+import type { GuideFlag } from '../../show';
 import { byId } from '../dom';
 import { groupRowsMarkup, rigRowsMarkup, type GuideGroup } from './rigTable';
 
-const SEEN_KEY = 'lumadesk-guide-seen';
+/** On a first visit the guide waits this long, so the stage has painted before the overlay covers it. */
+const FIRST_RUN_DELAY_MS = 600;
 const chapters: readonly GuideChapter[] = he.guide.chapters;
 
 /**
@@ -15,10 +17,19 @@ export class Guide {
   private readonly markup: GuideMarkup;
 
   readonly #startTour: () => void;
+  readonly #seenFlag: Pick<GuideFlag, 'seen' | 'markSeen'>;
 
-  /** `groups` is read only when the rig chapter renders, as before; `startTour` runs from the tour button. */
-  constructor(groups: () => Readonly<Record<string, GuideGroup>>, startTour: () => void) {
+  /**
+   * `groups` is read only when the rig chapter renders, as before; `startTour` runs from the tour button. `seenFlag`
+   * is the show's stored "guide seen" flag, so the key and its storage errors are handled in one place.
+   */
+  constructor(
+    groups: () => Readonly<Record<string, GuideGroup>>,
+    startTour: () => void,
+    seenFlag: Pick<GuideFlag, 'seen' | 'markSeen'>,
+  ) {
     this.#startTour = startTour;
+    this.#seenFlag = seenFlag;
     this.markup = {
       kbd: (k) => `<kbd>${k}</kbd>`,
       code: (c) => `<code>${c}</code>`,
@@ -42,11 +53,7 @@ export class Guide {
 
   close(): void {
     byId('guide').classList.remove('show');
-    try {
-      localStorage.setItem(SEEN_KEY, '1');
-    } catch {
-      // storage can be blocked (private mode); the guide then opens again next visit, as before
-    }
+    this.#seenFlag.markSeen();
   }
 
   /** The keyboard handlers ask this: global keys are ignored while the guide is open. */
@@ -54,13 +61,9 @@ export class Guide {
     return byId('guide').classList.contains('show');
   }
 
-  /** On a first visit, opens chapter 1 after 600 ms so the stage has painted first. */
+  /** On a first visit, opens chapter 1 after {@link FIRST_RUN_DELAY_MS}; unreadable storage counts as seen. */
   openOnFirstRun(): void {
-    try {
-      if (!localStorage.getItem(SEEN_KEY)) setTimeout(() => this.open(0), 600);
-    } catch {
-      // no storage: skip the first-run open, as before
-    }
+    if (!this.#seenFlag.seen()) setTimeout(() => this.open(0), FIRST_RUN_DELAY_MS);
   }
 
   private show(i: number): void {
