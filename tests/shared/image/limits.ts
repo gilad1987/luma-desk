@@ -4,7 +4,7 @@ import type { PerceptualDiff } from './perceptualDiff';
  * Pass limits of the perceptual image gate. tests/unit/gates/imageLimits.test.ts is their specification: it builds
  * each case from the committed baselines and from synthetic images and asserts pass or fail (docs/render-gates.md
  * has the table and the measured run-to-run noise). Raise or lower one only with a measured reason in the same commit.
- * - exposure: |ln(Yb/Ya)| of the mean linear luminance. 2 % measures at most 0.024, 5 % at least 0.047.
+ * - exposure: |ln(Yb/Ya)| of the mean linear luminance. 2 % measures at most 0.019, 5 % at least 0.048.
  * - hue: the chroma-weighted hue turn. Gamut clipping keeps a real turn from showing in full: 3° measures at most
  *   2.8°, 10° at least 5.3°.
  * - share: changed blocks (shift-tolerant distance above 0.05). 0.0003 lets 5 of the 17,325 blocks of a 660x420 shot

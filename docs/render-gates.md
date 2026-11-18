@@ -47,9 +47,14 @@ the range over those five images:
 Gamut clipping keeps a real hue turn from showing in full, so 10° measures 5.3° to 10°. The mean alone cannot see a
 5 % exposure change (0.0021 to 0.0055), which is why exposure has its own limit. The dimmed pixels are ranked by
 Oklab lightness, as the lamps of a real stage are spread hot spots; they also break the exposure limit. The dark wide
-view is the closest case: 16 changed blocks against a limit of 5. A lost thin structure fails when it changes 6 blocks
+view is the closest case: 16 changed blocks against a limit of 5. The earlier case, the brightest 53x53 square 30 %
+dimmer, now passes every limit on the wide view (worst 0.049): the gate cannot see a 30 % dim of one mid-dark
+region of that size, only of the lamps' hot spots. On the synthetic stage the beam pixels tie at the cut, so the
+whole beam (4.5 % of the pixels) is dimmed. A lost thin structure fails when it changes 6 blocks
 or more (about 24 px of a line); a lost 240 px line changes 60. The moved white line sits on the darkest 10-row band:
-the rows that both lines, their 4x4 blocks and the 1 px windows can touch, so no lit row is in reach. The whole shot
+the rows that both lines, their 4x4 blocks and the 1 px windows can touch, so no lit row is in reach. Next to a lit row, the 1 px windows move the background with the line, and the same
+move changed 6 blocks on the MA FOH view, a fail: a real 1 px jitter of a thin line beside a lit edge can fail the
+gate. The whole shot
 moved by 1 px on x and y changes 1 block on the wide view (worst 0.054), still a pass.
 `tests/unit/gates/perceptualDiff.test.ts` checks the arithmetic of the metric.
 
