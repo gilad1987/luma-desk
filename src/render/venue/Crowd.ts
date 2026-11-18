@@ -11,7 +11,7 @@ import {
 import { placeAudience } from './audiencePlacement';
 import { buildChairs } from './Chairs';
 import { injectCrowdBounce, type CrowdBounceUniforms } from './crowdBounce';
-import { layOutCrowd } from './crowdLayout';
+import { layOutCrowd, type TerraceHeight } from './crowdLayout';
 import { placeRaisedArms } from './raisedArms';
 
 /** Share of the audience with one hand up. */
@@ -26,11 +26,11 @@ function setBounceAttributes(geometry: BufferGeometry, phase: Float32Array, boun
 /**
  * Builds the audience: chairs on the pool floor, then the people (instanced bodies, heads and raised arms) that
  * bounce to the beat in the vertex shader. It is built after the band layout pass, so it is not scaled. Returns the
- * shared bounce uniforms that the frame loop writes.
+ * shared bounce uniforms that the frame loop writes. `ground` is the venue's terrace height (tiers or flat).
  */
-export function buildCrowd(scene: Object3D): CrowdBounceUniforms {
+export function buildCrowd(scene: Object3D, ground: TerraceHeight): CrowdBounceUniforms {
   const uniforms: CrowdBounceUniforms = { uBeat: { value: 0 }, uJump: { value: 1 } };
-  const { chairs, spots } = layOutCrowd();
+  const { chairs, spots } = layOutCrowd(ground);
   buildChairs(scene, chairs);
   const bodyG = new CapsuleGeometry(0.21, 0.82, 2, 7).translate(0, 0.65, 0),
     headG = new SphereGeometry(0.12, 8, 6).translate(0, 1.3, 0),

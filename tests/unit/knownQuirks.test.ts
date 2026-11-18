@@ -12,7 +12,7 @@ const UNCITED: Readonly<Record<string, string>> = {
   A2: 'one Executor class gives the AUTO executor `flashOnly` too, so the two shapes no longer differ',
   B1: 'the wrapper is gone: the Beam buttons call `applyPreset` directly',
   F2: 'one shared `UP` vector (src/domain/venue.ts) replaces the two copies',
-  F3: 'the dead terms were left out (src/render/surface/hitSurface.ts)',
+  F3: 'the dead terms were left out (src/render/surface/boxHit.ts, surfacePlanes.ts)',
   F4: 'the wrong comment was corrected (src/render/lights/KeyLights.ts)',
   F8: 'the wrong count was only in a comment, which the new code does not repeat',
   G6: 'the tour code has no variable that shadows the selection',

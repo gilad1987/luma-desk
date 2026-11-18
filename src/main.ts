@@ -56,6 +56,7 @@ new ViewportPicking({
   get fixtures() {
     return stage.rig.fixtures;
   },
+  isBuilding: () => builder.isOpen,
 });
 wireMidi(engine);
 render.stageRenderer.observeViewer();
@@ -95,6 +96,5 @@ installTestHook({
   execs,
   autoShow: auto.autoShow,
   deskMode: () => layout.mode(),
-  mvrReady: mvr.ready,
-  mvrScenery: mvr.hasScenery,
+  ...mvr.testHook,
 });

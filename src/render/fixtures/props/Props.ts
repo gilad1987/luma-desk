@@ -11,8 +11,8 @@ import { buildRoboSpotStation } from './roboSpotStation';
 export interface PropsDeps {
   readonly scene: Object3D;
   readonly kit: ModelKit;
-  /** The camera views' FOH rig (the MA view hides it); the riser must be in it already, the station joins after it. */
-  readonly fohRig: Pick<FohRig, 'add'>;
+  /** The camera views' FOH rig (the MA view hides it); the station stands on the venue's riser in it. */
+  readonly fohRig: Pick<FohRig, 'addRider'>;
   readonly state: Pick<AppState, 'haze'>;
   /** The beams' shared haze uniform; the props copy the Haze master into it each frame. */
   readonly beamHaze: SharedUniform;

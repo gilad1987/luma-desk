@@ -21,13 +21,14 @@ const text = he.panels;
 /**
  * The "Build Stage" button that opens the Stage Builder: the one part of the bar the original page did not have. It
  * is one constant, so the markup-parity test can name it and remove exactly this text before it compares the bar. It
- * opens the Glow group, the last group that a 1280 px window shows without a scroll (quirk G10, orig:260).
+ * opens the Glow group, the last group that a 1280 px window shows without a scroll (quirk G11, orig:260).
  */
 export const buildStageButton = `<button id="buildBtn" title="${he.builder.openTitle}">Build Stage</button>`;
 
 /**
- * The top bar, byte for byte as the original page had it, plus {@link buildStageButton}. It holds controls other modules wire (layout selects,
- * REC, fullscreen, install, MIDI, show file, guide, clock); the bar renders them all so the shell needs no header.
+ * The top bar, byte for byte as the original page had it, plus {@link buildStageButton}. It holds controls other
+ * modules wire (layout selects, REC, fullscreen, install, MIDI, show file, guide, clock); the bar renders them all so
+ * the shell needs no header.
  */
 export const topBarMarkup =
   [

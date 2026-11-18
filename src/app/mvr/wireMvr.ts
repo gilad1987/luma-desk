@@ -3,6 +3,7 @@ import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { EngineBus } from '../../engine/events';
 import type { StageService } from '../../engine/stage/StageService';
 import { downloadBlob } from '../../io/download';
+import type { TestHookDeps } from '../testHook/TestHookDeps';
 import type { MvrActions } from '../../ui/panels/mvr/MvrActions';
 import { MvrMissingPrompt } from '../../ui/panels/mvr/MvrMissingPrompt';
 import { exportStageMvr, type MvrExportOut } from './exportStageMvr';
@@ -33,12 +34,13 @@ export interface MvrWiringDeps {
 export interface MvrWiring {
   /** The Show File dialog's MVR row. */
   readonly actions: MvrActions;
-  /** The test hook's `mvrReady()`: resolves after the latest MVR load or export ended. */
-  readonly ready: () => Promise<void>;
   /** Queues the boot restore of the stage as it is now; call it after the show restore. */
   readonly restore: () => void;
-  /** The test hook's `mvrScenery()`: true while the scenery shows the layers of a file. */
-  readonly hasScenery: () => boolean;
+  /**
+   * The test hook's MVR reads, in its own names so the composition root spreads them: `mvrReady()` resolves after
+   * the latest MVR load or export ended, `mvrScenery()` is true while the scenery shows the layers of a file.
+   */
+  readonly testHook: Pick<TestHookDeps, 'mvrReady' | 'mvrScenery'>;
 }
 
 /** The message of any error, for the toast of a failed load or export. */
@@ -73,8 +75,7 @@ export function wireMvr({
   followStage({ bus, stage, scenery, prompt, restore });
   return {
     actions,
-    ready: () => queue.ready(),
     restore: () => restore(stage.design),
-    hasScenery: () => scenery.hasScenery,
+    testHook: { mvrReady: () => queue.ready(), mvrScenery: () => scenery.hasScenery },
   };
 }

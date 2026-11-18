@@ -1,7 +1,23 @@
-import { BoxGeometry, Group, MeshStandardMaterial, PlaneGeometry, type Material, type Object3D } from 'three';
+import { Box3, BoxGeometry, Group, MeshStandardMaterial, PlaneGeometry, type Material, type Object3D } from 'three';
 import { addMesh } from '../shared';
 
 const BOXES_PER_HANG = 16;
+
+/**
+ * One line-array hang as built: its group, its side (-1 left, 1 right), its row in the pair of that side (0 outer,
+ * 1 inner), its built position, and how far its boxes reach above (`top`) and below (`bottom`, negative) its origin.
+ * The PA fit reads these to hang it under a lower truss or stand it on the deck.
+ */
+export interface PaHang {
+  readonly group: Object3D;
+  readonly side: number;
+  readonly row: number;
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+  readonly top: number;
+  readonly bottom: number;
+}
 
 /** One curved line-array hang: 16 boxes, each with its own grill material, splayed a little more per box. */
 function buildHang(dark: Material): Group {
@@ -16,16 +32,24 @@ function buildHang(dark: Material): Group {
   return hang;
 }
 
-/** Builds the PA: two line-array hangs per side, angled toward the audience, and four ground subs per side. */
-export function buildPaHangs(scene: Object3D, dark: Material): void {
+/**
+ * Builds the PA: two line-array hangs per side, angled toward the audience, and four ground subs per side. Returns
+ * the hangs, measured at the origin before they are placed, so the PA fit knows the real reach of the splayed boxes.
+ */
+export function buildPaHangs(scene: Object3D, dark: Material): PaHang[] {
+  const hangs: PaHang[] = [];
   for (const sx of [-1, 1]) {
     for (const off of [0, 3.2]) {
       const hang = buildHang(dark);
+      const reach = new Box3().setFromObject(hang);
       hang.position.set(sx * (29 + off), 21.5, 3 - off * 0.5);
       hang.rotation.y = -sx * (0.12 + off * 0.05);
       scene.add(hang);
+      const { x, y, z } = hang.position;
+      hangs.push({ group: hang, side: sx, row: off === 0 ? 0 : 1, x, y, z, top: reach.max.y, bottom: reach.min.y });
     }
     for (let i = 0; i < 4; i++)
       addMesh(scene, new BoxGeometry(1.5, 1.2, 1.4), dark, { position: [sx * (28 - i * 1.6), 0.6, 3.4] });
   }
+  return hangs;
 }

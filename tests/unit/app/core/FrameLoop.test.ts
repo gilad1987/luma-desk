@@ -1,48 +1,10 @@
-import { Vector3 } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { FrameLoop } from '../../../../src/app/loop/FrameLoop';
-import { defaultAutoSettings } from '../../../../src/autoshow/AutoSettings';
-import { Tempo } from '../../../../src/engine/Tempo';
-import { LightFrame } from '../../../../src/render/lights/LightFrame';
+import { recordedLoop } from './FrameLoopSetup';
 
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
-
-/** A loop over recording fakes, a captured requestAnimationFrame queue and a frozen performance.now() of 1000. */
-function recordedLoop() {
-  const trace: string[] = [];
-  const frames: FrameRequestCallback[] = [];
-  vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => (trace.push('raf'), frames.push(cb)));
-  vi.spyOn(performance, 'now').mockReturnValue(1000);
-  const crowd = { uBeat: { value: 0 }, uJump: { value: 0 } };
-  const dts: number[] = [];
-  const step = (name: string) => () => void trace.push(name);
-  const loop = new FrameLoop({
-    venue: { crowd, performers: [] },
-    tempo: new Tempo(),
-    songPlayer: { sync: step('songPlayer.sync'), audioGraph: null },
-    autoShow: { settings: defaultAutoSettings(), modulation: { pump: 1, hitUntil: 0 }, tick: step('autoShow.tick') },
-    pool: { stepFades: step('pool.stepFades') },
-    merger: { compute: step('merger.compute') },
-    visualSync: {
-      update: (_now, dt) => {
-        trace.push('visualSync.update');
-        dts.push(dt);
-      },
-    },
-    camera: { position: new Vector3() },
-    props: { update: step('props.update') },
-    sceneLights: { update: step('sceneLights.update') },
-    keyLights: { update: step('keyLights.update') },
-    lightFrame: new LightFrame(),
-    stageRenderer: { renderFrame: step('stageRenderer.renderFrame') },
-    fps: { frame: step('fps.frame') },
-    ui: { tick: step('ui.tick') },
-  });
-  return { loop, trace, frames, crowd, dts };
-}
 
 describe('FrameLoop', () => {
   it('asks for the next frame first, then steps in the legacy order', () => {
@@ -84,5 +46,21 @@ describe('FrameLoop', () => {
     expect(frames).toHaveLength(3);
     expect(frames[1]).toBe(frames[0]);
     expect(frames[2]).toBe(frames[0]);
+  });
+
+  it('moves the crowd and the band while they are shown', () => {
+    const { loop, frames, crowd, performers } = recordedLoop();
+    loop.start();
+    frames[0]?.(1016);
+    expect(crowd.uJump.value).toBe(1);
+    expect(performers[0]?.body.position.y).toBe(5);
+  });
+
+  it('skips the per-frame work of a hidden crowd and a hidden band', () => {
+    const { loop, frames, crowd, performers } = recordedLoop(new Set(['crowd', 'band']));
+    loop.start();
+    frames[0]?.(1016);
+    expect(crowd.uJump.value).toBe(0);
+    expect(performers[0]?.body.position.y).toBe(0);
   });
 });

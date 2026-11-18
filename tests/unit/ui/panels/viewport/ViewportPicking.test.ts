@@ -45,6 +45,20 @@ describe('ViewportPicking', () => {
     expect(selection.set).not.toHaveBeenCalled();
   });
 
+  it('while the builder is open a click or box selects nothing; after it closes the click selects', () => {
+    const { dom, win, canvas, at, selection, controls, flags } = mount();
+    flags.building = true;
+    canvas.fire('pointerdown', at(10, 10));
+    win.fire('pointerup', at(10, 10));
+    canvas.fire('pointerdown', at(80, 90, { shiftKey: true, button: 0 }));
+    win.fire('pointerup', at(40, 30, { target: win }));
+    expect([selection.set.mock.calls, controls.enabled, dom.get('selRect').style.display]).toEqual([[], true, 'none']);
+    flags.building = false;
+    canvas.fire('pointerdown', at(10, 10));
+    win.fire('pointerup', at(10, 10));
+    expect(selection.set.mock.calls).toEqual([[[7], 'replace']]);
+  });
+
   it('hover shows the tooltip beside the pointer, and hides it over empty space', () => {
     const hit = mount();
     hit.canvas.fire('pointermove', hit.at(20, 30));

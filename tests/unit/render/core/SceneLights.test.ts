@@ -24,7 +24,7 @@ describe('addEnvironmentLights', () => {
 describe('SceneLights', () => {
   it('creates stage, audience, 3 zones, 3 house spots (each then its target) and the screen light in order', () => {
     const scene = new Scene();
-    new SceneLights(scene, new PointLight());
+    new SceneLights(scene, { wallFloodlight: new PointLight() });
     const house = ['SpotLight', 'Object3D'];
     expect(kinds(scene)).toEqual([
       ...['PointLight', 'PointLight', 'PointLight', 'PointLight', 'PointLight'],
@@ -40,7 +40,7 @@ describe('SceneLights', () => {
 
   it('turns the stage bounce and zones to the normalised beam colour with the legacy caps', () => {
     const scene = new Scene();
-    const lights = new SceneLights(scene, new PointLight());
+    const lights = new SceneLights(scene, { wallFloodlight: new PointLight() });
     const frame = new LightFrame();
     frame.addStage([1, 0.5, 0], 10, 1);
     frame.addAudience(-20, [0, 0, 1], 100);
@@ -56,18 +56,22 @@ describe('SceneLights', () => {
 
   it('sets the house spots from the house level and forces the wall light dark', () => {
     const scene = new Scene();
-    const wall = new PointLight(0xffffff, 5);
-    const lights = new SceneLights(scene, wall);
+    const venue: { wallFloodlight: PointLight | null } = { wallFloodlight: null };
+    const lights = new SceneLights(scene, venue);
     lights.setHouseLevel(0.5);
     lights.update(new LightFrame());
     const spots = scene.children.filter((child): child is SpotLight => child instanceof SpotLight);
     expect(spots.map((spot) => spot.intensity)).toEqual([550, 550, 250]);
-    expect(wall.intensity).toBe(0);
     expect(lights.stageLight.intensity).toBe(0);
+    // the live venue: a floodlight that a later venue switch brings is forced dark too
+    const wall = new PointLight(0xffffff, 5);
+    venue.wallFloodlight = wall;
+    lights.update(new LightFrame());
+    expect(wall.intensity).toBe(0);
   });
 
   it('keeps the screen light for the screen fixture to drive', () => {
-    const lights = new SceneLights(new Scene(), new PointLight());
+    const lights = new SceneLights(new Scene(), { wallFloodlight: null });
     expect(lights.screenLight.position.toArray()).toEqual([0, 8, -16]);
     expect(lights.screenLight).toBeInstanceOf(Object3D);
   });
