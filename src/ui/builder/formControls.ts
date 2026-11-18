@@ -34,30 +34,18 @@ export function labelled(text: string, control: HTMLElement): HTMLLabelElement {
   return label;
 }
 
-/** A plain button with an English text and a Hebrew tooltip; the text is its focus key (`renderKeepingFocus`). */
-export function makeButton(text: string, title: string, onPress: () => void): HTMLButtonElement {
+/**
+ * A plain button with an English text and a Hebrew tooltip. `key` is its focus key (`renderKeepingFocus`); it is the
+ * text unless the text repeats in one panel (one Remove per riser, trusses with one name), where it must name the item.
+ */
+export function makeButton(text: string, title: string, onPress: () => void, key = text): HTMLButtonElement {
   const button = document.createElement('button');
-  button.dataset['focusKey'] = text;
+  button.dataset['focusKey'] = key;
   button.type = 'button';
   button.textContent = text;
   button.title = title;
   button.onclick = () => onPress();
   return button;
-}
-
-/** A labelled checkbox; `onToggle` gets the new state. */
-export function makeCheckbox(
-  text: string,
-  title: string,
-  isOn: boolean,
-  onToggle: (isOn: boolean) => void,
-): HTMLElement {
-  const box = document.createElement('input');
-  box.type = 'checkbox';
-  box.checked = isOn;
-  box.title = title;
-  box.onchange = () => onToggle(box.checked);
-  return labelled(text, box);
 }
 
 /** A labelled select over `options.choices`, showing `options.value`. */

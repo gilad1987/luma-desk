@@ -3,7 +3,8 @@ import type { StageDesign } from '../../domain/stage/StageDesign';
 import { SCENERY_PARTS, VENUE_KINDS, type SceneryPart, type VenueKind } from '../../domain/stage/types';
 import { he } from '../../i18n/he';
 import type { RunEdit } from './ErrorText';
-import { makeCheckbox, makeHeading, makeSelect, oneOf } from './formControls';
+import { makeCheckbox } from './checkbox';
+import { makeHeading, makeSelect, oneOf } from './formControls';
 
 const VENUE_NAMES: Readonly<Record<VenueKind, string>> = {
   'sultans-pool': "Sultan's Pool",
@@ -32,9 +33,13 @@ export function venueControls(d: StageDesign, run: RunEdit): HTMLElement[] {
     onPick: (value) => run((draft) => setVenue(draft, oneOf(VENUE_KINDS, value))),
   });
   const parts = SCENERY_PARTS.map((part) =>
-    makeCheckbox(SCENERY_NAMES[part], he.builder.tools.scenery, d.scenery[part], (isOn) =>
-      run((draft) => setSceneryPart(draft, part, isOn)),
-    ),
+    makeCheckbox({
+      label: SCENERY_NAMES[part],
+      key: `scenery ${part}`,
+      title: he.builder.tools.scenery,
+      isOn: d.scenery[part],
+      onToggle: (isOn) => run((draft) => setSceneryPart(draft, part, isOn)),
+    }),
   );
   return [makeHeading('Venue'), venue, makeHeading('Scenery'), ...parts];
 }

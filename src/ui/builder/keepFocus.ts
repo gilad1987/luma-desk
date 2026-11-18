@@ -3,7 +3,8 @@
  * `data-focus-key` as the control that has it now, with the caret where it was in a text field. The panels rebuild
  * their DOM after every session change, so without this one typed value would throw a keyboard user out of the panel.
  * The render runs after Tab moved the focus (`mountTools`), so "now" is the next field, not the edited one.
- * The keys are set where the controls are made (`labelled`, `makeButton`); a control without a key loses the focus.
+ * The keys are set where the controls are made (`labelled`, `makeButton`, `makeCheckbox`); a control without a key
+ * loses the focus. Keys must be unique in one panel, or the focus goes to the first match (tests/unit/ui/builder/focusKeys).
  */
 export function renderKeepingFocus(root: HTMLElement, parts: readonly HTMLElement[]): void {
   const active = document.activeElement;
