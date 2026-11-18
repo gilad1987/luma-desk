@@ -82,9 +82,9 @@ export class SymbolExpander {
     const known = this.empty.expansionOf(symdef, uuid) ?? this.memo.get(key);
     if (known) return known;
     this.open.add(uuid);
-    const [list, name, outer] = [childElement(symdef, 'ChildList'), attr(symdef, 'name') ?? '', this.empty.swap([])];
+    const [list, name, outer] = [childElement(symdef, 'ChildList'), attr(symdef, 'name') ?? '', this.empty.enter()];
     const meshes = (list ? this.meshesOf(list, depth) : []).map((mesh) => ({ symdef: name, ...mesh }));
-    const expansion = { meshes, seeds: this.empty.swap(outer) };
+    const expansion = { meshes, seeds: this.empty.leave(outer) };
     this.open.delete(uuid);
     this.memo.set(key, expansion);
     return expansion;

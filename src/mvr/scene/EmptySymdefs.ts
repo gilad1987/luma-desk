@@ -16,7 +16,13 @@ export class EmptySymdefs {
   static readonly MAX = 250_000;
   private readonly warnings: MvrWarning[];
   private readonly read = new Map<Element, Expansion | undefined>();
+  /** Seeds emitted into the scene, each counted once; the cap the user is warned about. */
   private kept = 0;
+  /** Seeds stored inside Symdef expansions; counted apart, so a shared expansion does not use up `kept`. */
+  private built = 0;
+  /** How many Symdef expansions are open: 0 while the scene walk keeps seeds for an element. */
+  private depth = 0;
+  private warned = false;
   private sink: ProxySeed[] = [];
 
   /** Writes the one over-the-cap warning into the import's `warnings`. */
@@ -48,15 +54,33 @@ export class EmptySymdefs {
     return filled;
   }
 
-  /** Keeps `seed`, moved by `local`, in the current list; `false` once the cap is reached, which warns once. */
+  /** Opens a Symdef expansion: swaps in a fresh list and returns the outer one, for `leave`. */
+  enter(): ProxySeed[] {
+    this.depth += 1;
+    return this.swap([]);
+  }
+
+  /** Closes a Symdef expansion: puts `outer` back and returns the expansion's seeds. */
+  leave(outer: ProxySeed[]): ProxySeed[] {
+    this.depth -= 1;
+    return this.swap(outer);
+  }
+
+  /**
+   * Keeps `seed`, moved by `local`, in the current list; `false` once the cap is reached, which warns once. Seeds
+   * kept inside an expansion are emitted again per placement of that Symdef, so they count apart (`built`), and each
+   * seed emitted into the scene counts once (`kept`). Both are capped, so a hostile file holds at most twice `MAX`.
+   */
   keep(seed: ProxySeed, local: Mat4): boolean {
-    if (this.kept >= EmptySymdefs.MAX) {
+    const inScene = this.depth === 0;
+    if ((inScene ? this.kept : this.built) >= EmptySymdefs.MAX) {
       const message = `The file places more than ${EmptySymdefs.MAX} symbols that have no geometry; the rest are left out.`;
-      if (this.kept === EmptySymdefs.MAX) this.warnings.push({ code: 'empty-symdef', message });
-      this.kept += 1;
+      if (!this.warned) this.warnings.push({ code: 'empty-symdef', message });
+      this.warned = true;
       return false;
     }
-    this.kept += 1;
+    if (inScene) this.kept += 1;
+    else this.built += 1;
     this.sink.push({ ...seed, matrix: multiply(local, seed.matrix) });
     return true;
   }

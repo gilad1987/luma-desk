@@ -1,5 +1,5 @@
 import { looksLikePanel, looksLikeSeat, panelFrame, seatFrame } from './proxyFrames';
-import { measurePitch, neighbourOffsets, type V3 } from './proxyGrid';
+import { measurePitch, neighbourOffsets, uniquePlaces, type V3 } from './proxyGrid';
 import { namedProxyKind } from './proxyNames';
 import type { MvrProxy, ProxyPlacement } from './ProxyPlacement';
 
@@ -29,28 +29,34 @@ function spacingKind(offsets: readonly (readonly V3[])[]): Kind | undefined {
   return share(looksLikeSeat) >= PROXY_LIMITS.share ? 'seat' : undefined;
 }
 
-/** One group: the placements of one Symdef on one layer. */
+/**
+ * One group: the placements of one Symdef on one layer. Each distinct place is classified once, from the first
+ * placement there; a placement stacked on an earlier one stays `unknown` with the reason `stacked`.
+ */
 function classifyGroup(members: readonly ProxyPlacement[], toward: V3 | undefined): MvrProxy[] {
-  const points = members.map(({ matrix: m }): V3 => [m[12] ?? 0, m[13] ?? 0, m[14] ?? 0]);
-  const pitch = measurePitch(points);
+  const { places, slots } = uniquePlaces(members.map(({ matrix: m }): V3 => [m[12] ?? 0, m[13] ?? 0, m[14] ?? 0]));
+  const pitch = measurePitch(places);
   const spacing = pitch === undefined ? {} : { pitch };
-  const unknown = members.map((m): MvrProxy => ({
+  const unknown = members.map((m, index): MvrProxy => ({
     ...m,
     kind: 'unknown',
     inferred: true,
     evidence: 'none',
     ...spacing,
+    ...(slots[index] === -1 ? { reason: 'stacked' } : {}),
   }));
   if (pitch === undefined) return unknown;
-  const offsets = neighbourOffsets(points, pitch * PROXY_LIMITS.reach);
+  const offsets = neighbourOffsets(places, pitch * PROXY_LIMITS.reach);
   const names = [members[0]?.symdefName ?? '', ...members.map((m) => m.name), members[0]?.layerName ?? ''];
   const named = namedProxyKind(names);
   const kind = named ?? spacingKind(offsets);
   if (!kind || !inside(pitch, kind === 'panel' ? PROXY_LIMITS.panelPitch : PROXY_LIMITS.seatPitch)) return unknown;
   const evidence = named ? 'name' : 'spacing';
   return unknown.map((proxy, index) => {
-    const at: V3 = points[index] ?? [0, 0, 0];
-    const near = offsets[index] ?? [];
+    const slot = slots[index] ?? -1;
+    if (slot === -1) return proxy;
+    const at: V3 = places[slot] ?? [0, 0, 0];
+    const near = offsets[slot] ?? [];
     const frame = kind === 'panel' ? panelFrame(at, near) : seatFrame(at, near, toward);
     return frame ? { ...proxy, kind, evidence, frame } : proxy;
   });
@@ -65,9 +71,10 @@ function classifyGroup(members: readonly ProxyPlacement[], toward: V3 | undefine
  *
  * Limits: the file states none of this, so every result is an inference (`inferred`). `unknown` is the answer when
  * the group is under 4 placements and unnamed, when the spacing is outside the limits, when a placement has no
- * neighbour to measure from, and for a panel in a single line (no plane). An unnamed single level line of tiles
- * reads as a seat row. Tiles that are not square are drawn as squares of the nearest spacing. The placement point
- * is taken as the centre of a panel and as the floor point under a seat, which the file does not say.
+ * neighbour to measure from, for a panel in a single line (no plane), and for a copy stacked on another (`reason`
+ * `stacked`). An unnamed single level line of tiles reads as a seat row. Tiles that are not square are drawn as
+ * squares of the nearest spacing. The placement point is taken as the centre of a panel and as the floor point
+ * under a seat, which the file does not say.
  *
  * `toward` is the stage centre in the MVR frame (millimetres); seats face it. The result keeps the input order.
  */

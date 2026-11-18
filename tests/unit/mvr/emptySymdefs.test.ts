@@ -4,7 +4,8 @@
  * meshes. The scene walk keeps every such placement as a record with its Symdef, owner, layer and world matrix, so
  * the import can count them all; none of them is a mesh placement.
  */
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { EmptySymdefs } from '../../../src/mvr/scene/EmptySymdefs.ts';
 import { walkScene } from '../../../src/mvr/scene/walkScene.ts';
 import { parseXml } from '../../../src/mvr/xml/parseXml.ts';
 import { sceneXml } from '../../shared/index.ts';
@@ -55,6 +56,23 @@ describe('empty Symdefs', () => {
       ['Stand', 'Seats', 500, 1900, 300],
       ['Other', 'Tiles', 0, 0, 0],
     ]);
+  });
+
+  describe('the cap', () => {
+    const max = EmptySymdefs.MAX;
+    afterEach(() => Object.defineProperty(EmptySymdefs, 'MAX', { value: max }));
+
+    it('counts each placement emitted into the scene once, not again while it builds a shared Symdef', () => {
+      Object.defineProperty(EmptySymdefs, 'MAX', { value: 4 });
+      const scene = walk(object('Stand', '', symbol('Row', at(0, 0, 0)) + symbol('Row', at(0, 900, 0))));
+      expect([scene.proxies.length, scene.warnings]).toEqual([4, []]);
+    });
+
+    it('leaves out the placements past the cap with one warning', () => {
+      Object.defineProperty(EmptySymdefs, 'MAX', { value: 3 });
+      const scene = walk(object('Stand', '', symbol('Row', at(0, 0, 0)) + symbol('Row', at(0, 900, 0))));
+      expect([scene.proxies.length, scene.warnings.map((w) => w.code)]).toEqual([3, ['empty-symdef']]);
+    });
   });
 
   it('keeps nothing when every symbol has geometry', () => {

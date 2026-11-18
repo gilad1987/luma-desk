@@ -28,6 +28,31 @@ export function measurePitch(points: readonly V3[]): number | undefined {
   return nearest[Math.floor(nearest.length / 2)];
 }
 
+/**
+ * The distinct places of a point set, to 1 mm, and for each point the index of its place, or -1 for a point stacked
+ * on an earlier one. Thousands of copies stacked at one point would fill one cell of `neighbourOffsets`, where each
+ * scans the whole cell: quadratic time for one place.
+ */
+export function uniquePlaces(points: readonly V3[]): { readonly places: V3[]; readonly slots: number[] } {
+  const seen = new Set<string>();
+  const places: V3[] = [];
+  const slots = points.map((point) => {
+    const key = point.map(Math.round).join();
+    if (seen.has(key)) return -1;
+    seen.add(key);
+    places.push(point);
+    return places.length - 1;
+  });
+  return { places, slots };
+}
+
+/**
+ * The most points a cell holds. A grid at its pitch puts a few points in a cell of 1.5 pitches; a dense cloud of
+ * distinct points (closer than the pitch measured) would make each point scan a full cell, so the cap keeps the worst
+ * case linear. Points past it are still classified, but are not seen as neighbours.
+ */
+const CELL_CAP = 64;
+
 /** The 27 cells around and with a cell. */
 const AROUND = [-1, 0, 1].flatMap((x) => [-1, 0, 1].flatMap((y) => [-1, 0, 1].map((z): V3 => [x, y, z])));
 
@@ -41,7 +66,7 @@ export function neighbourOffsets(points: readonly V3[], reach: number): V3[][] {
   for (const point of points) {
     const key = cellOf(point, [0, 0, 0]);
     const cell = cells.get(key) ?? [];
-    cell.push(point);
+    if (cell.length < CELL_CAP) cell.push(point);
     cells.set(key, cell);
   }
   return points.map((point) => {

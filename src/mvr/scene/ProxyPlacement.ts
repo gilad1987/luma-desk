@@ -30,6 +30,12 @@ export interface MvrProxy extends ProxyPlacement {
   readonly inferred: true;
   /** What decided `kind`: a name word, the spacing of the placements, or nothing (`unknown`). */
   readonly evidence: 'name' | 'spacing' | 'none';
+  /**
+   * `stacked` when an earlier placement of the same Symdef and layer is at the same place (to 1 mm): CAD files stack
+   * copies, and drawing each copy would only draw the same proxy again. Such a placement is `unknown`: counted, not
+   * drawn.
+   */
+  readonly reason?: 'stacked';
   /** Measured distance to the nearest placement of the same Symdef and layer, millimetres; absent when alone. */
   readonly pitch?: number;
   /**
