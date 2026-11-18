@@ -7,16 +7,20 @@ import type { JerusalemStone } from './JerusalemStone';
 
 const WALL_HEIGHT = 14;
 
-/** A wall run from corner `A` to corner `B`, with its ground length `L` and heading `ang` about the up axis. */
+/**
+ * A wall run from corner `start` to corner `end`, with its ground `length` and `heading` about the up axis. The caller
+ * computes length and heading once, because the wall sections and the corner tower of the run both need them.
+ */
 export interface WallRun {
-  readonly A: Vector3;
-  readonly B: Vector3;
-  readonly L: number;
-  readonly ang: number;
+  readonly start: Vector3;
+  readonly end: Vector3;
+  readonly length: number;
+  readonly heading: number;
 }
 
 /** Builds one run as about 6 m sections whose base follows the terrain; returns 3 merlons per section. */
-export function addWallSections(scene: Object3D, stone: JerusalemStone, { A, B, L, ang }: WallRun): CrenelPlacement[] {
+export function addWallSections(scene: Object3D, stone: JerusalemStone, run: WallRun): CrenelPlacement[] {
+  const { start: A, end: B, length: L, heading: ang } = run;
   const merlons: CrenelPlacement[] = [],
     n = Math.ceil(L / 6),
     H = WALL_HEIGHT;

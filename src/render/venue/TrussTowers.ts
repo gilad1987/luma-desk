@@ -3,7 +3,7 @@ import { DECK, TOWERS } from '../../domain/venue';
 import { addMesh } from '../shared';
 import type { TrussKit } from './TrussKit';
 
-/** The two delay speaker towers in the audience as [x, z]; the crowd layout keeps a gap around them. */
+/** The two delay speaker towers in the audience as [x, z]. */
 const DELAYS: readonly (readonly [x: number, z: number])[] = [
   [-24, 33],
   [24, 33],

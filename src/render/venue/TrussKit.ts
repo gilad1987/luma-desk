@@ -1,9 +1,6 @@
 import { CylinderGeometry, Group, MeshBasicMaterial, Vector3, type Material, type Object3D } from 'three';
 import { ROOF, UP } from '../../domain/venue';
-import { addMesh } from '../shared';
-
-/** A point in metres, as the truss tables give it. */
-export type TrussPoint = readonly [x: number, y: number, z: number];
+import { addMesh, type Vec3Tuple } from '../shared';
 
 /** The four chords of a square box truss, as corner signs. */
 const CHORDS: readonly (readonly [x: number, z: number])[] = [
@@ -38,7 +35,7 @@ export class TrussKit {
    * Adds a straight box truss from `a` to `b` with `spacing` between chords: 4 chords, then zig-zag lacing on all
    * four faces, in one group turned along the truss.
    */
-  addSection(parent: Object3D, a: TrussPoint, b: TrussPoint, spacing: number): Group {
+  addSection(parent: Object3D, a: Vec3Tuple, b: Vec3Tuple, spacing: number): Group {
     const s = spacing,
       A = new Vector3(...a),
       B = new Vector3(...b),

@@ -5,7 +5,10 @@ import type { InstrumentBuilder } from './performerSpec';
 
 type StringInstrument = 'guitar' | 'bass' | 'violin' | 'viola' | 'cello' | 'dbass';
 
-/** A slung instrument's size and body finish: `length` scales the body and neck (the bass is 1.25). */
+/**
+ * A slung instrument's size and body finish. The guitar and the bass differ only in these two values, so one builder
+ * makes both: the bass has `length` 1.25 and a black finish.
+ */
 interface SlungSize {
   readonly length: number;
   readonly finish: Material;

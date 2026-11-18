@@ -40,7 +40,11 @@ const TOWER_MERLONS: readonly (readonly [dx: number, dz: number])[] = [
 const TOWER_HEIGHT = 20;
 
 /** Builds the square tower at the run's start corner, turned like the run; returns its 8 merlons. */
-function addCornerTower(scene: Object3D, stone: JerusalemStone, { A, ang }: WallRun): CrenelPlacement[] {
+function addCornerTower(
+  scene: Object3D,
+  stone: JerusalemStone,
+  { start: A, heading: ang }: WallRun,
+): CrenelPlacement[] {
   const H = TOWER_HEIGHT,
     base = A.y - 3;
   addMesh(scene, new BoxGeometry(8, H, 8), stone.floodlit(8, H), {
@@ -62,7 +66,12 @@ export function buildRidgeWalls(scene: Object3D, stone: JerusalemStone): CrenelP
       const A = pts[i],
         B = pts[i + 1];
       if (!A || !B) continue;
-      const run = { A, B, L: Math.hypot(B.x - A.x, B.z - A.z), ang: Math.atan2(B.x - A.x, B.z - A.z) };
+      const run: WallRun = {
+        start: A,
+        end: B,
+        length: Math.hypot(B.x - A.x, B.z - A.z),
+        heading: Math.atan2(B.x - A.x, B.z - A.z),
+      };
       merlons.push(...addWallSections(scene, stone, run));
       if (i > 0) merlons.push(...addCornerTower(scene, stone, run));
     }
