@@ -13,20 +13,24 @@ import type { MvrFlowDeps } from './MvrFlowDeps';
  * Opens the summary of `result` with its layer list, or, when another dialog holds the modal, toasts it in one line
  * so that dialog keeps its state.
  */
-function presentSummary(result: MvrImport, failures: readonly MeshFailure[], deps: MvrFlowDeps): void {
+function presentSummary(result: MvrImport, failures: readonly MeshFailure[], deps: MvrFlowDeps, kept: boolean): void {
   const view = importSummaryView(result, failures);
   const modal = deps.modal();
   if (!mayOpenMvrSummary(modal)) {
     deps.toast(he.mvr.imported(result.design.source.name, result.summary.fixtureCount, view.warnings.length));
+    if (kept) deps.toast(he.mvr.cuesKept);
     return;
   }
   const { layers = [], hiddenLayers = [] } = result.design.mvr ?? {};
-  openMvrSummary(modal, { view, layers, hiddenLayers }, (uuids) => hideMvrLayers(deps, uuids));
+  const buildShow = kept ? deps.show.build : undefined;
+  openMvrSummary(modal, { view, layers, hiddenLayers, buildShow }, (uuids) => hideMvrLayers(deps, uuids));
 }
 
 /**
- * Imports a picked `.mvr` file: load the scenery chunk, store and apply the file (`importMvrFile`), draw its
- * scenery, then show the summary with the mesh files three.js could not draw. The scenery chunk loads first, so a
+ * Imports a picked `.mvr` file: load the scenery chunk, measure the show, store and apply the file (`importMvrFile`),
+ * build the starting show with the MVR first look or keep the operator's cues (`MvrShow.afterImport`), draw the
+ * scenery, then show the summary with the mesh files three.js could not draw and, for kept cues, the choice to build
+ * the starting show after all. The scenery chunk loads first, so a
  * chunk that does not load rejects before the stage changes. A file that is not a usable MVR keeps the stage, toasts
  * and fills `#mvrImportError`. A stage change after the apply wins: before the draw the import then draws nothing,
  * and during the draw it opens no summary, whose layer toggles would write this file's layers into the new design.
@@ -36,6 +40,7 @@ export async function importPickedMvr(file: File, deps: MvrFlowDeps): Promise<vo
   setMvrImportError('');
   await deps.scenery.load();
   const bytes = new Uint8Array(await file.arrayBuffer());
+  const before = deps.show.before();
   const outcome = await importMvrFile({ name: file.name, bytes }, deps);
   if (outcome.kind === 'failed') {
     deps.toast(outcome.message);
@@ -44,8 +49,9 @@ export async function importPickedMvr(file: File, deps: MvrFlowDeps): Promise<vo
   }
   if (deps.stage.design !== outcome.result.design) return;
   deps.prompt.hide();
+  const kept = deps.show.afterImport(before) === 'kept';
   const failures = await deps.scenery.show(outcome.result);
   if (deps.stage.design !== outcome.result.design) return;
-  presentSummary(outcome.result, failures, deps);
+  presentSummary(outcome.result, failures, deps, kept);
   if (!outcome.stored) deps.toast(he.mvr.notStored);
 }

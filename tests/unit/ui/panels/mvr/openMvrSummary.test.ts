@@ -78,6 +78,14 @@ describe('openMvrSummary', () => {
     expect(lines().map((line) => [line.textContent, line.hidden ?? false])).toEqual(
       Array.from({ length: 10 }, (_, i) => [`w${i}`, false]),
     );
+    const firstRevealed = lines()[8] as Line & { tabIndex?: number };
+    expect(firstRevealed.tabIndex).toBe(-1);
+    expect(firstRevealed.focus).toHaveBeenCalledOnce();
+  });
+
+  it('offers the show choice only when the import kept cues', () => {
+    const { modal } = open();
+    expect(String(modal.open.mock.calls[0]?.[0])).not.toContain('mvrShowChoice');
   });
 
   it('closes the modal from #mvrSummaryClose', () => {

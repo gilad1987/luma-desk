@@ -1,10 +1,13 @@
 import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { EngineBus } from '../../engine/events';
+import type { ExecutorPool } from '../../engine/ExecutorPool';
 import type { StageService } from '../../engine/stage/StageService';
 import { downloadBlob } from '../../io/download';
+import { StartingShow, type StartingShowDeps } from '../../show/startingShow/StartingShow';
 import type { TestHookDeps } from '../testHook/TestHookDeps';
 import type { MvrActions } from '../../ui/panels/mvr/MvrActions';
 import { MvrMissingPrompt } from '../../ui/panels/mvr/MvrMissingPrompt';
+import { mvrShow } from './mvrShow';
 import { exportStageMvr, type MvrExportOut } from './exportStageMvr';
 import { followStage } from './followStage';
 import { importPickedMvr } from './importPickedMvr';
@@ -20,8 +23,13 @@ export interface MvrWiringDeps {
   readonly bus: Pick<EngineBus, 'emit' | 'on'>;
   /** The scene the scenery joins and the camera views it fits; read only from the first MVR load on. */
   readonly render: MvrSceneryRender;
-  /** The flows' stage; the stage follower also reads the cause of the last apply. */
-  readonly stage: MvrFlowDeps['stage'] & Pick<StageService, 'cause'>;
+  /** The flows' stage; the stage follower reads the cause of the last apply, the starting show the rest. */
+  readonly stage: MvrFlowDeps['stage'] & Pick<StageService, 'cause' | 'rig' | 'frame' | 'isBuiltIn'>;
+  /** The operator's executors; an import rebuilds or keeps their cues. */
+  readonly pool: Pick<ExecutorPool, 'execs'>;
+  readonly demo: StartingShowDeps['demo'];
+  readonly groupLibrary: StartingShowDeps['groupLibrary'];
+  readonly presetLibrary: StartingShowDeps['presetLibrary'];
   /** The shared modal; the panels build it after `wireMvr`, so it is read when a flow runs. */
   readonly modal: MvrFlowDeps['modal'];
   /** The Stage Builder's cancel; the builder is built after the panels, so it is read when a flow applies. */
@@ -53,14 +61,8 @@ const messageOf = (error: unknown): string => (error instanceof Error ? error.me
  * stage follower (`followStage`) keeps the scenery and the prompt on the current stage. It creates no three.js object
  * until the first MVR load.
  */
-export function wireMvr({
-  bus,
-  render,
-  stage,
-  modal,
-  cancelBuilder,
-  download = downloadBlob,
-}: MvrWiringDeps): MvrWiring {
+export function wireMvr(wiring: MvrWiringDeps): MvrWiring {
+  const { bus, render, stage, pool, modal, cancelBuilder, download = downloadBlob } = wiring;
   const toast = (text: string): void => bus.emit('message', { kind: 'toast', text });
   const queue = new MvrLoadQueue((error) => toast(messageOf(error)));
   const actions: MvrActions = {
@@ -70,7 +72,9 @@ export function wireMvr({
   };
   const prompt = new MvrMissingPrompt(actions);
   const scenery = new LazyMvrStage(render);
-  const deps: MvrFlowDeps = { stage, store: openMvrStore(), scenery, prompt, toast, modal, cancelBuilder };
+  const show = mvrShow(new StartingShow({ ...wiring, execs: pool.execs }), toast);
+  const store = openMvrStore();
+  const deps: MvrFlowDeps = { stage, store, scenery, prompt, toast, modal, cancelBuilder, show };
   const restore = (design: StageDesign): void => queue.run(() => restoreStoredMvr(deps, design));
   followStage({ bus, stage, scenery, prompt, restore });
   return {

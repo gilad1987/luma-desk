@@ -42,7 +42,11 @@ function wired(design?: StageDesign) {
     surfaceHit: { setSurfaces: vi.fn() },
   };
   const { modal, cancelBuilder } = flow.deps;
-  const mvr = wireMvr({ bus: { emit, on: vi.fn() }, render, stage: flow.stage, modal, cancelBuilder, download });
+  const bus = { emit, on: vi.fn() };
+  const groupLibrary = { all: {}, replace: vi.fn() };
+  const presetLibrary = { all: { 1: {}, 2: {}, 3: {}, 4: {}, 5: {} }, replace: vi.fn() };
+  const show = { pool: { execs: [] }, demo: { load: vi.fn() }, groupLibrary, presetLibrary };
+  const mvr = wireMvr({ bus, render, stage: flow.stage, ...show, modal, cancelBuilder, download });
   return { mvr, flow, emit, download };
 }
 
