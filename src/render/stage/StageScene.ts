@@ -24,7 +24,8 @@ export class StageScene {
     this.#deps = deps;
     this.#build = new StageBuild(deps.scene, design);
     this.#venue = new StageVenue(deps, this.#build, (o) => this.#build.owns(o));
-    deps.surfaces.setSurfaces(surfacesOf(design), design.venue.kind);
+    deps.surfaces.setVenue(design.venue.kind);
+    deps.surfaces.setSurfaces(surfacesOf(design));
   }
 
   /** Builds the venue of the boot design; the returned venue stays current across later venue switches. */
@@ -55,9 +56,10 @@ export class StageScene {
     else {
       this.#build.leaveVenue(design);
       this.#venue.switchTo(kind);
+      this.#deps.surfaces.setVenue(kind);
     }
     this.#venue.apply(design);
-    this.#deps.surfaces.setSurfaces(surfacesOf(design), kind);
+    this.#deps.surfaces.setSurfaces(surfacesOf(design));
     handOverRig(host, this.#build.walls, fixtures);
     const { views } = this.#deps;
     views.fitTo(boundsOf(design));

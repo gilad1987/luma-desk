@@ -11,7 +11,8 @@ const down = (x: number, z: number): [Vector3, Vector3] => [new Vector3(x, 10, z
 
 function surfacesIn(venue: VenueKind): SurfaceHit {
   const surfaces = new SurfaceHit();
-  surfaces.setSurfaces(surfacesOf(BUILT_IN_DESIGN), venue);
+  surfaces.setVenue(venue);
+  surfaces.setSurfaces(surfacesOf(BUILT_IN_DESIGN));
   return surfaces;
 }
 
@@ -36,5 +37,13 @@ describe('SurfaceHit per venue', () => {
 
   it('still lands on the deck top before the flat floor', () => {
     expect(surfacesIn('black-box').hit(...down(0, -5))?.t).toBeCloseTo(10 - 1.8);
+  });
+
+  it('keeps the venue across setSurfaces and changes the ground only on setVenue', () => {
+    const surfaces = surfacesIn('black-box');
+    surfaces.setSurfaces([]);
+    expect(surfaces.hit(...down(60, 0))).toEqual({ t: 10, normal: UP });
+    surfaces.setVenue('sultans-pool');
+    expect(surfaces.hit(...down(60, 0))).toBeNull();
   });
 });

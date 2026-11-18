@@ -5,6 +5,7 @@ import { SurfaceHit } from '../../../src/render/surface/SurfaceHit';
 /** The surfaces of the built-in stage in Sultan's Pool, as the stage scene sets them at boot. */
 export function builtInSurfaces(): SurfaceHit {
   const surfaces = new SurfaceHit();
-  surfaces.setSurfaces(surfacesOf(BUILT_IN_DESIGN), BUILT_IN_DESIGN.venue.kind);
+  surfaces.setVenue(BUILT_IN_DESIGN.venue.kind);
+  surfaces.setSurfaces(surfacesOf(BUILT_IN_DESIGN));
   return surfaces;
 }

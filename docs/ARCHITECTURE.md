@@ -108,15 +108,16 @@ frame runs the slow tick (known quirk Q17).
 The engine reports what happened through one typed, synchronous `EventBus` (`src/core/EventBus.ts`, ADR 0002). It
 never calls the UI or storage. The event map is `EngineEvents` in `src/engine/events.ts`:
 
-| Event              | Means                                                     | Listener today                                       |
-| ------------------ | --------------------------------------------------------- | ---------------------------------------------------- |
-| `message`          | Feedback for the operator: a log line or a toast          | `CommandLine`, `Toast`                               |
-| `poolsChanged`     | Group or preset pools changed; repaint them               | `PoolsPanel`                                         |
-| `stateDirty`       | The slow panels must repaint                              | `UiTickScheduler.markDirty()`, joined in `main.ts`   |
-| `showChanged`      | The show must be saved                                    | `ShowStorage.persist()`, joined in `createShowFiles` |
-| `storeModeChanged` | STORE was armed or cancelled                              | `showStoreMode`                                      |
-| `selectionChanged` | The fixture selection changed                             | none (known quirks, section H)                       |
-| `cueStored`        | A cue was stored; carries the executor and the cue number | none (known quirks, section H)                       |
+| Event              | Means                                                     | Listener today                                              |
+| ------------------ | --------------------------------------------------------- | ----------------------------------------------------------- |
+| `message`          | Feedback for the operator: a log line or a toast          | `CommandLine`, `Toast`                                      |
+| `poolsChanged`     | Group or preset pools changed; repaint them               | `PoolsPanel`                                                |
+| `stateDirty`       | The slow panels must repaint                              | `UiTickScheduler.markDirty()`, joined in `main.ts`          |
+| `showChanged`      | The show must be saved                                    | `ShowStorage.persist()`, joined in `createShowFiles`        |
+| `storeModeChanged` | STORE was armed or cancelled                              | `showStoreMode`                                             |
+| `selectionChanged` | The fixture selection changed                             | none (known quirks, section H)                              |
+| `cueStored`        | A cue was stored; carries the executor and the cue number | none (known quirks, section H)                              |
+| `rigChanged`       | `StageService` replaced the rig; carries the new `design` | engine services, `StageScene`, `SheetPanel` (Stage Builder) |
 
 Delivery is synchronous because order is behavior: the command line must show a statement's feedback before the
 next statement runs, and the save debounce must start in the same tick as before.
@@ -124,6 +125,33 @@ next statement runs, and the save debounce must start in the same tick as before
 Per-frame data that crosses layers is passed as a value, not as an import. For example the Auto Show's beat pump
 reaches the output merge as a readonly `OutputModulation` argument, so the engine never imports `autoshow`
 (decision 2).
+
+## Stage Builder
+
+The rig is not edited directly: it is derived from a stage design ([ADR 0005](adr/0005-derived-rig.md)).
+
+- **Model** (`src/domain/stage`). `StageDesign` (version 1) is plain readonly data: deck, risers, trusses, LED walls,
+  fixtures, venue and scenery toggles. `templates/` makes the four start designs (`empty`, `theatre`, `festival`,
+  `sultans-pool`); the built-in Sultan's Pool design derives the original rig field by field and in build order
+  (`sultansPoolParity.test.ts`). `edit/` holds the pure edit operations and `History`, the builder's undo stack of
+  whole designs. `rigFromDesign` derives the rig.
+- **Rig lifecycle** (`src/engine/stage`). `StageService` is the one place that replaces the rig at run time. It is
+  the `RigSource`: rig, design, frame and cause are set together, then `RigAnnouncer` emits `rigChanged` with only
+  the design. The cause is `boot`, `preview` (the builder's live preview, not saved), `builder` (Done), `showLoad`
+  or `import` (MVR); only `builder` and `import` emit `showChanged`. Delivery is synchronous in subscribe order:
+  `Selection`, `StageGroups`, `MissingFixtureNotice`, `Programmer`, then `StageScene` and the UI. A listener that
+  calls `apply` again throws.
+- **Render** (`src/render/stage`). `StageScene` owns `StageBuild` (deck, risers, trusses, LED walls) and
+  `StageVenue` (the venue around them). `SceneryRegistry` shows or hides a scenery part without a rebuild. The venue
+  kinds are `sultans-pool`, `black-box` and `open-field`; only a new kind rebuilds the venue. Each build makes one
+  `SurfaceHit.setSurfaces(surfacesOf(design))` call; `setVenue` sets the ground (terraces or a flat floor) at boot
+  and on a venue switch. A rebuild calls `CameraViews.fitTo(boundsOf(design))`, then `setView(currentView)`.
+- **Builder UI** (`src/ui/builder`). The **Build Stage** button (`#buildBtn`) opens `BuilderMode`, which hides the
+  console and makes `#side`, `#enc` and `#desk` inert. Edits apply as a delayed `preview`; Done applies the draft as
+  `builder`, Cancel applies the start design back. `builderKeys.ts` maps Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Ctrl/Cmd+Y,
+  Ctrl/Cmd+D and Delete/Backspace.
+- **Show format** (`src/show/stageField.ts`). A v:1 show has an optional `stage` key, written only for a custom
+  design, so the default show stays byte-equal to older ones. The auto-saved show stays under `lumadesk-show-v6`.
 
 ## Behavior parity
 

@@ -19,9 +19,9 @@ export interface BeamHit {
 export const SCREEN_NORMAL: Readonly<Vector3> = new Vector3(0, 0, 1);
 
 /**
- * Where fixture beams land (G6): the stage's surface boxes from `setSurfaces`, plus the venue ground, which is not
- * stage data: the audience terraces and pool floor of Sultan's Pool, or a flat floor in the other venues (a floor
- * skips what lies under a top box). A `top` box hit carries the `UP`
+ * Where fixture beams land (G6): the stage's surface boxes from `setSurfaces`, plus the venue ground from `setVenue`,
+ * which is not stage data: the audience terraces and pool floor of Sultan's Pool, or a flat floor in the other venues
+ * (a floor skips what lies under a top box). A `top` box hit carries the `UP`
  * normal and a `front` box hit `SCREEN_NORMAL`, both by identity, because the fixture sync sorts hits into stage,
  * audience and key-light contributions by `normal ===`. Each instance holds its own boxes, so a stage rebuild
  * replaces them with ONE `setSurfaces` call.
@@ -36,13 +36,20 @@ export class SurfaceHit {
   private isPool = true;
 
   /**
-   * Replaces the boxes beams land on (never adds to them) and the venue ground around them; a new stage design passes
-   * `surfacesOf(design)` and its venue kind. The face is checked here once, so the per-frame box tests never do.
+   * Sets the venue ground around the boxes. Kept apart from {@link setSurfaces} so that call keeps the contract's
+   * one-argument form (§9); the stage calls it at boot and before `setSurfaces` when the venue kind changes.
    */
-  setSurfaces(boxes: readonly SurfaceBox[], venue: VenueKind): void {
+  setVenue(venue: VenueKind): void {
+    this.isPool = venue === 'sultans-pool';
+  }
+
+  /**
+   * Replaces the boxes beams land on (never adds to them); a new stage design passes `surfacesOf(design)`. The face is
+   * checked here once, so the per-frame box tests never do.
+   */
+  setSurfaces(boxes: readonly SurfaceBox[]): void {
     this.tops = boxes.filter((box) => box.face === 'top');
     this.fronts = boxes.filter((box) => box.face === 'front');
-    this.isPool = venue === 'sultans-pool';
   }
 
   /** Where a beam ray from `origin` along the unit `direction` lands first, or null when it lands nowhere. */
