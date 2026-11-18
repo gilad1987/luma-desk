@@ -30,14 +30,14 @@ describe('BandFit', () => {
   it('skips the pass at the identity fit: no placement is read or written', () => {
     const { riser, wedge, performers, fit } = band();
     const read = vi.spyOn(riser.position, 'set');
-    expect(fit.fit(IDENTITY_FIT)).toBe(performers);
+    expect(fit.fit(IDENTITY_FIT, null)).toBe(performers);
     expect(read).not.toHaveBeenCalled();
     expect(wedge.position.toArray()).toEqual([6, DECK + 0.25, STAGE.z1]);
   });
 
   it('moves the band onto a wide deck: x by width, z from the downstage edge, lifted by the height change', () => {
     const { riser, wedge, fit } = band();
-    const [moved] = fit.fit(deckFitOf(wideDeck));
+    const [moved] = fit.fit(deckFitOf(wideDeck), null);
     expect(wedge.position.x).toBeCloseTo(12);
     expect(wedge.position.z).toBeCloseTo(STAGE.z1);
     expect(wedge.position.y).toBeCloseTo(DECK + 1.25);
@@ -48,10 +48,10 @@ describe('BandFit', () => {
 
   it('starts each fit from the built placement, so fits never stack', () => {
     const { wedge, fit } = band();
-    fit.fit(deckFitOf(wideDeck));
-    fit.fit(deckFitOf(wideDeck));
+    fit.fit(deckFitOf(wideDeck), null);
+    fit.fit(deckFitOf(wideDeck), null);
     expect(wedge.position.x).toBeCloseTo(12);
-    fit.fit(IDENTITY_FIT);
+    fit.fit(IDENTITY_FIT, null);
     expect(wedge.position.toArray()).toEqual([6, DECK + 0.25, STAGE.z1]);
   });
 });
