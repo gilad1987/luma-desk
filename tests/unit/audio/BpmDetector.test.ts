@@ -21,6 +21,28 @@ describe('detectBpm', () => {
     expect(Object.is(result.off, expected.off)).toBe(true);
   });
 
+  // A NaN sample poisons every onset after it, so every tempo scores NaN and the search keeps 120. The original's
+  // offset scan read `on[i] || 0`, which counts a NaN onset as 0; `?? 0` kept NaN, so every grid summed to NaN and the
+  // offset fell back to the first frame instead of the beat a quarter period in.
+  it('counts NaN onsets as 0 in the offset scan, as the original did', () => {
+    const track = clickTrack(120, 70, 0.25);
+    track.getChannelData(0)[track.sampleRate * 60] = NaN;
+    const result = detectBpm(track),
+      expected = legacyDetectBpm(track);
+    expect(expected.off).toBeCloseTo(0.25, 1);
+    expect(Object.is(result.bpm, expected.bpm)).toBe(true);
+    expect(Object.is(result.off, expected.off)).toBe(true);
+  });
+
+  // Only the offset scan read `|| 0`: the envelope and tempo scans read the samples as they were, so NaN still
+  // poisons them and a 128 BPM song with a NaN sample is reported at 120.
+  it('lets a NaN sample poison the tempo search, as the original did', () => {
+    const track = clickTrack(128, 70, 0.37);
+    track.getChannelData(0)[track.sampleRate * 60] = NaN;
+    expect(legacyDetectBpm(track).bpm).toBe(120);
+    expect(detectBpm(track)).toEqual(legacyDetectBpm(track));
+  });
+
   it('finds 120 BPM on a 120 BPM click track', () => {
     expect(detectBpm(clickTrack(120, 70)).bpm).toBe(120);
   });

@@ -1,8 +1,8 @@
 import { clamp, jsonClone, lerp } from '../core';
-import type { AttrValues } from '../domain/attributes';
+import type { AttrName, AttrValues } from '../domain/attributes';
 import type { FixtureValues } from './CueList';
 import type { Executor } from './Executor';
-import { attrEntries } from './shared';
+import { attrName } from './shared';
 
 /** A running crossfade of one executor from the values it showed to a cue's tracked values. */
 export interface Fade {
@@ -43,22 +43,28 @@ export function stepFade(e: Executor, now: number): void {
 /** One fixture's blend at curve position `k` (always below 1 here: the caller ends the fade at 1). */
 function blendFixture(a: AttrValues, b: AttrValues, k: number): AttrValues {
   const o: AttrValues = {};
-  for (const at of new Set([...attrEntries(a), ...attrEntries(b)].map(([name]) => name))) {
-    const fa = a[at],
-      fb = b[at];
-    if (at === 'dim') {
-      o[at] = lerp(fa ?? 0, fb ?? 0, k);
-      continue;
-    }
-    if (fb == null) {
-      // kept from the original: k < 1 is always true here
-      if (k < 1) o[at] = fa ?? fb;
-      continue;
-    }
-    const from = fa ?? fb;
-    // gobo is a slot number: it snaps half way through the fade instead of blending
-    if (at === 'gobo') o[at] = k < 0.5 ? from : fb;
-    else o[at] = lerp(from, fb, k);
-  }
+  // the keys of a, then those only in b: the order of the original key Set, without its arrays on every frame
+  for (const key in a) blendAttr(o, attrName(key), a, b, k);
+  for (const key in b) if (!Object.hasOwn(a, key)) blendAttr(o, attrName(key), a, b, k);
   return o;
+}
+
+/** Writes the blend of attribute `at` into `o`; see {@link stepFade} for the rules. */
+// eslint-disable-next-line @typescript-eslint/max-params -- per-frame path: an options object would allocate per call
+function blendAttr(o: AttrValues, at: AttrName, a: AttrValues, b: AttrValues, k: number): void {
+  const fa = a[at],
+    fb = b[at];
+  if (at === 'dim') {
+    o[at] = lerp(fa ?? 0, fb ?? 0, k);
+    return;
+  }
+  if (fb == null) {
+    // kept from the original: k < 1 is always true here
+    if (k < 1) o[at] = fa ?? fb;
+    return;
+  }
+  const from = fa ?? fb;
+  // gobo is a slot number: it snaps half way through the fade instead of blending
+  if (at === 'gobo') o[at] = k < 0.5 ? from : fb;
+  else o[at] = lerp(from, fb, k);
 }

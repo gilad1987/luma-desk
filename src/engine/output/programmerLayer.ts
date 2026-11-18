@@ -1,7 +1,7 @@
 import { ATTR } from '../../domain/attributes';
 import type { Fixture } from '../../domain/Fixture';
 import type { FixtureValues } from '../CueList';
-import { attrEntries, fxKey, type FxIndex } from '../shared';
+import { attrName, fxKey, type FxIndex } from '../shared';
 import { PHASER_FEATURES, type PhaserSlots } from './PhaserSlots';
 import type { AttrOutput } from './resetOutput';
 
@@ -21,8 +21,9 @@ export interface ProgrammerOutput {
 export function mergeProgrammer(f: Fixture, o: AttrOutput, slots: PhaserSlots, programmer: ProgrammerOutput): void {
   const pv = programmer.vals[f.id];
   if (pv)
-    for (const [a, value] of attrEntries(pv)) {
-      o[a] = value;
+    for (const key in pv) {
+      const a = attrName(key);
+      o[a] = pv[a] as number;
       slots[ATTR[a].feat] = null;
     }
   for (const ft of PHASER_FEATURES) {

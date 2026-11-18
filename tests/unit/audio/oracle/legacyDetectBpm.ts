@@ -1,6 +1,6 @@
 // Reference oracle: detectBpm 2645-2658 from index.html (index.base.html), formatted by Prettier. Changes: types,
 // and indexed reads go through at() (0 past the end) because the original's reads are untyped; every in-range read
-// is unchanged and `on[Math.round(t)] || 0` already meant exactly that.
+// is unchanged. `on[Math.round(t)] || 0` also maps NaN to 0, so the offset scan keeps `|| 0` after at().
 
 interface Pcm {
   sampleRate: number;

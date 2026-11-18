@@ -15,7 +15,10 @@ export interface BpmResult {
 /** Samples per envelope frame. */
 const HOP = 512;
 
-/** A sample of a list, 0 past its end; the scans below read one frame beyond the onsets on purpose. */
+/**
+ * A sample of a list. Every read below is in range, so `?? 0` only narrows the `noUncheckedIndexedAccess` type; NaN
+ * passes through, because the original read these samples unguarded.
+ */
 const at = (values: ArrayLike<number>, i: number): number => values[i] ?? 0;
 
 /** Rises in loudness per frame of a low-passed RMS envelope: where the beats hit. */
@@ -62,7 +65,8 @@ function bestOffset(on: readonly number[], period: number): number {
     bo = 0;
   for (let o = 0; o < period; o++) {
     let sm = 0;
-    for (let t = o; t < on.length; t += period) sm += at(on, Math.round(t));
+    // || and not ??: the original counted a NaN onset as 0 here, and only here
+    for (let t = o; t < on.length; t += period) sm += on[Math.round(t)] || 0;
     if (sm > bp) {
       bp = sm;
       bo = o;
