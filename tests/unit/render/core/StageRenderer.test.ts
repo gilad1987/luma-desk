@@ -17,7 +17,11 @@ function stage(): { renderer: StageRenderer; parts: StageRendererParts; calls: s
     },
     scene: new Scene(),
     views: { camera: new PerspectiveCamera(), updateControls: vi.fn(() => calls.push('controls')) },
-    postFx: { setSize: vi.fn(() => calls.push('postFx.setSize')), render: vi.fn(() => calls.push('postFx.render')) },
+    postFx: {
+      setSize: vi.fn(() => calls.push('postFx.setSize')),
+      render: vi.fn(() => calls.push('postFx.render')),
+      selectChain: vi.fn(() => false),
+    },
     overlay: {
       isVisible: false,
       resize: vi.fn(() => calls.push('overlay.resize')),
@@ -59,6 +63,15 @@ describe('StageRenderer', () => {
     renderer.renderFrame();
     expect(calls).toEqual(['controls', 'postFx.render', 'overlay', 'controls', 'renderer.render', 'overlay']);
     expect(parts.renderer.render).toHaveBeenCalledWith(parts.scene, parts.views.camera);
+  });
+
+  it('renders an MVR stage through the post chain with glow off too, so it has one tone path', () => {
+    const { renderer, parts, calls } = stage();
+    vi.mocked(parts.postFx.selectChain).mockReturnValue(true);
+    renderer.setGlow(false);
+    renderer.renderFrame();
+    expect(calls).toEqual(['controls', 'postFx.render', 'overlay']);
+    expect(parts.postFx.render).toHaveBeenCalledWith(false);
   });
 
   it('forwards the shadow and id toggles', () => {

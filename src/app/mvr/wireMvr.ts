@@ -11,6 +11,7 @@ import { mvrShow } from './mvrShow';
 import { exportStageMvr, type MvrExportOut } from './exportStageMvr';
 import { followStage } from './followStage';
 import { importPickedMvr } from './importPickedMvr';
+import type { PostFx } from '../../render/stage/PostFx';
 import { LazyMvrStage, type MvrSceneryRender } from './LazyMvrStage';
 import { loadDemoRig } from './loadDemoRig';
 import { MvrLoadQueue } from './MvrLoadQueue';
@@ -22,7 +23,7 @@ import { restoreStoredMvr } from './restoreStoredMvr';
 export interface MvrWiringDeps {
   readonly bus: Pick<EngineBus, 'emit' | 'on'>;
   /** The scene the scenery joins and the camera views it fits; read only from the first MVR load on. */
-  readonly render: MvrSceneryRender;
+  readonly render: MvrSceneryRender & { readonly postFx: Pick<PostFx, 'followMvr'> };
   /** The flows' stage; the stage follower reads the cause of the last apply, the starting show the rest. */
   readonly stage: MvrFlowDeps['stage'] & Pick<StageService, 'cause' | 'rig' | 'frame' | 'isBuiltIn'>;
   /** The operator's executors; an import rebuilds or keeps their cues. */
@@ -72,6 +73,8 @@ export function wireMvr(wiring: MvrWiringDeps): MvrWiring {
   };
   const prompt = new MvrMissingPrompt(actions);
   const scenery = new LazyMvrStage(render);
+  // an MVR stage draws through the HDR post chain; a built-in stage keeps the legacy chain
+  render.postFx.followMvr(() => scenery.hasScenery);
   const show = mvrShow(new StartingShow({ ...wiring, execs: pool.execs }), toast);
   const store = openMvrStore();
   const deps: MvrFlowDeps = { stage, store, scenery, prompt, toast, modal, cancelBuilder, show };
