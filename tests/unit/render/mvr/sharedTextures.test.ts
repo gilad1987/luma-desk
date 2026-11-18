@@ -4,7 +4,7 @@
  * its own Texture, so equal textured materials never pool and every file is its own draw; and archive bytes or blob
  * URLs that the library keeps after the build. jsdom decodes no image, so `createImageBitmap` is stubbed.
  */
-import { MeshStandardMaterial } from 'three';
+import { MeshStandardMaterial, Texture } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { importMvr } from '../../../../src/mvr/index.ts';
 import { isMesh } from '../../../../src/render/mvr/isMesh.ts';
@@ -14,6 +14,7 @@ import { OfflineLoadingManager } from '../../../../src/render/mvr/OfflineLoading
 import { meshScene, triangleGlb } from '../../../shared/index.ts';
 
 const IMAGE = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+const OTHER_IMAGE = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d]);
 
 /** Stubs `createImageBitmap` and returns the blobs it was asked to decode. */
 function stubDecoder(): Blob[] {
@@ -41,7 +42,7 @@ describe('MeshLibrary shared textures', () => {
     const mapOf = (material: unknown) => (material instanceof MeshStandardMaterial ? material.map : undefined);
     expect(blobs.map((blob) => blob.size)).toEqual([IMAGE.byteLength]);
     expect(a?.[0]?.material).toBe(b?.[0]?.material);
-    expect(mapOf(a?.[0]?.material)).toBeDefined();
+    expect(mapOf(a?.[0]?.material)).toBeInstanceOf(Texture);
     const stage = new MvrStage();
     await stage.show({ design, geometry, meshes, meshResources });
     let draws = 0;
@@ -59,5 +60,34 @@ describe('MeshLibrary shared textures', () => {
     const managers = released.mock.contexts.filter((context) => context instanceof OfflineLoadingManager);
     expect(managers.map((manager) => manager.resolveURL('wood.png'))).toEqual(['data:,']);
     expect(revoked.mock.calls.map(([url]) => url)).toEqual(created.mock.results.map(({ value }) => String(value)));
+  });
+
+  it('keeps the archive files for a file parsed after an earlier one finished', async () => {
+    const blobs = stubDecoder();
+    const files = Object.entries({ 'a.glb': triangleGlb('wood.png'), 'b.glb': triangleGlb('wood.png') });
+    const library = new MeshLibrary(new Map(files), new Map([['wood.png', IMAGE]]));
+    await library.parts('a.glb');
+    const [b] = await library.parts('b.glb');
+    expect(b?.material instanceof MeshStandardMaterial ? b.material.map : null).toBeInstanceOf(Texture);
+    expect(blobs.map((blob) => blob.size)).toEqual([IMAGE.byteLength]);
+  });
+
+  it('releases nothing while another file is still parsing', async () => {
+    let finishOther = (): void => undefined;
+    const otherDecoded = new Promise<void>((resolve) => (finishOther = resolve));
+    vi.stubGlobal('createImageBitmap', async (blob: Blob) => {
+      if (blob.size === OTHER_IMAGE.byteLength) await otherDecoded;
+      return { width: 1, height: 1, close: () => undefined };
+    });
+    const released = vi.spyOn(OfflineLoadingManager.prototype, 'dispose');
+    const files = Object.entries({ 'a.glb': triangleGlb('wood.png'), 'b.glb': triangleGlb('other.png') });
+    const resources = Object.entries({ 'wood.png': IMAGE, 'other.png': OTHER_IMAGE });
+    const library = new MeshLibrary(new Map(files), new Map(resources));
+    const [a, b] = [library.parts('a.glb'), library.parts('b.glb')];
+    await a;
+    expect(released).not.toHaveBeenCalled();
+    finishOther();
+    await b;
+    expect(released).toHaveBeenCalledOnce();
   });
 });

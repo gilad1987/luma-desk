@@ -1,4 +1,4 @@
-import { LoadingManager } from 'three';
+import { LoadingManager, type ImageBitmapLoader, type TextureLoader } from 'three';
 import { isEmbeddedUri } from '../../mvr/index';
 import { SharedTextureLoader } from './SharedTextureLoader';
 
@@ -12,9 +12,9 @@ const EVERY_URI = /^/;
  * A loading manager that never asks the network, shared by every parse of one import. A 3DS material names its
  * texture file and a glTF may name an external image or buffer; the loaders would fetch those names from the app's
  * own origin, which holds none of them. Embedded data passes through. A name found in `resources`
- * (`MvrImport.meshResources`) is served from the archive's bytes as one `blob:` URL, and an image a file names is decoded
- * once for all files (`SharedTextureLoader`); any other name gets an empty data URL. Call `dispose` once no parse
- * runs: it revokes the blob URLs and drops the archive bytes, so they can be freed.
+ * (`MvrImport.meshResources`) is served from the archive's bytes as one `blob:` URL, and an image a file names is
+ * decoded once for all files (`SharedTextureLoader`); any other name gets an empty data URL. Call `dispose` once no
+ * parse runs: it revokes the blob URLs and drops the archive bytes, so they can be freed.
  */
 export class OfflineLoadingManager extends LoadingManager {
   #resources: ReadonlyMap<string, Uint8Array>;
@@ -27,6 +27,14 @@ export class OfflineLoadingManager extends LoadingManager {
     this.#resources = resources;
     this.setURLModifier((url) => this.#resolve(url));
     this.addHandler(EVERY_URI, this.#textures);
+  }
+
+  /**
+   * Decodes the archive images as GLTFLoader decodes embedded ones; `parserLoader` is `GLTFParser.textureLoader`.
+   * See `SharedTextureLoader.decodeLike`.
+   */
+  decodeLike(parserLoader: TextureLoader | ImageBitmapLoader): void {
+    this.#textures.decodeLike(parserLoader);
   }
 
   /** Revokes every blob URL this manager made and lets go of the archive bytes and the decoded images. */

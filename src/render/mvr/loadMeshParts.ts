@@ -1,7 +1,15 @@
-import { Matrix4, Texture, type LoadingManager, type Material } from 'three';
+import { Matrix4, Texture, type Material } from 'three';
+import type { GLTFLoaderPlugin } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { meshFormatOf, mvrToThreeMatrix } from '../../mvr/index';
 import type { MeshPart } from './MeshPart';
 import { meshPartsOf } from './meshPartsOf';
+import { OfflineLoadingManager } from './OfflineLoadingManager';
+
+/**
+ * The plugin GLTFLoader gets back from the callback that reads its parser's texture loader. GLTFLoader needs a name
+ * for every plugin (the types omit it); this one handles no extension.
+ */
+const DECODE_PLUGIN: GLTFLoaderPlugin & { readonly name: string } = { name: 'luma_archive_texture_decode' };
 
 /**
  * Drops the texture maps of a 3DS material. They name image files the archive does not hand to render, so they never
@@ -16,28 +24,40 @@ function removeTextures(material: Material): void {
   }
 }
 
-/** Parses a GLB; the files it names load through `manager`. */
-async function parseGlb(buffer: ArrayBuffer, manager: LoadingManager): Promise<MeshPart[]> {
+/**
+ * Parses a GLB; the files it names load through `manager`. The parser picks how this browser decodes images before
+ * it loads one, and `manager` decodes the archive images the same way.
+ */
+async function parseGlb(buffer: ArrayBuffer, manager: OfflineLoadingManager): Promise<MeshPart[]> {
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
-  const gltf = await new GLTFLoader(manager).parseAsync(buffer, '');
+  const loader = new GLTFLoader(manager).register((parser) => {
+    manager.decodeLike(parser.textureLoader);
+    return DECODE_PLUGIN;
+  });
+  const gltf = await loader.parseAsync(buffer, '');
   return meshPartsOf(gltf.scene, new Matrix4());
 }
 
 /**
  * Parses one mesh file into parts in the three frame. The loaders are imported on first use, so a show without MVR
- * scenery never downloads them. Every file named inside a mesh loads through `manager`, the import's
- * `OfflineLoadingManager`, so it is never fetched: a glTF gets its files from the archive and a 3DS texture is
- * dropped. glTF is already metres, Y up; a 3DS mesh (millimetres, Z up) gets C baked in. Any other extension gives
- * no parts: the import already warned about it. A file the loader cannot parse rejects.
+ * scenery never downloads them. No file named inside a mesh is fetched: a glTF gets its files from the archive
+ * through `manager`, the import's `OfflineLoadingManager`. A 3DS mesh gets a manager without archive files, because
+ * its texture maps are dropped and an archive image would be decoded for nothing. glTF is already metres, Y up; a
+ * 3DS mesh (millimetres, Z up) gets C baked in. Any other extension gives no parts: the import already warned about
+ * it. A file the loader cannot parse rejects.
  */
-export async function loadMeshParts(file: string, bytes: Uint8Array, manager: LoadingManager): Promise<MeshPart[]> {
+export async function loadMeshParts(
+  file: string,
+  bytes: Uint8Array,
+  manager: OfflineLoadingManager,
+): Promise<MeshPart[]> {
   const buffer = bytes.slice().buffer;
   switch (meshFormatOf(file)) {
     case 'glb':
       return parseGlb(buffer, manager);
     case '3ds': {
       const { TDSLoader } = await import('three/examples/jsm/loaders/TDSLoader.js');
-      const root = new TDSLoader(manager).parse(buffer, '');
+      const root = new TDSLoader(new OfflineLoadingManager(new Map())).parse(buffer, '');
       const parts = meshPartsOf(root, new Matrix4().fromArray(mvrToThreeMatrix()));
       parts.forEach((part) => removeTextures(part.material));
       return parts;

@@ -1,4 +1,5 @@
 import type { MvrArchive } from '../archive/MvrArchive';
+import { archiveName } from '../mesh/archiveName';
 import { glbModel } from '../mesh/glbModel';
 import { meshFormatOf } from '../mesh/meshFormatOf';
 import type { MvrWarning } from '../MvrWarning';
@@ -10,20 +11,6 @@ function externalUris(bytes: Uint8Array): readonly string[] {
   } catch {
     return [];
   }
-}
-
-/**
- * The archive file a URI names: glTF URIs are percent-encoded, and a malformed escape is read as written. A leading
- * `./` names the folder of the mesh, which the archive keeps at its root with the meshes.
- */
-function archiveName(uri: string): string {
-  let name = uri;
-  try {
-    name = decodeURIComponent(uri);
-  } catch {
-    // A malformed escape: keep the URI as written.
-  }
-  return name.replace(/^\.\//, '');
 }
 
 /**

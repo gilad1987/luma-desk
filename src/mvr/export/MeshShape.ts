@@ -16,7 +16,9 @@ export type MeshShape =
   | { readonly kind: 'riser'; readonly size: Vec3 }
   | { readonly kind: 'screen'; readonly width: number; readonly height: number };
 
-/** The grid shape numbers are hashed on: 0.1 mm in metres, finer than any build tolerance and coarser than float noise. */
+/**
+ * The grid shape numbers are hashed on: 0.1 mm in metres, finer than any build tolerance and coarser than float noise.
+ */
 const HASH_STEP = 1e-4;
 
 /**
@@ -34,8 +36,8 @@ function canonicalJson(value: unknown): string {
 
 /**
  * The mesh file name of a shape: `luma_<kind>_<hash>.glb`, where the hash is taken over the canonical shape data.
- * Equal shapes, such as two identical trusses, get one name, so the archive holds the mesh once and a Symdef shares it. The name
- * holds only letters, digits and `_`, because MVR readers look files up by plain name in the archive root.
+ * Equal shapes, such as two identical trusses, get one name, so the archive holds the mesh once and a Symdef shares
+ * it. The name holds only letters, digits and `_`, because MVR readers look files up by plain name in the archive root.
  */
 export function meshFileOf(shape: MeshShape): string {
   const hash = stableUuid(canonicalJson(shape)).replace(/-/g, '').slice(0, 12).toLowerCase();

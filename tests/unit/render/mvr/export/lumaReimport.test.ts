@@ -13,7 +13,8 @@ import { make3ds, makeZip } from '../../../../shared/index.ts';
 
 const SCENE = 'GeneralSceneDescription.xml';
 const PROP_GEOMETRY = '<Geometries><Geometry3D fileName="prop.3ds"/></Geometries>';
-const PROP = `<SceneObject uuid="P1" name="Prop"><Matrix>{1,0,0}{0,1,0}{0,0,1}{0,0,0}</Matrix>${PROP_GEOMETRY}</SceneObject>`;
+const PROP_MATRIX = '<Matrix>{1,0,0}{0,1,0}{0,0,1}{0,0,0}</Matrix>';
+const PROP = `<SceneObject uuid="P1" name="Prop">${PROP_MATRIX}${PROP_GEOMETRY}</SceneObject>`;
 
 /** The festival template exported with its meshes, optionally with a prop that another tool added. */
 async function festivalExport(withProp: boolean): Promise<Uint8Array> {

@@ -35,7 +35,9 @@ export class MeshLibrary {
     this.#manager = new OfflineLoadingManager(resources);
   }
 
-  /** The parts of `file`; none when the archive lacks it (the import warned) or it cannot be parsed (see `failures`). */
+  /**
+   * The parts of `file`; none when the archive lacks it (the import warned) or it cannot be parsed (see `failures`).
+   */
   parts(file: string): Promise<readonly MeshPart[]> {
     let load = this.#loads.get(file);
     if (!load) {
@@ -50,7 +52,11 @@ export class MeshLibrary {
     return [...this.#failures];
   }
 
-  /** Frees every geometry, material and texture parsed so far, and those of loads still running when they finish. */
+  /**
+   * Frees every geometry, material and texture parsed so far, and those of loads still running when they finish.
+   * It also lets go of the mesh bytes not yet read, and releases the archive resources and their blob URLs; while a
+   * parse still runs, that release waits until the last parse ends, so no running parse loses its files.
+   */
   dispose(): void {
     this.#isDisposed = true;
     this.#bytes.clear();

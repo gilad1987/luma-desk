@@ -1,6 +1,7 @@
 /**
  * Owns the re-entry guard of `StageService.updateMeta`: a `rigChanged` listener may not call it during an apply, and a
- * `showChanged` listener may not call `updateMeta` or `apply` while `updateMeta` emits. The error names the refused call.
+ * `showChanged` listener may not call `updateMeta` or `apply` while `updateMeta` emits. The error names the refused
+ * call.
  */
 import { describe, expect, it } from 'vitest';
 import { EventBus } from '../../../../src/core';

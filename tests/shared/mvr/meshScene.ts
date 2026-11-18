@@ -19,7 +19,8 @@ export function meshScene(
   const layers = new Map<string, string[]>();
   placements.forEach(({ file, matrix = '{1,0,0}{0,1,0}{0,0,1}{0,0,0}', layer = 'L1' }, index) => {
     const geometries = `<Geometries><Geometry3D fileName="${file}"/></Geometries>`;
-    const object = `<SceneObject uuid="S${index}" name="S${index}"><Matrix>${matrix}</Matrix>${geometries}</SceneObject>`;
+    const body = `<Matrix>${matrix}</Matrix>${geometries}`;
+    const object = `<SceneObject uuid="S${index}" name="S${index}">${body}</SceneObject>`;
     layers.set(layer, [...(layers.get(layer) ?? []), object]);
   });
   const layerXml = [...layers].map(

@@ -9,6 +9,7 @@ export { meshShapes } from './export/meshShapes';
 export { importMvr, type MvrImportOptions } from './importMvr';
 export type { MvrGeometry, MvrImport, MvrSummary } from './MvrImport';
 export { mvrToThreeMatrix, toThree } from './math/axes';
+export { archiveName } from './mesh/archiveName';
 export { isEmbeddedUri } from './mesh/isEmbeddedUri';
 export { meshFormatOf } from './mesh/meshFormatOf';
 export { MvrError, type MvrWarning, type MvrWarningCode } from './MvrWarning';

@@ -30,9 +30,8 @@ describe('mvrFileName', () => {
   });
 
   it('also avoids COM0, LPT0, the superscript ports, CONIN$, CONOUT$ and a reserved name before " ."', () => {
-    const names = ['COM0', 'lpt0', 'COM¹', 'LPT²', 'com³', 'CONIN$', 'conout$', 'CON .txt', 'nul  .x'].map(mvrFileName);
-    const prefixed = ['COM0', 'lpt0', 'COM¹', 'LPT²', 'com³', 'CONIN$', 'conout$', 'CON .txt', 'nul  .x'];
-    expect(names).toEqual(prefixed.map((name) => `_${name}.mvr`));
+    const reserved = ['COM0', 'lpt0', 'COM¹', 'LPT²', 'com³', 'CONIN$', 'conout$', 'CON .txt', 'nul  .x'];
+    expect(reserved.map(mvrFileName)).toEqual(reserved.map((name) => `_${name}.mvr`));
     expect(mvrFileName('COM10')).toBe('COM10.mvr');
   });
 
