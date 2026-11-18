@@ -1,9 +1,10 @@
-import type { BufferGeometry } from 'three';
+import type { BufferGeometry, Material } from 'three';
 import { loadMeshParts } from './loadMeshParts';
 import { MaterialPool } from './MaterialPool';
 import type { MeshPart } from './MeshPart';
 import { createMvrScreenMaterial } from './mvrScreenMaterial';
 import { OfflineLoadingManager } from './OfflineLoadingManager';
+import { styleScenery } from './sceneryStyle';
 
 /** A mesh file the archive holds but three.js could not parse, with the loader's reason, for the import summary. */
 export interface MeshFailure {
@@ -38,9 +39,7 @@ export class MeshLibrary {
     this.#manager = new OfflineLoadingManager(resources);
   }
 
-  /**
-   * The parts of `file`; none when the archive lacks it (the import warned) or it cannot be parsed (see `failures`).
-   */
+  /** The parts of `file`; none when the archive lacks it (the import warned) or it cannot parse (see `failures`). */
   parts(file: string): Promise<readonly MeshPart[]> {
     let load = this.#loads.get(file);
     if (!load) {
@@ -74,7 +73,8 @@ export class MeshLibrary {
     this.#bytes.delete(file);
     if (!bytes) return [];
     const parsed = await this.#parse(file, bytes);
-    const parts = parsed.map(({ geometry, material }) => ({ geometry, material: this.#materials.adopt(material) }));
+    const adopt = (material: Material): Material => this.#materials.adopt(styleScenery(material));
+    const parts = parsed.map(({ geometry, material }) => ({ geometry, material: adopt(material) }));
     this.#geometries.push(...parts.map((part) => part.geometry));
     if (this.#isDisposed) this.dispose();
     return parts;

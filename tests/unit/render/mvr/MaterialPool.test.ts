@@ -50,25 +50,14 @@ describe('MaterialPool', () => {
     expect(pool.adopt(repeated)).toBe(repeated);
   });
 
-  it('turns an untextured light material into dark matte scenery, as the built-in venue draws at night', () => {
+  it('keeps a material as it is given: the scenery style is applied before the pool', () => {
     const pool = new MaterialPool();
-    const beige = pool.adopt(new MeshStandardMaterial({ color: 0xd8cfb8, roughness: 0.3 }));
-    const grey = pool.adopt(new MeshPhongMaterial({ color: 0xc0c0c0, specular: 0xffffff }));
-    expect(beige).toBeInstanceOf(MeshStandardMaterial);
-    expect(grey).toBeInstanceOf(MeshPhongMaterial);
-    if (!(beige instanceof MeshStandardMaterial) || !(grey instanceof MeshPhongMaterial)) return;
-    expect(Math.max(beige.color.r, beige.color.g, beige.color.b)).toBeLessThan(0.05);
-    expect(beige.roughness).toBeGreaterThanOrEqual(0.9);
-    expect(Math.max(grey.color.r, grey.specular.r)).toBeLessThan(0.05);
+    const beige = new MeshStandardMaterial({ color: 0xd8cfb8, roughness: 0.3 });
+    expect(pool.adopt(beige)).toBe(beige);
+    expect([beige.color.getHex(), beige.roughness]).toEqual([0xd8cfb8, 0.3]);
   });
 
-  it('keeps a textured material as the file drew it', () => {
-    const pool = new MaterialPool();
-    const textured = pool.adopt(new MeshPhongMaterial({ color: 0xffffff, map: new Texture() }));
-    expect(textured instanceof MeshPhongMaterial && textured.color.getHex()).toBe(0xffffff);
-  });
-
-  it('pools a material by its look in the file, so equal file materials still share one dark instance', () => {
+  it('pools a material by its look, so equal materials share one instance', () => {
     const pool = new MaterialPool();
     const first = pool.adopt(new MeshPhongMaterial({ color: 0xc0c0c0 }));
     expect(pool.adopt(new MeshPhongMaterial({ color: 0xc0c0c0 }))).toBe(first);
