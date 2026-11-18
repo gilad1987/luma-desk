@@ -4,6 +4,7 @@
  * the band marks with it.
  */
 import { describe, expect, it } from 'vitest';
+import { IDENTITY_FIT } from '../../../../src/domain/stage/deckFit.ts';
 import { frameOf } from '../../../../src/domain/stage/StageFrame.ts';
 import { createTemplate } from '../../../../src/domain/stage/templates/index.ts';
 import { BAND_PTS, DECK, RING, SCREEN, STAGE } from '../../../../src/domain/venue.ts';
@@ -28,6 +29,7 @@ describe('frameOf', () => {
       ring: null,
       bandPoints: [],
       venue: 'sultans-pool',
+      fit: IDENTITY_FIT,
     });
   });
 

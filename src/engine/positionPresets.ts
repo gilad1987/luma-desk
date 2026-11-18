@@ -2,6 +2,7 @@ import { clamp, lerp } from '../core';
 import { aimAt } from '../domain/aim';
 import type { AttrValues } from '../domain/attributes';
 import type { Fixture } from '../domain/Fixture';
+import { onDeck, type DeckFit } from '../domain/stage/deckFit';
 import { VENUE_AIM, type PresetAim } from './presetAim';
 import { ringPresetsOf } from './ringPresets';
 
@@ -21,25 +22,37 @@ function cycle<T>(list: readonly T[], k: number): T {
   return item;
 }
 
-/** The stage side (-1 left, 1 right) a fixture at `x` aims to; fixtures on the centre line alternate by index `k`. */
+/**
+ * The stage side (-1 left, 1 right) a fixture `x` metres right of the deck centre aims to; fixtures on the centre line
+ * alternate by index `k`.
+ */
 function stageSide(x: number, k: number): number {
   if (x < 0) return -1;
   if (x > 0) return 1;
   return k % 2 ? 1 : -1;
 }
 
+/** An `aimAt` for points in built-in deck metres: it first moves the point onto the current deck with `fit`. */
+function deckAim(fit: DeckFit): (f: Fixture, x: number, y: number, z: number) => AttrValues {
+  return (f, x, y, z) => {
+    const [dx, dz] = onDeck(fit, x, z);
+    return aimAt(f, dx, y, dz);
+  };
+}
+
 function positionsOf(aim: PresetAim) {
-  const { deckY, screenZ, band } = aim;
+  const { deckY, screenZ, band, fit } = aim;
+  const atDeck = deckAim(fit);
   return {
     ...ringPresetsOf(aim),
     converge: (f) => aimAt(f, 0, 12, 42),
     wingFan: (f) => aimAt(f, f.pos.x * 3.2, 3, f.pos.z + 55),
     home: () => ({ pan: 0, tilt: 0 }),
     straight: () => ({ pan: 0, tilt: 0 }),
-    center: (f) => aimAt(f, f.pos.x * 0.6, deckY, -9 + (f.pos.z + 9) * 0.25),
-    singer: (f) => aimAt(f, 0, deckY + 1.5, -3.2),
-    drums: (f) => aimAt(f, 0, deckY + 1.7, -13.2),
-    down: (f) => aimAt(f, f.pos.x * 0.55, deckY, -1.2),
+    center: (f) => atDeck(f, f.pos.x * 0.6, deckY, -9 + (f.pos.z + 9) * 0.25),
+    singer: (f) => atDeck(f, 0, deckY + 1.5, -3.2),
+    drums: (f) => atDeck(f, 0, deckY + 1.7, -13.2),
+    down: (f) => atDeck(f, f.pos.x * 0.55, deckY, -1.2),
     audience: (f) => aimAt(f, clamp(f.pos.x * 1.6, -38, 38), 1.2, 30),
     fanAud: (f, k, n) => aimAt(f, lerp(-60, 60, fan(k, n)), 1, 42),
     crowd: (f, k, n) =>
@@ -50,7 +63,7 @@ function positionsOf(aim: PresetAim) {
       f.mount === 'floor'
         ? aimAt(f, lerp(-45, 45, fan(k, n)), 60, f.pos.z + 12)
         : aimAt(f, lerp(-60, 60, fan(k, n)), 30, 70),
-    cross: (f) => aimAt(f, -f.pos.x * 0.9, deckY, f.pos.z < -12 ? -5 : -9),
+    cross: (f) => atDeck(f, -f.pos.x * 0.9, deckY, f.pos.z < -12 ? -5 : -9),
     screen: (f) => aimAt(f, f.pos.x * 0.75, deckY + 5, screenZ),
     vOut: (f) =>
       f.mount === 'floor' ? aimAt(f, f.pos.x * 4, 40, f.pos.z) : aimAt(f, f.pos.x * 2.5, deckY, f.pos.z + 6),
@@ -59,7 +72,8 @@ function positionsOf(aim: PresetAim) {
       return aimAt(f, P[0], deckY + 1.3 + (P[2] || 0), P[1]);
     },
     orch: (f, k) => {
-      return aimAt(f, stageSide(f.pos.x, k) * (16.4 + ((k % 3) - 1) * 2.1), deckY + 1.6, -11.6 + ((k % 3) - 1) * 2.4);
+      const side = stageSide(f.pos.x - fit.offsetX, k);
+      return atDeck(f, side * (16.4 + ((k % 3) - 1) * 2.1), deckY + 1.6, -11.6 + ((k % 3) - 1) * 2.4);
     },
     tunnel: (f) => aimAt(f, 0, f.mount === 'floor' ? 40 : deckY, 40),
   } satisfies Record<string, PresetFn>;
@@ -69,9 +83,10 @@ function positionsOf(aim: PresetAim) {
 export type PositionPresetName = keyof ReturnType<typeof positionsOf>;
 
 /**
- * The position presets aimed at one stage, by function name; show files store the name. Only the deck height, the
- * ring, the screen plane and the band marks come from `aim`; the other targets are venue coordinates in metres and
- * must stay exactly as they are: the saved demo show and the output goldens depend on every rounded degree.
+ * The position presets aimed at one stage, by function name; show files store the name. The deck height, the ring,
+ * the screen plane and the band marks come from `aim`; the deck targets (center, singer, drums, down, cross, orch) are
+ * built-in deck metres moved onto the deck by `aim.fit`. The audience, sky and fixture-relative targets stay venue
+ * metres. On the built-in stage every number stays exact: the demo show and the output goldens pin every degree.
  */
 export function positionPresetsOf(aim: PresetAim): Readonly<Record<PositionPresetName, PresetFn>> {
   return positionsOf(aim);

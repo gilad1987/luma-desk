@@ -3,8 +3,7 @@ import type { AttrValues } from '../domain/attributes';
 import type { Rig } from '../domain/rig';
 import type { FixtureValues } from './CueList';
 import type { PresetFn } from './positionPresets';
-import { PRESET_FNS } from './presetFunctions';
-import type { PresetFnName } from './presetFunctions';
+import { PRESET_FNS, type PresetFnName, type PresetFns } from './presetFunctions';
 import { attrEntries } from './shared';
 
 /**
@@ -17,7 +16,7 @@ export type CueValueSource = AttrValues | PresetFnName | PresetFn;
 export type CueValueStep = readonly [ids: readonly number[], source: CueValueSource];
 
 /** The step's source as a function of the fixture, with a preset name looked up in `fns`, or its fixed values. */
-const resolve = (source: CueValueSource, fns: Readonly<Record<PresetFnName, PresetFn>>): PresetFn | AttrValues =>
+const resolve = (source: CueValueSource, fns: PresetFns): PresetFn | AttrValues =>
   typeof source === 'string' ? fns[source] : source;
 
 /**
@@ -31,7 +30,7 @@ export function buildCueVals(
   rig: Rig,
   steps: readonly CueValueStep[],
   into: FixtureValues = {},
-  fns: Readonly<Record<PresetFnName, PresetFn>> = PRESET_FNS,
+  fns: PresetFns = PRESET_FNS,
 ): FixtureValues {
   for (const [ids, source] of steps) {
     const step = resolve(source, fns);

@@ -1,3 +1,4 @@
+import { IDENTITY_FIT, type DeckFit } from '../domain/stage/deckFit';
 import type { BandPoint, StageFrame } from '../domain/stage/StageFrame';
 import { BAND_PTS, DECK, RING, SCREEN } from '../domain/venue';
 
@@ -15,7 +16,9 @@ export interface PresetAim {
   readonly screenZ: number;
   /** Never empty: the `band` preset cycles through it. */
   readonly band: readonly BandPoint[];
+  /** Moves the venue-fixed deck targets (singer, drums, orchestra, ...) onto the deck; see `onDeck`. */
+  readonly fit: DeckFit;
 }
 
 /** The built-in Sultan's Pool numbers, read from the venue constants the original presets read. */
-export const VENUE_AIM: PresetAim = { deckY: DECK, ring: RING, screenZ: SCREEN.z, band: BAND_PTS };
+export const VENUE_AIM: PresetAim = { deckY: DECK, ring: RING, screenZ: SCREEN.z, band: BAND_PTS, fit: IDENTITY_FIT };

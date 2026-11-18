@@ -1,7 +1,6 @@
 import type { StageFrame } from '../../domain/stage/StageFrame';
 import type { PresetAim } from '../presetAim';
-import { presetFnsAimedAt, type PresetFnName } from '../presetFunctions';
-import type { PresetFn } from '../positionPresets';
+import { presetFnsAimedAt, type PresetFns } from '../presetFunctions';
 
 /**
  * The aim numbers of a stage. A part the stage lacks is replaced by the deck centre (the ring with radius 0, the screen
@@ -17,6 +16,7 @@ function aimOf(frame: StageFrame): PresetAim {
     ring: frame.ring ?? { x, z, R: 0 },
     screenZ: frame.screen?.z ?? z,
     band: frame.bandPoints.length > 0 ? frame.bandPoints : [[x, z, 0]],
+    fit: frame.fit,
   };
 }
 
@@ -25,6 +25,6 @@ function aimOf(frame: StageFrame): PresetAim {
  * throws for a missing stage part (see `aimOf`). Builds new functions on each call, so callers on a hot path keep the
  * result until the next `rigChanged`.
  */
-export function presetFnsOf(frame: StageFrame): Readonly<Record<PresetFnName, PresetFn>> {
+export function presetFnsOf(frame: StageFrame): PresetFns {
   return presetFnsAimedAt(aimOf(frame));
 }

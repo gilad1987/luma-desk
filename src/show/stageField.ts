@@ -11,7 +11,7 @@ import { isRecord } from './isRecord';
  */
 export interface StageFieldDeps {
   /** The stage service: its `builtIn` is the design a show without a valid `stage` key means. */
-  readonly service: Pick<StageService, 'rig' | 'design' | 'frame' | 'isBuiltIn' | 'apply' | 'builtIn'>;
+  readonly service: Pick<StageService, 'rig' | 'design' | 'isBuiltIn' | 'apply' | 'builtIn'>;
   /** The toast text for a show whose `stage` key does not parse; injected because `show/` holds no UI language. */
   readonly badStage: string;
   /** Sends the bad-stage toast; main.ts passes the engine bus `message` emit. */
