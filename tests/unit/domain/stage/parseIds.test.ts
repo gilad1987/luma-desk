@@ -13,7 +13,10 @@ const [first] = SAMPLE.fixtures;
 
 describe('parseStageDesign ids', () => {
   it('rejects a second screen or riser with the same id', () => {
-    expect(errorsOf({ ...SAMPLE, screens: [wall, wall] })).toStrictEqual(['screens[1].id: duplicate id "wall"']);
+    expect(errorsOf({ ...SAMPLE, screens: [wall, wall] })).toStrictEqual([
+      'screens[1].id: duplicate id "wall"',
+      'screens[1].fixtureId: 9 already drives the LED wall "wall"',
+    ]);
     expect(errorsOf({ ...SAMPLE, risers: [riser, riser] })).toStrictEqual(['risers[1].id: duplicate id "drum"']);
   });
 
@@ -34,6 +37,12 @@ describe('parseStageDesign ids', () => {
     const fixtures = SAMPLE.fixtures.map((f) => (f.type === 'screen' ? { ...f, type: 'wash' } : f));
     expect(errorsOf({ ...SAMPLE, fixtures })).toStrictEqual([
       'screens[0].fixtureId: 9 is not a fixture of type "screen"',
+    ]);
+  });
+
+  it('rejects a second LED wall that names the screen fixture of the first', () => {
+    expect(errorsOf({ ...SAMPLE, screens: [wall, { ...wall, id: 'side' }] })).toStrictEqual([
+      'screens[1].fixtureId: 9 already drives the LED wall "wall"',
     ]);
   });
 });
