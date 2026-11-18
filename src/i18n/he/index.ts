@@ -1,4 +1,5 @@
 import { autoStyleTaglines } from './autoStyleTaglines';
+import { builder } from './builder';
 import { guide } from './guide';
 import { messages } from './messages';
 import { panels } from './panels';
@@ -17,4 +18,5 @@ export const he = {
   panels,
   topBar,
   messages,
+  builder,
 } as const;

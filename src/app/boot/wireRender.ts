@@ -15,19 +15,18 @@ export type RenderHandles = StageHandles &
  * Builds the whole three.js side after the engine: stage, fixture visuals, then the renderer that draws them with
  * the fixture-id overlay. The page must already hold `#c`, `#ov` and `#viewer` (index.html).
  */
-export function wireRender({
-  rig,
-  selection,
-  appState,
-}: Pick<EngineHandles, 'rig' | 'selection' | 'appState'>): RenderHandles {
+export function wireRender(engine: Pick<EngineHandles, 'stage' | 'selection' | 'appState'>): RenderHandles {
+  const { selection, appState } = engine;
+  // the boot rig: the visuals and the overlay keep it until the render rebuilds them on a stage change
+  const { fixtures } = engine.stage.rig;
   const stage = wireStage();
-  const visuals = wireFixtureVisuals({ stage, fixtures: rig.fixtures, selection, appState });
+  const visuals = wireFixtureVisuals({ stage, fixtures, selection, appState });
   const stageRenderer = new StageRenderer({
     renderer: stage.renderer,
     scene: stage.scene,
     views: stage.views,
     postFx: stage.postFx,
-    overlay: new FixtureIdOverlay(byId('ov', HTMLCanvasElement), rig.fixtures, (id) => selection.has(id)),
+    overlay: new FixtureIdOverlay(byId('ov', HTMLCanvasElement), fixtures, (id) => selection.has(id)),
     viewer: byId('viewer'),
   });
   return { ...stage, ...visuals, stageRenderer };

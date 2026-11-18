@@ -1,5 +1,5 @@
-import type { Rig } from '../../../domain/rig';
 import type { EngineBus } from '../../../engine/events';
+import type { RigSource } from '../../../engine/stage/RigSource';
 import type { DemoShow } from '../../../show/DemoShow';
 import type { ShowFileInput } from '../../../show/ShowFile';
 import type { ShowSerializer } from '../../../show/ShowSerializer';
@@ -10,7 +10,8 @@ import type { Modal } from '../../shared';
 export interface ShowFileDeps {
   readonly bus: EngineBus;
   readonly modal: Pick<Modal, 'open' | 'close'>;
-  readonly rig: Rig;
+  /** The current stage: New Show starts from its default group pool. */
+  readonly stage: Pick<RigSource, 'rig' | 'design' | 'isBuiltIn'>;
   readonly serializer: Pick<ShowSerializer, 'serialize'>;
   readonly storage: Pick<ShowStorage, 'persist'>;
   /** Rebuilds the demo show (the original `buildDemo`). */

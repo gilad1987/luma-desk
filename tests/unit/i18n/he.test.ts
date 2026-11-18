@@ -51,7 +51,8 @@ const sourceForm: GuideMarkup = {
 
 describe('he', () => {
   it('holds only legacy strings, siblings in the legacy order, so two swapped values fail', () => {
-    const groups = siblingGroups(he);
+    // the stage builder's texts are new copy, so the legacy page has none of them
+    const groups = siblingGroups({ ...he, builder: {} });
     expect(groups.flat().length).toBeGreaterThan(100);
     for (const group of groups) {
       const starts = offsetsOf(group[0] ?? '');

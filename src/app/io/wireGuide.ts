@@ -1,5 +1,5 @@
-import type { Rig } from '../../domain/rig';
-import { defaultGroups } from '../../engine/defaultGroups';
+import { defaultPoolOf } from '../../engine/stage/defaultPool';
+import type { RigSource } from '../../engine/stage/RigSource';
 import type { GuideFlag } from '../../show';
 import { bindGuideEscape } from '../../ui/guide/bindGuideEscape';
 import { Guide } from '../../ui/guide/Guide';
@@ -9,8 +9,8 @@ import { createTourHooks } from './createTourHooks';
 
 /** What the guide and the tour read from main.ts. */
 export interface GuideWiringDeps {
-  /** The rig chapter lists the default groups of this rig, built fresh at each render as the original did. */
-  readonly rig: Rig;
+  /** The rig chapter lists the default groups of the current stage, built fresh at each render as the original did. */
+  readonly stage: Pick<RigSource, 'rig' | 'design' | 'isBuiltIn'>;
   /** The tour switches side panes through the same tab bar the layouts use. */
   readonly sideTabs: Pick<SideTabs, 'show'>;
   /** Whether the MA layout is on (`deskMode === 'ma'`); the layout area owns `deskMode`. */
@@ -36,7 +36,7 @@ export interface GuideHandles {
 export function wireGuide(deps: GuideWiringDeps): GuideHandles {
   const hooks = createTourHooks(deps.sideTabs, deps.isMa);
   const guide = new Guide(
-    () => defaultGroups(deps.rig),
+    () => defaultPoolOf(deps.stage),
     () => tour.start(),
     deps.guideFlag,
   );
