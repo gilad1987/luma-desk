@@ -10,8 +10,17 @@ export type Vec3 = readonly [x: number, y: number, z: number];
  */
 export type Quat = readonly [x: number, y: number, z: number, w: number];
 
+/**
+ * The venues the Stage Builder offers. `mvr` is not one: only an import makes it, as it draws nothing but a ground and
+ * the sky around a file that brings its own stage, and a builder stage in it would stand in a void.
+ */
+export const BUILDER_VENUE_KINDS = ['sultans-pool', 'black-box', 'open-field'] as const;
+
+/** A venue the Stage Builder offers (see `BUILDER_VENUE_KINDS`). */
+export type BuilderVenueKind = (typeof BUILDER_VENUE_KINDS)[number];
+
 /** Every venue kind; the parser reads stored kinds against this list, so it cannot drift from `VenueKind`. */
-export const VENUE_KINDS = ['sultans-pool', 'black-box', 'open-field'] as const;
+export const VENUE_KINDS = [...BUILDER_VENUE_KINDS, 'mvr'] as const;
 
 /** The venue scenery to draw around the stage; each kind has its own static scene in the renderer. */
 export type VenueKind = (typeof VENUE_KINDS)[number];

@@ -4,4 +4,5 @@ export { FakeCanvas, FakeElement } from './FakeElement';
 export { FakeHost } from './FakeHost';
 export { FakeResizeObserver } from './FakeResizeObserver';
 export { pointer } from './fakePointer';
+export { FakeFileInput } from './FakeFileInput';
 export { FakeDom } from './installFakeDom';

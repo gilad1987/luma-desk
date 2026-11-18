@@ -1,30 +1,42 @@
 import { cssRgb } from '../../../core';
 import type { AttrName, AttrValues } from '../../../domain/attributes';
+import type { SheetDmx } from './sheetDmx';
 import type { SheetFixture } from './SheetFixture';
 
-/** The header and one row per fixture in rig build order (never sorted); the cells are filled by the tick. */
+/**
+ * The header and one row per fixture in rig build order (never sorted); the cells are filled by the tick. The DMX
+ * columns come last so the value cells keep their original indexes; the Mode cell is `dir="auto"` because it shows
+ * text from the MVR file, which may be right-to-left.
+ */
 export function sheetTable(fixtures: readonly SheetFixture[]): string {
   const header =
-    '<tr><th>ID</th><th>Type</th><th>Dim</th><th>Pan</th>' + '<th>Tilt</th><th>Col</th><th>Gobo</th><th>Zoom</th></tr>';
+    '<tr><th>ID</th><th>Type</th><th>Dim</th><th>Pan</th>' +
+    '<th>Tilt</th><th>Col</th><th>Gobo</th><th>Zoom</th><th>Universe.Address</th><th>Mode</th></tr>';
   const row = (f: SheetFixture): string =>
     `<tr data-id="${f.id}"><td>${f.id}</td><td style="font-family:Inter">${f.T.name}</td>` +
-    `<td></td><td></td><td></td><td><span class="cs"></span></td><td></td><td></td></tr>`;
+    `<td></td><td></td><td></td><td><span class="cs"></span></td><td></td><td></td>` +
+    `<td></td><td dir="auto"></td></tr>`;
   return header + fixtures.map(row).join('');
 }
 
-/** What one row shows: the row class, then per cell (by column) its text and its class (`p` = in programmer). */
+/**
+ * What one row shows: the row class, then per value cell (by column) its text and its class (`p` = in programmer),
+ * the color class and swatch, and the DMX columns, which have no programmer class.
+ */
 export interface SheetRowView {
   readonly rowClass: string;
   readonly cells: readonly (readonly [column: number, text: string, className: string])[];
   readonly colorClass: string;
   readonly swatch: string;
+  readonly dmx: SheetDmx;
 }
 
 /**
- * The values row `f` shows now; `prog` is the fixture's programmer values (empty when it has none). A value the
- * fixture has not output yet reads as NaN, so the cell shows "NaN" as the old `Math.round(undefined)` did.
+ * The values row `f` shows now; `prog` is the fixture's programmer values (empty when it has none) and `dmx` its
+ * DMX columns from the current design. A value the fixture has not output yet reads as NaN, so the cell shows "NaN"
+ * as the old `Math.round(undefined)` did.
  */
-export function sheetRowView(f: SheetFixture, selected: boolean, prog: AttrValues): SheetRowView {
+export function sheetRowView(f: SheetFixture, selected: boolean, prog: AttrValues, dmx: SheetDmx): SheetRowView {
   const base = f.base;
   const inProg = (a: AttrName): string => (prog[a] !== undefined && prog[a] !== null ? 'p' : '');
   const rounded = (v: number | undefined): string => String(Math.round(v ?? NaN));
@@ -40,5 +52,6 @@ export function sheetRowView(f: SheetFixture, selected: boolean, prog: AttrValue
     cells: cells.map(([n, text, a]) => [n, text, inProg(a)] as const),
     colorClass: inProg('r'),
     swatch: f.has('r') ? cssRgb(base.r ?? NaN, base.g ?? NaN, base.b ?? NaN) : '#333',
+    dmx,
   };
 }

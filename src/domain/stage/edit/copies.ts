@@ -6,10 +6,15 @@ export type TrussIdOf = (f: StageFixture) => string | null;
 
 /**
  * Appends copies of `sources` with new ids from the next free block, each linked to the truss `trussIdOf` names.
- * Duplicate and mirror share it, so copies always get ids no live fixture holds.
+ * Duplicate and mirror share it, so copies always get ids no live fixture holds. A copy has no DMX `patch`: on the
+ * source's address it would answer the same channels (contract Amendment 3).
  */
 export function appendCopies(d: StageDesign, sources: readonly StageFixture[], trussIdOf: TrussIdOf): StageDesign {
   const first = nextIdBlock(d);
-  const copies = sources.map((f, i): StageFixture => ({ ...f, id: first + i, trussId: trussIdOf(f) }));
+  const copies = sources.map(({ patch: _patch, ...f }, i): StageFixture => ({
+    ...f,
+    id: first + i,
+    trussId: trussIdOf(f),
+  }));
   return { ...d, fixtures: [...d.fixtures, ...copies] };
 }

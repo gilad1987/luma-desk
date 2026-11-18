@@ -1,5 +1,6 @@
 /**
- * The app wiring of the Fixture Sheet to the stage: on `rigChanged` the rows are built again from the new rig. The
+ * The app wiring of the Fixture Sheet to the stage: on `rigChanged` the rows are built again from the new rig, and
+ * their DMX cells read the stage design live, not a copy taken at wiring. The
  * row build itself is owned by tests/unit/ui/panels/sheet/SheetPanel.test.ts; the Sequence pane has no part in a stage
  * change, so it mounts on bare DOM fakes.
  */
@@ -7,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { wireCuePanes, type CuePanesDeps } from '../../../../src/app/ui/wireCuePanes';
 import { EventBus } from '../../../../src/core';
 import { buildRig } from '../../../../src/domain/rig';
+import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import type { EngineEvents } from '../../../../src/engine/events';
 import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import { asReal, FakeButton, FakeDom, FakeElement, FakeHost } from '../../../shared/dom';
@@ -16,7 +18,7 @@ const allFixtures = buildRig().fixtures;
 const [firstRig, secondRig] = [allFixtures.slice(0, 3), allFixtures.slice(3, 6)];
 
 /** A row with enough cells for `SheetRow.show`. */
-const fakeRow = (): FakeElement =>
+const fakeRow = (): FakeElement & { readonly cells: FakeElement[] } =>
   Object.assign(new FakeElement(), { cells: Array.from({ length: 12 }, () => new FakeElement()) });
 
 function setup() {
@@ -26,9 +28,10 @@ function setup() {
   for (const id of ['seqSel', 'seqTable']) dom.add(id);
   for (const id of ['seqGo', 'seqBack', 'seqDel']) dom.add(id, new FakeButton());
   const table = dom.add('sheet', new FakeHost());
-  table.found.set('tr[data-id]', [fakeRow(), fakeRow(), fakeRow()]);
+  const rows = [fakeRow(), fakeRow(), fakeRow()];
+  table.found.set('tr[data-id]', rows);
   const bus = new EventBus<EngineEvents>();
-  const stage = { rig: { fixtures: firstRig } };
+  const stage = { rig: { fixtures: firstRig }, design: BUILT_IN_DESIGN };
   const deps = {
     side: new FakeHost(),
     bus,
@@ -39,7 +42,8 @@ function setup() {
   };
   const { sheet } = wireCuePanes(asReal<CuePanesDeps>(deps));
   const rowIds = (): string[] => [...table.innerHTML.matchAll(/data-id="(\d+)"/g)].map((m) => m[1] ?? '');
-  return { bus, stage, sheet, rowIds };
+  const addresses = (): string[] => rows.map((r) => r.cells[8]?.textContent ?? '');
+  return { bus, stage, sheet, rowIds, addresses };
 }
 
 describe('wireCuePanes', () => {
@@ -52,5 +56,16 @@ describe('wireCuePanes', () => {
     stage.rig = { fixtures: secondRig };
     bus.emit('rigChanged', { design: BUILT_IN_DESIGN });
     expect([before, rowIds()]).toEqual([firstRig.map((f) => String(f.id)), secondRig.map((f) => String(f.id))]);
+  });
+
+  it('fills the Universe.Address cells from the stage design current at rigChanged', () => {
+    const { bus, stage, sheet, addresses } = setup();
+    sheet.render();
+    const fixtures = BUILT_IN_DESIGN.fixtures.map((f) => ({ ...f, patch: { universe: 9, address: f.id, mode: 'M' } }));
+    const design: StageDesign = { ...BUILT_IN_DESIGN, fixtures };
+    stage.design = design;
+    stage.rig = { fixtures: secondRig };
+    bus.emit('rigChanged', { design });
+    expect(addresses()).toEqual(secondRig.map((f) => `9.${f.id}`));
   });
 });

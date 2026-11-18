@@ -13,7 +13,7 @@ import type { LayoutMode } from '../../ui/panels/layoutMode';
 
 /** What the Playwright test API reads and drives; names follow the legacy main.ts variables. */
 export interface TestHookDeps {
-  /** The stage: `fixtures` and `outputAt` read its current rig, and the stage hooks drive it. */
+  /** The stage: `fixtures`, `outputAt` and `mvrStage()` read its current rig, and the stage hooks drive it. */
   readonly stage: Pick<StageService, 'rig' | 'design' | 'builtIn' | 'apply'>;
   /** The stage's `setView`: the screenshot suite moves the camera with it. */
   readonly setView: (view: string, instant?: boolean) => void;
@@ -32,4 +32,8 @@ export interface TestHookDeps {
   };
   /** The current console layout (`deskMode`), owned by the layout area. */
   readonly deskMode: () => LayoutMode;
+  /** Resolves after the latest MVR load ended, with success or failure (the MVR load queue). */
+  readonly mvrReady: () => Promise<void>;
+  /** True while the MVR scenery shows the layers of a file. */
+  readonly mvrScenery: () => boolean;
 }

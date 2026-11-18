@@ -9,6 +9,9 @@ export const MOVING_TYPES = {
   spot: {
     name: 'Spot',
     model: 'forte',
+    // GDTF name and mode unverified: no official MVR sample holds this product.
+    gdtfSpec: 'Robe Lighting@FORTE.gdtf',
+    gdtfMode: 'Mode 1',
     attrs: MOVER,
     zr: [7, 42],
     z0: 16,
@@ -20,6 +23,9 @@ export const MOVING_TYPES = {
   beam: {
     name: 'Beam',
     model: 'megapointe',
+    // GDTF name and mode verified against the GDTF files in the official MVR sample files.
+    gdtfSpec: 'Robe@Robin MegaPointe@r3038.gdtf',
+    gdtfMode: '1',
     attrs: MOVER,
     zr: [1.5, 6],
     z0: 2.6,
@@ -31,6 +37,9 @@ export const MOVING_TYPES = {
   wash: {
     name: 'Wash',
     model: 'spiider',
+    // GDTF name and mode verified against the GDTF files in the official MVR sample files.
+    gdtfSpec: 'Robe Lighting@Robin Spiider.gdtf',
+    gdtfMode: 'Mode 1 - Zones',
     attrs: ['dim', 'pan', 'tilt', 'r', 'g', 'b', 'zoom', 'strobe'],
     zr: [10, 60],
     z0: 26,
@@ -44,6 +53,9 @@ export const MOVING_TYPES = {
   bar: {
     name: 'LED Bar',
     model: 'tetra2',
+    // GDTF name and mode verified against the GDTF files in the official MVR sample files.
+    gdtfSpec: 'Robe Lighting@Robin Tetra2.gdtf',
+    gdtfMode: 'Mode 1-Wash',
     attrs: ['dim', 'tilt', 'r', 'g', 'b', 'zoom', 'strobe'],
     zr: [4, 45],
     z0: 20,
@@ -59,6 +71,9 @@ export const MOVING_TYPES = {
   follow: {
     name: 'Follow Spot',
     model: 'forteFS',
+    // GDTF name and mode unverified: no official MVR sample holds this product.
+    gdtfSpec: 'Robe Lighting@FORTE FS.gdtf',
+    gdtfMode: 'Mode 1',
     attrs: MOVER,
     zr: [5, 55],
     z0: 9,

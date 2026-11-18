@@ -1,6 +1,6 @@
 import type { TemplateId } from '../../domain/stage/templates';
 import { TEMPLATE_IDS } from '../../domain/stage/templates';
-import { VENUE_KINDS, type VenueKind } from '../../domain/stage/types';
+import { BUILDER_VENUE_KINDS, type BuilderVenueKind } from '../../domain/stage/types';
 import { he } from '../../i18n/he';
 
 /** The English label and the Hebrew help line of one start card. */
@@ -16,7 +16,7 @@ const TEMPLATE_CARDS: Readonly<Record<TemplateId, CardText>> = {
   'sultans-pool': { label: "Current Sultan's Pool rig", help: he.builder.templates.sultansPool },
 };
 
-const VENUE_CARDS: Readonly<Record<VenueKind, CardText>> = {
+const VENUE_CARDS: Readonly<Record<BuilderVenueKind, CardText>> = {
   'sultans-pool': { label: "Sultan's Pool", help: he.builder.venues.sultansPool },
   'black-box': { label: 'Black box', help: he.builder.venues.blackBox },
   'open-field': { label: 'Open field', help: he.builder.venues.openField },
@@ -32,13 +32,13 @@ export const templateCardsMarkup = step(
 /** The way from step 2 back to the template cards. */
 const backMarkup = `<button class="start-back" data-start="back" title="${he.builder.startBack}">Back</button>`;
 
-/** Step 2 of the start screen: the Back button, then one card per venue, in `VENUE_KINDS` order. */
+/** Step 2 of the start screen: the Back button, then one card per builder venue, in `BUILDER_VENUE_KINDS` order. */
 export const venueCardsMarkup =
   backMarkup +
   step(
     'Choose a venue',
     he.builder.start.venueHelp,
-    VENUE_KINDS.map((kind) => card('venue', kind, VENUE_CARDS[kind])),
+    BUILDER_VENUE_KINDS.map((kind) => card('venue', kind, VENUE_CARDS[kind])),
   );
 
 function step(title: string, help: string, cards: readonly string[]): string {

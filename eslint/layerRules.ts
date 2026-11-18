@@ -1,23 +1,27 @@
 import type { Linter } from 'eslint';
+import { APP_WIRING, appWiringBlock } from './appWiring.ts';
 import { restrictDynamicImports, type ImportRestriction } from './dynamicImports.ts';
 import { HEBREW_TEXT } from './i18nRules.ts';
 import { SHARED_INTERNALS } from './sharedInternals.ts';
 
-type Layer = 'core' | 'domain' | 'engine' | 'command' | 'show' | 'autoshow' | 'audio' | 'render' | 'ui' | 'io' | 'i18n';
-
-const FEATURES: readonly Layer[] = ['command', 'show', 'autoshow', 'audio'];
-const PRESENTATION: readonly Layer[] = ['render', 'ui', 'io'];
+const FEATURES = ['command', 'show', 'autoshow', 'audio'] as const;
+const PRESENTATION = ['render', 'ui', 'io'] as const;
+/** Every layer, bottom up; the rules are built in this order. */
+const LAYERS = ['i18n', 'core', 'domain', 'engine', 'mvr', ...FEATURES, ...PRESENTATION] as const;
+type Layer = (typeof LAYERS)[number];
 
 /**
  * The layers each layer must not import, so dependencies point one way: core <- domain <- engine <- command, show,
- * autoshow, audio; render and ui sit on top of the engine, and ui drives render, never the reverse. i18n is plain
- * text data that the engine, io and ui read, so it imports no layer.
+ * autoshow, audio; render and ui sit on top of the engine, and ui drives render, never the reverse. mvr is a pure
+ * parser on core and domain: it turns a file into data, so only the features and presentation above it may use it.
+ * i18n is plain text data that the engine, io and ui read, so it imports no layer.
  */
 const FORBIDDEN_LAYERS: Partial<Record<Layer, readonly Layer[]>> = {
-  i18n: ['core', 'domain', 'engine', ...FEATURES, ...PRESENTATION],
-  core: ['domain', 'engine', ...FEATURES, ...PRESENTATION],
-  domain: ['engine', ...FEATURES, ...PRESENTATION],
-  engine: [...FEATURES, ...PRESENTATION],
+  i18n: ['core', 'domain', 'engine', 'mvr', ...FEATURES, ...PRESENTATION],
+  core: ['domain', 'engine', 'mvr', ...FEATURES, ...PRESENTATION],
+  domain: ['engine', 'mvr', ...FEATURES, ...PRESENTATION],
+  engine: ['mvr', ...FEATURES, ...PRESENTATION],
+  mvr: ['engine', ...FEATURES, ...PRESENTATION],
   command: PRESENTATION,
   show: PRESENTATION,
   autoshow: PRESENTATION,
@@ -31,66 +35,66 @@ const THREE_ADDONS: ImportRestriction = {
 };
 /** `three` and every subpath, as the old `three` glob matched: core imports no part of the library. */
 const THREE_CORE: ImportRestriction = { regex: '^three(/|$)', message: 'core is pure helpers and imports no library.' };
-
-/** The three.js imports a layer must not use: core uses no library, domain and engine only the core math types. */
-function forbiddenThree(layer: Layer): ImportRestriction[] {
-  if (layer === 'core') return [THREE_CORE, THREE_ADDONS];
-  if (layer === 'domain' || layer === 'engine') return [THREE_ADDONS];
-  return [];
-}
-
-/**
- * `src/app` is the composition root's wiring: only `src/main.ts` and `src/app` itself may import it. A file reaches it
- * through relative steps (`./app`, `../app`, `./../app`) or through the src folder (`../../src/app`); the regex covers
- * all of them. It is a regex, not a glob, because the old glob also matched package paths such as `firebase/app`. No
- * other src folder is named `app`.
- */
-const APP_WIRING: ImportRestriction = {
-  regex: '^(\\.{1,2}/)+(src/)?app(/|$)',
-  message: 'Only src/main.ts and src/app may import src/app.',
+const THREE_MVR: ImportRestriction = {
+  regex: '^three(/|$)',
+  message: 'mvr is a pure parser: it gives data, and render draws it with three.',
 };
 
-/** A layer folder as any segment of the path, so `../engine`, `./../engine/x` and `../../src/engine/x` all match. */
-function layerRestriction(layer: Layer, name: Layer): ImportRestriction {
-  return { regex: `(^|/)${name}(/|$)`, message: `${layer} must not import ${name}: see the layer rules in docs/plan.` };
-}
-
-/** The locale is the one folder that rule I1 lets hold Hebrew text. */
-function hebrewTextRule(layer: Layer): typeof HEBREW_TEXT {
-  return layer === 'i18n' ? [] : HEBREW_TEXT;
-}
+/** The three.js imports each layer must not use; layers not listed may use all of three. */
+const FORBIDDEN_THREE: Partial<Record<Layer, readonly ImportRestriction[]>> = {
+  core: [THREE_CORE, THREE_ADDONS],
+  domain: [THREE_ADDONS],
+  engine: [THREE_ADDONS],
+  mvr: [THREE_MVR, THREE_ADDONS],
+};
 
 /**
- * Rules for one layer. A later entry for a rule replaces the earlier one, so it repeats the shared-folder rule of
- * no-restricted-imports and the Hebrew text rule of no-restricted-syntax.
+ * The deepest file, counted in `../` steps up to `src/`, that gets an exact rule; deeper files share the last rule,
+ * which then also matches more `../` steps. The deepest file today needs 4 steps.
  */
-function layerBlock(layer: Layer, forbidden: readonly Layer[]): Linter.Config {
-  const layers = forbidden.map((name) => layerRestriction(layer, name));
-  const restrictions = [APP_WIRING, ...layers, ...forbiddenThree(layer)];
+const MAX_DEPTH = 6;
+
+/**
+ * The exact rules see a layer only in the shortest relative path, so a longer form of the same path is refused:
+ * `./../`, a folder step undone by `..`, an empty or `.` step, or a climb out of `src/` and back in.
+ */
+const SHORTEST_PATH: ImportRestriction = {
+  regex: '^\\./\\.\\.|/\\.?/|(^|/)[^./][^/]*/\\.\\.(/|$)|^(\\.\\./)+src/',
+  message: 'Write the shortest relative path, so the layer rule can see it.',
+};
+
+/**
+ * Rules for the files of one layer that sit `depth` folders below `src/`. An import string does not say which folder
+ * it reaches, but a file at a known depth reaches `src/` with exactly `depth` `../` steps. So only `../../mvr` from
+ * `src/domain/stage/x.ts` is the mvr layer; `./stage/mvr` and `../domain/stage/mvr` are files inside a layer.
+ * A later entry for a rule replaces the earlier one, so it repeats the shared-folder, wiring and Hebrew text rules.
+ */
+function depthRules(layer: Layer, forbidden: readonly Layer[], depth: number): Linter.Config {
+  const last = depth === MAX_DEPTH;
+  const steps = last ? `{${depth},}` : `{${depth}}`;
+  const layers = forbidden.map((name) => ({
+    regex: `^(\\.\\./)${steps}${name}(/|$)`,
+    message: `${layer} must not import ${name}: see the layer rules in docs/plan.`,
+  }));
+  const restrictions = [APP_WIRING, SHORTEST_PATH, ...layers, ...(FORBIDDEN_THREE[layer] ?? [])];
+  const hebrewText = layer === 'i18n' ? [] : HEBREW_TEXT;
+  const folders = '*/'.repeat(depth - 1);
   return {
-    files: [`src/${layer}/**/*.ts`],
+    files: [last ? `src/${layer}/${folders}**/*.ts` : `src/${layer}/${folders}*.ts`],
     rules: {
       'no-restricted-imports': ['error', { patterns: [SHARED_INTERNALS, ...restrictions] }],
-      'no-restricted-syntax': ['error', ...hebrewTextRule(layer), ...restrictDynamicImports(restrictions)],
+      'no-restricted-syntax': ['error', ...hebrewText, ...restrictDynamicImports(restrictions)],
     },
   };
 }
 
-/**
- * Every src folder outside the wiring; the layer blocks after it replace it for their own folders, which is how
- * src/i18n loses the Hebrew text rule again.
- */
-const appWiringBlock: Linter.Config = {
-  files: ['src/**/*.ts'],
-  ignores: ['src/main.ts', 'src/app/**'],
-  rules: {
-    'no-restricted-imports': ['error', { patterns: [SHARED_INTERNALS, APP_WIRING] }],
-    'no-restricted-syntax': ['error', ...HEBREW_TEXT, ...restrictDynamicImports([APP_WIRING])],
-  },
-};
+const DEPTHS = Array.from({ length: MAX_DEPTH }, (_, index) => index + 1);
 
-/** The wiring block, then one config block per layer that has import limits, from the FORBIDDEN_LAYERS table. */
+/** The wiring block, then the import rules of every layer that has limits, one config per layer and file depth. */
 export const layerRules: Linter.Config[] = [
   appWiringBlock,
-  ...Object.entries(FORBIDDEN_LAYERS).map(([layer, forbidden]) => layerBlock(layer as Layer, forbidden)),
+  ...LAYERS.flatMap((layer) => {
+    const forbidden = FORBIDDEN_LAYERS[layer];
+    return forbidden ? DEPTHS.map((depth) => depthRules(layer, forbidden, depth)) : [];
+  }),
 ];

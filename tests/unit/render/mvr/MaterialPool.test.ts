@@ -1,0 +1,77 @@
+// @vitest-environment jsdom
+/**
+ * MaterialPool: materials that draw alike become one instance, whichever loader call made them, so merging and
+ * instancing can group parts of different files; and dispose frees the maps that `Material.dispose` leaves behind.
+ */
+import { MeshPhongMaterial, MeshStandardMaterial, Texture } from 'three';
+import { describe, expect, it } from 'vitest';
+import { MaterialPool } from '../../../../src/render/mvr/MaterialPool.ts';
+
+describe('MaterialPool', () => {
+  it('shares one instance between equal materials and frees the duplicate', () => {
+    const pool = new MaterialPool();
+    const first = new MeshPhongMaterial({ color: 0x808080, name: 'grey' });
+    const second = new MeshPhongMaterial({ color: 0x808080, name: 'Grey 2' });
+    let isSecondFreed = false;
+    second.addEventListener('dispose', () => (isSecondFreed = true));
+    expect([pool.adopt(first), pool.adopt(second), isSecondFreed]).toEqual([first, first, true]);
+  });
+
+  it('shares one instance between materials that hold the same texture instance', () => {
+    const pool = new MaterialPool();
+    const map = new Texture();
+    const first = new MeshPhongMaterial({ map });
+    const second = new MeshPhongMaterial({ map });
+    expect(pool.adopt(first)).toBe(first);
+    expect(pool.adopt(second)).toBe(first);
+  });
+
+  it('keeps materials apart that differ in colour, opacity, side or map', () => {
+    const pool = new MaterialPool();
+    const grey = new MeshPhongMaterial({ color: 0x808080 });
+    const others = [
+      new MeshPhongMaterial({ color: 0x808081 }),
+      new MeshPhongMaterial({ color: 0x808080, opacity: 0.5, transparent: true }),
+      new MeshPhongMaterial({ color: 0x808080, side: 2 }),
+      new MeshPhongMaterial({ color: 0x808080, map: new Texture() }),
+    ];
+    pool.adopt(grey);
+    for (const material of others) expect(pool.adopt(material)).toBe(material);
+  });
+
+  it('keeps materials apart whose textures share an image but differ in repeat', () => {
+    const pool = new MaterialPool();
+    const map = new Texture();
+    const tiled = map.clone();
+    tiled.repeat.set(4, 4);
+    const plain = new MeshPhongMaterial({ map });
+    const repeated = new MeshPhongMaterial({ map: tiled });
+    pool.adopt(plain);
+    expect(pool.adopt(repeated)).toBe(repeated);
+  });
+
+  it('keeps a material as it is given: the scenery style is applied before the pool', () => {
+    const pool = new MaterialPool();
+    const beige = new MeshStandardMaterial({ color: 0xd8cfb8, roughness: 0.3 });
+    expect(pool.adopt(beige)).toBe(beige);
+    expect([beige.color.getHex(), beige.roughness]).toEqual([0xd8cfb8, 0.3]);
+  });
+
+  it('pools a material by its look, so equal materials share one instance', () => {
+    const pool = new MaterialPool();
+    const first = pool.adopt(new MeshPhongMaterial({ color: 0xc0c0c0 }));
+    expect(pool.adopt(new MeshPhongMaterial({ color: 0xc0c0c0 }))).toBe(first);
+  });
+
+  it('frees every pooled material and its textures on dispose', () => {
+    const pool = new MaterialPool();
+    const map = new Texture();
+    const material = new MeshPhongMaterial({ map });
+    const freed: string[] = [];
+    map.addEventListener('dispose', () => freed.push('map'));
+    material.addEventListener('dispose', () => freed.push('material'));
+    pool.adopt(material);
+    pool.dispose();
+    expect(freed).toEqual(['map', 'material']);
+  });
+});

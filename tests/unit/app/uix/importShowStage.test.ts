@@ -2,8 +2,8 @@
 // wireShowFileDialog.test.ts, and the browser paths are in tests/e2e/stage-bad-import.spec.ts.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { wireShowFileDialog } from '../../../../src/app/uix/wireShowFileDialog';
+import { BAD_STAGE, BUILT_IN, stageWorld } from '../../../shared';
 import { FakeButton, FakeDom, FakeElement } from '../../../shared/dom';
-import { BAD_STAGE, BUILT_IN, stageWorld } from '../../show/stageWorld';
 
 /** A show whose `stage` key does not parse; the rest of it is a good v1 show. */
 const BAD_STAGE_SHOW = { v: 1, groups: {}, presets: {}, execs: [], bpm: 97, haze: 0, stage: { v: 1, trusses: 'x' } };
@@ -12,8 +12,10 @@ const BAD_STAGE_SHOW = { v: 1, groups: {}, presets: {}, execs: [], bpm: 97, haze
 function importPasted(show: unknown) {
   const dom = new FakeDom();
   for (const kind of ['HTMLTextAreaElement', 'HTMLInputElement']) vi.stubGlobal(kind, FakeElement);
-  for (const id of ['fileBtn', 'fSave', 'fCopy', 'fDemo', 'fNew', 'fImp']) dom.add(id, new FakeButton());
-  for (const id of ['fTxt', 'fFile']) dom.add(id);
+  for (const id of ['fileBtn', 'fSave', 'fCopy', 'fDemo', 'fNew', 'fImp', 'fDemoRig', 'fMvrExport']) {
+    dom.add(id, new FakeButton());
+  }
+  for (const id of ['fTxt', 'fFile', 'fMvrFile']) dom.add(id);
   const world = stageWorld();
   wireShowFileDialog({
     bus: world.bus,
@@ -23,6 +25,7 @@ function importPasted(show: unknown) {
     showStorage: { persist: vi.fn() },
     demo: world.demo,
     showLoaded: vi.fn(),
+    mvr: { importFile: vi.fn(), loadDemoRig: vi.fn(), exportMvr: vi.fn() },
     cancelBuilder: vi.fn(),
   });
   dom.get('fileBtn').onclick?.({ target: null });

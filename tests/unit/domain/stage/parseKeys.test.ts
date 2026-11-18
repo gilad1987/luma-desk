@@ -1,12 +1,14 @@
 /**
- * Owns the key handling of `parseStageDesign`: unknown keys are dropped at every level, so a later optional field (MVR
- * `patch`) is additive, and an absent optional field stays absent, so the design is exactOptionalPropertyTypes-safe.
+ * Owns the key handling of `parseStageDesign`: unknown keys are dropped at every level, so a later optional field (as
+ * MVR `patch` and `mvr` were) is additive, and an absent optional field stays absent, so the design is
+ * exactOptionalPropertyTypes-safe.
  */
 import { describe, expect, it } from 'vitest';
 import { parseStageDesign } from '../../../../src/domain/stage/parse/parseStageDesign.ts';
 import { SAMPLE } from './parseSample.ts';
 
-const extra = { patch: { universe: 1 } };
+// MVR `patch` is a known fixture key now, so the unknown key has a name no design field uses
+const extra = { laterField: { universe: 1 } };
 
 /** Adds an unknown key to every object of the sample design, at every level. */
 function withExtraKeys(): unknown {

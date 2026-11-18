@@ -1,4 +1,5 @@
 import type { Scene, WebGLRenderer } from 'three';
+import { boundsOf } from '../../domain/stage/bounds';
 import type { StageDesign } from '../../domain/stage/StageDesign';
 import { CameraViews } from '../../render/camera/CameraViews';
 import { isViewName, type ViewName } from '../../render/camera/viewTable';
@@ -55,6 +56,9 @@ export function wireStage(design: StageDesign): StageHandles {
   const setView = (view: string, instant?: boolean): void => {
     if (isViewName(view)) views.setView(view, instant);
   };
+  // the views fit the boot design as a rebuild fits a new one, so a reload frames a saved stage as its first build
+  // did; the built-in design's bounds are the reference, which gives the hand-placed views back bit for bit
+  views.fitTo(boundsOf(design));
   setView('foh', true);
   const postFx = new PostFx(renderer, scene, views.camera);
   addEnvironmentLights(scene);

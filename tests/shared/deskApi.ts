@@ -1,3 +1,4 @@
+import type { MvrStageInfo } from './mvrStageInfo';
 import type { AttrValues, SavedShow } from './savedShow';
 
 /** The three console layouts; the layout select and lumadesk-layout2 use these names. */
@@ -54,6 +55,17 @@ export interface DeskTestApi {
   outputAt(sec: number): FixtureOutput[];
   run(line: string): CommandResult;
   applyFx(type: string): void;
+  /** Named for MVR, as Stage Builder's hook has `__desk.stage()` with another shape. */
+  mvrStage(): MvrStageInfo;
+  /**
+   * Resolves after the latest MVR load ended, with success or failure: a picked file, or the restore from IndexedDB
+   * at boot. Both run off the frame loop, so a spec cannot see the end in frames or the DOM. The app queues the load
+   * in the input's change handler before its first await, so a spec that picks a file and then calls this waits for
+   * that file, not an older load. Resolved at once when no load ran.
+   */
+  mvrReady(): Promise<void>;
+  /** True while the MVR scenery shows the layers of a file; the 3D view itself says nothing a spec can read. */
+  mvrScenery(): boolean;
 }
 
 /** window.__desk.stage(): the fixture count and the design's source and venue kinds. */

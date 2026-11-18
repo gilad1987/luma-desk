@@ -6,6 +6,7 @@ import type { EngineBus } from '../events';
 import { RigAnnouncer } from './RigAnnouncer';
 import type { RigChangeCause } from './rigChanged';
 import type { RigSource } from './RigSource';
+import { isSameRig } from './sameRig';
 import type { StageServiceOptions } from './StageServiceOptions';
 
 /**
@@ -67,7 +68,7 @@ export class StageService implements RigSource {
    * @throws Error when a listener re-enters `apply` during its emit (see `RigAnnouncer.checkIdle`).
    */
   apply(design: StageDesign, cause: Exclude<RigChangeCause, 'boot'>): void {
-    this.#announcer.checkIdle(cause);
+    this.#announcer.checkIdle('apply', cause);
     const rig = rigFromDesign(design);
     const frame = frameOf(design);
     this.#design = design;
@@ -77,6 +78,19 @@ export class StageService implements RigSource {
     this.#announcer.announce(design, cause, rig.fixtures.length);
   }
 
-  // G8 slot: MVR adds `updateMeta(patch)` (no rig rebuild). Stage Builder does NOT define it.
-  // An emitting updateMeta must use the same RigAnnouncer guard: `checkIdle` before any state change, as `apply` does.
+  /**
+   * Replaces the design with one that differs only in data that is not the rig, today the MVR `hiddenLayers`, and
+   * emits `showChanged` to save it (G8). No rig rebuild and no `rigChanged`: a layer toggle must not reset groups,
+   * presets and scene.
+   * @throws Error on re-entry during an emit, for a design without MVR data, or when `design` changes rig data (that
+   * needs `apply`).
+   */
+  updateMeta(design: StageDesign): void {
+    this.#announcer.checkIdle('updateMeta', 'a hiddenLayers change');
+    if (!design.mvr) throw new Error('StageService.updateMeta: the design has no MVR data; use apply');
+    const sameRig = isSameRig(design, this.#design);
+    if (!sameRig) throw new Error('StageService.updateMeta: the design changes rig data; use apply');
+    this.#design = design;
+    this.#announcer.announceMeta();
+  }
 }

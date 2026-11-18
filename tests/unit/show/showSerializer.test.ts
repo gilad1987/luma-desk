@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NEW_GROUPS } from '../../../src/engine/defaultGroups';
-import { readGolden, type SavedShow } from '../../shared';
-import { readSavedShow, showWorld } from './showWorld';
+import { readGolden, readSavedShow, showWorld, type SavedShow } from '../../shared';
 
 const DEMO_GROUPS = (readGolden('demo-show') as SavedShow).groups;
 

@@ -20,8 +20,10 @@ type Field = FakeElement & { files?: unknown[]; onchange?: () => void };
 function openDialog() {
   const dom = new FakeDom();
   vi.stubGlobal('HTMLTextAreaElement', FakeElement);
-  for (const id of ['fileBtn', 'fSave', 'fCopy', 'fDemo', 'fNew', 'fImp']) dom.add(id, new FakeButton());
-  for (const id of ['fTxt', 'fFile']) dom.add(id);
+  for (const id of ['fileBtn', 'fSave', 'fCopy', 'fDemo', 'fNew', 'fImp', 'fDemoRig', 'fMvrExport']) {
+    dom.add(id, new FakeButton());
+  }
+  for (const id of ['fTxt', 'fFile', 'fMvrFile']) dom.add(id);
   const bus = new EventBus<EngineEvents>(),
     toasts: string[] = [];
   bus.on('message', (m: EngineMessage) => toasts.push(m.text));
@@ -33,6 +35,7 @@ function openDialog() {
     loadShow: vi.fn(() => ({ badStage: false })),
     download: vi.fn(),
     stamp: () => '20261117-2350',
+    mvr: { importFile: vi.fn(), loadDemoRig: vi.fn(), exportMvr: vi.fn() },
   };
   const deps: ShowFileDeps = { ...fakes, bus, stage: { rig, design: BUILT_IN_DESIGN, isBuiltIn: true } };
   new ShowFileDialog(deps);
@@ -44,7 +47,7 @@ function openDialog() {
 describe('ShowFileDialog', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('opens the original markup from #fileBtn', () => {
+  it('opens the original markup plus the MVR row from #fileBtn', () => {
     const { modal } = openDialog();
     expect(showFileMarkup).toBe(legacyMarkup('showFile'));
     expect(modal.open).toHaveBeenCalledWith(showFileMarkup);

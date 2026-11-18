@@ -17,8 +17,10 @@ afterEach(() => {
 function openDialog() {
   const dom = new FakeDom();
   for (const kind of ['HTMLTextAreaElement', 'HTMLInputElement']) vi.stubGlobal(kind, FakeElement);
-  for (const id of ['fileBtn', 'fSave', 'fCopy', 'fDemo', 'fNew', 'fImp']) dom.add(id, new FakeButton());
-  for (const id of ['fTxt', 'fFile']) dom.add(id);
+  for (const id of ['fileBtn', 'fSave', 'fCopy', 'fDemo', 'fNew', 'fImp', 'fDemoRig', 'fMvrExport']) {
+    dom.add(id, new FakeButton());
+  }
+  for (const id of ['fTxt', 'fFile', 'fMvrFile']) dom.add(id);
   const engine = wireEngine();
   const { serializer, showStorage, demo } = createShowFiles({ ...engine, execs: engine.pool.execs });
   const modal = { open: vi.fn(), close: vi.fn() };
@@ -30,6 +32,7 @@ function openDialog() {
     showStorage,
     demo,
     showLoaded: vi.fn(),
+    mvr: { importFile: vi.fn(), loadDemoRig: vi.fn(), exportMvr: vi.fn() },
     cancelBuilder: vi.fn(),
   });
   const click = (id: string): void => dom.get(id).onclick?.({ target: null });

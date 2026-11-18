@@ -1,0 +1,57 @@
+// @vitest-environment jsdom
+/**
+ * QA edges of `importMvrFile`: files that are not an MVR in other ways than "not a zip" (empty, a zip without the
+ * scene), a rejected file when the store had refused the bytes, and one file imported twice. The bug each guards:
+ * bytes left in IndexedDB for a file the desk rejected, a delete of a key that was never stored, or a duplicate record.
+ * The main path and "not a zip" are owned by importMvrFile.test.ts.
+ */
+import { describe, expect, it } from 'vitest';
+import { MvrStore } from '../../../../src/io/mvrStore';
+import { importMvrFile, type MvrImportDeps } from '../../../../src/ui/panels/mvr/importMvrFile';
+import { FakeIndexedDb, makeMvr, makeZip, sceneXml } from '../../../shared';
+
+const FIXTURE = '<Fixture uuid="F1" name="F1"><GDTFSpec>Acme@Spot</GDTFSpec><GDTFMode>Std</GDTFMode></Fixture>';
+const mvrBytes = (): Uint8Array<ArrayBuffer> =>
+  new Uint8Array(makeMvr(sceneXml(`<Layer uuid="L1" name="Rig"><ChildList>${FIXTURE}</ChildList></Layer>`)));
+
+/** A real store on the fake database, a stage that counts applies, and a log of the store's deletes. */
+function setup() {
+  const db = new FakeIndexedDb();
+  const real = new MvrStore(db.factory, globalThis.crypto.subtle);
+  const deleted: string[] = [];
+  let applies = 0;
+  const deps: MvrImportDeps = {
+    store: { put: (bytes) => real.put(bytes), delete: (hash) => (deleted.push(hash), real.delete(hash)) },
+    stage: { apply: () => void (applies += 1) },
+    cancelBuilder: () => {},
+  };
+  return { db, deps, deleted, applies: () => applies };
+}
+
+describe('importMvrFile edges', () => {
+  it.each([
+    ['an empty file', new Uint8Array(0)],
+    ['a zip without the scene file', new Uint8Array(makeZip({ 'readme.txt': 'hi' }))],
+  ])('rejects %s and leaves no bytes stored', async (_label, bytes) => {
+    const { db, deps, deleted, applies } = setup();
+    const outcome = await importMvrFile({ name: 'x.mvr', bytes }, deps);
+    expect([outcome.kind, applies(), db.records.size, deleted.length]).toEqual(['failed', 0, 0, 1]);
+  });
+
+  it('deletes nothing for a rejected file the store had refused', async () => {
+    const { db, deps, deleted } = setup();
+    db.failWrites = true;
+    const outcome = await importMvrFile({ name: 'x.mvr', bytes: new TextEncoder().encode('not a zip') }, deps);
+    expect([outcome.kind, deleted]).toEqual(['failed', []]);
+  });
+
+  it('keeps one record when the same file is imported twice, and both imports carry its hash', async () => {
+    const { db, deps, applies } = setup();
+    const first = await importMvrFile({ name: 'a.mvr', bytes: mvrBytes() }, deps);
+    const second = await importMvrFile({ name: 'b.mvr', bytes: mvrBytes() }, deps);
+    const hashOf = (outcome: typeof first): string | undefined =>
+      outcome.kind === 'imported' ? outcome.result.design.source.fileHash : undefined;
+    expect([db.records.size, applies(), hashOf(first) === hashOf(second)]).toEqual([1, 2, true]);
+    expect(hashOf(first)).toMatch(/^[0-9a-f]{64}$/);
+  });
+});

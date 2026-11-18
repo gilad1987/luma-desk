@@ -29,6 +29,7 @@ export function wirePanels(deps: PanelsDeps): Panels {
     ...files,
     modal: services.modal,
     showLoaded: () => side.showLoaded(),
+    mvr: deps.mvr,
     cancelBuilder: deps.builder.cancel,
   });
   const side = wireSideColumn({ ...deps, services }, topBar);

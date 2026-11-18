@@ -33,5 +33,8 @@ export function wireRender(engine: Pick<EngineHandles, 'stage' | 'selection' | '
     viewer: byId('viewer'),
   });
   bus.on('rigChanged', ({ design }) => stage.stageScene.rebuild(design, engine.stage.rig.fixtures));
+  // the built-in hazers stand on the desk's own deck; an imported stage (`mvr` set) brings its own rig
+  visuals.props.setHazersShown(!engine.stage.design.mvr);
+  bus.on('rigChanged', ({ design }) => visuals.props.setHazersShown(!design.mvr));
   return { ...stage, ...visuals, stageRenderer };
 }

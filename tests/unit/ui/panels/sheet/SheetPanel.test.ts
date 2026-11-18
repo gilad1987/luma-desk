@@ -4,6 +4,7 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildRig } from '../../../../../src/domain/rig';
+import { BUILT_IN_DESIGN } from '../../../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import type { SheetDeps } from '../../../../../src/ui/panels/sheet/SheetPanel';
 import { SheetPanel } from '../../../../../src/ui/panels/sheet/SheetPanel';
 import { asReal, FakeDom, FakeElement, FakeHost } from '../../../../shared/dom';
@@ -22,7 +23,13 @@ function setup(tab: 'sheet' | 'pools' = 'sheet') {
     fixtures.map(() => fakeRow()),
   );
   const builds = vi.spyOn(table, 'querySelectorAll');
-  const deps = { fixtures, programmer: { vals: {} }, selection: { has: () => false }, sideTab: () => tab };
+  const deps = {
+    fixtures,
+    programmer: { vals: {} },
+    selection: { has: () => false },
+    sideTab: () => tab,
+    stageDesign: () => BUILT_IN_DESIGN,
+  };
   const sheet = new SheetPanel(asReal<HTMLElement>(new FakeHost()), asReal<SheetDeps>(deps));
   return { sheet, builds };
 }

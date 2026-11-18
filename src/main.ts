@@ -13,6 +13,7 @@ import { wireLayout } from './app/layout/wireLayout';
 import { FrameLoop } from './app/loop/FrameLoop';
 import { scheduleUiTicks } from './app/loop/scheduleUiTicks';
 import { UiTickScheduler } from './app/loop/UiTickScheduler';
+import { wireMvr } from './app/mvr/wireMvr';
 import { installTestHook } from './app/testHook/installTestHook';
 import { FpsClock } from './app/ui/FpsClock';
 import { wireBuilder } from './app/ui/wireBuilder';
@@ -34,6 +35,9 @@ const { execs } = pool;
 const render = wireRender(engine);
 const files = createShowFiles({ ...engine, execs });
 const auto = createAutoShow(engine);
+// a show load and an MVR load cancel the same builder session; the builder is built after the panels
+const cancelBuilder = (): void => builder.exit(false);
+const mvr = wireMvr({ ...engine, demo: files.demo, render, modal: () => panels.modal, cancelBuilder });
 
 const panels = wirePanels({
   engine,
@@ -42,7 +46,8 @@ const panels = wirePanels({
   auto,
   layoutMode: () => layout.mode(),
   guideOrTourOpen: () => guide.isOpen() || tour.isActive(),
-  builder: { isOpen: () => builder.isOpen, cancel: () => builder.exit(false) },
+  mvr: mvr.actions,
+  builder: { isOpen: () => builder.isOpen, cancel: cancelBuilder },
 });
 // a getter: box selection reads the current rig at each drag, so it follows every stage change
 new ViewportPicking({
@@ -56,12 +61,7 @@ new ViewportPicking({
 wireMidi(engine);
 render.stageRenderer.observeViewer();
 
-const { guide, tour } = wireGuide({
-  stage,
-  sideTabs: panels.sideTabs,
-  isMa: () => layout.mode() === 'ma',
-  guideFlag: files.guideFlag,
-});
+const { guide, tour } = wireGuide({ ...files, ...panels, stage, isMa: () => layout.mode() === 'ma' });
 byId('helpBtn').onclick = () => guide.open(0);
 wireAppFeatures({ ...engine, canvas: render.canvas, songPlayer: auto.songPlayer, guide });
 
@@ -85,6 +85,7 @@ bus.on('stateDirty', () => ui.markDirty());
 
 panels.autoShowPanel.renderStyles();
 restoreShow({ ...files, storage: files.showStorage, execs, repaint: panels.showLoaded });
+mvr.restore();
 guide.openOnFirstRun();
 new FrameLoop({ ...engine, ...render, ...auto, fps, ui }).start();
 installTestHook({
@@ -95,4 +96,5 @@ installTestHook({
   execs,
   autoShow: auto.autoShow,
   deskMode: () => layout.mode(),
+  ...mvr.testHook,
 });

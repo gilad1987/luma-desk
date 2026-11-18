@@ -15,7 +15,10 @@ export class SheetRow {
     this.#swatch = requireChild(tr, '.cs');
   }
 
-  /** Writes `view`, in the original order: row class, then per cell text and class, the color class, the swatch. */
+  /**
+   * Writes `view`, in the original order: row class, then per cell text and class, the color class, the swatch; the
+   * DMX columns, which the original page did not have, come last.
+   */
   show(view: SheetRowView): void {
     this.#put('sel', view.rowClass, (v) => (this.#tr.className = v));
     for (const [n, text, cls] of view.cells) {
@@ -24,6 +27,8 @@ export class SheetRow {
     }
     this.#put('c5', view.colorClass, (v) => (this.#cell(5).className = v));
     this.#put('sw', view.swatch, (v) => (this.#swatch.style.background = v));
+    this.#put('t8', view.dmx.address, (v) => (this.#cell(8).textContent = v));
+    this.#put('t9', view.dmx.mode, (v) => (this.#cell(9).textContent = v));
   }
 
   #put(key: string, value: string, write: (v: string) => void): void {

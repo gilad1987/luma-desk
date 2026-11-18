@@ -5,6 +5,7 @@ import type { ShowFileInput, ShowFileV1 } from '../../../show/ShowFile';
 import type { ShowLoadResult, ShowSerializer } from '../../../show/ShowSerializer';
 import type { ShowStorage } from '../../../show/ShowStorage';
 import type { Modal } from '../../shared';
+import type { MvrActions } from '../mvr/MvrActions';
 
 /** A show the dialog loads: a v1 input, plus the `stage` New Show passes to keep a custom stage. */
 export type ShowToLoad = ShowFileInput & Pick<ShowFileV1, 'stage'>;
@@ -28,4 +29,6 @@ export interface ShowFileDeps {
   readonly download: (name: string, text: string) => void;
   /** The `yyyymmdd-hhmm` local-time stamp in download names, shared with the video recorder. */
   readonly stamp: () => string;
+  /** The MVR row: import, demo rig and export, which the app wiring runs. */
+  readonly mvr: MvrActions;
 }

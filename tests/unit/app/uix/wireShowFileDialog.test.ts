@@ -15,8 +15,10 @@ function open() {
   const dom = new FakeDom(),
     calls: string[] = [];
   for (const kind of ['HTMLTextAreaElement', 'HTMLInputElement']) vi.stubGlobal(kind, FakeElement);
-  for (const id of ['fileBtn', 'fSave', 'fCopy', 'fDemo', 'fNew', 'fImp']) dom.add(id, new FakeButton());
-  for (const id of ['fTxt', 'fFile']) dom.add(id);
+  for (const id of ['fileBtn', 'fSave', 'fCopy', 'fDemo', 'fNew', 'fImp', 'fDemoRig', 'fMvrExport']) {
+    dom.add(id, new FakeButton());
+  }
+  for (const id of ['fTxt', 'fFile', 'fMvrFile']) dom.add(id);
   const record = (name: string) => vi.fn(() => void calls.push(name));
   const serializer = {
     serialize: vi.fn(),
@@ -33,6 +35,7 @@ function open() {
     showStorage: { persist: record('persist') },
     demo: { load: record('demo') },
     showLoaded: record('repaint'),
+    mvr: { importFile: vi.fn(), loadDemoRig: record('demoRig'), exportMvr: vi.fn() },
     cancelBuilder: record('cancelBuilder'),
   });
   dom.get('fileBtn').onclick?.({ target: null });
@@ -47,6 +50,12 @@ describe('wireShowFileDialog', () => {
     const { calls, click } = open();
     click('fDemo');
     expect(calls).toEqual(['cancelBuilder', 'demo', 'repaint', 'close']);
+  });
+
+  it('hands Load demo rig to the MVR actions, without the show repaint', () => {
+    const { calls, click } = open();
+    click('fDemoRig');
+    expect(calls).toEqual(['demoRig']);
   });
 
   it('loads a new show with the default groups, repaints, saves, then closes', () => {

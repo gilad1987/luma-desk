@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { createTemplate } from '../../../src/domain/stage/templates';
 import { savedStageOf } from '../../../src/show/stageField';
-import { BAD_STAGE, stageWorld } from './stageWorld';
+import { BAD_STAGE, importedDesign, stageWorld } from '../../shared';
 
 describe('show stage field: no rebuild', () => {
   it('load(null) throws before the stage changes', () => {
@@ -24,6 +24,15 @@ describe('show stage field: no rebuild', () => {
     world.serializer.load(JSON.parse(text));
     expect(world.designs).toEqual([]);
     expect(world.service.design).toEqual(theatre);
+  });
+
+  it('booting on a stored MVR stage (patch, mvr, fileHash), then loading the same show, does not rebuild', () => {
+    const imported = { ...importedDesign(), source: { kind: 'mvr', name: 'Rig.mvr', fileHash: 'h1' } } as const;
+    const text = stageWorld(imported).json();
+    const world = stageWorld(savedStageOf(text));
+    world.serializer.load(JSON.parse(text));
+    expect(world.designs).toEqual([]);
+    expect(world.service.design).toEqual(imported);
   });
 
   it('a bad stage on the built-in stage toasts once and does not rebuild the rig', () => {

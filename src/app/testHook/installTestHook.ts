@@ -6,6 +6,7 @@ import type { ShowFileV1 } from '../../show/ShowFile';
 import { CommandCapture, type CapturedOutput } from './CommandCapture';
 import { readDeskClock, type DeskClock } from './deskClock';
 import { readDeskState, type DeskState } from './readDeskState';
+import { readMvrStageInfo, type MvrStageInfo } from './readMvrStageInfo';
 import { createStageHooks } from './stageHooks';
 import type { TestHookDeps } from './TestHookDeps';
 
@@ -19,6 +20,12 @@ export interface DeskTestApi extends DeskClock {
   run(line: string): CapturedOutput & { state: DeskState };
   /** Starts a programmer phaser on the selection, as the phaser buttons do. */
   applyFx(type: string): void;
+  /** The stage the rig is built from, read live; named for MVR so it does not meet Stage Builder's `stage()`. */
+  mvrStage(): MvrStageInfo;
+  /** Resolves after the latest MVR load ended (a picked file or the boot restore), with success or failure. */
+  mvrReady(): Promise<void>;
+  /** True while the MVR scenery shows the layers of a file; the 3D view itself is not inspectable. */
+  mvrScenery(): boolean;
 }
 
 const isPhaserType = (type: string): type is PhaserType => Object.hasOwn(PHASER_TYPES, type);
@@ -42,6 +49,9 @@ function createTestApi(clock: DeskClock, deps: TestHookDeps): DeskTestApi {
       if (!isPhaserType(type)) throw new Error(`unknown phaser type: ${type}`);
       deps.programmer.applyPhaser(type);
     },
+    mvrStage: () => readMvrStageInfo(deps.stage),
+    mvrReady: deps.mvrReady,
+    mvrScenery: deps.mvrScenery,
   };
 }
 

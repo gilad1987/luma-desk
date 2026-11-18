@@ -1,10 +1,14 @@
 import type { SceneryPart, VenueKind } from './types';
 
-/** Plan §3.3 defaults: every part on, except the crowd in a black box, which has no audience area to fill. */
+/**
+ * Plan §3.3 defaults: every part on, except the crowd in a black box, which has no audience area to fill. The MVR
+ * venue has every part off: the file brings its own stage, and a deck, trusses or band would stand inside it.
+ */
 const VENUE_SCENERY: Readonly<Record<VenueKind, Readonly<Record<SceneryPart, boolean>>>> = {
   'sultans-pool': { deck: true, trusses: true, band: true, ledWall: true, crowd: true },
   'black-box': { deck: true, trusses: true, band: true, ledWall: true, crowd: false },
   'open-field': { deck: true, trusses: true, band: true, ledWall: true, crowd: true },
+  mvr: { deck: false, trusses: false, band: false, ledWall: false, crowd: false },
 };
 
 /**

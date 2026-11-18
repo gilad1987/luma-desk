@@ -12,6 +12,12 @@ export interface HazePuff {
   readonly ph: number;
 }
 
+/** The built hazers: the case groups to show or hide, and the puffs the frame update animates. */
+export interface Hazers {
+  readonly cases: readonly Object3D[];
+  readonly puffs: readonly HazePuff[];
+}
+
 const HAZER_SPOTS = [
   [-20.6, -15.6],
   [20.6, -15.6],
@@ -35,9 +41,9 @@ const paintPuff = (x: CanvasRenderingContext2D): void => {
 
 /**
  * Antari HZ-500 hazers upstage (not patched): black road case with aluminium edges, ball corners, latches and
- * handle, nozzle and lid on top; each gets 3 hidden puff sprites. Returns the puffs for the frame update.
+ * handle, nozzle and lid on top; each gets 3 hidden puff sprites. Returns the cases and the puffs.
  */
-export function buildHazers(scene: Object3D, { prims, materials }: ModelKit): HazePuff[] {
+export function buildHazers(scene: Object3D, { prims, materials }: ModelKit): Hazers {
   const { box, sphereGeo } = prims;
   const caseMat = new MeshStandardMaterial({ color: 0x141417, roughness: 0.55, metalness: 0.2 });
   const body = merge([
@@ -57,12 +63,14 @@ export function buildHazers(scene: Object3D, { prims, materials }: ModelKit): Ha
   ]);
   const puffTex = srgbCanvasTexture(64, 64, paintPuff);
   const puffs: HazePuff[] = [];
+  const cases: Group[] = [];
   for (const [x, z] of HAZER_SPOTS) {
     const g = new Group();
     g.position.set(x, DECK, z);
     addMesh(g, body, caseMat);
     addMesh(g, alu, materials.alu);
     scene.add(g);
+    cases.push(g);
     for (let k = 0; k < 3; k++) {
       const sp = new Sprite(
         new SpriteMaterial({ map: puffTex, color: 0xc4c8d2, transparent: true, depthWrite: false, opacity: 0 }),
@@ -72,5 +80,5 @@ export function buildHazers(scene: Object3D, { prims, materials }: ModelKit): Ha
       puffs.push({ sp, x, z, ph: k / 3 });
     }
   }
-  return puffs;
+  return { cases, puffs };
 }
