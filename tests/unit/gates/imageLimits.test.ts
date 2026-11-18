@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { imageGateFailures, perceptualDiff, type RgbaImage } from '../../shared';
 import { baseline, darkestRow, stage, translated, withLine, type Line } from './gateImages';
-import { dimmedBrightest, exposed, hueTurned } from './imageEdits';
+import { dimmedBrightestPixels, exposed, hueTurned } from './imageEdits';
 
 // The specification of the image gate: every case is built in code from a committed baseline (a bright FOH and a
 // mostly dark wide view among them) or from the synthetic stage, and must pass or fail as stated. The numbers behind
@@ -20,7 +20,7 @@ const passes = (a: RgbaImage, b: RgbaImage): void => expect(imageGateFailures(pe
 describe.each(IMAGES)('image gate on the %s', (_name, load) => {
   const img = load();
   const along = { x: 8, length: 240, vertical: false } as const;
-  /** A line on the darkest band of the picture, where a truss tube shows against the house. */
+  /** A line on the darkest 10-row band of the picture (plain where it moves), as a truss tube against the house. */
   const line = (width: number, rgb: Line['rgb']): Line => ({ ...along, y: darkestRow(img, 8, 240), width, rgb });
 
   it('passes a 2 % exposure change both ways', () => {
@@ -40,8 +40,8 @@ describe.each(IMAGES)('image gate on the %s', (_name, load) => {
     fails(img, hueTurned(img, -10), /^\|hue\|/);
   });
 
-  it('fails when the brightest 1 % of the picture goes 30 % dimmer', () => {
-    fails(img, dimmedBrightest(img, 0.01, 0.7), /^share/);
+  it('fails when the brightest 1 % of the pixels go 30 % dimmer', () => {
+    fails(img, dimmedBrightestPixels(img, 0.01, 0.7), /^share/);
   });
 
   it('fails a lost grey truss line, 2 px or 1 px wide and 240 px long', () => {

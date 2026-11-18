@@ -50,16 +50,20 @@ export function withLine(src: RgbaImage, line: Line): RgbaImage {
   return { ...src, data };
 }
 
-/** The row whose 6-row band over [x, x + length) is darkest: where a thin truss tube shows against the house. */
+/**
+ * The row y whose 10-row band [y - 4, y + 6) over [x, x + length) is darkest (least green): where a thin truss tube
+ * shows against the house. The 10 rows are those both lines (y, y + 1), their 4x4 blocks and the 1 px windows can
+ * touch, so the background is plain where the line moves.
+ */
 export function darkestRow(src: RgbaImage, x: number, length: number): number {
   const sum = (y: number): number => {
     let s = 0;
     for (let i = x; i < x + length; i++)
-      for (let j = y; j < y + 6; j++) s += src.data[(j * src.width + i) * 4 + 1] ?? 0;
+      for (let j = y - 4; j < y + 6; j++) s += src.data[(j * src.width + i) * 4 + 1] ?? 0;
     return s;
   };
   let [best, row] = [Infinity, 0];
-  for (let y = 2; y + 8 < src.height; y++) if (sum(y) < best) [best, row] = [sum(y), y + 2];
+  for (let y = 4; y + 6 <= src.height; y++) if (sum(y) < best) [best, row] = [sum(y), y];
   return row;
 }
 

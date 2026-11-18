@@ -6,9 +6,10 @@ import type { PerceptualDiff } from './perceptualDiff';
  * has the table and the measured run-to-run noise). Raise or lower one only with a measured reason in the same commit.
  * - exposure: |ln(Yb/Ya)| of the mean linear luminance. 2 % measures at most 0.024, 5 % at least 0.047.
  * - hue: the chroma-weighted hue turn. Gamut clipping keeps a real turn from showing in full: 3° measures at most
- *   2.8°, 10° at least 5.7°.
+ *   2.8°, 10° at least 5.3°.
  * - share: changed blocks (shift-tolerant distance above 0.05). 0.0003 lets 5 of the 17,325 blocks of a 660x420 shot
- *   change; the brightest 1 % of the dark wide view dimmed by 30 % changes 8, a lost 24 px truss line 6 or more.
+ *   change; the brightest 1 % of the pixels dimmed by 30 % changes 16 or more (the dark wide view, the closest case),
+ *   a lost 240 px truss line 60.
  * - worst: one block; a whole-pixel move of a thin line measures about 0, a lost 2 px grey truss line 0.12 or more.
  * - mean: the mean block distance, a broad backstop (5 % exposure on the synthetic stage measures 0.0055).
  */

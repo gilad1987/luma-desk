@@ -36,31 +36,17 @@ export function noisy(src: RgbaImage, lsb: number): RgbaImage {
   return mapPixels(src, (rgb) => each(rgb, (v) => Math.max(0, Math.min(255, v + next() - lsb))));
 }
 
-export const pixelOf = (src: RgbaImage, x: number, y: number): Rgb => {
-  const p = (y * src.width + x) * 4;
-  return [src.data[p] ?? 0, src.data[p + 1] ?? 0, src.data[p + 2] ?? 0];
-};
-
-/** Oklab lightness summed on a 4 px grid over the square of `side` at (x, y): cheap, and enough to rank squares. */
-function squareLightness(src: RgbaImage, x: number, y: number, side: number): number {
-  let sum = 0;
-  for (let j = 0; j < side; j += 4) for (let i = 0; i < side; i += 4) sum += toOklab(pixelOf(src, x + i, y + j))[0];
-  return sum;
-}
-
-/** A copy with the brightest square of `area` (a share of the picture) at its linear light times `gain`. */
-export function dimmedBrightest(src: RgbaImage, area: number, gain: number): RgbaImage {
-  const side = Math.round(Math.sqrt(area * src.width * src.height));
-  let [best, bx, by] = [-1, 0, 0];
-  for (let y = 0; y + side <= src.height; y += 4) {
-    for (let x = 0; x + side <= src.width; x += 4) {
-      const sum = squareLightness(src, x, y, side);
-      if (sum > best) [best, bx, by] = [sum, x, y];
-    }
+/**
+ * A copy with the brightest `share` of the pixels (ranked by Oklab L) at their linear light times `gain`, as a dimmer
+ * lamp would be: lamps on a real stage are spread hot spots, not one square. Every pixel at the cut is included, so
+ * ties can take more than `share` (on the synthetic stage every beam pixel has the same L).
+ */
+export function dimmedBrightestPixels(src: RgbaImage, share: number, gain: number): RgbaImage {
+  const n = src.width * src.height;
+  const lightness = new Float64Array(n);
+  for (let p = 0; p < n; p++) {
+    lightness[p] = toOklab([src.data[p * 4] ?? 0, src.data[p * 4 + 1] ?? 0, src.data[p * 4 + 2] ?? 0])[0];
   }
-  return mapPixels(src, (rgb, p) => {
-    const [x, y] = [p % src.width, Math.floor(p / src.width)];
-    const inside = x >= bx && x < bx + side && y >= by && y < by + side;
-    return inside ? gained(rgb, gain) : rgb;
-  });
+  const cut = Float64Array.from(lightness).sort()[Math.floor(n * (1 - share))] ?? Infinity;
+  return mapPixels(src, (rgb, p) => ((lightness[p] ?? 0) >= cut ? gained(rgb, gain) : rgb));
 }

@@ -33,21 +33,25 @@ mean < 0.01. `tests/unit/gates/imageLimits.test.ts` is their specification. It b
 synthetic stage and from all four baselines, the bright FOH and the mostly dark wide view among them. The values are
 the range over those five images:
 
-| Change                                         | Measured                    | Result          |
-| ---------------------------------------------- | --------------------------- | --------------- |
-| Exposure × 1.02 and ÷ 1.02                     | \|exposure\| 0.018 to 0.024 | pass            |
-| Exposure × 1.05 and × 0.95                     | \|exposure\| 0.047 to 0.054 | fail (exposure) |
-| Hue turned 3° (same lightness and chroma)      | \|hue\| 1.6° to 2.8°        | pass            |
-| Hue turned 10° and -10°                        | \|hue\| 5.7° to 10.0°       | fail (hue)      |
-| Brightest 1 % square 30 % dimmer               | share 0.00046 to 0.0075     | fail (share)    |
-| Lost 240 px grey truss line, 2 px or 1 px wide | share 0.0035 to 0.015       | fail (share)    |
-| 1 px white line on the darkest band moved 1 px | worst 0.018 or less         | pass            |
-| Whole shot moved 1 px (x, or x and y)          | worst 0.025 or less         | pass            |
+| Change                                                | Measured                                 | Result                 |
+| ----------------------------------------------------- | ---------------------------------------- | ---------------------- |
+| Exposure × 1.02 and ÷ 1.02                            | \|exposure\| 0.009 to 0.019              | pass                   |
+| Exposure × 1.05 and × 0.95                            | \|exposure\| 0.048 to 0.055              | fail (exposure)        |
+| Hue turned 3° (same lightness and chroma)             | \|hue\| 1.6° to 2.8°                     | pass                   |
+| Hue turned 10° and -10°                               | \|hue\| 5.3° to 10.0°                    | fail (hue)             |
+| Brightest 1 % of the pixels 30 % dimmer               | share 0.00092 to 0.045, 16 to 180 blocks | fail (share, exposure) |
+| Lost 240 px grey truss line, 2 px or 1 px wide        | share 0.0035 to 0.015, 60 blocks         | fail (share)           |
+| 1 px white line on the darkest 10-row band moved 1 px | worst 0.011 or less, 0 blocks            | pass                   |
+| Whole shot moved 1 px (x, or x and y)                 | worst 0.055 or less, 0 or 1 block        | pass                   |
 
-Gamut clipping keeps a real hue turn from showing in full, so 10° measures 5.7° to 10°. The mean alone cannot see a
-5 % exposure change (0.0011 to 0.0055), which is why exposure has its own limit. The dimmed square on the dark wide view
-is the closest case: 8 changed blocks against a limit of 5. A lost thin structure fails when it changes 6 blocks or more
-(about 24 px of a line). `tests/unit/gates/perceptualDiff.test.ts` checks the arithmetic of the metric.
+Gamut clipping keeps a real hue turn from showing in full, so 10° measures 5.3° to 10°. The mean alone cannot see a
+5 % exposure change (0.0021 to 0.0055), which is why exposure has its own limit. The dimmed pixels are ranked by
+Oklab lightness, as the lamps of a real stage are spread hot spots; they also break the exposure limit. The dark wide
+view is the closest case: 16 changed blocks against a limit of 5. A lost thin structure fails when it changes 6 blocks
+or more (about 24 px of a line); a lost 240 px line changes 60. The moved white line sits on the darkest 10-row band:
+the rows that both lines, their 4x4 blocks and the 1 px windows can touch, so no lit row is in reach. The whole shot
+moved by 1 px on x and y changes 1 block on the wide view (worst 0.054), still a pass.
+`tests/unit/gates/perceptualDiff.test.ts` checks the arithmetic of the metric.
 
 The gate shoots four views of the synthetic stage: FOH, Wide and Front in the desk layout, and FOH in the MA layout,
 which frames the stage in the part of the view its console leaves free. Every shot waits for the lazy MVR post chain,
