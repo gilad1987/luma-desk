@@ -1019,13 +1019,14 @@ right types, and `JSON.stringify` turns `NaN` into `null`, which gives the same 
 `null ?? 0.62`, `null ?? 0`). Pinned by: `tests/unit/show/showFileInput.test.ts` (show rows) and
 `tests/unit/ui/layouts/layoutPrefsParity.test.ts` (layout row).
 
-| Saved value                                                | Original (`index.html@48a3b63`)                                       | Now                     |
-| ---------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------- |
-| `bpm` or `haze` not a number                               | used as it was (`d.bpm \|\| 120`, `d.haze ?? .62`, line 2306)         | default (120, 0.62)     |
-| executor `name`, `level` or `cues` of the wrong type       | used as it was (line 2305)                                            | default (`''`, 0, `[]`) |
-| `groups` a truthy primitive, or `presets` a non-empty text | threw part-way in strict mode, e.g. `{ groups: 7 }` (lines 2301-2304) | ignored                 |
-| `execs` an object with number keys                         | read by index (`(d.execs \|\| [])[i]`)                                | ignored                 |
-| `deskMode` or `deskZoom` in the layout not text            | used as it was (`L.deskMode \|\| 'ma'`, line 3080)                    | `ma` / `auto`           |
+| Saved value                                                | Original (`index.html@48a3b63`)                                                                                                                                                                                                                                                                             | Now                                                                                                                                  |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `bpm` or `haze` not a number                               | used as it was (`d.bpm \|\| 120`, `d.haze ?? .62`, line 2306)                                                                                                                                                                                                                                               | default (120, 0.62)                                                                                                                  |
+| executor `name`, `level` or `cues` of the wrong type       | used as it was (line 2305)                                                                                                                                                                                                                                                                                  | default (`''`, 0, `[]`)                                                                                                              |
+| `groups` a truthy primitive, or `presets` a non-empty text | threw part-way in strict mode, e.g. `{ groups: 7 }` (lines 2301-2304)                                                                                                                                                                                                                                       | ignored                                                                                                                              |
+| `execs` an object with number keys                         | read by index (`(d.execs \|\| [])[i]`)                                                                                                                                                                                                                                                                      | ignored                                                                                                                              |
+| `deskMode` or `deskZoom` in the layout not text            | used as it was (`L.deskMode \|\| 'ma'`, line 3080)                                                                                                                                                                                                                                                          | `ma` / `auto`                                                                                                                        |
+| group `ids` saved as text (`"101"`)                        | kept as text in the selection (`FX[id]` matched, line 1796); later `sel.includes(101)` missed it, so add and toggle (lines 1798, 1800), applying a phaser (line 1827), the phaser encoders such as spread (line 1834), Remove Phasers (line 2129) and Store Group treated `"101"` and `101` as two fixtures | read as numbers (`Number(id)`); text that `Number` reads but an object key did not (`" 101"`, `"0x65"`, `"1.01e2"`) now also matches |
 
 Notes:
 
@@ -1034,6 +1035,8 @@ Notes:
   `groups` and the presets were already replaced. Now a truthy `groups` that is not an object gives an empty pool
   that only the newer default groups fill, and a `presets` that is not an object is skipped.
 - A saved show of JSON `null` still throws before anything changes, as reading a field of it always did.
+- Group `ids` saved as text: the show reader does not check them; `Selection.set` (`src/engine/Selection.ts`) reads
+  each id with `Number` before the rig lookup. Pinned by: `tests/unit/engine/state/Selection.test.ts`.
 
 ## Q. UI quirks from the Phase 5 extraction map
 
