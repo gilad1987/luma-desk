@@ -40,7 +40,7 @@ function wired(design?: StageDesign) {
     scene: { add: vi.fn() },
     views: { fitTo: vi.fn(), setView: vi.fn(), currentView: 'foh' as const },
     surfaceHit: { setSurfaces: vi.fn(), setVenue: vi.fn(), setScenery: vi.fn() },
-    postFx: { followMvr: vi.fn() },
+    postFx: { followMvr: vi.fn(), mvrChainReady: vi.fn(() => Promise.resolve()) },
   };
   const { modal, cancelBuilder } = flow.deps;
   const bus = { emit, on: vi.fn() };

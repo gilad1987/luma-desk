@@ -20,6 +20,8 @@ export class LazyMvrChain {
   #chain: MvrChain | undefined;
   /** The identity of the MVR stage the chain loads for; a chain that arrives for an older one is freed. */
   #session: object | undefined;
+  /** The latest load; it settles with success or failure, so a wait on it never rejects. */
+  #pending: Promise<void> = Promise.resolve();
   #width = 0;
   #height = 0;
 
@@ -51,8 +53,16 @@ export class LazyMvrChain {
     return this.#chain;
   }
 
+  /**
+   * Resolves when the latest load ended (at once if none started), so a memory reading of the test API counts the
+   * chain's targets: the load is async and can end after the frames a reading draws. It never rejects.
+   */
+  ready(): Promise<void> {
+    return this.#pending;
+  }
+
   #load(session: object): void {
-    void this.#create().then(
+    this.#pending = this.#create().then(
       (chain) => {
         if (this.#session !== session) {
           chain.dispose();

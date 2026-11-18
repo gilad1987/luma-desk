@@ -44,6 +44,11 @@ export class PostFx {
     return this.mvr.select() !== undefined;
   }
 
+  /** Resolves when the MVR chain's latest load ended; the test API's `mvrReady` waits on it. Never rejects. */
+  mvrChainReady(): Promise<void> {
+    return this.mvr.ready();
+  }
+
   /** The scene depth of the MVR chain, for the beam pass; undefined while the built-in chain draws. */
   get sceneDepth(): SceneDepth | undefined {
     return this.mvr.current?.sceneDepth;
