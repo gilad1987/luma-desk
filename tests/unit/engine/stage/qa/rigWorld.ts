@@ -2,7 +2,7 @@
  * QA6: the engine of the Stage Builder wired as plan §3.2 orders it, for the rig-switch tests in this folder: one real
  * StageService, Selection (with the source), StageGroups over a GroupLibrary, PresetLibrary (with the source), the
  * MissingFixtureNotice fed by `ExecutorPool.observeCues`, and a Programmer that reads the rig at call time and aims
- * the computed presets with the source.
+ * the computed presets through the PresetLibrary.
  */
 import { EventBus, type Clock } from '../../../../../src/core';
 import type { StageDesign } from '../../../../../src/domain/stage/StageDesign';
@@ -50,7 +50,6 @@ export function rigWorld() {
     state,
     clock,
     bus,
-    source: service,
   });
   const lines = recordEvents(bus);
   /** Applies a template; `sultans-pool` means the built-in design object itself, so `isBuiltIn` turns true. */

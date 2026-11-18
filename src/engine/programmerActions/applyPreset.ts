@@ -1,9 +1,7 @@
-import { PRESET_FNS } from '../presetFunctions';
 import type { Programmer } from '../Programmer';
 import type { PresetType } from '../presetTypes';
 import { presetValues } from '../presetValues';
 import { attrEntries } from '../shared';
-import { presetFnsOf } from '../stage/presetFnsOf';
 import { colorTargets } from './colorTargets';
 import type { ProgrammerDeps } from './ProgrammerDeps';
 import { toastSelectFirst } from './toastSelectFirst';
@@ -16,10 +14,10 @@ const COLOR_POOL: PresetType = 4;
  * presets (fans, recorded values) spread across the selection. An empty slot does nothing. The original also had an
  * empty `if (type === 2)` branch meant to tidy position phasers; it never did anything and is not carried over.
  * A computed preset that the current stage cannot aim (G10) changes nothing and logs which stage part is missing;
- * any other computed preset aims at the frame of `deps.source`, so it follows the stage like the pool view does.
+ * any other computed preset aims at `presets.fns`, the stage the pool view also reads.
  */
 export function applyPreset(p: Programmer, deps: ProgrammerDeps, type: PresetType, slot: number): void {
-  const { rig, selection, presets, bus, source } = deps;
+  const { rig, selection, presets, bus } = deps;
   const pr = presets.all[type][slot];
   if (!pr) return;
   const missing = presets.missingTarget(type, slot);
@@ -33,7 +31,7 @@ export function applyPreset(p: Programmer, deps: ProgrammerDeps, type: PresetTyp
     if (type !== COLOR_POOL) toastSelectFirst(bus);
     return;
   }
-  const fns = source ? presetFnsOf(source.frame) : PRESET_FNS;
+  const fns = presets.fns;
   ids.forEach((id, k) => {
     const f = rig.get(id);
     const v = f && presetValues(pr, f, { k, n: ids.length }, fns);

@@ -5,7 +5,6 @@ import type { EngineBus } from '../events';
 import type { ExecutorPool } from '../ExecutorPool';
 import type { PresetLibrary } from '../PresetLibrary';
 import type { Selection } from '../Selection';
-import type { RigSource } from '../stage/RigSource';
 
 /**
  * The owners the programmer works with. They are injected, not imported, so tests build a programmer on any rig and
@@ -23,6 +22,4 @@ export interface ProgrammerDeps {
   /** Times the CLEAR double press; the original used `performance.now()`, not the frame time. */
   readonly clock: Clock;
   readonly bus: EngineBus;
-  /** The stage the computed presets aim at, read at apply time; without it they aim at the built-in stage. */
-  readonly source?: RigSource;
 }

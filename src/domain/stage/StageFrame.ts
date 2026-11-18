@@ -1,5 +1,5 @@
 import { BAND_PTS } from '../venue';
-import { deckFitOf, isIdentityFit } from './deckFit';
+import { deckFitOf, isIdentityFit, onDeck, type DeckFit } from './deckFit';
 import type { StageDeck, StageDesign, StageScreen } from './StageDesign';
 import type { VenueKind } from './types';
 
@@ -19,11 +19,21 @@ export interface StageFrame {
   /** Empty when the band scenery is off, because then no performer stands on the deck. */
   readonly bandPoints: readonly BandPoint[];
   readonly venue: VenueKind;
+  /** How the built-in deck maps onto this deck; position presets move their venue-fixed deck targets with it. */
+  readonly fit: DeckFit;
 }
 
 /** The focus targets of a design; see `StageFrame`. */
 export function frameOf(d: StageDesign): StageFrame {
-  return { deck: d.deck, screen: screenOf(d), ring: ringOf(d), bandPoints: bandPointsOf(d), venue: d.venue.kind };
+  const fit = deckFitOf(d.deck);
+  return {
+    deck: d.deck,
+    screen: screenOf(d),
+    ring: ringOf(d),
+    bandPoints: bandPointsOf(d, fit),
+    venue: d.venue.kind,
+    fit,
+  };
 }
 
 function screenOf(d: StageDesign): StageFrame['screen'] {
@@ -40,9 +50,9 @@ function ringOf(d: StageDesign): StageFrame['ring'] {
   return null;
 }
 
-function bandPointsOf(d: StageDesign): readonly BandPoint[] {
+/** `BAND_PTS` itself on the built-in deck, so the default frame holds the venue constant (parity). */
+function bandPointsOf(d: StageDesign, fit: DeckFit): readonly BandPoint[] {
   if (!d.scenery.band) return [];
-  const fit = deckFitOf(d.deck);
   if (isIdentityFit(fit)) return BAND_PTS;
-  return BAND_PTS.map(([x, z, lift]) => [x * fit.scaleX + fit.offsetX, z * fit.scaleZ + fit.offsetZ, lift] as const);
+  return BAND_PTS.map(([x, z, lift]) => [...onDeck(fit, x, z), lift] as const);
 }

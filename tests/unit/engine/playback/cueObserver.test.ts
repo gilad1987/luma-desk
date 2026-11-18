@@ -1,8 +1,8 @@
 /**
  * Owns the cue observer: every way an operator executor starts a cue (GO, `goto`, a fader, a flash) reaches
  * `observeCues` with the executor index, the auto executor never does, and the MissingFixtureNotice wired to it logs
- * once per cue. What the notice
- * counts is owned by `stage/MissingFixtureNotice.test.ts`; the playback itself by the parity tests.
+ * once per cue. What the notice counts is owned by `stage/MissingFixtureNotice.test.ts`; the playback itself by the
+ * parity tests.
  */
 import { describe, expect, it } from 'vitest';
 import { EventBus, type Clock } from '../../../../src/core';
