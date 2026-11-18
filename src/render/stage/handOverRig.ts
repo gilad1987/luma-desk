@@ -4,7 +4,8 @@ import type { StageFixtureHost } from './StageSceneDeps';
 
 /**
  * Hands the fixtures with a built wall to the visuals and the overlay, after each stage build: a screen fixture
- * without a wall gets no visual and no label.
+ * without a wall gets no visual and no label. Only a screen visual writes the screen spill light, so a build without
+ * one turns the light off: else it keeps the old wall's last colour, and blackout and the master cannot reach it.
  */
 export function handOverRig(
   host: StageFixtureHost,
@@ -15,4 +16,5 @@ export function handOverRig(
     shown = withWalls(fixtures, slots);
   host.visuals.rebuild(shown, slots);
   host.overlay.setFixtures(shown);
+  if (!shown.some((f) => f.T.shape === 'screen')) host.screenLight.intensity = 0;
 }
