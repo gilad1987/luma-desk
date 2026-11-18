@@ -13,6 +13,7 @@ import { sameMvrFile } from './sameMvrFile';
  * queued. A stage of another file (before the restore runs or during an await) stops it before it shows the prompt
  * or the scenery, so two queued restores do not both draw the latest stage. A stage of the same file (a builder edit,
  * a show load) keeps it going: the stage follower queues nothing for that change, so this restore draws its scenery.
+ * A stage of the same file without MVR data stops it before the draw too: the stage follower disposed the scenery.
  */
 export async function restoreStoredMvr(deps: MvrFlowDeps, queued: StageDesign): Promise<void> {
   const { stage, store, scenery, prompt, toast } = deps;
@@ -27,7 +28,7 @@ export async function restoreStoredMvr(deps: MvrFlowDeps, queued: StageDesign): 
   const { importMvr } = await import('../../mvr');
   const { geometry, meshes, meshResources } = await importMvr(stored.bytes, { name: queued.source.name });
   const { design } = stage;
-  if (!sameMvrFile(queued.source, design.source)) return;
+  if (!design.mvr || !sameMvrFile(queued.source, design.source)) return;
   const failures = await scenery.show({ design, geometry, meshes, meshResources });
   if (failures.length > 0) toast(he.mvr.meshFailed(failures.map(({ file }) => file).join(', ')));
 }

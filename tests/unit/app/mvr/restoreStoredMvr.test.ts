@@ -8,10 +8,15 @@ import { describe, expect, it } from 'vitest';
 import { restoreStoredMvr } from '../../../../src/app/mvr/restoreStoredMvr';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { createTemplate } from '../../../../src/domain/stage/templates';
+import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import { he } from '../../../../src/i18n/he';
 import { fakeMvrFlowDeps, makeMvr, sceneXml } from '../../../shared';
 
-const savedMvr: StageDesign = { ...createTemplate('theatre'), source: { kind: 'mvr', name: 'Rig.mvr', fileHash: 'h' } };
+const savedMvr: StageDesign = {
+  ...createTemplate('theatre'),
+  source: { kind: 'mvr', name: 'Rig.mvr', fileHash: 'h' },
+  mvr: { fixtures: {}, layers: [], hiddenLayers: [], offset: [0, 0, 0] },
+};
 const BYTES = new Uint8Array(makeMvr(sceneXml('<Layer uuid="L1" name="Rig"><ChildList></ChildList></Layer>')));
 
 describe('restoreStoredMvr', () => {
@@ -73,11 +78,14 @@ describe('restoreStoredMvr', () => {
     expect(flow.calls).toEqual([]);
   });
 
-  it('draws no scenery when the stage changed while the file was imported again', async () => {
+  it.each([
+    ['another stage', BUILT_IN_DESIGN],
+    ['a stage of the same file without MVR data', { ...createTemplate('theatre'), source: savedMvr.source }],
+  ])('draws no scenery when %s came while the file was imported again', async (_name, next: StageDesign) => {
     const flow = fakeMvrFlowDeps(savedMvr);
     flow.store.get.mockResolvedValue(BYTES);
     flow.scenery.load.mockImplementationOnce(() => {
-      flow.stage.design = flow.deps.stage.builtIn;
+      flow.stage.design = next;
       return Promise.resolve();
     });
     await restoreStoredMvr(flow.deps, flow.stage.design);
