@@ -29,6 +29,8 @@ Groups:
 - [H. Dead code and unused names](#h-dead-code-and-unused-names)
 - [I. Service worker (`sw.js`)](#i-service-worker-swjs)
 - [J. Refactor departures on paths that only crash](#j-refactor-departures-on-paths-that-only-crash)
+- [K. Test mode (`?test`)](#k-test-mode-test)
+- [L. Corrupt-save-only changes](#l-corrupt-save-only-changes)
 - [Q. UI quirks from the Phase 5 extraction map](#q-ui-quirks-from-the-phase-5-extraction-map)
 
 ---
@@ -455,7 +457,8 @@ Groups:
   $('#haze').value = hazeU.value * 100;
   ```
 - What it does: `bpm: 0` loads as 120; `haze: 0` loads as 0. Both are correct for valid data (bpm 0 is not valid),
-  but the operators differ. The loader does not check `v` or the types of the fields.
+  but the operators differ. The loader does not check `v`. A field of the wrong type now counts as missing
+  (section L).
 - Why kept: loader parity with old saved shows.
 - Future fix: validate the show with a schema; keep `v: 1` as the version.
 
@@ -515,12 +518,12 @@ Groups:
 ### D9. An unknown stored `deskMode` is used as it is
 
 - Source: `index.html:3080` (`deskMode = L.deskMode || 'ma'`)
-- Lives in: `src/ui/layouts/layoutStorage.ts` (`storedText`), `src/ui/layouts/LayoutManager.ts` (writes it into
-  `#layoutSel`)
-- What it does: a stored value that is not `ma`, `desk` or `classic` is kept. The layout select gets that value, so
-  it shows no option, and the page is drawn in the classic layout. Only an empty value falls back to `ma`.
+- Lives in: `src/show/LayoutPrefs.ts` (`textOr`), `src/ui/layouts/LayoutManager.ts` (writes it into `#layoutSel`)
+- What it does: a stored text that is not `ma`, `desk` or `classic` is kept. The layout select gets that value, so
+  it shows no option, and the page is drawn in the classic layout. Only an empty value falls back to `ma`. A stored
+  value that is not text now falls back to `ma` too (section L).
 - Why kept: `lumadesk-layout2` compatibility and DOM parity.
-- Pinned by: `tests/unit/ui/layouts/layoutStorage.test.ts` ("keeps an unknown stored layout name as it is ...").
+- Pinned by: `tests/unit/ui/layouts/layoutPrefsParity.test.ts` ("keeps an unknown saved layout name ...").
 - Future fix: accept only the three known names and fall back to `ma`.
 
 ## E. Auto Show and audio
@@ -689,8 +692,9 @@ Groups:
 
 - Source: `index.html:1148` (comment `orchestra (20)`)
 - Lives in: `src/render/venue/Orchestra.ts`, rows in `src/render/venue/orchestraRows.ts`
-- What it does: the code builds 30 seated players; with the band the stage holds 38 performers. The comment and the
-  extraction map said 20.
+- What it does: the code builds 30 players, 3 rows of 5 on each side; 27 sit, and the 2 double basses and the
+  timpani player stand. With the 8 band members the stage holds 38 performers. The comment and the extraction map
+  said 20.
 - Why kept: the scene is the behavior; the comment was wrong. The README already says 30.
 - Pinned by: `tests/unit/render/venue/venueParity.test.ts`.
 - Future fix: none; the new code does not repeat the wrong count.
@@ -737,6 +741,8 @@ Groups:
   ```js
   if (down.box && moved > 5) { ... } else if (moved < 5 && ev.target === canvas) { ... }
   ```
+- Lives in: `src/ui/panels/viewport/ViewportPicking.ts` (`CLICK_SLOP_PX = 5`: box select on `moved > 5`, click pick
+  on `moved < 5`)
 - What it does: a pointer move of exactly 5 px does nothing. Box select also includes the LED screen (2001) when its
   center is inside the box.
 - Why kept: interaction parity.
@@ -970,6 +976,56 @@ unreachable from the UI or crashed in the original too.
   code). The new code throws `RangeError: preset index ... is not a selection index`.
 - Why kept: unreachable; the preset loop passes indexes from 0.
 - Pinned by: `tests/unit/engine/state/positionPresets.test.ts`.
+
+### J4. A MIDI message with no data is ignored
+
+- Source: `index.html:2492` (`const [st, d1, d2] = m.data`)
+- Lives in: `src/io/Midi.ts` (`event.data ? decodeMidiMessage(event.data) : undefined`)
+- What it does: `MIDIMessageEvent.data` can be `null` in the DOM types. The original destructured it and threw a
+  `TypeError` in the event handler; the message had no effect. The new code skips the message. A short message
+  (fewer than 3 bytes) still reads the missing bytes as `NaN`, as before (`src/io/midiMessage.ts`).
+- Why kept: the original only crashed on this path; a real device always sends data.
+- Pinned by: no test for the `null` case.
+
+## K. Test mode (`?test`)
+
+### K1. Test mode freezes the clock and frames, but not timers
+
+- Lives in: the `?test` block in the `<head>` of `index.html`
+- What it does: with `?test`, `performance.now()` and `Date` return a frozen time that moves only on
+  `__desk.test.advance(ms)`, `requestAnimationFrame` callbacks run only on `frames(n)`, and `Math.random` is
+  seeded. `setTimeout` and `setInterval` are not patched: they run on real time. Code that waits on a timer (the
+  show save debounce in `src/show/ShowStorage.ts`, toast timers in `src/ui/components/Toast.ts`, the console-info
+  clock in `src/ui/layouts/startConsoleInfo.ts`, the guide opening 600 ms after boot) runs when real time passes,
+  and reads the frozen clock when it does.
+- Why kept: the goldens and screenshots need only the frame clock frozen. Specs that need a timer poll for its
+  result (`tests/shared/timerPolling.ts`).
+- Future fix: none planned; a fake timer queue would change when the save and the toasts happen in every spec.
+
+## L. Corrupt-save-only changes
+
+The show and layout readers now check the type of each field they read (`src/show/readShowFile.ts`,
+`src/show/LayoutPrefs.ts`). A field of the wrong type counts as missing, so the default applies. This changes the
+result only for a save with wrong types. No save written by any desk version is affected: every writer stores the
+right types, and `JSON.stringify` turns `NaN` into `null`, which gives the same default as before (`null || 120`,
+`null ?? 0.62`, `null ?? 0`). Pinned by: `tests/unit/show/showFileInput.test.ts` and
+`tests/unit/show/layoutPrefs.test.ts`.
+
+| Saved value                                                 | Original (`index.html@48a3b63`)                                       | Now                     |
+| ----------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------- |
+| `bpm` or `haze` not a number                                | used as it was (`d.bpm \|\| 120`, `d.haze ?? .62`, line 2306)         | default (120, 0.62)     |
+| executor `name`, `level` or `cues` of the wrong type        | used as it was (line 2305)                                            | default (`''`, 0, `[]`) |
+| `groups` or `presets` a non-empty string or other primitive | threw part-way in strict mode, e.g. `{ groups: 7 }` (lines 2301-2304) | ignored                 |
+| `execs` an object with number keys                          | read by index (`(d.execs \|\| [])[i]`)                                | ignored                 |
+| `deskMode` or `deskZoom` in the layout not text             | used as it was (`L.deskMode \|\| 'ma'`, line 3080)                    | `ma` / `auto`           |
+
+Notes:
+
+- `groups` or `presets` given as a non-empty string: the earlier port spread the string into one entry per
+  character. The original module ran in strict mode and threw a `TypeError` part-way through `loadShow`, after
+  `groups` and the presets were already replaced. Now a truthy `groups` that is not an object gives an empty pool
+  that only the newer default groups fill, and a `presets` that is not an object is skipped.
+- A saved show of JSON `null` still throws before anything changes, as reading a field of it always did.
 
 ## Q. UI quirks from the Phase 5 extraction map
 

@@ -140,7 +140,7 @@ ordering. Report at most six nits inline; give the rest as a count.
 Anything `npm run typecheck`, `npm run lint` (ESLint, `check:lines`, `format:check`) or `npm test` already rejects
 is not a finding. Run them first and report their exit codes; a failing gate is reported once, as a blocker.
 
-**Skip**: `package-lock.json`, `dist/**`, `vendor/**`, `tests/golden/**`, `tests/fixtures/**`,
+**Skip**: `package-lock.json`, `dist/**`, `tests/golden/**`, `tests/fixtures/**`,
 `tests/e2e/__screenshots__/**`, `docs/screenshots/**`, `docs/plan/**`, and `src/main.ts` lines that only moved
 out unchanged (review what replaced them).
 

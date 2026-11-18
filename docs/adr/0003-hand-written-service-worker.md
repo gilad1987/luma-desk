@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-11-17
-- Scope: `sw.ts`, `build/`, the page-side registration (moving to `src/io/`)
+- Scope: `sw.ts`, `build/`, the page-side registration (`src/io/serviceWorkerRegistration.ts`)
 
 ## Context
 
@@ -51,7 +51,8 @@ Cache Storage, so a new cache name loses no user data.
    `/sw.js` with a module the classic registration cannot parse. Registration fails silently (quirk I10), so the dev
    server never serves stale files.
 5. The page-side registration stays one call, as before (`register('sw.js')` on http(s), errors ignored). It lives
-   in `src/main.ts` today and moves to `src/io/` with the other browser edges.
+   in `registerServiceWorker()` in `src/io/serviceWorkerRegistration.ts`, with the other browser edges, and
+   `src/app/io/wireAppFeatures.ts` calls it once at boot.
 6. Test the worker in Playwright against the production preview. `playwright.config.ts` blocks service workers for
    every other spec; `tests/e2e/swOffline.spec.ts` and `tests/e2e/swCaching.spec.ts` allow them with `test.use`.
 
@@ -89,5 +90,6 @@ Costs and risks:
 - `tests/unit/swManifest.test.ts`: the shell list, the cache-name hash (stable, order-free, changes with content),
   placeholder injection and the public-folder read.
 - `tests/unit/swBuild.test.ts`: the plugin over a real build.
+- `tests/unit/io/serviceWorkerRegistration.test.ts`: the registration call, the `file:` skip and the ignored error.
 - `tests/e2e/swOffline.spec.ts`: the app boots offline from the cache. `tests/e2e/swCaching.spec.ts`: what is cached.
 - Not verified: the update path on an installed iPad (manual, after the deploy switch).

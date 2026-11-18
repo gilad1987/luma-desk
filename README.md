@@ -136,18 +136,38 @@ npm run build     # production build into dist/
 npm run preview   # serve dist/ as GitHub Pages would
 ```
 
-Checks (CI runs all except Playwright):
+`npm ci` also installs the git hooks (`prepare`); the pre-commit hook runs ESLint and Prettier on the staged files.
+
+Checks (CI runs all except `npm run test:screenshots`):
 
 ```bash
 npm run typecheck   # tsc over the app, tests, configs and the service worker
-npm test            # Vitest unit and parity tests
-npm run lint        # ESLint, the 100-line check and Prettier --check
+npm test            # Vitest unit and parity tests (npm run test:watch to re-run on change)
+npm run lint        # ESLint, the 100-line check, the no-JS check and Prettier --check
+npm run lint:fix    # ESLint --fix, then Prettier --write
 npm run format      # Prettier --write over the tree
 npx playwright install chromium   # once
-npx playwright test               # browser parity suite against the production preview
+npm run test:e2e                  # whole browser parity suite against the production preview
+npm run test:e2e:ci               # the same without the @screenshot tests (what CI runs)
+npm run test:screenshots          # only the @screenshot tests
 ```
 
-The Playwright screenshot baselines are recorded on macOS; on another OS the screenshot spec reports differences.
+**Screenshots are a local macOS check.** The screenshot baselines are recorded on macOS, and fonts and WebGL draw
+differently on Linux, so CI skips the `@screenshot` tests. Run `npm run test:screenshots` on macOS before a change
+that can move a pixel, and state the result in the PR. `npm run test:e2e:update` records new baselines; only the
+orchestrator approves them.
+
+## Deploy
+
+`.github/workflows/deploy.yml` checks every pull request and deploys `main` to GitHub Pages
+([ADR 0004](docs/adr/0004-actions-deploy.md)). The Pages source changes from the `gh-pages` branch to the workflow
+once, after the refactor is merged, and only with the owner's approval:
+
+```bash
+gh api -X PUT repos/gilad1987/luma-desk/pages -f build_type=workflow
+gh workflow run deploy.yml --ref main
+gh api repos/gilad1987/luma-desk/pages --jq .build_type   # prints: workflow
+```
 
 ## Performance
 

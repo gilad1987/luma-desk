@@ -4,18 +4,15 @@ LUMA DESK is a lighting desk and a 3D stage that run in the browser with no serv
 was one file, `index.html` (3,096 lines at commit `48a3b63`). This document describes the target structure in `src/`,
 why it has that shape, and the rules that keep it that way.
 
-> **Status (Phase 8, written on the staging branch `refactor/typescript-ahead`).** The layers below exist and are
-> tested, but the integration is not finished. Update this note and the marked sections when it is:
+> **Status (Phase 8 draft, written on `refactor/typescript-docs8` from `3cbff92`).** The layers below exist and are
+> tested. The `src/app/` wiring modules are merged on the lane branch, but the integration that makes `src/main.ts`
+> call them is not. The list "To confirm in Phase 8" at the end names every statement that depends on it.
 >
-> - `src/main.ts` still holds most of the original script (6,500 lines, `// @ts-nocheck`, exempt from lint in
->   `eslint.config.ts` as `LEGACY_UNTIL_PHASE_6`). Phase 6 makes it wiring and boot only.
-> - `index.html` still holds the markup and the `?test` hook (413 lines). The final pass makes it a shell of at most
->   100 lines (`docs/plan/extraction/index-shell.html`).
-> - `index.html` links `src/styles/index.css`. The SCSS partials (`src/styles/**/_*.scss`, entry `index.scss`) sit
->   beside the CSS until the styles owner switches the entry.
-> - `src/io/` (service-worker registration, install, fullscreen, download, MIDI, REC) is being created. Until it
->   lands, the page registers the worker in `src/main.ts`.
-> - `vendor/` (three.js r160) is still in the tree. Phase 6 deletes it; the app already imports `three` from npm.
+> - `src/main.ts` at `3cbff92` still holds the ported script (2,680 lines, `// @ts-nocheck`, exempt from lint in
+>   `eslint/legacyRules.ts` as `LEGACY_UNTIL_PHASE_6`). Phase 6 makes it the composition root of at most 100 lines.
+> - `index.html` still holds the markup and the `?test` hook (413 lines). FIX-1 makes it a shell of at most 100
+>   lines (`docs/plan/extraction/index-shell.html`, decision 27).
+> - `index.html` links `src/styles/index.scss`; Vite compiles the SCSS partials.
 
 ## Layers
 
@@ -24,7 +21,8 @@ Each folder under `src/` is a layer. A layer imports only from the layers below 
 ```text
 core  <-  domain  <-  engine  <-  command / show / autoshow / audio
                                   render / ui / io  (on top: they may import any layer above in this list)
-main.ts: the composition root; the only file that knows every layer
+app: the wiring modules; app -> every layer, nothing imports app
+main.ts: the composition root; it calls the app modules
 ```
 
 `ui` drives `render`, never the reverse: `render` must not import `ui`.
@@ -43,6 +41,7 @@ main.ts: the composition root; the only file that knows every layer
 | `io`       | Browser edges: service-worker registration, install, fullscreen, download, MIDI, REC.                       |
 | `i18n`     | Hebrew text (`i18n/he/`). English console terms stay inline where they are used (decision 16).              |
 | `styles`   | One stylesheet per panel or layout, in the original cascade order.                                          |
+| `app`      | Wiring for the composition root: builds the objects of every layer, joins them, runs the frame loop.        |
 
 Why one direction: the engine must run in Vitest with no browser, and a parity test must be able to drive it
 without a DOM. So `engine` never imports `render`, `ui`, `io` or the DOM. `domain` and `engine` may use the `three`
@@ -51,9 +50,54 @@ core package for its math types only (`Vector3` keeps the float results exact, d
 
 ## Wiring
 
-`main.ts` builds every object and passes each one what it needs in its constructor. There are no module
-singletons: the rig, for example, is built once in `main.ts` and injected (decision 4). A class that `main.ts`
-builds says in its TSDoc what it receives and which events it emits or listens to.
+Every object is built once and gets what it needs in its constructor. There are no module singletons: the rig, for
+example, is built once at boot and injected (decision 4). A class that the wiring builds says in its TSDoc what it
+receives and which events it emits or listens to.
+
+### Composition root
+
+`src/main.ts` (at most 100 lines) only calls the wiring modules in `src/app/`, in the boot order of the original
+script (`index.html@48a3b63`), because the order of construction is behavior (decision 24):
+
+| Folder             | Wires                                                                                           |
+| ------------------ | ----------------------------------------------------------------------------------------------- |
+| `src/app/boot`     | Engine, stage, render and fixture visuals (`wireEngine`, `wireStage`, `wireRender`, ...).       |
+| `src/app/loop`     | The frame loop (`FrameLoop`), the UI tick scheduler (`UiTickScheduler`), the FPS/clock readout. |
+| `src/app/testHook` | `window.__desk` for the parity suite, only with `?test` (`installTestHook`, decision 25).       |
+| `src/app/ui`       | The UI panels: top bar, encoders, executors, cue panes, side panes, command line.               |
+| `src/app/uix`      | Show files, the Show File dialog, Auto Show, view names.                                        |
+| `src/app/io`       | MIDI, the guide and tour, recording, fullscreen, install, service-worker registration.          |
+| `src/app/layout`   | The layouts (MA, desk, classic), the MA hardware readouts, console info, `LayoutPrefs`.         |
+
+### Frame loop
+
+`FrameLoop` (`src/app/loop/FrameLoop.ts`) asks for the next frame first, so an exception later in the frame does
+not stop the loop. Then it runs one frame in the original order, which is parity: the merger reads the fades just
+stepped, the visuals read the merged output, and the lights read the light frame the visuals just filled.
+
+1. `animateCrowd`
+2. the engine: `songPlayer.sync`, `autoShow.tick`, `pool.stepFades`, `merger.compute` (with the Auto Show
+   modulation)
+3. `visualSync.update`
+4. `props.update`
+5. `sceneLights.update`
+6. `keyLights.update`
+7. `animatePerformers`
+8. `stageRenderer.renderFrame`
+9. the FPS readout, then the UI tick
+
+A frame steps at most 0.1 s, so a frame after a stalled tab does not jump the fades.
+
+### UI tick scheduler
+
+The render runs every frame; the DOM panels repaint on two slower clocks (`src/app/loop/UiTickScheduler.ts`):
+
+- **Fast tick**, more than 50 ms after the last one: live readouts and faders. Callbacks get the frame time.
+- **Slow tick**, more than 400 ms after the last one, or on the next frame when the UI is dirty: the slow panels.
+  `markDirty()` replaces the original `stateDirty` flag; it forces the slow tick on the next frame, not at once.
+
+Callbacks run in registration order, so the composition root registers them in the original order. The UI starts
+dirty, so the first frame runs the slow tick (known quirk Q17).
 
 The engine reports what happened through one typed, synchronous `EventBus` (`src/core/EventBus.ts`, ADR 0002). It
 never calls the UI or storage. The event map is `EngineEvents` in `src/engine/events.ts`:
@@ -88,7 +132,8 @@ The refactor changes no behavior. That is proved by tests, not by review:
 Determinism makes that possible. With `?test` in the URL, a block in `index.html` freezes the clock, seeds
 `Math.random` and lets the test step frames. The test API `window.__desk.test` exists only then. The hook ships in
 every build and is switched on at run time, so the parity suite runs against the production preview (decision 23).
-Note: `window.__desk` itself is published at the end of boot in every run today; only `__desk.test` needs `?test`.
+`window.__desk` itself exists only with `?test` too (decision 25). Test mode does not patch `setTimeout` or
+`setInterval` (known quirk K1).
 
 three.js gives every object a uuid from `Math.random`. So the order in which render code creates materials,
 geometries and meshes is part of the behavior (decision 24): unused materials stay, and some materials are created
@@ -112,7 +157,7 @@ The full rules are in the plan and, once merged, in `CLAUDE.md` and `docs/rules/
 - **100 lines per file**, measured after Prettier, for every file except Markdown. ESLint `max-lines` checks `.ts`;
   `npm run check:lines` checks `.css`, `.scss` and `.glsl`. Split by responsibility: the rig is data files per area
   plus one index that joins them in build order.
-- **All TypeScript.** No `.js`, `.mjs` or `.cjs` file (until Phase 6 deletes `vendor/`). Configs are `.ts`.
+- **All TypeScript.** No `.js`, `.mjs` or `.cjs` file anywhere (`vendor/` is deleted). Configs are `.ts`.
 - **Strict types.** `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`, `verbatimModuleSyntax`. No `any`,
   no `@ts-ignore`, no `!` that hides a real gap.
 - **Prettier 3** (`prettier.config.ts`: width 120, single quotes, semicolons, trailing commas) for `.ts`, `.css`,
@@ -128,6 +173,27 @@ The full rules are in the plan and, once merged, in `CLAUDE.md` and `docs/rules/
 
 - `docs/adr/`: the decisions with their alternatives.
 - `docs/known-quirks.md`: behavior kept on purpose.
-- `docs/plan/extraction/00-decisions.md`: the 24 binding decisions of the extraction.
+- `docs/plan/extraction/00-decisions.md`: the binding decisions of the extraction and the integration.
 - `docs/plan/extraction/01-core-domain-engine.md`, `02-command-show-autoshow-audio-render.md`, `03-ui.md`: where each
   part of the original script went.
+
+## To confirm in Phase 8
+
+Each item below is written from the merged `src/app/` modules on the lane branch (`refactor/typescript-int456` at
+`eb6c87e`), not from an integrated `src/main.ts`. Check each one against the final tree, then delete this section.
+
+1. `src/main.ts` is at most 100 lines, calls only `src/app/` modules, and calls them in the original boot order.
+2. The folder table under "Composition root" matches `src/app/` (file names and what each folder wires).
+3. The frame order under "Frame loop" matches `src/app/loop/FrameLoop.ts` as `main.ts` builds it.
+4. The fast and slow tick callbacks are registered in the original order (50 ms and 400 ms clocks).
+5. `window.__desk` exists only with `?test` and holds `setView`, `fixtures` and `test` (decisions 25, 26).
+6. ESLint enforces "nothing imports app" (no `src/app` rule in `eslint/layerRules.ts` at `eb6c87e`).
+7. `src/ui/layouts/layoutStorage.ts` is gone and `LayoutPrefs` is the one layout store (decision 28; known quirk D9
+   cites `tests/unit/ui/layouts/layoutPrefsParity.test.ts`).
+8. `index.html` is a shell of at most 100 lines and the panel markup comes from TypeScript templates (decision 27);
+   then update rule I1 in `docs/rules/docs-tests.md`, which still says static markup Hebrew stays in `index.html`.
+9. `vendor/` is deleted and the I1 Hebrew-literal lint rule is active (`eslint/i18nRules.ts`, commit `373f4a0`).
+10. ADR 0003 decision 5: `src/app/io/wireAppFeatures.ts` calls `registerServiceWorker()`, and `src/main.ts` no
+    longer registers the worker itself.
+11. The "Listener today" column of the event table names the `src/app/` modules instead of `main.ts`.
+12. The status note at the top of this file is removed.

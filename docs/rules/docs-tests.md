@@ -4,7 +4,7 @@ Adopted from budget-app; the project rules (docs/rules/code.md, "Project rules")
 code.md. The source references (`doc:80-83`, `test:41-51`, ...) point at budget-app's `.cursor/rules/`.
 
 Not linted yet, so checked in review until a later change adds the rule: T8, T11, T15, T20, T22, T23, T25 and I5.
-I1 (Hebrew literals only in `src/i18n/`) is linted after Phase 5. T14 is linted only by Vitest `allowOnly: false`
+I1 (Hebrew literals only in `src/i18n/`) is linted (`eslint/i18nRules.ts`). T14 is linted only by Vitest `allowOnly: false`
 and Playwright `forbidOnly: true`.
 
 ### 1.1 Documentation (TSDoc, README, ADR, docs/)
@@ -54,7 +54,7 @@ and Playwright `forbidOnly: true`.
   in the shared worktree: other agents run the suite there. [review] Source: test:550-555.
 - **T4. A bug fix adds the red case first, then the fix.** [review] Source: test:84-85.
 - **T5. Exempt by definition (no test, no excuse):** type-only files, barrel `index.ts`, rig data files under
-  `domain/rig/` (the `rig-build` golden owns them), `i18n/he.ts`, styles and `.glsl` (screenshots own them). [review]
+  `domain/rig/` (the `rig-build` golden owns them), `i18n/he/`, styles and `.glsl` (screenshots own them). [review]
   Source: test:53-58.
 - **T6. One layer answers one question; do not re-check another layer's answer.** Lint/check scripts: repo
   invariants (layers, lines, format). Vitest units: pure logic in `core`, `domain`, `engine`, `command`, `show`,
@@ -139,7 +139,7 @@ order'`. [lint] ESLint `no-restricted-syntax` on
   Finding: today `tests/unit/domain/rigBuild.test.ts:3` and `aim.test.ts:6` import `../../shared/index.ts`, which
   re-exports `expectGolden.ts`, which imports `test`/`expect` from `@playwright/test` as values.
 - **T26. Specs find user text by key, not by literal.** A spec that asserts Hebrew UI text imports it from
-  `src/i18n/he.ts`, so a copy edit moves the spec with it. [review] Source: test:139-141, test:639-641,
+  `src/i18n/he/`, so a copy edit moves the spec with it. [review] Source: test:139-141, test:639-641,
   `budget-app/e2e/support/text.ts:33-41`.
 - **T27. Selectors: role and accessible name first, then the app's own `id`.** `getByRole('button', { name })` for
   user controls; the `#id` the app owns (`byId`, decision D2) where the control has no name (canvas, sheet cells). A
@@ -152,23 +152,26 @@ order'`. [lint] ESLint `no-restricted-syntax` on
   a change that can move a pixel (styles, render, ui, layout, fonts) and say in the PR body that it passed. A new
   screenshot test gets the `@screenshot` tag; a test without it must pass on Linux. [review] Source: ADR 0004.
 
-### 1.3 i18n (`src/i18n/he.ts`)
+### 1.3 i18n (`src/i18n/he/`)
 
-- **I1. Every script Hebrew string lives in `he.ts`.** Static markup Hebrew stays in `index.html` (D3); English
-  console terms stay inline (D4). [lint] ESLint `no-restricted-syntax` on `Literal[value=/[֐-׿]/]` and
-  `TemplateElement[value.raw=/[֐-׿]/]` for `src/**/*.ts`, with `src/i18n/he.ts` excluded (and `src/main.ts`
-  until Phase 6). Source: i18n:9-12 (one source of truth, the build fails on a gap).
+The locale is the folder `src/i18n/he/`: one file per area, joined by `src/i18n/he/index.ts`.
+
+- **I1. Every script Hebrew string lives in `src/i18n/he/`.** Static markup Hebrew stays in `index.html` (D3);
+  English console terms stay inline (D4). [lint] ESLint `no-restricted-syntax` on `Literal[value=/[֐-׿]/]` and
+  `TemplateElement[value.raw=/[֐-׿]/]` for `src/**/*.ts`, with `src/i18n/**` excluded (`eslint/i18nRules.ts`;
+  `src/main.ts` stays exempt in `eslint/legacyRules.ts` until Phase 6 rewrites it). Source: i18n:9-12 (one source
+  of truth, the build fails on a gap).
 - **I2. A missing key fails the build.** `he` is a typed `as const` object read by property (`he.toast.noSelection`),
   never by a computed string key, so `tsc` refuses a key that does not exist. [lint] `npm run typecheck`.
   Source: i18n:40-49.
 - **I3. Group keys by reach, not by origin.** Keys used by one module live under that module's group
   (`he.autoshow.styles`); a string used by 2+ modules moves to `he.common` in the same change. [review]
   Source: i18n:14-38.
-- **I4. Text with values is a function in `he.ts`.** `noSelectionApplied: (n: number) => \`…${n} הגופים…\``. Keep
+- **I4. Text with values is a function in `src/i18n/he/`.** `noSelectionApplied: (n: number) => \`…${n} הגופים…\``. Keep
 the exact original string for parity (no `Intl.PluralRules` or rewording during the refactor). After the
 refactor, a count message may use Hebrew plural forms (`one`/`two`/`many`/`other`). [review]
   Source: i18n:51-57 (adapted: no i18next).
-- **I5. `he.ts` imports nothing from the app.** It is pure data, so Playwright specs can import it (T26). [lint]
+- **I5. `src/i18n/he/` imports nothing from the app.** It is pure data, so Playwright specs can import it (T26). [lint]
   ESLint `no-restricted-imports` patterns `['../*', './*']` for `src/i18n/**`. Source: test:588-589 (e2e imports
   only the locale file).
 - **I6. Delete a key with its last use.** Before you delete, search for every reference (`rg "he\.toast\.x\b" src`),
