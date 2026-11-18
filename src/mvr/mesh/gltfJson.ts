@@ -7,12 +7,14 @@ export interface GltfNode extends GltfNodeTransform {
   readonly children: readonly number[];
 }
 
-/** The glTF JSON reduced to what bounds need: the root nodes, the nodes and one local box per mesh index. */
+/** The glTF JSON reduced to what the import needs: the bounds' nodes and boxes, and the files it names. */
 export interface GltfModel {
   readonly roots: readonly number[];
   readonly nodes: readonly GltfNode[];
   /** Local box per mesh index; empty when no primitive has a usable `POSITION` min/max. */
   readonly meshBoxes: readonly Aabb[];
+  /** Each distinct `uri` of an image or buffer that is not a `data:` URI: the files the mesh needs from outside. */
+  readonly externalUris: readonly string[];
 }
 
 type Json = Readonly<Record<string, unknown>>;
@@ -62,6 +64,12 @@ function readNode(value: unknown): GltfNode {
   };
 }
 
+/** The image and buffer URIs that name another file; a `data:` URI holds its bytes inline. */
+function externalUris(gltf: Json): string[] {
+  const uris = [...list(gltf['images']), ...list(gltf['buffers'])].map((item) => record(item)['uri']);
+  return [...new Set(uris.filter((uri): uri is string => typeof uri === 'string' && !/^data:/i.test(uri)))];
+}
+
 /** The default scene's nodes, or every node that no other node lists as a child. */
 function rootNodes(gltf: Json, nodes: readonly GltfNode[]): number[] {
   const scene = record(list(gltf['scenes'])[index(gltf['scene']) ?? 0]);
@@ -80,5 +88,5 @@ export function readGltf(json: unknown): GltfModel {
   const nodes = list(gltf['nodes']).map(readNode);
   const accessors = list(gltf['accessors']);
   const meshBoxes = list(gltf['meshes']).map((mesh) => meshBox(mesh, accessors));
-  return { roots: rootNodes(gltf, nodes), nodes, meshBoxes };
+  return { roots: rootNodes(gltf, nodes), nodes, meshBoxes, externalUris: externalUris(gltf) };
 }

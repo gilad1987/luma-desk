@@ -72,6 +72,7 @@ function importNow(bytes: Uint8Array, options: MvrImportOptions): MvrImport {
   const rig = resolveFixtures(archive, scene.fixtures);
   const meshWarnings: MvrWarning[] = [];
   const meshBoxes = readMeshBoxes(archive, scene.placements, (warning) => meshWarnings.push(warning));
+  const meshFiles = meshBytes(archive, scene.placements, (warning) => meshWarnings.push(warning));
   const fixed = luma ? { fixed: { offset: luma.offset, deck: luma.deck } } : {};
   const result = toStageDesign({ ...options, scene, fixtures: rig.fixtures, meshBoxes, ...fixed });
   const design = withLumaData(result, luma);
@@ -79,7 +80,7 @@ function importNow(bytes: Uint8Array, options: MvrImportOptions): MvrImport {
   return {
     design: design.design,
     geometry: result.geometry,
-    meshes: meshBytes(archive, scene.placements),
+    ...meshFiles,
     summary: summarize(walked, rig, noGeometry),
     warnings: [...scene.warnings, ...rig.gdtfWarnings, ...rig.patchWarnings, ...meshWarnings, ...design.warnings],
   };

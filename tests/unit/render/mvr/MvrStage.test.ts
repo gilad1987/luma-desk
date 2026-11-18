@@ -40,9 +40,9 @@ function sceneImport(): Promise<MvrImport> {
 }
 
 async function shownStage(): Promise<MvrStage> {
-  const { design, geometry, meshes } = await sceneImport();
+  const { design, geometry, meshes, meshResources } = await sceneImport();
   const stage = new MvrStage();
-  await stage.show({ design, geometry, meshes });
+  await stage.show({ design, geometry, meshes, meshResources });
   return stage;
 }
 

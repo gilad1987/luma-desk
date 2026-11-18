@@ -69,8 +69,7 @@ function layerGroup(
     if (first && others.length === 0) singles.push({ parts: fileParts, matrix: first });
     else instancedMeshes(fileParts, matrices).forEach((mesh) => group.add(mesh));
   }
-  const merged = mergeStatic(singles);
-  if (merged.length > 0) group.add(...merged);
+  mergeStatic(singles).forEach((mesh) => group.add(mesh));
   return group;
 }
 

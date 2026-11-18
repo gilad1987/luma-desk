@@ -17,6 +17,15 @@ describe('MaterialPool', () => {
     expect([pool.adopt(first), pool.adopt(second), isSecondFreed]).toEqual([first, first, true]);
   });
 
+  it('shares one instance between materials that hold the same texture instance', () => {
+    const pool = new MaterialPool();
+    const map = new Texture();
+    const first = new MeshPhongMaterial({ map });
+    const second = new MeshPhongMaterial({ map });
+    expect(pool.adopt(first)).toBe(first);
+    expect(pool.adopt(second)).toBe(first);
+  });
+
   it('keeps materials apart that differ in colour, opacity, side or map', () => {
     const pool = new MaterialPool();
     const grey = new MeshPhongMaterial({ color: 0x808080 });

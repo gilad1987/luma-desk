@@ -41,7 +41,7 @@ async function bothBoxes(file: string, bytes: Uint8Array, matrices: readonly str
     matrices.map((matrix) => ({ file, matrix })),
     { [file]: bytes },
   );
-  const { design, geometry, meshes } = await importMvr(mvr, { name: 'frames' });
+  const { design, geometry, meshes, meshResources } = await importMvr(mvr, { name: 'frames' });
   const local = meshBounds(MvrArchive.open(mvr), file, () => undefined);
   if (!local || geometry.placements.length !== matrices.length) throw new Error(`frames: ${file} gave no bounds`);
   const expected = new Box3();
@@ -50,7 +50,7 @@ async function bothBoxes(file: string, bytes: Uint8Array, matrices: readonly str
     expected.union(new Box3(new Vector3(...min), new Vector3(...max)));
   }
   const stage = new MvrStage();
-  await stage.show({ design, geometry, meshes });
+  await stage.show({ design, geometry, meshes, meshResources });
   return { expected, drawn: new Box3().setFromObject(stage.group, true), stage };
 }
 

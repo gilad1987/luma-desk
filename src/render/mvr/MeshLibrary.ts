@@ -16,15 +16,21 @@ export interface MeshFailure {
  */
 export class MeshLibrary {
   readonly #bytes: Map<string, Uint8Array>;
+  readonly #resources: ReadonlyMap<string, Uint8Array>;
   readonly #loads = new Map<string, Promise<readonly MeshPart[]>>();
   readonly #geometries: BufferGeometry[] = [];
   readonly #materials = new MaterialPool();
   readonly #failures: MeshFailure[] = [];
   #isDisposed = false;
 
-  /** `bytes` is `MvrImport.meshes`: mesh bytes by archive file name. The library lets go of each file once read. */
-  constructor(bytes: ReadonlyMap<string, Uint8Array>) {
+  /**
+   * `bytes` is `MvrImport.meshes`: mesh bytes by archive file name. The library lets go of each file once read.
+   * `resources` is `MvrImport.meshResources`: the files the meshes name, kept as long as the library, since meshes
+   * share them.
+   */
+  constructor(bytes: ReadonlyMap<string, Uint8Array>, resources: ReadonlyMap<string, Uint8Array> = new Map()) {
     this.#bytes = new Map(bytes);
+    this.#resources = resources;
   }
 
   /** The parts of `file`; none when the archive lacks it (the import warned) or it cannot be parsed (see `failures`). */
@@ -62,7 +68,7 @@ export class MeshLibrary {
 
   async #parse(file: string, bytes: Uint8Array): Promise<MeshPart[]> {
     try {
-      return await loadMeshParts(file, bytes);
+      return await loadMeshParts(file, bytes, this.#resources);
     } catch (error) {
       this.#failures.push({ file, reason: error instanceof Error ? error.message : String(error) });
       return [];

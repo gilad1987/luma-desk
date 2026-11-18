@@ -5,11 +5,15 @@ import { buildLayers, type MvrProgress } from './buildLayers';
 import { isMesh } from './isMesh';
 import { MeshLibrary, type MeshFailure } from './MeshLibrary';
 
-/** What one imported stage draws from: its design, the import's scenery and the mesh bytes (`MvrImport.meshes`). */
+/**
+ * What one imported stage draws from: its design, the import's scenery, the mesh bytes (`MvrImport.meshes`) and the
+ * files those meshes name (`MvrImport.meshResources`).
+ */
 export interface MvrStageInput {
   readonly design: StageDesign;
   readonly geometry: MvrGeometry;
   readonly meshes: ReadonlyMap<string, Uint8Array>;
+  readonly meshResources: ReadonlyMap<string, Uint8Array>;
 }
 
 /**
@@ -29,12 +33,12 @@ export class MvrStage {
    * Replaces the scenery with that of `input`. The design's hidden layers start hidden. A later `show` or `dispose`
    * while this one still parses wins: the late result is freed and never shown. Resolves with the mesh files three.js
    * could not parse, which the import's bounds reader may have accepted, so the UI can name them in the summary.
-   * The mesh bytes are freed only when the caller also drops `input.meshes` (the import's `result.meshes`).
+   * The mesh bytes are freed only when the caller also drops `input.meshes` and `input.meshResources` (the import's).
    */
   async show(input: MvrStageInput, onProgress?: MvrProgress): Promise<readonly MeshFailure[]> {
     this.dispose();
     const build = this.#build;
-    const library = new MeshLibrary(input.meshes);
+    const library = new MeshLibrary(input.meshes, input.meshResources);
     this.#library = library;
     this.#hidden = new Set(input.design.mvr?.hiddenLayers ?? []);
     const layers = await buildLayers(input.geometry, library, onProgress);

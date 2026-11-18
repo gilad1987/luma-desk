@@ -13,6 +13,7 @@ export type MvrWarningCode =
   | 'symbol-depth'
   | 'missing-mesh'
   | 'bad-mesh'
+  | 'missing-mesh-resource'
   | 'duplicate-id'
   | 'oversize'
   | 'no-geometry'

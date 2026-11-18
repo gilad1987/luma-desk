@@ -33,8 +33,8 @@ describe('MeshLibrary', () => {
 
   it('lets MvrStage.show resolve with the files it could not parse', async () => {
     const mvr = meshScene([{ file: 'bad.glb' }], { 'bad.glb': TRUNCATED_GLB });
-    const { design, geometry, meshes } = await importMvr(mvr, { name: 'bad' });
-    const failures = await new MvrStage().show({ design, geometry, meshes });
+    const { design, geometry, meshes, meshResources } = await importMvr(mvr, { name: 'bad' });
+    const failures = await new MvrStage().show({ design, geometry, meshes, meshResources });
     expect(failures.map((failure) => failure.file)).toEqual(['bad.glb']);
   });
 

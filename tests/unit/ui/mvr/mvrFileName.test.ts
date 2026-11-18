@@ -18,7 +18,7 @@ describe('mvrFileName', () => {
     expect(mvrFileName('a\u0000b\tc\u007fd\u0085e')).toBe('a_b_c_d_e.mvr');
   });
 
-  it('drops trailing dots and spaces, which Windows removes', () => {
+  it('drops trailing dots and spaces, so no name ends like "show..mvr" or "show .mvr"', () => {
     expect(mvrFileName('show. .')).toBe('show.mvr');
     expect(mvrFileName('...')).toBe('luma-desk.mvr');
   });
@@ -27,6 +27,25 @@ describe('mvrFileName', () => {
     const names = ['CON', 'prn', 'Aux', 'NUL', 'COM1', 'lpt9', 'nul.backup'].map(mvrFileName);
     expect(names).toEqual(['_CON', '_prn', '_Aux', '_NUL', '_COM1', '_lpt9', '_nul.backup'].map((n) => `${n}.mvr`));
     expect(mvrFileName('CONSOLE')).toBe('CONSOLE.mvr');
+  });
+
+  it('also avoids COM0, LPT0, the superscript ports, CONIN$, CONOUT$ and a reserved name before " ."', () => {
+    const names = ['COM0', 'lpt0', 'COM¹', 'LPT²', 'com³', 'CONIN$', 'conout$', 'CON .txt', 'nul  .x'].map(mvrFileName);
+    const prefixed = ['COM0', 'lpt0', 'COM¹', 'LPT²', 'com³', 'CONIN$', 'conout$', 'CON .txt', 'nul  .x'];
+    expect(names).toEqual(prefixed.map((name) => `_${name}.mvr`));
+    expect(mvrFileName('COM10')).toBe('COM10.mvr');
+  });
+
+  it('replaces lone surrogates and prefixes a name that would start with a dot', () => {
+    expect(mvrFileName('a\uD800b\uDC00c')).toBe('a_b_c.mvr');
+    expect(mvrFileName(' .hidden')).toBe('_.hidden.mvr');
+  });
+
+  it('never cuts inside a grapheme: a combining mark, Hebrew niqqud or a ZWJ emoji stays whole', () => {
+    expect(mvrFileName(`${'a'.repeat(199)}e\u0301`)).toBe(`${'a'.repeat(199)}.mvr`);
+    expect(mvrFileName(`${'a'.repeat(196)}שָׁ`)).toBe(`${'a'.repeat(196)}.mvr`);
+    expect(mvrFileName(`${'a'.repeat(190)}👨‍👩‍👧`)).toBe(`${'a'.repeat(190)}.mvr`);
+    expect(mvrFileName(`${'a'.repeat(182)}👨‍👩‍👧`)).toBe(`${'a'.repeat(182)}👨‍👩‍👧.mvr`);
   });
 
   it('cuts a long name to 200 UTF-8 bytes before ".mvr" without cutting a character in half', () => {

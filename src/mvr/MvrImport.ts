@@ -44,6 +44,11 @@ export interface MvrImport {
    * placements; it is the counterpart of `MvrExportOptions.meshes`, so an export's meshes come back under one name.
    */
   readonly meshes: ReadonlyMap<string, Uint8Array>;
+  /**
+   * The files the GLB meshes name by URI and the archive holds (textures, external buffers), keyed by the URI as the
+   * glTF writes it, which is the URL the loader asks for. A URI the archive lacks gave a `missing-mesh-resource`.
+   */
+  readonly meshResources: ReadonlyMap<string, Uint8Array>;
   readonly summary: MvrSummary;
   /** Every problem the import survived, in the order the steps met them. */
   readonly warnings: readonly MvrWarning[];
