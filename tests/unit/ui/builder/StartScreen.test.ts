@@ -37,6 +37,15 @@ describe('StartScreen', () => {
     expect(chosen).toEqual([setVenue(createTemplate('theatre'), 'black-box')]);
   });
 
+  it('goes back from the venue cards to the template cards, and a new pick is chosen', () => {
+    click('[data-template="theatre"]');
+    click('[data-start="back"]');
+    const back = root.innerHTML;
+    click('[data-template="festival"]');
+    click('[data-venue="open-field"]');
+    expect([back, chosen]).toEqual([templateCardsMarkup, [setVenue(createTemplate('festival'), 'open-field')]]);
+  });
+
   it('hands over the built-in design itself for the current rig in its own venue', () => {
     click('[data-template="sultans-pool"]');
     click('[data-venue="sultans-pool"]');

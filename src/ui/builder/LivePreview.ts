@@ -22,7 +22,6 @@ export class LivePreview {
   readonly #stage: EditorSessionDeps['stage'];
   readonly #debounce: Debounce;
   readonly #original: StageDesign;
-  #isPreviewed = false;
 
   constructor(deps: EditorSessionDeps) {
     this.#stage = deps.stage;
@@ -37,10 +36,7 @@ export class LivePreview {
 
   /** Shows `design()` on the rig `PREVIEW_DELAY_MS` after the last call; it reads the design when the timer fires. */
   request(design: () => StageDesign): void {
-    this.#debounce.request(() => {
-      this.#isPreviewed = true;
-      this.#stage.apply(design(), 'preview');
-    });
+    this.#debounce.request(() => this.#stage.apply(design(), 'preview'));
   }
 
   /**
@@ -57,10 +53,12 @@ export class LivePreview {
     this.#stage.apply(built, 'builder');
   }
 
-  /** Drops a waiting preview and, if a preview was shown, puts the start design back. */
+  /**
+   * Drops a waiting preview and, if the live stage is no longer the start design, puts it back. The live design is
+   * the one fact of what a preview changed; a separate "previewed" flag could drift from it.
+   */
   cancel(): void {
     this.#debounce.cancel();
-    if (this.#isPreviewed) this.#stage.apply(this.#original, 'preview');
-    this.#isPreviewed = false;
+    if (this.#stage.design !== this.#original) this.#stage.apply(this.#original, 'preview');
   }
 }

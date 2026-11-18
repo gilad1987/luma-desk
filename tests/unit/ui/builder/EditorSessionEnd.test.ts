@@ -65,6 +65,17 @@ describe('EditorSession commit and cancel', () => {
     expect(stage.applied[1]?.design).toBe(stage.builtIn);
   });
 
+  it('cancels without an apply when the last preview already showed the start design', () => {
+    const stage = fakeStage();
+    const session = new EditorSession({ stage });
+    addTruss(session);
+    vi.runAllTimers();
+    session.undo();
+    vi.runAllTimers();
+    session.cancel();
+    expect(stage.applied.map((a) => a.design === stage.builtIn)).toEqual([false, true]);
+  });
+
   it('uses the injected schedule instead of the browser timer', () => {
     const runs: (() => void)[] = [];
     const stage = fakeStage();

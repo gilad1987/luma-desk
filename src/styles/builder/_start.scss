@@ -17,6 +17,12 @@
   h2 {
     font-size: 18px;
   }
+  .start-back {
+    align-self: flex-start;
+    min-width: var(--builder-target);
+    min-height: var(--builder-target);
+    padding-inline: 16px;
+  }
   .start-help {
     color: var(--mut);
   }

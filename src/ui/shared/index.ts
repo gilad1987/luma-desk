@@ -7,3 +7,4 @@ export { paintFader } from './paintFader';
 export { createElement } from './createElement';
 export { Modal } from './Modal';
 export { StoreModeGuard } from './StoreModeGuard';
+export { isTextField } from './isTextField';

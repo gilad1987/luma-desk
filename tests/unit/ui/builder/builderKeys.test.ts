@@ -5,21 +5,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { keyActionOf, listenBuilderKeys, type KeyPress } from '../../../../src/ui/builder/builderKeys.ts';
 import { asReal, FakeDom, FakeElement } from '../../../shared/dom';
+import { press } from './builderHarness.ts';
 
 type Listener = (ev: KeyPress) => void;
 
-const press = (key: string, mods: Partial<Pick<KeyPress, 'ctrlKey' | 'metaKey' | 'shiftKey'>> = {}) => ({
-  key,
-  ctrlKey: false,
-  metaKey: false,
-  shiftKey: false,
-  target: null,
-  preventDefault: vi.fn(),
-  ...mods,
-});
-
 describe('keyActionOf', () => {
-  it('maps Ctrl/Cmd+Z, Ctrl+Shift+Z, Ctrl+Y, Ctrl+D and Delete, and nothing else', () => {
+  it('maps Ctrl/Cmd+Z, Ctrl+Shift+Z, Ctrl+Y, Ctrl+D, Delete and Backspace, and nothing else', () => {
     const cases = [
       press('z', { ctrlKey: true }),
       press('z', { metaKey: true }),
@@ -31,7 +22,8 @@ describe('keyActionOf', () => {
       press('Backspace'),
       press('a', { ctrlKey: true }),
     ];
-    expect(cases.map(keyActionOf)).toEqual(['undo', 'undo', 'redo', 'redo', 'duplicate', 'delete', null, null, null]);
+    const actions = ['undo', 'undo', 'redo', 'redo', 'duplicate', 'delete', null, 'delete', null];
+    expect(cases.map(keyActionOf)).toEqual(actions);
   });
 });
 
@@ -54,6 +46,7 @@ describe('listenBuilderKeys', () => {
     const ctrlD = press('d', { ctrlKey: true });
     send(ctrlD);
     send({ ...press('Delete'), target: asReal<EventTarget>(new FakeElement('INPUT')) });
+    send({ ...press('Backspace'), target: asReal<EventTarget>(new FakeElement('TEXTAREA')) });
     send({ ...press('Delete'), target: asReal<EventTarget>(new FakeElement('BUTTON')) });
     send(press('x'));
     stop();

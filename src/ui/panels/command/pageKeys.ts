@@ -1,7 +1,8 @@
+import { isTextField } from '../../shared';
 import type { CommandLineDeps } from './CommandLineDeps';
 
 /** Focus is in a form field: the page keys leave the keystroke to it. */
-const typingInField = (): boolean => ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName ?? '');
+const typingInField = (): boolean => isTextField(document.activeElement);
 
 /**
  * The page keyboard. Space is GO+ on the selected executor, Escape leaves store mode, and any other printable key

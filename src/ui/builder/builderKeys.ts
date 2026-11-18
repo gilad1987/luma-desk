@@ -1,3 +1,5 @@
+import { isTextField } from '../shared';
+
 /** The edits the builder keyboard reaches. */
 export type KeyAction = 'undo' | 'redo' | 'duplicate' | 'delete';
 
@@ -10,15 +12,13 @@ export interface KeySource {
   removeEventListener(type: 'keydown', listener: (ev: KeyPress) => void): void;
 }
 
-/** Tags that take typed text; a key there edits the field, not the stage. */
-const FIELD_TAGS = ['INPUT', 'TEXTAREA', 'SELECT'];
-
 /**
- * The edit a key press asks for, or `null`. Ctrl and Cmd both count, so the Mac shortcuts work too; Shift makes
- * Ctrl+Z read as an upper-case Z, so keys compare in lower case.
+ * The edit a key press asks for, or `null`. Backspace deletes too, because a Mac keyboard has no Delete key. Ctrl and
+ * Cmd both count, so the Mac shortcuts work too; Shift makes Ctrl+Z read as an upper-case Z, so keys compare in lower
+ * case.
  */
 export function keyActionOf(ev: KeyPress): KeyAction | null {
-  if (ev.key === 'Delete') return 'delete';
+  if (ev.key === 'Delete' || ev.key === 'Backspace') return 'delete';
   if (!ev.ctrlKey && !ev.metaKey) return null;
   const key = ev.key.toLowerCase();
   if (key === 'z') return ev.shiftKey ? 'redo' : 'undo';
@@ -34,7 +34,7 @@ export function keyActionOf(ev: KeyPress): KeyAction | null {
  */
 export function listenBuilderKeys(source: KeySource, run: (action: KeyAction) => void): () => void {
   const listener = (ev: KeyPress): void => {
-    if (isTyping(ev.target)) return;
+    if (isTextField(ev.target instanceof Element ? ev.target : null)) return;
     const action = keyActionOf(ev);
     if (!action) return;
     ev.preventDefault();
@@ -42,8 +42,4 @@ export function listenBuilderKeys(source: KeySource, run: (action: KeyAction) =>
   };
   source.addEventListener('keydown', listener);
   return () => source.removeEventListener('keydown', listener);
-}
-
-function isTyping(target: EventTarget | null): boolean {
-  return target instanceof HTMLElement && FIELD_TAGS.includes(target.tagName);
 }
