@@ -18,7 +18,7 @@ const upstage: [Vector3, Vector3] = [new Vector3(0, 10, 0), new Vector3(0, 0, -1
 
 function surfacesFor(design: StageDesign): SurfaceHit {
   const surfaces = new SurfaceHit();
-  surfaces.setSurfaces(surfacesOf(design));
+  surfaces.setSurfaces(surfacesOf(design), design.venue.kind);
   return surfaces;
 }
 
@@ -64,9 +64,9 @@ describe('SurfaceHit on other stages', () => {
   it('replaces the boxes on setSurfaces instead of adding to them', () => {
     const surfaces = surfacesFor(BUILT_IN_DESIGN);
     expect(described(surfaces.hit(...down(15, -10)))).toEqual([10 - 1.8, 'up']);
-    surfaces.setSurfaces(surfacesOf(createTemplate('theatre')));
+    surfaces.setSurfaces(surfacesOf(createTemplate('theatre')), 'sultans-pool');
     expect([described(surfaces.hit(...down(15, -10))), surfaces.hit(...upstage)]).toEqual([[10, 'up'], null]);
-    surfaces.setSurfaces([]);
+    surfaces.setSurfaces([], 'sultans-pool');
     expect(described(surfaces.hit(...down(0, -10)))).toEqual([10, 'up']);
   });
 });

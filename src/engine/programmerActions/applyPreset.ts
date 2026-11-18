@@ -11,10 +11,10 @@ const COLOR_POOL: PresetType = 4;
 
 /**
  * Applies preset `slot` of pool `type` into the programmer, fixture by fixture in selection order, so per-fixture
- * presets (fans, recorded values) spread across the selection. An empty slot does nothing. The original also had an
- * empty `if (type === 2)` branch meant to tidy position phasers; it never did anything and is not carried over.
- * A computed preset that the current stage cannot aim (G10) changes nothing and logs which stage part is missing;
- * any other computed preset aims at `presets.fns`, the stage the pool view also reads.
+ * presets (fans, recorded values) spread across the selection. An empty slot does nothing. The original's empty
+ * `if (type === 2)` branch (quirk B2, orig:1821) never tidied position phasers and is not carried over.
+ * A computed preset that the current stage cannot aim (plan G10) changes nothing and logs which stage part is
+ * missing; any other computed preset aims at `presets.fns`, the stage the pool view also reads.
  */
 export function applyPreset(p: Programmer, deps: ProgrammerDeps, type: PresetType, slot: number): void {
   const { rig, selection, presets, bus } = deps;

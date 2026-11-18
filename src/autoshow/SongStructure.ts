@@ -9,7 +9,10 @@ export interface BeatPosition {
   readonly bar: number;
 }
 
-/** How loud each section plays, as a factor on the operator's energy. `intro` is missing on purpose (quirk E5). */
+/**
+ * How loud each section plays, as a factor on the operator's energy. `intro` is missing on purpose (quirk E5,
+ * orig:2575).
+ */
 const SECTION_ENERGY: Readonly<Partial<Record<Section, number>>> = {
   groove: 0.75,
   verse: 0.65,

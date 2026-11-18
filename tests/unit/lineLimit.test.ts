@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_FILE_LINES, countLines, findOversizedFiles } from '../../scripts/lineLimit.ts';
+import { MAX_FILE_LINES, countLines, findOversizedFiles, isLineChecked } from '../../scripts/lineLimit.ts';
 
 const linesOf = (n: number): string => 'a{}\n'.repeat(n);
 
@@ -31,11 +31,34 @@ describe('findOversizedFiles', () => {
     ]);
   });
 
+  it('reports .html and .yml files over the limit', () => {
+    const files = [
+      { path: 'index.html', text: linesOf(MAX_FILE_LINES + 1) },
+      { path: '.github/workflows/deploy.yml', text: linesOf(MAX_FILE_LINES + 2) },
+    ];
+    expect(findOversizedFiles(files)).toEqual([
+      { path: 'index.html', lines: MAX_FILE_LINES + 1 },
+      { path: '.github/workflows/deploy.yml', lines: MAX_FILE_LINES + 2 },
+    ]);
+  });
+
   it('accepts a file of exactly the limit', () => {
     expect(findOversizedFiles([{ path: 'src/styles/ok.css', text: linesOf(MAX_FILE_LINES) }])).toEqual([]);
   });
 
   it('leaves .ts files to ESLint max-lines', () => {
     expect(findOversizedFiles([{ path: 'src/main.ts', text: linesOf(MAX_FILE_LINES * 3) }])).toEqual([]);
+  });
+});
+
+describe('isLineChecked', () => {
+  it('selects the hand-written markup, styles, shaders and workflows', () => {
+    const paths = ['a.css', 'a.scss', 'a.glsl', 'index.html', 'deploy.yml'];
+    expect(paths.filter(isLineChecked)).toEqual(paths);
+  });
+
+  it('skips TypeScript and the JSON and PNG baselines', () => {
+    const paths = ['a.ts', 'tests/golden/rig.json', 'tests/e2e/__screenshots__/a.png'];
+    expect(paths.filter(isLineChecked)).toEqual([]);
   });
 });

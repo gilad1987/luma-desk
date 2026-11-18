@@ -23,7 +23,7 @@ function wheelRow({ deps, actions }: ExtraContext, isScreen: boolean): HTMLDivEl
   return row;
 }
 
-/** Gobo extras: the wheel (decided once per render, quirk Q9) and the rotation buttons. */
+/** Gobo extras: the wheel (decided once per render, quirk Q9, orig:2105) and the rotation buttons. */
 export function goboExtra(host: HTMLElement, ctx: ExtraContext): void {
   const { deps, actions } = ctx;
   const first = deps.selection.ids[0];

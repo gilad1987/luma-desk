@@ -67,6 +67,10 @@ of a build is easy to get wrong: an old `dist/`, a build from uncommitted files,
 
 4. Switch Pages to `build_type=workflow` only after the refactor branch is merged to `main`, and only with the
    owner's explicit approval at that time. Until then the legacy `gh-pages` site keeps serving the current app.
+   The `github-pages` environment allows only the `gh-pages` branch, so a deploy from `main` is rejected until `main`
+   is added. The order is: (1) add a deployment branch policy for `main` to the `github-pages` environment, (2) set
+   `build_type=workflow`, (3) run `gh workflow run deploy.yml --ref main`. The README (section Deploy) has the
+   commands and the checks.
 5. Keep the `gh-pages` branch after the switch, unchanged, as a rollback: setting the Pages source back to
    `gh-pages /` restores the old site.
 6. No `CNAME`, custom domain or Jekyll step. Vite output with `base: './'` works under `/luma-desk/` as it is.

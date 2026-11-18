@@ -11,6 +11,15 @@ export interface CrowdLayout {
   readonly spots: readonly CrowdSpot[];
 }
 
+/** The ground height under terrace row `step` (0 is the first row behind the floor); those people stand on it. */
+export type TerraceHeight = (step: number) => number;
+
+/** Sultan's Pool: each terrace row is one step higher than the row in front of it. */
+export const TIERED_GROUND: TerraceHeight = (step) => (step + 1) * AUDIENCE_TERRAIN.RISE;
+
+/** A black box or an open field: the back rows stand on the same flat ground as the floor in front. */
+export const FLAT_GROUND: TerraceHeight = () => 0;
+
 /** True for the pool-floor aisles, the FOH area and the delay tower bases, where no chair stands. */
 const isAisle = (x: number, z: number): boolean =>
   Math.abs(x) < 1.1 ||
@@ -21,8 +30,9 @@ const isAisle = (x: number, z: number): boolean =>
 /**
  * Lays out the audience: a chair grid on the pool floor (93 % of chairs taken) and people on the terraces (75 % of
  * places taken). `Math.random` runs once per chair and once per terrace place off the centre aisle, in that order.
+ * `ground` gives the height of each terrace row: tiers in Sultan's Pool, flat elsewhere.
  */
-export function layOutCrowd(): CrowdLayout {
+export function layOutCrowd(ground: TerraceHeight): CrowdLayout {
   const chairs: [number, number][] = [];
   const spots: CrowdSpot[] = [];
   for (let z = 8.4; z < AUDIENCE_TERRAIN.Z1 - 0.8; z += 1.02)
@@ -34,7 +44,7 @@ export function layOutCrowd(): CrowdLayout {
   for (let k = 0; k < AUDIENCE_TERRAIN.STEPS; k++)
     for (let x = -AUDIENCE_TERRAIN.X + 1; x <= AUDIENCE_TERRAIN.X - 1; x += 0.6) {
       if (Math.abs(x) < 1.1 || Math.random() < 0.25) continue;
-      spots.push([x, (k + 1) * AUDIENCE_TERRAIN.RISE + 0.05, AUDIENCE_TERRAIN.Z1 + k * AUDIENCE_TERRAIN.RUN + 0.62, 0]);
+      spots.push([x, ground(k) + 0.05, AUDIENCE_TERRAIN.Z1 + k * AUDIENCE_TERRAIN.RUN + 0.62, 0]);
     }
   return { chairs, spots };
 }

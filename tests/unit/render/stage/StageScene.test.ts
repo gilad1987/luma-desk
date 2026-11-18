@@ -35,7 +35,7 @@ describe('StageScene', () => {
   it('sets the surfaces once at boot and leaves the camera alone', () => {
     const { surfaces, views, host } = bootStageScene(BUILT_IN_DESIGN);
     expect(surfaces.setSurfaces).toHaveBeenCalledTimes(1);
-    expect(surfaces.setSurfaces).toHaveBeenCalledWith(surfacesOf(BUILT_IN_DESIGN));
+    expect(surfaces.setSurfaces).toHaveBeenCalledWith(surfacesOf(BUILT_IN_DESIGN), 'sultans-pool');
     expect(views.fitTo).not.toHaveBeenCalled();
     expect(views.setView).not.toHaveBeenCalled();
     const [fixtures, slots] = host.visuals.rebuild.mock.calls[0] as [Fixture[], Map<number, ScreenSlot>];
@@ -49,7 +49,7 @@ describe('StageScene', () => {
       fixtures = rigFromDesign(design).fixtures;
     stage.rebuild(design, fixtures);
     expect(surfaces.setSurfaces).toHaveBeenCalledTimes(2);
-    expect(surfaces.setSurfaces).toHaveBeenLastCalledWith(surfacesOf(design));
+    expect(surfaces.setSurfaces).toHaveBeenLastCalledWith(surfacesOf(design), 'open-field');
     expect(views.fitTo).toHaveBeenCalledWith(boundsOf(design));
     expect(views.setView).toHaveBeenCalledWith('top');
     expect(host.visuals.rebuild).toHaveBeenCalledTimes(2);
@@ -75,7 +75,10 @@ describe('StageScene', () => {
     expect(disposed).toEqual(new Set(owned));
     expect(scene.children.length).toBe(before.length);
     for (const m of Object.values(materials)) expect(disposed.has(m)).toBe(false);
-    for (const o of before) expect(o.parent).toBeNull();
+    // the venue stays; every old stage part left the scene
+    const gone = before.filter((o) => !scene.children.includes(o));
+    expect(gone.length).toBeGreaterThan(0);
+    for (const o of gone) expect(o.parent).toBeNull();
   });
 
   it('builds no deck and no LED wall when the design hides them, and drops the screen fixture', () => {

@@ -55,6 +55,7 @@ export class OutputMerger {
     for (const f of rig.fixtures) {
       const o = resetOutput(f);
       const slots = mergeExecutors(f, o, active, modulation.pump);
+      // quirk A7 (orig:1678): a hit takes the AUTO master level, before the programmer and the Grand Master
       if (f.type === 'blinder' && modulation.hitUntil > now && auto.on) o.dim = Math.max(o.dim, 100 * auto.level);
       mergeProgrammer(f, o, slots, programmer);
       Object.assign(f.base, o);

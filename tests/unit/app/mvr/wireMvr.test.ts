@@ -52,7 +52,7 @@ describe('wireMvr', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(download).not.toHaveBeenCalled();
     release();
-    await mvr.ready();
+    await mvr.testHook.mvrReady();
     expect(download).toHaveBeenCalledOnce();
   });
 
@@ -61,7 +61,7 @@ describe('wireMvr', () => {
     mvr.restore();
     flow.stage.design = savedMvr('B.mvr');
     mvr.restore();
-    await mvr.ready();
+    await mvr.testHook.mvrReady();
     expect(emit.mock.calls).toEqual([['message', { kind: 'toast', text: he.mvr.missingToast('B.mvr') }]]);
   });
 });

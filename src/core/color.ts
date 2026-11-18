@@ -24,7 +24,7 @@ export function hsv(h: number, s: number, v: number): Rgb01 {
     [v, p, q],
   ];
   const rgb = sectors[((i % 6) + 6) % 6];
-  if (rgb === undefined) throw new RangeError(`hsv: hue * 6 must be finite, got hue ${h}`);
+  if (rgb === undefined) throw new RangeError(`hsv: hue * 6 must be finite, got hue ${h}`); // quirk J1 (orig:691)
   return rgb;
 }
 
@@ -50,7 +50,7 @@ export function rgb2hsv(r: number, g: number, b: number): readonly [h: number, s
 /**
  * CSS colour for channels in percent (0..100), the scale fixture attributes are stored in. It does not round:
  * `100 * 2.55` is `254.99999999999997` and the browser rounds it, so the painted pixels and the inline style strings
- * stay identical to the code this replaces.
+ * stay identical to the code this replaces (quirk G2, orig:2229).
  */
 export function cssRgb(r: number, g: number, b: number): string {
   return `rgb(${r * 2.55},${g * 2.55},${b * 2.55})`;
