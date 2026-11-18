@@ -40,7 +40,6 @@ export function wireSideColumn(deps: PanelsWithServices, topBar: Pick<TopBar, 's
     side,
     execs: engine.pool.execs,
     sideTabs,
-    fixtures: engine.rig.fixtures,
   });
   return { sideTabs, pools, showLoaded, autoShowPanel, sequence, sheet };
 }

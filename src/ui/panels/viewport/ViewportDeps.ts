@@ -20,4 +20,9 @@ export interface ViewportDeps {
   /** The orbit controls; a box drag turns them off so the camera holds still under the rectangle. */
   readonly controls: { enabled: boolean };
   readonly clock: Clock;
+  /**
+   * True while the Stage Builder is open. The view then shows the preview rig, and a fixture picked there could be a
+   * preview-only id that stays selected after Cancel, so a release selects nothing.
+   */
+  readonly isBuilding: () => boolean;
 }

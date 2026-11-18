@@ -5,6 +5,7 @@ import type { Programmer } from '../../../engine/Programmer';
 import type { Selection } from '../../../engine/Selection';
 import type { Modal } from '../../shared';
 import type { AimHeight } from '../../components/AimHeight';
+import type { FocusPadDeps } from '../../components/FocusPad';
 import type { LayoutMode } from '../layoutMode';
 
 /** The programmer members the encoders, their extras and the feature dots read and write. */
@@ -33,6 +34,8 @@ export interface EncodersDeps {
   readonly layoutMode: () => LayoutMode;
   /** The focus height the Position extras set and every focus pad aims at. */
   readonly aimHeight: AimHeight;
+  /** The current stage's focus frame, which the Position focus pad aims at; see `FocusPadDeps.frame`. */
+  readonly frame: FocusPadDeps['frame'];
   /** Gobo wheel images as data URLs by gobo index, drawn by the renderer. */
   readonly goboIcons: readonly string[];
 }

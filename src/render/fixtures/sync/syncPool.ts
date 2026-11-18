@@ -1,6 +1,6 @@
 import { Matrix4, Vector3, type Texture } from 'three';
 import type { LightFrame } from '../../lights/LightFrame';
-import { SCREEN_NORMAL, type SurfaceHit } from '../../surface/SurfaceHit';
+import { SCREEN_NORMAL, type BeamHit } from '../../surface/SurfaceHit';
 import type { BeamFrame } from './BeamFrame';
 import { addPoolContributions } from './poolContributions';
 
@@ -38,7 +38,7 @@ export function syncPool(frame: BeamFrame, gob: number, goboTextures: readonly T
 }
 
 /** Places the pool at the hit, offset along the normal by a per-fixture step so overlapping pools do not z-fight. */
-function placePool(frame: BeamFrame, hit: SurfaceHit): void {
+function placePool(frame: BeamFrame, hit: BeamHit): void {
   const { visual: v, dir, origin, length, tz } = frame;
   const pl = v.pool,
     r = length * tz,

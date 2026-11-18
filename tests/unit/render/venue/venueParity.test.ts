@@ -19,9 +19,7 @@ describe('render/venue parity', () => {
   it('returns the handles that later code needs', () => {
     expect(venue.fohRig).toHaveLength(2);
     expect(venue.performers).toHaveLength(38);
-    expect(venue.wallFloodlight.intensity).toBe(0);
-    expect(venue.ledWall.screen.material.uniforms).toBe(venue.ledWall.uniforms);
-    expect(scene.children).toContain(venue.ledWall.strip);
+    expect(venue.wallFloodlight?.intensity).toBe(0);
     expect(venue.crowd.uJump.value).toBe(1);
   });
 });

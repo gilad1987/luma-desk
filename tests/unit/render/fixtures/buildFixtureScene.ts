@@ -12,6 +12,12 @@ export interface FixtureStage {
   readonly fixtures: readonly Fixture[];
 }
 
+/**
+ * The Sultan's Pool FOH riser the RoboSpot station stands on, as the venue registers it before the props build. It
+ * is created at module load, outside the seeded window, so it draws no uuid of the fixture scene.
+ */
+const FOH_RISER = new Object3D();
+
 /** A stage with the 405-fixture rig and an empty scene. */
 export const createFixtureStage = (): FixtureStage => ({
   scene: new Scene(),
@@ -35,16 +41,35 @@ export function buildFixtureScene({ scene, screenMesh, fixtures }: FixtureStage 
   const kit = { prims, materials: fx.createModelMaterials(trim) };
   const picker = { register: (o: Object3D) => void picks.add(o) };
   const models = fx.createFixtureModels(kit);
-  const builder = new fx.FixtureVisualBuilder({ scene, prims, beam, gobo, models, lensTextures, screenMesh, picker });
+  const screens = new Map(fixtures.filter((f) => f.T.shape === 'screen').map((f) => [f.id, screenMesh] as const));
+  const deps = { scene, prims, beam, gobo, models, lensTextures, screenMesh: screens, picker };
+  const builder = new fx.FixtureVisualBuilder(deps);
   const visuals = fixtures.map((f) => builder.build(f));
   const state = { haze: 0.5 };
-  const props = new fx.Props({ scene, kit, fohRig: new FohRig(), state, beamHaze: beam.haze });
+  const fohRig = new FohRig();
+  fohRig.add(FOH_RISER);
+  const props = new fx.Props({ scene, kit, fohRig, state, beamHaze: beam.haze });
   const { panel, vent, alu } = kit.materials;
   const { cylinderGeo, boxGeo, circleGeo, planeGeo, poolGeo, sphereGeo, torusGeo } = prims;
   const resources: (Texture | BufferGeometry | Material)[] = [...gobo.textures, gobo.glow, beam.geometry, trim];
   resources.push(...Object.values(lensTextures), cylinderGeo, boxGeo, circleGeo, planeGeo, poolGeo, sphereGeo);
   resources.push(torusGeo, panel, vent, alu);
-  return { fixtures, scene, screenMesh, picks, gobo, beam, visuals, props, state, resources };
+  return {
+    fixtures,
+    scene,
+    screenMesh,
+    screenMeshes: screens,
+    picks,
+    gobo,
+    beam,
+    visuals,
+    props,
+    state,
+    resources,
+    prims,
+    models,
+    lensTextures,
+  };
 }
 
 const isMesh = (o: Object3D): o is Mesh<BufferGeometry, Material | Material[]> => o instanceof Mesh;

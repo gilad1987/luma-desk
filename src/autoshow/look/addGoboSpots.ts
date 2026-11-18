@@ -1,4 +1,3 @@
-import { PRESET_FNS } from '../../engine/presetFunctions';
 import type { PresetFnName } from '../../engine/presetFunctions';
 import { colorByName } from '../../engine/colorByName';
 import type { LookDraft } from './LookDraft';
@@ -21,7 +20,7 @@ export function addGoboSpots(look: LookDraft): void {
 function setSingerFoh(look: LookDraft, gob: number): void {
   const S = look.style;
   look.set(look.groups.foh, (f, k, n) => ({
-    ...PRESET_FNS[S.orch && k % 2 ? 'orch' : 'singer'](f, k, n),
+    ...look.fns[S.orch && k % 2 ? 'orch' : 'singer'](f, k, n),
     ...colorByName('Warm'),
     dim: look.level(72),
     // a calm style without its own gobos keeps the FOH spots open
@@ -33,7 +32,7 @@ function setSingerFoh(look: LookDraft, gob: number): void {
 
 function setCrowdFoh(look: LookDraft, gob: number): void {
   look.set(look.groups.foh, (f, k, n) => ({
-    ...PRESET_FNS[look.pick<PresetFnName>(['audience', 'cross', 'fanAud'])](f, k, n),
+    ...look.fns[look.pick<PresetFnName>(['audience', 'cross', 'fanAud'])](f, k, n),
     ...colorByName('White'),
     dim: look.level(82),
     gobo: gob,
@@ -45,7 +44,7 @@ function setCrowdFoh(look: LookDraft, gob: number): void {
 function setTrussSpots(look: LookDraft): void {
   const S = look.style;
   look.set(look.groups.t4, (f, k, n) => ({
-    ...PRESET_FNS[S.orch ? 'orch' : look.pick<PresetFnName>(['cross', 'band', 'down', 'orch'])](f, k, n),
+    ...look.fns[S.orch ? 'orch' : look.pick<PresetFnName>(['cross', 'band', 'down', 'orch'])](f, k, n),
     ...(S.mono ? colorByName('White') : look.c1),
     dim: look.level(S.calm ? 48 : 62),
     gobo: look.pick(S.gobos || [1, 2, 3, 7]),
@@ -57,7 +56,7 @@ function setTrussSpots(look: LookDraft): void {
 function setRingWashes(look: LookDraft): void {
   const S = look.style;
   look.set(look.groups.rwash, (f, k, n) => ({
-    ...PRESET_FNS[S.calm ? 'ringCone' : look.pick<PresetFnName>(['center', 'ringCone', 'band'])](f, k, n),
+    ...look.fns[S.calm ? 'ringCone' : look.pick<PresetFnName>(['center', 'ringCone', 'band'])](f, k, n),
     ...(k % 2 ? look.c1 : look.c2),
     dim: look.level(S.calm ? 45 : 70),
     zoom: 26,
@@ -67,7 +66,7 @@ function setRingWashes(look: LookDraft): void {
 function setAngleSpots(look: LookDraft): void {
   const S = look.style;
   look.set(look.groups.angS, (f, k, n) => ({
-    ...PRESET_FNS[S.orch ? 'orch' : look.pick<PresetFnName>(['cross', 'band', 'audience'])](f, k, n),
+    ...look.fns[S.orch ? 'orch' : look.pick<PresetFnName>(['cross', 'band', 'audience'])](f, k, n),
     ...(S.mono ? colorByName('White') : look.c2),
     dim: look.level(S.calm ? 45 : 70),
     gobo: look.pick(S.gobos || [1, 3, 5, 7]),

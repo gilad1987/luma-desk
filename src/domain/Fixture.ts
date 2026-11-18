@@ -1,10 +1,13 @@
-import type { Vector3 } from 'three';
+import type { Quaternion, Vector3 } from 'three';
 import type { AttrName, AttrValues } from './attributes';
 import type { FixtureType, FixtureTypeId } from './FixtureType';
 import { TYPES } from './fixtureTypes';
 
+/** Every mount; the stage parser reads a stored mount against this list, so it cannot drift from `Mount`. */
+export const MOUNTS = ['hang', 'floor', 'wall'] as const;
+
 /** How a fixture is rigged; floor units point up at tilt 0, hung and wall units point down. */
-export type Mount = 'hang' | 'floor' | 'wall';
+export type Mount = (typeof MOUNTS)[number];
 
 /**
  * A pan/tilt pair in degrees: what `aimAt` returns and what a static fixture is rigged at. It is readonly because a
@@ -47,6 +50,13 @@ export class Fixture {
    * fixtures without a `pix` key at all, as the original plain objects were.
    */
   declare pix?: PixelStrip;
+  /**
+   * The body orientation relative to the rest pose (hanging, beam straight down), set only on fixtures whose design
+   * gives one (G1): circle trusses, rotated trusses and MVR imports. It is always unit (`rigFromDesign` normalizes it),
+   * because `aimAt` inverts it by its conjugate. When it is set, `aimAt` and `dirFrom` use it and
+   * ignore `mount` (G2). `declare` keeps the built-in rig without a `rotation` key, so its output stays at parity.
+   */
+  declare rotation?: Quaternion;
 
   constructor({ id, type, pos, mount, fixed }: Pick<Fixture, 'id' | 'type' | 'pos' | 'mount' | 'fixed'>) {
     this.id = id;

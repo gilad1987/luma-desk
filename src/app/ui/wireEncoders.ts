@@ -1,7 +1,7 @@
-import type { Rig } from '../../domain/rig/Rig';
 import type { AppState } from '../../engine/AppState';
 import type { EngineBus } from '../../engine/events';
 import type { Selection } from '../../engine/Selection';
+import type { RigSource } from '../../engine/stage/RigSource';
 import { AimHeight } from '../../ui/components/AimHeight';
 import type { EncoderProgrammer } from '../../ui/panels/encoders/EncodersDeps';
 import { EncodersPanel } from '../../ui/panels/encoders/EncodersPanel';
@@ -16,7 +16,8 @@ export interface EncodersWiringDeps {
   readonly appState: AppState;
   readonly programmer: EncoderProgrammer;
   readonly selection: Pick<Selection, 'ids' | 'set'>;
-  readonly rig: Pick<Rig, 'get'>;
+  /** The stage: the encoders look fixtures up in its current rig. */
+  readonly stage: Pick<RigSource, 'rig' | 'frame'>;
   readonly modal: Pick<Modal, 'number'>;
   /** The active layout (the layout area's `deskMode`). */
   readonly layoutMode: () => LayoutMode;
@@ -42,10 +43,11 @@ export function wireEncoders(deps: EncodersWiringDeps): EncodersWiring {
     state: deps.appState,
     programmer: deps.programmer,
     selection: deps.selection,
-    rig: deps.rig,
+    rig: { get: (id) => deps.stage.rig.get(id) },
     modal: deps.modal,
     layoutMode: deps.layoutMode,
     aimHeight,
+    frame: () => deps.stage.frame,
     goboIcons: deps.goboIcons,
   });
   return { encoders, aimHeight };

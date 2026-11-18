@@ -1,6 +1,9 @@
 import { Scene } from 'three';
 import { vi } from 'vitest';
-import { buildVenue, type Venue } from '../../../../src/render/venue/Venue';
+import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
+import { FohRig } from '../../../../src/render/camera/FohRig';
+import { StageScene } from '../../../../src/render/stage/StageScene';
+import type { Venue } from '../../../../src/render/venue/Venue';
 import { stubCanvasDocument } from '../stubCanvasDocument';
 import { withSeededRandom } from '../seededRandom';
 
@@ -9,6 +12,7 @@ export interface HeadlessVenue {
   readonly scene: Scene;
   readonly venue: Venue;
   readonly firstChild: number;
+  readonly stageScene: StageScene;
 }
 
 /**
@@ -20,8 +24,13 @@ export function buildVenueHeadless(): HeadlessVenue {
   try {
     const scene = new Scene();
     const firstChild = scene.children.length;
-    const venue = withSeededRandom(() => buildVenue(scene));
-    return { scene, venue, firstChild };
+    const views = { fitTo: vi.fn(), setView: vi.fn(), currentView: 'foh' as const, fohRig: new FohRig() };
+    const stageScene = new StageScene(
+      { scene, surfaces: { setSurfaces: vi.fn(), setVenue: vi.fn() }, views },
+      BUILT_IN_DESIGN,
+    );
+    const venue = withSeededRandom(() => stageScene.buildVenue());
+    return { scene, venue, firstChild, stageScene };
   } finally {
     vi.unstubAllGlobals();
   }

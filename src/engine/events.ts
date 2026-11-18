@@ -1,4 +1,5 @@
 import type { EventBus } from '../core';
+import type { RigChanged } from './stage/rigChanged';
 
 /** The command-line feedback styles; the UI uses the value as the CSS class of the log line, so '' means plain. */
 export type LogLevel = '' | 'ok' | 'er';
@@ -33,6 +34,8 @@ export type EngineEvents = {
   showChanged: undefined;
   /** Store mode turned on or off; the UI reflects it on the Store key and the page. */
   storeModeChanged: { readonly on: boolean };
+  /** The rig was replaced; rig, frame and cause are read from the `RigSource`, which is set before the emit. */
+  rigChanged: RigChanged;
 };
 
 /** The one bus the engine publishes on; `main.ts` creates it and passes it to every engine service. */

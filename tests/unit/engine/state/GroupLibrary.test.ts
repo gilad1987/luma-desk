@@ -3,7 +3,7 @@ import { EventBus, rng } from '../../../../src/core';
 import type { EngineEvents } from '../../../../src/engine/events';
 import { GroupLibrary, type GroupPool } from '../../../../src/engine/GroupLibrary';
 import { storeGroupOracle } from './oracle/groupStoreOracle';
-import { recordEvents } from './recordEvents';
+import { recordEvents } from '../../../shared';
 
 const setup = () => {
   const bus = new EventBus<EngineEvents>();

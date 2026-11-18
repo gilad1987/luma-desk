@@ -35,6 +35,7 @@ export function wireDeskPanels(deps: PanelsWithServices): DeskPanels {
     execs,
     fanToggled: () => encoders.fanToggled(),
     guideOrTourOpen: deps.guideOrTourOpen,
+    builderOpen: deps.builder.isOpen,
   });
   const { encoders, aimHeight } = wireEncoders({
     ...engine,

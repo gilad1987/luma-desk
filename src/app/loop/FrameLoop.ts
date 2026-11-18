@@ -23,7 +23,8 @@ const MAX_DT = 0.1;
 
 /** What one frame steps and draws; names follow the legacy main.ts variables. */
 export interface FrameLoopDeps {
-  readonly venue: Pick<Venue, 'crowd' | 'performers'>;
+  /** The live venue: a venue switch or a scenery toggle reaches the loop without new wiring. */
+  readonly venue: Pick<Venue, 'crowd' | 'performers'> & { readonly scenery: Pick<Venue['scenery'], 'isVisible'> };
   readonly tempo: Tempo;
   readonly songPlayer: Pick<SongPlayer, 'sync' | 'audioGraph'>;
   readonly autoShow: Pick<AutoShow, 'settings' | 'modulation' | 'tick'>;
@@ -69,7 +70,10 @@ export class FrameLoop {
     this.#last = t;
     const now = t / 1000;
     const isAudioPulse = d.autoShow.settings.pulse === 'audio' && d.songPlayer.audioGraph;
-    animateCrowd(d.venue.crowd, now, d.tempo, isAudioPulse ? 0.3 + d.autoShow.modulation.pump : 1);
+    // a hidden scenery part skips its per-frame work (G3)
+    const { scenery } = d.venue;
+    if (scenery.isVisible('crowd'))
+      animateCrowd(d.venue.crowd, now, d.tempo, isAudioPulse ? 0.3 + d.autoShow.modulation.pump : 1);
     d.songPlayer.sync(d.tempo);
     d.autoShow.tick(now);
     d.pool.stepFades(now);
@@ -78,7 +82,7 @@ export class FrameLoop {
     d.props.update(now);
     d.sceneLights.update(d.lightFrame);
     d.keyLights.update(d.lightFrame);
-    animatePerformers(d.venue.performers, now, d.tempo);
+    if (scenery.isVisible('band')) animatePerformers(d.venue.performers, now, d.tempo);
     d.stageRenderer.renderFrame();
     d.fps.frame(dt);
     d.ui.tick(t, now);

@@ -1,4 +1,5 @@
-import type { Rig } from '../../domain/rig/Rig';
+import type { Rig } from '../../domain/rig';
+import type { StageFrame } from '../../domain/stage/StageFrame';
 import type { AppState } from '../../engine/AppState';
 import type { EngineBus } from '../../engine/events';
 import type { Executor } from '../../engine/Executor';
@@ -15,13 +16,14 @@ import type { StoreModeGuard } from '../../ui/shared';
 
 /**
  * Everything the layouts and the MA hardware use from the rest of the app. The field names are the old `main.ts`
- * variables, so the composition root maps them one to one; `rig` replaces the old `FX` lookup.
+ * variables, so the composition root maps them one to one; `stage.rig`, read at each call, replaces the old `FX`
+ * lookup.
  */
 export interface LayoutDeps {
   readonly bus: EngineBus;
   readonly programmer: Pick<Programmer, 'vals' | 'set' | 'colorTargets'>;
   readonly selection: Pick<Selection, 'ids'>;
-  readonly rig: Pick<Rig, 'get'>;
+  readonly stage: { readonly rig: Pick<Rig, 'get'>; readonly frame: StageFrame };
   readonly aimHeight: AimHeight;
   readonly appState: Pick<AppState, 'selExec'>;
   readonly execs: readonly Pick<Executor, 'name'>[];
@@ -38,4 +40,6 @@ export interface LayoutDeps {
   readonly layoutPrefs: Pick<LayoutPrefs, 'load' | 'save'>;
   /** The old `setView`: it ignores names that are not views. */
   readonly setView: (view: string, instant: boolean) => void;
+  /** The Stage Builder is open: it owns the console height, so a refit passes 0 to the renderer. */
+  readonly builderOpen: () => boolean;
 }

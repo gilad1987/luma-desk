@@ -2,13 +2,15 @@ import { Color, PointLight, Vector3 } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clamp } from '../../../../src/core';
 import { FixtureVisualSync } from '../../../../src/render/fixtures';
+import type { BeamSurface } from '../../../../src/render/fixtures/sync/LightSync';
 import { LightFrame } from '../../../../src/render/lights/LightFrame';
+import { builtInSurfaces } from '../builtInSurfaces';
 import { buildFixtureScene } from './buildFixtureScene';
 import { stubCanvasDocument } from '../stubCanvasDocument';
 
 afterEach(() => vi.unstubAllGlobals());
 
-function setup() {
+function setup(surface: BeamSurface = builtInSurfaces()) {
   stubCanvasDocument();
   const built = buildFixtureScene();
   const u = () => ({ value: 0 });
@@ -19,13 +21,13 @@ function setup() {
   };
   const lights = new LightFrame();
   const sync = new FixtureVisualSync({
-    visuals: built.visuals,
     selection: { has: (id) => id === built.fixtures[0]?.id },
-    screen,
     beamTime: built.beam.time,
     goboTextures: built.gobo.textures,
     lights,
+    surface,
   });
+  sync.setVisuals(built.visuals, new Map([...built.screenMeshes.keys()].map((id) => [id, screen])));
   return { ...built, screen, lights, sync };
 }
 
@@ -72,6 +74,16 @@ describe('FixtureVisualSync', () => {
     const colorOf = (v: (typeof movers)[number]) => lights.keyCandidates.find((c) => c.fixture === v.fixture)?.color;
     expect(colorOf(red)).toEqual([1, 0, 0]);
     expect(colorOf(blue)).toEqual([0, 0, 1]);
+  });
+
+  it('stretches each lit beam to its own hit, though the sync refills one beam carrier per fixture', () => {
+    const hits = [7, 13];
+    const { visuals, sync } = setup({ hit: () => ({ t: hits.shift() ?? 85, normal: new Vector3(0, 1, 0) }) });
+    const [near, far] = visuals.filter((v) => v.kind === 'light');
+    if (near?.kind !== 'light' || far?.kind !== 'light') throw new Error('rig has fewer than two lights');
+    for (const v of [near, far]) Object.assign(v.fixture.out, { dim: 100, strobe: 0, r: 100, zoom: 20 });
+    sync.update(1, 0.016, new Vector3());
+    expect([near, far].flatMap((v) => [v.beam.scale.y, v.uniforms.uLen.value])).toEqual([7, 7, 13, 13]);
   });
 
   it('gates the strobe: open for 22 % of each period', () => {

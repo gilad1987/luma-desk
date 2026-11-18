@@ -12,6 +12,7 @@ const KEYS = ['kStore', 'kClear', 'kHigh', 'kFan', 'kAll', 'kOdd', 'kEven', 'kRe
 describe('CommandLine', () => {
   let dom: FakeDom, input: FakeElement, state: AppState, deps: CommandLineDeps, line: CommandLine, host: FakeHost;
   let go: Mock<ExecutorPool['go']>;
+  let flags: { building: boolean };
   const key = (k: string) => {
     const preventDefault = vi.fn();
     input.onkeydown?.({ key: k, preventDefault } as { key: string });
@@ -23,7 +24,7 @@ describe('CommandLine', () => {
     Object.assign(input, { blur: vi.fn() });
     dom.add('cmdFb', new FakeList());
     for (const id of [...KEYS, 'modal', 'mbox']) dom.add(id, new FakeButton());
-    ({ deps, state, go } = commandLineDeps());
+    ({ deps, state, go, flags } = commandLineDeps());
     host = new FakeHost();
     line = new CommandLine(asReal<HTMLElement>(host), deps);
   });
@@ -77,5 +78,13 @@ describe('CommandLine', () => {
     dom.documentClicks.at(-1)?.({ target: null, code: 'Space', key: ' ', preventDefault } as { target: null });
     expect(preventDefault).toHaveBeenCalled();
     expect(go).toHaveBeenCalledWith(deps.execs[0], 1);
+  });
+
+  it('page keys do nothing while the Stage Builder is open', () => {
+    flags.building = true;
+    const preventDefault = vi.fn();
+    dom.documentClicks.at(-1)?.({ target: null, code: 'Space', key: ' ', preventDefault } as { target: null });
+    expect(preventDefault).not.toHaveBeenCalled();
+    expect(go).not.toHaveBeenCalled();
   });
 });

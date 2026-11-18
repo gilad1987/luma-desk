@@ -1,12 +1,15 @@
 import { vi } from 'vitest';
 import { FakeCanvas, FakeElement } from './FakeElement';
+import { FakeResizeObserver } from './FakeResizeObserver';
+import { escapeCss } from './fakeSelector';
 
 type Project = (x: number, y: number) => readonly [number, number];
 
 /**
  * The page as the components see it, installed with `vi.stubGlobal` (no DOM library is installed): ids resolve to
- * registered fakes, `Element`/`HTMLElement`/`HTMLInputElement` are the fake class, and the `<i>` probes of boxMap
- * report where `project` puts their `left`/`top`. Call `vi.unstubAllGlobals()` after each test.
+ * registered fakes, `Element`/`HTMLElement`/`HTMLInputElement` are the fake class, `CSS.escape` is `escapeCss`,
+ * `ResizeObserver` is `FakeResizeObserver`, and the
+ * `<i>` probes of boxMap report where `project` puts their `left`/`top`. Call `vi.unstubAllGlobals()` after each test.
  */
 export class FakeDom {
   readonly body = new FakeElement('body');
@@ -28,6 +31,9 @@ export class FakeDom {
     vi.stubGlobal('HTMLElement', FakeElement);
     vi.stubGlobal('HTMLInputElement', FakeElement);
     vi.stubGlobal('HTMLCanvasElement', FakeCanvas);
+    vi.stubGlobal('CSS', { escape: escapeCss });
+    FakeResizeObserver.made.length = 0;
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver);
   }
 
   /** Registers `element` (a new fake by default) under `id`. */

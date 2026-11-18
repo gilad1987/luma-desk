@@ -8,7 +8,7 @@ import {
   createLensTextures,
   createModelMaterials,
   createTrimMaterial,
-  FixtureVisualBuilder,
+  FixtureVisuals,
   FixtureVisualSync,
   ModelPrimitives,
   Props,
@@ -18,6 +18,7 @@ import {
 import { KeyLights } from '../../render/lights/KeyLights';
 import { LightFrame } from '../../render/lights/LightFrame';
 import { FixturePicker } from '../../render/picking/FixturePicker';
+import type { FixtureIdOverlay } from '../../render/stage/FixtureIdOverlay';
 import type { StageHandles } from './wireStage';
 
 /** The stage parts the fixtures hang in, plus the engine parts their visuals read. */
@@ -26,6 +27,8 @@ export interface FixtureVisualDeps {
   readonly fixtures: readonly Fixture[];
   readonly selection: Selection;
   readonly appState: AppState;
+  /** The fixture-id overlay; the stage scene hands it each new rig. */
+  readonly overlay: Pick<FixtureIdOverlay, 'setFixtures'>;
 }
 
 /** The fixture visuals and the per-frame objects the frame loop updates. */
@@ -37,15 +40,19 @@ export interface FixtureVisualHandles {
   readonly props: Props;
   readonly lightFrame: LightFrame;
   readonly visualSync: FixtureVisualSync;
+  readonly fixtureVisuals: FixtureVisuals;
 }
 
 /**
  * Builds every fixture visual and the props in the legacy order (decision 24: each three.js object draws its uuid
- * from the seeded Math.random). The FOH riser joins the camera views' rig before the props build, so the RoboSpot
- * station joins it after the riser and takes the riser's visibility, as it did before.
+ * from the seeded Math.random). The visuals build through the stage scene, which rebuilds them on a new stage; the
+ * frame update and the light frame exist first but create no three.js object. The venue build already put the FOH
+ * riser in the camera views' rig, so the RoboSpot station joins it after the riser and takes the riser's
+ * visibility, as it did before; in a venue without a riser it stays hidden.
  */
-export function wireFixtureVisuals({ stage, fixtures, selection, appState }: FixtureVisualDeps): FixtureVisualHandles {
-  const { scene, venue, views, sceneLights } = stage;
+export function wireFixtureVisuals(deps: FixtureVisualDeps): FixtureVisualHandles {
+  const { stage, fixtures, selection, appState, overlay } = deps;
+  const { scene, views, sceneLights } = stage;
   const gobo = createGoboAtlas();
   const beamShared = createBeamShared();
   const trimMaterial = createTrimMaterial();
@@ -55,28 +62,25 @@ export function wireFixtureVisuals({ stage, fixtures, selection, appState }: Fix
   const kit = { prims, materials: createModelMaterials(trimMaterial) };
   const picker = new FixturePicker(stage.canvas, stage.camera);
   const models = createFixtureModels(kit);
-  const screenMesh = venue.ledWall.screen;
-  const builder = new FixtureVisualBuilder({
+  const lightFrame = new LightFrame();
+  const visualSync = new FixtureVisualSync({
+    selection,
+    beamTime: beamShared.time,
+    goboTextures: gobo.textures,
+    lights: lightFrame,
+    surface: stage.surfaceHit,
+  });
+  const fixtureVisuals = new FixtureVisuals({
     scene,
     prims,
     beam: beamShared,
     gobo,
     models,
     lensTextures,
-    screenMesh,
     picker,
+    sync: visualSync,
   });
-  const visuals = fixtures.map((f) => builder.build(f));
-  views.fohRig.add(...venue.fohRig);
+  stage.stageScene.connect({ visuals: fixtureVisuals, overlay, screenLight: sceneLights.screenLight }, fixtures);
   const props = new Props({ scene, kit, fohRig: views.fohRig, state: appState, beamHaze: beamShared.haze });
-  const lightFrame = new LightFrame();
-  const visualSync = new FixtureVisualSync({
-    visuals,
-    selection,
-    screen: { uniforms: venue.ledWall.uniforms, light: sceneLights.screenLight, strip: venue.ledWall.strip },
-    beamTime: beamShared.time,
-    goboTextures: gobo.textures,
-    lights: lightFrame,
-  });
-  return { gobo, beamShared, keyLights, picker, props, lightFrame, visualSync };
+  return { gobo, beamShared, keyLights, picker, props, lightFrame, visualSync, fixtureVisuals };
 }

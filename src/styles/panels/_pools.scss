@@ -38,6 +38,12 @@
   color: var(--mut);
   font-weight: 400;
 }
+// A preset whose target is missing on this stage (presetSlot.ts): dimmer than an empty slot, same box, so the pool
+// layout does not change on the built-in stage.
+.slot.is-unavailable {
+  opacity: 0.2;
+  cursor: not-allowed;
+}
 .slot:hover {
   border-color: #666;
 }

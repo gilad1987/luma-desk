@@ -1,4 +1,3 @@
-import { PRESET_FNS } from '../../engine/presetFunctions';
 import type { PresetFnName } from '../../engine/presetFunctions';
 import { PHASER_TYPES } from '../../engine/shared';
 import { colorByName, type NamedColor } from '../../engine/colorByName';
@@ -63,7 +62,7 @@ export function addActiveGroups(look: LookDraft): void {
     const pn = groupPosition(look, ids);
     const col = groupColor(look, gi);
     look.set(ids, (f, k, n) => ({
-      ...PRESET_FNS[pn](f, k, n),
+      ...look.fns[pn](f, k, n),
       ...col,
       dim: look.level(S.calm ? 50 : 95),
       zoom: 2,

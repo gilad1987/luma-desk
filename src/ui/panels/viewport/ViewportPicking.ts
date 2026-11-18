@@ -52,10 +52,19 @@ export class ViewportPicking {
     style.height = `${Math.abs(ev.clientY - press.y)}px`;
   }
 
+  /** Ends a press: selects unless the builder is open (the camera orbit is not affected), then clears the box. */
   #release(ev: PointerEvent): void {
     const press = this.#press;
     if (!press) return;
-    const { canvas, picker, camera, fixtures, selection, bus, controls } = this.#deps;
+    if (!this.#deps.isBuilding()) this.#select(press, ev);
+    this.#rect.style.display = 'none';
+    this.#deps.controls.enabled = true;
+    this.#press = null;
+  }
+
+  /** A box drag past the slop adds the fixtures inside; a click on the canvas picks one fixture. */
+  #select(press: Press, ev: PointerEvent): void {
+    const { canvas, picker, camera, fixtures, selection, bus } = this.#deps;
     const moved = Math.hypot(ev.clientX - press.x, ev.clientY - press.y);
     if (press.box && moved > CLICK_SLOP_PX) {
       const box = boxBetween(press.x, press.y, ev.clientX, ev.clientY);
@@ -72,8 +81,5 @@ export class ViewportPicking {
         bus.emit('message', { kind: 'log', text: `Fixture ${f.id} (${f.T.name})`, level: 'ok' });
       }
     }
-    this.#rect.style.display = 'none';
-    controls.enabled = true;
-    this.#press = null;
   }
 }

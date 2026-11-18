@@ -21,6 +21,8 @@ export interface LayoutHandles {
   readonly restore: () => void;
   /** The MA part of the fast UI tick (the old `if (deskMode === 'ma') updateMaUI()`). */
   readonly fast: () => void;
+  /** Refits the console to the window; the Stage Builder calls it when it hides and shows the console. */
+  readonly fit: () => void;
 }
 
 /**
@@ -29,15 +31,16 @@ export interface LayoutHandles {
  * object and draws no random number; it moves no panel until {@link LayoutHandles.restore}.
  */
 export function wireLayout(deps: LayoutDeps): LayoutHandles {
-  const { programmer, selection, rig } = deps;
+  const { programmer, selection, stage } = deps;
   colorPad(byId('tsCol', HTMLCanvasElement), programmer);
   // built before MaLayout, which redraws it when the selection changes
   const redrawFocus = focusPad(byId('tsPos', HTMLCanvasElement), {
     bus: deps.bus,
     selection,
     programmer,
-    rig,
+    rig: { get: (id) => stage.rig.get(id) },
     aimHeight: deps.aimHeight,
+    frame: () => stage.frame,
   });
   const layout = new LayoutManager(layoutHost(deps));
   const ma = new MaLayout({
@@ -55,5 +58,6 @@ export function wireLayout(deps: LayoutDeps): LayoutHandles {
     fast: () => {
       if (layout.mode === 'ma') ma.update();
     },
+    fit: () => layout.fit(),
   };
 }

@@ -3,6 +3,7 @@ export { applyPreset } from './applyPreset';
 export { clearAll } from './clearAll';
 export { clearPress } from './clearPress';
 export { colorTargets } from './colorTargets';
+export { pruneToRig } from './pruneToRig';
 export { removeFeature } from './removeFeature';
 export { removePhasers } from './removePhasers';
 export { setValue } from './setValue';

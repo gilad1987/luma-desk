@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { he } from '../../../src/i18n/he';
 import { legacyPage } from '../../shared/legacy';
+import { legacyAreas } from './legacyAreas';
 
 /** The single-file page before the refactor: the source of truth for every Hebrew string. */
 const legacy = legacyPage();
@@ -72,8 +73,8 @@ describe('he key names', () => {
   });
 
   it('leaves no named string out of the table', () => {
-    const { autoStyleTaglines, ...named } = he;
-    expect(Object.keys(autoStyleTaglines)).toHaveLength(9);
+    const named = Object.fromEntries(Object.entries(legacyAreas).filter(([area]) => area !== 'autoStyleTaglines'));
+    expect(Object.keys(he.autoStyleTaglines)).toHaveLength(9);
     expect(namedStringPaths(named).sort()).toEqual(Object.keys(CONTEXTS).sort());
   });
 });

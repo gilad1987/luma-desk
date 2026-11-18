@@ -15,6 +15,7 @@ import { scheduleUiTicks } from './app/loop/scheduleUiTicks';
 import { UiTickScheduler } from './app/loop/UiTickScheduler';
 import { installTestHook } from './app/testHook/installTestHook';
 import { FpsClock } from './app/ui/FpsClock';
+import { wireBuilder } from './app/ui/wireBuilder';
 import { wirePanels } from './app/ui/wirePanels';
 import { createAutoShow } from './app/uix/createAutoShow';
 import { createShowFiles } from './app/uix/createShowFiles';
@@ -28,7 +29,7 @@ import { ViewportPicking } from './ui/panels/viewport/ViewportPicking';
 document.body.insertAdjacentHTML('afterbegin', appShellMarkup({ viewer: viewerMarkup, side: '', desk: '' }));
 
 const engine = wireEngine();
-const { rig, bus, pool } = engine;
+const { stage, bus, pool } = engine;
 const { execs } = pool;
 const render = wireRender(engine);
 const files = createShowFiles({ ...engine, execs });
@@ -41,13 +42,22 @@ const panels = wirePanels({
   auto,
   layoutMode: () => layout.mode(),
   guideOrTourOpen: () => guide.isOpen() || tour.isActive(),
+  builder: { isOpen: () => builder.isOpen, cancel: () => builder.exit(false) },
 });
-new ViewportPicking({ ...engine, ...render, fixtures: rig.fixtures });
+// a getter: box selection reads the current rig at each drag, so it follows every stage change
+new ViewportPicking({
+  ...engine,
+  ...render,
+  get fixtures() {
+    return stage.rig.fixtures;
+  },
+  isBuilding: () => builder.isOpen,
+});
 wireMidi(engine);
 render.stageRenderer.observeViewer();
 
 const { guide, tour } = wireGuide({
-  rig,
+  stage,
   sideTabs: panels.sideTabs,
   isMa: () => layout.mode() === 'ma',
   guideFlag: files.guideFlag,
@@ -62,7 +72,10 @@ const layout = wireLayout({
   execs,
   storeMode: panels.store,
   layoutPrefs: files.layoutPrefs,
+  builderOpen: () => builder.isOpen,
 });
+// before restore: the restore refits the console, and the refit asks whether the builder is open
+const builder = wireBuilder({ ...engine, ...render, fitLayout: () => layout.fit() });
 layout.restore();
 
 const fps = new FpsClock();
@@ -77,8 +90,8 @@ new FrameLoop({ ...engine, ...render, ...auto, fps, ui }).start();
 installTestHook({
   ...engine,
   ...files,
-  fixtures: rig.fixtures,
   setView: render.setView,
+  renderer: render.renderer,
   execs,
   autoShow: auto.autoShow,
   deskMode: () => layout.mode(),

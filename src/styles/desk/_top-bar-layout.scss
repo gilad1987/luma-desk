@@ -1,9 +1,16 @@
 @use '../abstracts/breakpoints' as bp;
 
 /* top-bar layout controls */
+// The bar is wider than a narrow window; it scrolls sideways (no visible scrollbar), so no control is out of reach
+// (known-quirks G11). The scroll position is 0 at boot, so the first view matches the legacy bar.
 #top {
   gap: 10px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+#top::-webkit-scrollbar {
+  display: none;
 }
 #top button {
   white-space: nowrap;

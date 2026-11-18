@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Cue } from '../../../src/engine/CueList';
-import { recordEvents } from '../engine/state/recordEvents';
+import { recordEvents } from '../../shared';
 import { commandWorld } from './commandWorld';
 
 /** A cue as `JSON.parse` gives it from a hand-edited show file without `vals`: saved shows are not validated. */

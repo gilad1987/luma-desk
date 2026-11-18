@@ -1,22 +1,23 @@
 import { clamp } from '../../core';
 import type { Rig } from '../../domain/rig';
 import type { Cue, FixtureValues } from '../../engine/CueList';
-import { buildCueVals } from '../../engine/cueValues';
-import type { CueValueSource } from '../../engine/cueValues';
+import { buildCueVals, type CueValueSource } from '../../engine/cueValues';
+import { PRESET_FNS, type PresetFns } from '../../engine/presetFunctions';
 import type { PhaserInstance } from '../../engine/shared';
 import type { AutoGroups } from '../autoGroups';
 import type { LookOptions } from '../AutoSettings';
 import type { AutoStyle } from '../AutoStyle';
-import { colorByName } from '../../engine/colorByName';
-import type { NamedColor } from '../../engine/colorByName';
+import { colorByName, type NamedColor } from '../../engine/colorByName';
 import { isBigSection, sectionName, type Section } from '../sections';
 import { sectionEnergy } from '../SongStructure';
 
-/** What every look is built against: the rig, its auto-show groups and the random source. */
+/** What every look is built against: the rig, its auto-show groups, the random source and the stage's presets. */
 export interface LookSource {
   readonly rig: Rig;
   readonly groups: AutoGroups;
   readonly random: () => number;
+  /** The presets aimed at the stage (`presetFnsOf`); missing means the built-in `PRESET_FNS`. */
+  readonly fns?: PresetFns;
 }
 
 /**
@@ -37,12 +38,15 @@ export class LookDraft {
   readonly firstColorName: string;
   readonly c1: NamedColor;
   readonly c2: NamedColor;
+  /** The position presets every build step aims with, so a look follows the stage it is built for. */
+  readonly fns: PresetFns;
   private readonly source: LookSource;
   private readonly energy: number;
 
   constructor(source: LookSource, style: AutoStyle, section: Section, options: LookOptions) {
     this.source = source;
     this.groups = source.groups;
+    this.fns = source.fns ?? PRESET_FNS;
     this.style = style;
     this.section = section;
     this.options = options;
@@ -74,7 +78,7 @@ export class LookDraft {
 
   /** Writes values on fixtures; later writes win per attribute, as the build steps rely on. */
   set(ids: readonly number[], values: CueValueSource): void {
-    buildCueVals(this.source.rig, [[ids, values]], this.vals);
+    buildCueVals(this.source.rig, [[ids, values]], this.vals, this.fns);
   }
 
   /** Every light except the LED screen, in rig order. */

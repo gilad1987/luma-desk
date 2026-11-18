@@ -701,7 +701,8 @@ Groups:
 ### F7. Nosing, FOH desk and roof slab create their material before their geometry
 
 - Source: `index.html:931` (nosing), `1009` (FOH desk), `1032` (roof slab)
-- Lives in: `src/render/venue/Stage.ts`, `src/render/venue/FohRiser.ts`, `src/render/venue/RoofGrid.ts`
+- Lives in: `src/render/stage/DeckBuilder.ts` (nosing), `src/render/venue/FohRiser.ts` (FOH desk),
+  `src/render/stage/goalpostAndRoof.ts` (roof slab)
 - What it does: the original passed `new THREE.MeshStandardMaterial(...)` as an argument to `box()`, so the
   material was created before the box geometry. The new code creates the material first in a local variable.
 - Why kept: the creation order sets the uuid order (decision 24); the other order changes the venue golden.
@@ -720,6 +721,20 @@ Groups:
 - Future fix: none; the new code does not repeat the wrong count.
 - Status: no longer in the code — the wrong count was only in a comment, and `src/render/venue/Orchestra.ts` does
   not repeat it.
+
+### F9. A later setView stops a running view tween
+
+- Source: `index.html@48a3b63:888-890`; reachable through the layout switch at `2979`
+- Lives in: `src/render/camera/tweenCamera.ts`, `src/render/camera/CameraViews.ts:66`
+- What it did: an animated view change ran a 700 ms tween that nothing could stop. An instant view set within those
+  700 ms (for example: click FOH, then switch to the MA layout) was overwritten by the old tween, so the camera
+  ended on the desk FOH pose with the MA lens. An animated view set after an animated one already won, because the
+  newer tween wrote last in each frame.
+- Why changed: the Stage Builder refits the camera with an animated `setView` after every stage rebuild, so the
+  overwrite became easy to reach. Every `setView` now stops the running tween first.
+- Pinned by: `tests/unit/render/core/CameraViews.test.ts` ("stops a running tween…"). Screenshots use only instant
+  views at boot, so they do not change.
+- Future fix: none.
 
 ## G. UI
 
@@ -811,6 +826,21 @@ Groups:
 - Why kept: the original is the behavior.
 - Pinned by: `tests/unit/i18n/he.test.ts` (`toHaveLength(17)`).
 - Future fix: none.
+
+### G11. The top bar scrolls sideways; the legacy bar clipped its controls at 1280 px
+
+- Source: `index.html@48a3b63:260` (`#top{gap:10px;overflow:hidden}`)
+- Lives in: `src/styles/desk/_top-bar-layout.scss` (`#top`), `src/ui/panels/top/topBarMarkup.ts`
+  (`buildStageButton`)
+- What it did: at 1280 px the legacy bar ended after "Real light". The layout selects, REC, fullscreen, MIDI, Show
+  File, Guide and the clock were cut off and could not be reached with the mouse.
+- What it does now: the bar scrolls sideways with a hidden scrollbar (trackpad, Shift+wheel, or Tab to a control), so
+  every control is reachable. The scroll position is 0 at boot. The Stage Builder's "Build Stage" button opens the
+  Glow group, so it shows at 1280 px in all three layouts. It pushes Real light to the scrolled part; Glow and
+  Fixture IDs stay visible at 1280 px.
+- Why changed: a new control must be visible, and the clipped controls were a defect, not a behavior to keep.
+- Pinned by: `tests/e2e/screenshots.spec.ts` (the 9 baselines differ from the legacy bar only in the top bar).
+- Future fix: a bar that wraps or folds its groups at narrow widths.
 
 ## H. Dead code and unused names
 

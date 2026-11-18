@@ -24,7 +24,13 @@ export function wirePanels(deps: PanelsDeps): Panels {
   const { engine, render, files } = deps;
   const topBar = wireTopBar({ ...render, app: byId('app'), appState: engine.appState });
   const services = createUiServices(engine.bus, engine.appState);
-  wireShowFileDialog({ ...engine, ...files, modal: services.modal, showLoaded: () => side.showLoaded() });
+  wireShowFileDialog({
+    ...engine,
+    ...files,
+    modal: services.modal,
+    showLoaded: () => side.showLoaded(),
+    cancelBuilder: deps.builder.cancel,
+  });
   const side = wireSideColumn({ ...deps, services }, topBar);
   return { topBar, ...services, ...side, ...wireDeskPanels({ ...deps, services }) };
 }

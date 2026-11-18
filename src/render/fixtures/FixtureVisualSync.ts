@@ -1,98 +1,76 @@
-import { Vector3, type Texture } from 'three';
-import { clamp, D2R } from '../../core';
-import type { AttrValues } from '../../domain/attributes';
+import type { Texture, Vector3 } from 'three';
 import type { Selection } from '../../engine/Selection';
 import type { LightFrame } from '../lights/LightFrame';
 import type { SharedUniform } from './BeamMaterial';
-import type { FixtureVisual, LightVisual } from './FixtureVisual';
-import { hitSurface } from '../surface/hitSurface';
-import { outputValue, type BeamFrameSlot } from './sync/BeamFrame';
+import type { FixtureVisual, ScreenVisual } from './FixtureVisual';
 import { gatedIntensity } from './sync/gatedIntensity';
-import { syncBeam } from './sync/syncBeam';
-import { syncGlow } from './sync/syncGlow';
-import { syncLens } from './sync/syncLens';
-import { syncPool } from './sync/syncPool';
-import { syncPose } from './sync/syncPose';
+import { LightSync, type BeamSurface } from './sync/LightSync';
 import { syncScreen, type ScreenTargets } from './sync/syncScreen';
 
-/** Inputs of the frame update; the screen targets and the light frame come from venue and render core. */
+/** Inputs of the frame update; the visuals and their screen targets come later, through `setVisuals`. */
 export interface FixtureVisualSyncDeps {
-  /** In fixture array order. */
-  readonly visuals: readonly FixtureVisual[];
   readonly selection: Pick<Selection, 'has'>;
-  readonly screen: ScreenTargets;
   /** The beams' shared haze-noise time. */
   readonly beamTime: SharedUniform;
   readonly goboTextures: readonly Texture[];
   /** Render core's per-frame light aggregate; the integrator feeds it to the scene and key lights after update. */
   readonly lights: LightFrame;
+  /** Where beams land: the stage's `SurfaceHit`, which follows the current design and venue. */
+  readonly surface: BeamSurface;
+}
+
+/** @throws Error when a screen fixture has no targets: its output would drive nothing. */
+function targetsOf(screens: ReadonlyMap<number, ScreenTargets>, v: ScreenVisual): ScreenTargets {
+  const targets = screens.get(v.fixture.id);
+  if (!targets) throw new Error(`FixtureVisualSync: screen fixture ${v.fixture.id} has no screen targets`);
+  return targets;
 }
 
 /**
  * Per-frame update of every fixture visual from the engine output (legacy `updateVisuals` up to the end of its
  * fixture loop). It resets and fills the render core light frame; render core turns it into the scene lights.
+ * It starts with no visuals; the visual list and the screen targets come with each rig build ({@link setVisuals}).
  */
 export class FixtureVisualSync {
-  readonly #deps: FixtureVisualSyncDeps;
-  readonly #camera = new Vector3();
-  readonly #dir = new Vector3();
-  readonly #origin = new Vector3();
-  /** The fixture colour, 0..1, refilled per fixture; a step that keeps it past the fixture's sync copies it. */
-  readonly #col: [number, number, number] = [0, 0, 0];
-  /** The beam carrier, made by the first lit fixture and refilled for every later one. */
-  #frame: BeamFrameSlot | null = null;
+  readonly #beamTime: SharedUniform;
+  readonly #lights: LightFrame;
+  readonly #light: LightSync;
+  #visuals: readonly FixtureVisual[] = [];
+  #screens: ReadonlyMap<number, ScreenTargets> = new Map();
+  #hasScreen = false;
 
   constructor(deps: FixtureVisualSyncDeps) {
-    this.#deps = deps;
+    const { selection, goboTextures, lights, surface } = deps;
+    this.#beamTime = deps.beamTime;
+    this.#lights = lights;
+    this.#light = new LightSync({ selection, goboTextures, lights, surface });
+  }
+
+  /**
+   * Replaces the visuals (fixture array order) and the targets of each screen fixture, by fixture id, after a rig
+   * rebuild. @throws Error when a screen visual has no targets, before the old list is replaced.
+   */
+  setVisuals(visuals: readonly FixtureVisual[], screens: ReadonlyMap<number, ScreenTargets>): void {
+    for (const v of visuals) if (v.kind === 'screen') targetsOf(screens, v);
+    this.#visuals = visuals;
+    this.#screens = screens;
+    this.#hasScreen = visuals.some((v) => v.kind === 'screen');
   }
 
   /** `now` and `dt` in seconds; `cameraPosition` places the lens glow flares. */
   update(now: number, dt: number, cameraPosition: Vector3): void {
-    this.#camera.copy(cameraPosition);
-    this.#deps.lights.reset();
-    for (const v of this.#deps.visuals) {
+    this.#light.camera.copy(cameraPosition);
+    this.#lights.reset();
+    for (const v of this.#visuals) {
       const o = v.fixture.out,
         intensity = gatedIntensity(o, now);
       if (v.kind === 'screen') {
-        syncScreen(this.#deps.screen, o, intensity, now);
-        // the beam haze-noise time moves only with a screen, as in the legacy code: no screen, still haze
-        this.#deps.beamTime.value = now;
-      } else this.#syncLight(v, o, intensity, dt);
+        syncScreen(targetsOf(this.#screens, v), o, intensity, now);
+        // the legacy code moved the beam haze-noise time in the screen branch; the built-in rig keeps that order
+        this.#beamTime.value = now;
+      } else this.#light.sync(v, o, intensity, dt);
     }
-  }
-
-  #syncLight(v: LightVisual, o: Readonly<AttrValues>, intensity: number, dt: number): void {
-    const deps = this.#deps,
-      f = v.fixture,
-      spec = f.T,
-      dir = this.#dir,
-      col = this.#col;
-    syncPose(v, o, dt, dir);
-    col[0] = outputValue(o, 'r') / 100;
-    col[1] = outputValue(o, 'g') / 100;
-    col[2] = outputValue(o, 'b') / 100;
-    v.bodyMat.emissive.setHex(deps.selection.has(f.id) ? 0x7a5a00 : 0x000000);
-    syncLens(v, col, intensity);
-    const on = intensity > 0.004;
-    v.beam.visible = v.pool.visible = v.glow.visible = on;
-    if (!on) return;
-    const origin = this.#origin.copy(f.pos).addScaledVector(dir, v.lensOff + 0.02);
-    const zoom = clamp(outputValue(o, 'zoom'), spec.zr[0], spec.zr[1]),
-      tz = Math.tan((zoom / 2) * D2R);
-    const hit = hitSurface(origin, dir),
-      length = hit ? hit.t : 85;
-    // col, dir and origin are this sync's own buffers, so the carrier keeps them from its first fill
-    const frame = (this.#frame ??= { visual: v, o, intensity, col, dir, origin, zoom, tz, hit, length });
-    frame.visual = v;
-    frame.o = o;
-    frame.intensity = intensity;
-    frame.zoom = zoom;
-    frame.tz = tz;
-    frame.hit = hit;
-    frame.length = length;
-    const gob = syncBeam(frame);
-    syncPool(frame, gob, deps.goboTextures, deps.lights);
-    if (f.type === 'blinder') deps.lights.addBlinder(intensity);
-    syncGlow(frame, this.#camera);
+    // a rig without a screen (theatre, empty) would otherwise freeze the haze
+    if (!this.#hasScreen) this.#beamTime.value = now;
   }
 }

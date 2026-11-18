@@ -1,5 +1,4 @@
 import { colorByName } from '../../engine/colorByName';
-import { PRESET_FNS } from '../../engine/presetFunctions';
 import { PHASER_TYPES } from '../../engine/shared';
 import type { LookDraft } from './LookDraft';
 
@@ -26,7 +25,7 @@ export function addStageFront(look: LookDraft): void {
     });
   // follow spots stay on the lead singer; profiles add a side wash
   look.set(AG.follow, (f, k, n) => ({
-    ...PRESET_FNS.singer(f, k, n),
+    ...look.fns.singer(f, k, n),
     ...colorByName('Warm'),
     dim: look.level(big ? 85 : 55),
     zoom: big ? 7 : 11,

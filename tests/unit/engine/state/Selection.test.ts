@@ -4,7 +4,7 @@ import { buildRig } from '../../../../src/domain/rig';
 import type { EngineEvents } from '../../../../src/engine/events';
 import { Selection, type SelectMode } from '../../../../src/engine/Selection';
 import { reverseOracle, setSelOracle, type SelState } from './oracle/selectionOracle';
-import { recordEvents } from './recordEvents';
+import { recordEvents } from '../../../shared';
 
 const rig = buildRig();
 const FX: Record<number, unknown> = Object.fromEntries(rig.fixtures.map((f) => [f.id, f]));

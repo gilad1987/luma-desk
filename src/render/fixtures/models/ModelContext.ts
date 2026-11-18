@@ -19,6 +19,7 @@ export interface ModelContext {
   readonly g: Group;
   readonly bodyMat: MeshStandardMaterial;
   readonly lensMat: MeshBasicMaterial;
+  /** Built upside down (floor mount); false for a fixture with a `rotation`, which its quaternion turns instead. */
   readonly floor: boolean;
   readonly mount: StaticMount | null;
 }
