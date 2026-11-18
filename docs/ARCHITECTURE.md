@@ -4,8 +4,8 @@ LUMA DESK is a lighting desk and a 3D stage that run in the browser with no serv
 was one file, `index.html` (3,096 lines at commit `48a3b63`). This document describes the structure in `src/`, why it
 has that shape, and the rules that keep it that way.
 
-> **Status: Phase 6 is done.** `src/main.ts` is the composition root (at most 100 lines) over `src/app/`, fully typed and linted
-> with no exemption. `index.html` is a 90-line shell. `vendor/` is deleted; three.js comes from npm.
+> **Status: Phase 6 is done.** `src/main.ts` is the composition root (at most 100 lines) over `src/app/`, fully typed
+> and linted with no exemption. `index.html` is a 90-line shell. `vendor/` is deleted; three.js comes from npm.
 
 ## Layers
 
@@ -50,8 +50,8 @@ receives and which events it emits or listens to.
 
 ### Composition root
 
-`src/main.ts` (at most 100 lines) builds the desk in the boot order of the original script (`index.html@48a3b63`), because
-the order of construction is behavior (decision 24). It calls the wiring modules in `src/app/`. Besides those, it
+`src/main.ts` (at most 100 lines) builds the desk in the boot order of the original script
+(`index.html@48a3b63`), because the order of construction is behavior (decision 24). It calls the wiring modules in `src/app/`. Besides those, it
 inserts the page shell markup first, builds `ViewportPicking`, binds `#helpBtn` and calls `restoreShow`, each at the
 point where the original did the same work.
 
