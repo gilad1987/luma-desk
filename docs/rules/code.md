@@ -11,9 +11,10 @@ the case goes to `docs/known-quirks.md`.
 
 - **Senior quality bar.** Professional, clean, easy-to-maintain code that follows the plan in `docs/plan/`.
 - **Layers, one way:** core <- domain <- engine <- command/show/autoshow/audio; render/ui -> engine. The engine never
-  imports render, ui or the DOM. [lint] `eslint/layerRules.ts`
+  imports render, ui or the DOM. [lint] `eslint/layerRules.ts` (static and dynamic `import()`),
+  `eslint/domGlobalRules.ts` (no `document`, `window`, `localStorage` in core, domain, engine)
 - **The wiring sits on top:** `src/app/` may import every layer, and no `src/` layer except `src/main.ts` imports
-  `src/app`. [lint] `eslint/layerRules.ts` (`APP_WIRING`)
+  `src/app`. [lint] `eslint/layerRules.ts` (`APP_WIRING`, static and dynamic `import()`)
 - **Small, focused files and classes:** one main export per file. Names say what a thing is. No clever code.
 - **No duplication:** each hotspot is removed by ONE shared abstraction. No copy-paste between modules.
 - **Strict types:** no `any`, no non-null `!` to hide a real gap, no `@ts-ignore`. Model the domain with types
