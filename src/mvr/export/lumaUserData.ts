@@ -19,11 +19,12 @@ function linkWithFootprint(fixture: StageFixture, design: StageDesign): FixtureL
 /**
  * The root `<UserData>` element with the stage parts as JSON in `<Data provider="LUMA DESK" ver="1">`. MVR lets a
  * provider put its own data there and other readers skip it, so a desk export can come back to the desk complete.
- * `offset` is the one the export takes off every point.
+ * `offset` is the one the export takes off every point; `hiddenLayers` is written only for a design with MVR facts.
  */
 export function writeLumaData(design: StageDesign, offset: Vec3): string {
   const { venue, scenery, deck, screens, risers, trusses } = design;
   const links = design.fixtures.map((fixture) => linkWithFootprint(fixture, design));
-  const json = JSON.stringify({ venue, scenery, deck, screens, risers, trusses, offset, links });
+  const hidden = design.mvr ? { hiddenLayers: design.mvr.hiddenLayers } : {};
+  const json = JSON.stringify({ venue, scenery, deck, screens, risers, trusses, offset, links, ...hidden });
   return xmlElement('UserData', {}, [xmlText('Data', json, { provider: LUMA_PROVIDER, ver: LUMA_DATA_VERSION })]);
 }

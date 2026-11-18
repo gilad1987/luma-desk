@@ -40,11 +40,13 @@ export type FixtureLink = Pick<StageFixture, 'id' | 'type' | 'role' | 'trussId' 
  * The stage parts plain MVR cannot hold: venue, scenery on/off, the deck numbers, LED walls, risers, truss params
  * and each fixture's link. Fixtures themselves travel as `<Fixture>` elements, which every MVR reader understands.
  * `offset` is the world offset the export took off every point (the fit of an imported design), so the import adds
- * it back and the stage lands where it was.
+ * it back and the stage lands where it was. `hiddenLayers` is the user's layer choice of an imported design, which
+ * the import puts back over the hall rule's guess; an export without MVR facts, or an older one, has none.
  */
 export type LumaStageData = Pick<StageDesign, 'venue' | 'scenery' | 'deck' | 'screens' | 'risers' | 'trusses'> & {
   readonly offset: Vec3;
   readonly links: readonly FixtureLink[];
+  readonly hiddenLayers?: readonly string[];
 };
 
 /** The link of a fixture; optional fields stay absent when the fixture has none, so the JSON never holds `null`s. */

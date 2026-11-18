@@ -9,7 +9,7 @@ import { LUMA_MESH_PREFIX, type LumaStageData } from './luma/lumaData';
 import type { Aabb } from './math/Aabb';
 import { meshBounds } from './mesh/meshBounds';
 import type { MvrImport } from './MvrImport';
-import { MvrError, type MvrWarning } from './MvrWarning';
+import { MvrError, type MvrWarning, type MvrWarningCode } from './MvrWarning';
 import type { MeshPlacement, MvrScene } from './scene/MvrScene';
 import { walkScene } from './scene/walkScene';
 import { parseXml } from './xml/parseXml';
@@ -51,12 +51,14 @@ function readMeshBoxes(
 
 /**
  * The design step's result with the luma data applied. The luma data rebuilds the stage parts, so a file without any
- * mesh still shows a whole stage and its `no-geometry` warning would be noise.
+ * mesh still shows a whole stage and its `no-geometry` warning would be noise; stored hidden layers replace the
+ * hall rule's, so its `hidden-layers` line would name layers that are not hidden.
  */
 function withLumaData(result: DesignResult, luma: LumaStageData | undefined): LumaApplied {
   if (!luma) return result;
   const applied = applyLumaData(result.design, luma);
-  const designWarnings = result.warnings.filter((warning) => warning.code !== 'no-geometry');
+  const noise: readonly MvrWarningCode[] = luma.hiddenLayers ? ['no-geometry', 'hidden-layers'] : ['no-geometry'];
+  const designWarnings = result.warnings.filter((warning) => !noise.includes(warning.code));
   return { design: applied.design, warnings: [...designWarnings, ...applied.warnings] };
 }
 
