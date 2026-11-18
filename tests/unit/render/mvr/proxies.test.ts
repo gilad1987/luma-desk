@@ -8,7 +8,7 @@ import { createTemplate } from '../../../../src/domain/stage/templates/index.ts'
 import type { MvrGeometry } from '../../../../src/mvr/index.ts';
 import { classifyProxies } from '../../../../src/mvr/scene/proxyClassify.ts';
 import { MvrStage } from '../../../../src/render/mvr/MvrStage.ts';
-import { PROXY_GROUP, proxyMeshes, setProxiesShown } from '../../../../src/render/mvr/proxies.ts';
+import { PROXY_GROUP, proxyMeshes, showProxies } from '../../../../src/render/mvr/proxies.ts';
 import { floorGrid, seatRows, wallGrid } from '../../../shared/index.ts';
 
 const placements = [
@@ -48,11 +48,13 @@ describe('proxy meshes', () => {
     stage.setHiddenLayers(['L2']);
     expect([drawn(first ?? null), drawn(second ?? null)]).toEqual([true, false]);
     stage.setHiddenLayers([]);
-    setProxiesShown(stage.group, false);
+    showProxies(false);
     expect([drawn(first ?? null), first?.parent?.name]).toEqual([false, PROXY_GROUP]);
-    setProxiesShown(stage.group, true);
+    showProxies(true);
     expect(drawn(second ?? null)).toBe(true);
     stage.dispose();
+    showProxies(false);
+    expect(first?.parent?.visible).toBe(true);
   });
 
   it('frees the geometry and the material of every proxy mesh with the stage', async () => {

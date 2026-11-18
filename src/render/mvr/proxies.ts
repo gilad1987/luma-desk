@@ -6,6 +6,12 @@ import { proxyGeometry, proxyMaterial, type DrawnProxyKind } from './proxiesShap
 /** The name of the group that holds a layer's proxy meshes, so one flag hides the proxies of the layer. */
 export const PROXY_GROUP = 'mvr-proxies';
 
+/**
+ * The proxy groups of the stages now built. The "Show proxies" choice of the import summary reaches them here
+ * (`showProxies`), as the app holds the scenery behind a wrapper that passes on layer choices only.
+ */
+const holders = new Set<Object3D>();
+
 /** T(offset)·toThree(frame)·S: the proxy's frame in the three frame, with the unit shape one pitch wide. */
 function proxyMatrix(proxy: MvrProxy, offset: Vec3): Matrix4 | undefined {
   if (!proxy.frame || proxy.pitch === undefined) return undefined;
@@ -27,6 +33,7 @@ function proxyMesh(kind: DrawnProxyKind, matrices: readonly Matrix4[]): Instance
   // The stage frees an instanced mesh with `dispose()` and leaves geometry and material to the mesh library. These
   // two are not the library's, so the mesh frees them on the same call.
   mesh.addEventListener('dispose', () => {
+    if (mesh.parent) holders.delete(mesh.parent);
     mesh.geometry.dispose();
     mesh.material.dispose();
   });
@@ -49,6 +56,7 @@ export function addProxyMeshes(layers: Map<string, Group>, geometry: MvrGeometry
       if (matrices.length > 0) holder.add(proxyMesh(kind, matrices));
     }
     if (holder.children.length === 0) continue;
+    holders.add(holder);
     const group = layers.get(layer) ?? new Group();
     layers.set(layer, group.add(holder));
   }
@@ -65,9 +73,10 @@ export function proxyMeshes(root: Object3D, kind: DrawnProxyKind): InstancedMesh
   return found;
 }
 
-/** Shows or hides every proxy under `root` (the "Show proxies" choice); a hidden layer stays hidden either way. */
-export function setProxiesShown(root: Object3D, shown: boolean): void {
-  root.traverse((node) => {
-    if (node.name === PROXY_GROUP) node.visible = shown;
-  });
+/**
+ * Shows or hides every proxy now built (the "Show proxies" choice); a hidden layer stays hidden either way. The
+ * choice is for the stage on screen: a stage built later shows its proxies, which is the default.
+ */
+export function showProxies(shown: boolean): void {
+  for (const holder of holders) holder.visible = shown;
 }
