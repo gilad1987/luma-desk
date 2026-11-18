@@ -68,10 +68,13 @@ describe('restoreStoredMvr', () => {
     expect(flow.scenery.show.mock.calls[0]?.[0].design).toBe(edited);
   });
 
-  it('shows no prompt when the stage changed while the store was read', async () => {
+  it.each([
+    ['another stage', BUILT_IN_DESIGN],
+    ['a stage of the same file without MVR data', { ...createTemplate('theatre'), source: savedMvr.source }],
+  ])('shows no prompt when %s came while the store was read', async (_name, next: StageDesign) => {
     const flow = fakeMvrFlowDeps(savedMvr);
     flow.store.get.mockImplementation(() => {
-      flow.stage.design = flow.deps.stage.builtIn;
+      flow.stage.design = next;
       return Promise.resolve(null);
     });
     await restoreStoredMvr(flow.deps, flow.stage.design);

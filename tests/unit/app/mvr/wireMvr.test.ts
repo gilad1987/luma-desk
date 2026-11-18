@@ -26,6 +26,7 @@ function heldFile(): { file: File; release: () => void } {
 const savedMvr = (name: string): StageDesign => ({
   ...createTemplate('theatre'),
   source: { kind: 'mvr', name, fileHash: name },
+  mvr: { fixtures: {}, layers: [], hiddenLayers: [], offset: [0, 0, 0] },
 });
 
 /** The MVR wiring over a fake stage on `design`; `emit` records the toasts. */

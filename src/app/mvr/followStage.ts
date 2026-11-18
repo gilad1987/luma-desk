@@ -2,7 +2,7 @@ import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { EngineBus } from '../../engine/events';
 import type { StageService } from '../../engine/stage/StageService';
 import type { MvrFlowDeps } from './MvrFlowDeps';
-import { sameMvrFile } from './sameMvrFile';
+import { showsMvrFile } from './showsMvrFile';
 
 /** What the stage follower needs: the bus to listen on, the stage to read the cause from, and the MVR parts. */
 export interface StageFollowDeps {
@@ -28,7 +28,7 @@ export function followStage({ bus, stage, scenery, prompt, restore }: StageFollo
     const previous = shown;
     shown = design.source;
     if (stage.cause === 'import') return;
-    if (design.mvr && sameMvrFile(previous, design.source)) {
+    if (showsMvrFile(design, previous)) {
       scenery.setHiddenLayers(design.mvr.hiddenLayers);
       return;
     }
