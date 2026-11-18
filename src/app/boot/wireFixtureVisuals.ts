@@ -46,13 +46,13 @@ export interface FixtureVisualHandles {
 /**
  * Builds every fixture visual and the props in the legacy order (decision 24: each three.js object draws its uuid
  * from the seeded Math.random). The visuals build through the stage scene, which rebuilds them on a new stage; the
- * frame update and the light frame exist first but create no three.js object. The FOH riser joins the camera views'
- * rig before the props build, so the RoboSpot station joins it after the riser and takes the riser's visibility, as
- * it did before.
+ * frame update and the light frame exist first but create no three.js object. The venue build already put the FOH
+ * riser in the camera views' rig, so the RoboSpot station joins it after the riser and takes the riser's
+ * visibility, as it did before.
  */
 export function wireFixtureVisuals(deps: FixtureVisualDeps): FixtureVisualHandles {
   const { stage, fixtures, selection, appState, overlay } = deps;
-  const { scene, venue, views, sceneLights } = stage;
+  const { scene, views, sceneLights } = stage;
   const gobo = createGoboAtlas();
   const beamShared = createBeamShared();
   const trimMaterial = createTrimMaterial();
@@ -81,7 +81,6 @@ export function wireFixtureVisuals(deps: FixtureVisualDeps): FixtureVisualHandle
     sync: visualSync,
   });
   stage.stageScene.connect({ visuals: fixtureVisuals, overlay, screenLight: sceneLights.screenLight }, fixtures);
-  views.fohRig.add(...venue.fohRig);
   const props = new Props({ scene, kit, fohRig: views.fohRig, state: appState, beamHaze: beamShared.haze });
   return { gobo, beamShared, keyLights, picker, props, lightFrame, visualSync, fixtureVisuals };
 }

@@ -22,11 +22,14 @@ export class SceneLights {
   private readonly houseLights: readonly Light[];
   /** Lit by the LED screen fixture in its own branch of the fixture sync. */
   readonly screenLight: PointLight;
-  private readonly wallLight: Light;
+  private readonly wallLight: Light | null;
   private houseLevel = 0.3;
 
-  /** `wallLight` is the old-city floodlight; it exists but is forced dark every frame (render quirk, 02 §4.8). */
-  constructor(scene: Scene, wallLight: Light) {
+  /**
+   * `wallLight` is the old-city floodlight; it exists but is forced dark every frame (render quirk, 02 §4.8). A boot
+   * venue other than Sultan's Pool has none (null); a floodlight built later starts dark and nothing lights it.
+   */
+  constructor(scene: Scene, wallLight: Light | null) {
     this.stageLight = new PointLight(0xffffff, 0, 34, 1.5);
     this.stageLight.position.set(0, 9, -10);
     scene.add(this.stageLight);
@@ -62,6 +65,6 @@ export class SceneLights {
       const light = this.houseLights[i];
       if (light) light.intensity = this.houseLevel * (i === 2 ? 500 : 1100);
     }
-    this.wallLight.intensity = 0;
+    if (this.wallLight) this.wallLight.intensity = 0;
   }
 }

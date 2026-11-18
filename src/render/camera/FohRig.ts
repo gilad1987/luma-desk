@@ -18,6 +18,14 @@ export class FohRig {
     }
   }
 
+  /** Forgets objects that left the scene with their venue; a later venue's riser joins with `add`. */
+  remove(...objects: Object3D[]): void {
+    for (const object of objects) {
+      const at = this.members.indexOf(object);
+      if (at >= 0) this.members.splice(at, 1);
+    }
+  }
+
   /** Shows or hides every registered object. */
   setVisible(isVisible: boolean): void {
     for (const member of this.members) member.visible = isVisible;

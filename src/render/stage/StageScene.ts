@@ -3,22 +3,25 @@ import { boundsOf } from '../../domain/stage/bounds';
 import type { StageDesign } from '../../domain/stage/StageDesign';
 import { surfacesOf } from '../../domain/stage/surfaces';
 import { ROOF } from '../../domain/venue';
+import type { Venue } from '../venue/Venue';
 import { buildDeck } from './DeckBuilder';
-import { buildScreens, screenSlotsOf, withWalls, type BuiltScreen } from './ScreenBuilder';
+import { handOverRig } from './handOverRig';
+import { buildScreens, type BuiltScreen } from './ScreenBuilder';
 import { StageParts } from './StageParts';
 import type { StageFixtureHost, StageSceneDeps } from './StageSceneDeps';
 import { materialList, type StageMaterials, type StageSlots } from './StageSlots';
+import { StageVenue } from './StageVenue';
 import { buildTrusses } from './TrussBuilder';
 import { TrussKit } from './TrussKit';
 
 /**
- * The 3D stage of the current design: deck and risers, trusses, LED walls and the fixture visuals. At boot the venue
- * calls the slots in its creation order and the camera stays put; on `rigChanged` {@link rebuild} frees the old parts
- * and builds the new design. Each build sets the beam surfaces exactly once (contract §9).
+ * The 3D stage of the design and the venue around it. At boot the venue calls the slots in its creation order; on
+ * `rigChanged` {@link rebuild} frees the old parts and builds the new design. Each build sets the surfaces once (§9).
  */
 export class StageScene implements StageSlots {
   readonly #deps: StageSceneDeps;
   readonly #parts = new StageParts();
+  readonly #venue: StageVenue;
   #design: StageDesign;
   #materials: StageMaterials | null = null;
   #kit: TrussKit | null = null;
@@ -28,10 +31,20 @@ export class StageScene implements StageSlots {
   constructor(deps: StageSceneDeps, design: StageDesign) {
     this.#deps = deps;
     this.#design = design;
-    deps.surfaces.setSurfaces(surfacesOf(design));
+    this.#venue = new StageVenue(deps, this, (o) => this.#parts.owns(o));
+    deps.surfaces.setSurfaces(surfacesOf(design), design.venue.kind);
   }
 
+  /** Builds the venue of the boot design; the returned venue stays current across later venue switches. */
+  buildVenue(): Venue {
+    this.#venue.build(this.#design.venue.kind);
+    this.#venue.apply(this.#design);
+    return this.#venue;
+  }
+
+  /** A new venue brings new materials, so the truss kit made with the old steel is built again. */
   deck(materials: StageMaterials): void {
+    if (materials !== this.#materials) this.#kit = null;
     this.#materials = materials;
     const { scenery, deck, risers } = this.#design;
     if (scenery.deck) this.#parts.capture(this.#deps.scene, () => buildDeck(this.#deps.scene, deck, risers, materials));
@@ -53,12 +66,13 @@ export class StageScene implements StageSlots {
   /** Builds the boot rig's fixture visuals into the walls built so far; later rigs come with {@link rebuild}. */
   connect(host: StageFixtureHost, fixtures: readonly Fixture[]): void {
     this.#host = host;
-    this.#buildRig(host, fixtures);
+    handOverRig(host, this.#screens, fixtures);
   }
 
   /**
-   * Checks the rig first, so a rig the visuals cannot build leaves the old stage whole.
-   * @throws Error before boot ({@link connect} not called yet), or when a light type of `fixtures` has no model.
+   * Checks the rig first, so a rig the visuals cannot build leaves the old stage whole. Only a new venue kind rebuilds
+   * the venue, and it frees the old venue's materials and truss kit too. @throws Error before boot, or on a rig with
+   * a light type that has no model.
    */
   rebuild(design: StageDesign, fixtures: readonly Fixture[]): void {
     const materials = this.#materials,
@@ -66,23 +80,21 @@ export class StageScene implements StageSlots {
       host = this.#host;
     if (!materials || !kit || !host) throw new Error('StageScene: rebuild before the boot build');
     host.visuals.assertBuildable(fixtures);
-    this.#parts.dispose(new Set([...kit.shared, ...materialList(materials)]));
+    const isSameVenue = design.venue.kind === this.#design.venue.kind;
+    this.#parts.dispose(new Set(isSameVenue ? [...kit.shared, ...materialList(materials)] : []));
     this.#design = design;
+    if (isSameVenue) this.#buildStage(materials);
+    else this.#venue.switchTo(design.venue.kind);
+    this.#venue.apply(design);
+    this.#deps.surfaces.setSurfaces(surfacesOf(design), design.venue.kind);
+    handOverRig(host, this.#screens, fixtures);
+    this.#deps.views.fitTo(boundsOf(design));
+    this.#deps.views.setView(this.#deps.views.currentView);
+  }
+
+  #buildStage(materials: StageMaterials): void {
     this.deck(materials);
     this.trusses(materials);
     this.screens(materials);
-    this.#deps.surfaces.setSurfaces(surfacesOf(design));
-    this.#buildRig(host, fixtures);
-    const { views } = this.#deps;
-    views.fitTo(boundsOf(design));
-    views.setView(views.currentView);
-  }
-
-  /** Hands the fixtures with a built wall to the visuals and the overlay: a screen without a wall gets no label. */
-  #buildRig(host: StageFixtureHost, fixtures: readonly Fixture[]): void {
-    const slots = screenSlotsOf(this.#screens, host.screenLight),
-      shown = withWalls(fixtures, slots);
-    host.visuals.rebuild(shown, slots);
-    host.overlay.setFixtures(shown);
   }
 }

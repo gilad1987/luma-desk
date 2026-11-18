@@ -8,7 +8,7 @@ import { createStageGraphics } from '../../render/stage/createStageGraphics';
 import { PostFx } from '../../render/stage/PostFx';
 import { StageScene } from '../../render/stage/StageScene';
 import { SurfaceHit } from '../../render/surface/SurfaceHit';
-import { buildVenue, type Venue } from '../../render/venue/Venue';
+import type { Venue } from '../../render/venue/Venue';
 import { byId } from '../../ui/dom';
 
 /** The renderer, camera and venue: everything the fixture visuals hang in. */
@@ -22,6 +22,7 @@ export interface StageHandles {
   /** Moves the camera; the view buttons and the test hook pass plain strings, so an unknown name does nothing. */
   readonly setView: (view: string, instant?: boolean) => void;
   readonly postFx: PostFx;
+  /** The live venue: after a venue switch it reads the new venue's crowd, band and scenery. */
   readonly venue: Venue;
   readonly sceneLights: SceneLights;
   /** The stage parts of the current design; it rebuilds them and the fixture visuals on `rigChanged`. */
@@ -59,7 +60,7 @@ export function wireStage(design: StageDesign): StageHandles {
   addEnvironmentLights(scene);
   const surfaceHit = new SurfaceHit();
   const stageScene = new StageScene({ scene, surfaces: surfaceHit, views }, design);
-  const venue = buildVenue(scene, stageScene);
+  const venue = stageScene.buildVenue();
   const sceneLights = new SceneLights(scene, venue.wallFloodlight);
   const { camera, controls } = views;
   return {

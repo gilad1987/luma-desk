@@ -3,7 +3,6 @@ import type { Selection } from '../../engine/Selection';
 import type { LightFrame } from '../lights/LightFrame';
 import type { SharedUniform } from './BeamMaterial';
 import type { FixtureVisual, ScreenVisual } from './FixtureVisual';
-import { hitSurface } from '../surface/hitSurface';
 import { gatedIntensity } from './sync/gatedIntensity';
 import { LightSync, type BeamSurface } from './sync/LightSync';
 import { syncScreen, type ScreenTargets } from './sync/syncScreen';
@@ -16,8 +15,8 @@ export interface FixtureVisualSyncDeps {
   readonly goboTextures: readonly Texture[];
   /** Render core's per-frame light aggregate; the integrator feeds it to the scene and key lights after update. */
   readonly lights: LightFrame;
-  /** Where beams land (the stage's `SurfaceHit`); without it, the venue's fixed surfaces (`hitSurface`). */
-  readonly surface?: BeamSurface;
+  /** Where beams land: the stage's `SurfaceHit`, which follows the current design and venue. */
+  readonly surface: BeamSurface;
 }
 
 /** @throws Error when a screen fixture has no targets: its output would drive nothing. */
@@ -40,7 +39,7 @@ export class FixtureVisualSync {
   #screens: ReadonlyMap<number, ScreenTargets> = new Map();
 
   constructor(deps: FixtureVisualSyncDeps) {
-    const { selection, goboTextures, lights, surface = { hit: hitSurface } } = deps;
+    const { selection, goboTextures, lights, surface } = deps;
     this.#beamTime = deps.beamTime;
     this.#lights = lights;
     this.#light = new LightSync({ selection, goboTextures, lights, surface });
