@@ -92,8 +92,9 @@ describe('fixture body classes of an import', () => {
       ['Stub', 'none', 1],
       ['Zenith@Gone', 'none', 1],
     ]);
-    expect(lines[0]?.message).toBe('2 fixtures of "Mover": the GDTF model is shown.');
-    expect(lines[2]?.message).toBe('1 fixture of "Posed": the GDTF model has a baked pose; boxes are shown.');
-    expect(lines[6]?.message).toBe('1 fixture of "Zenith@Gone": there is no GDTF file; the desk body is shown.');
+    expect(lines[0]?.message).toBe('2 fixtures of "Mover": the GDTF holds a 3D model.');
+    expect(lines[2]?.message).toBe('1 fixture of "Posed": the GDTF model has a baked pose.');
+    expect(lines[3]?.message).toBe('1 fixture of "Boxes": the GDTF holds model sizes but no mesh files.');
+    expect(lines[6]?.message).toBe('1 fixture of "Zenith@Gone": no GDTF file in the archive.');
   });
 });

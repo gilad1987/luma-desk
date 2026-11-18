@@ -1,7 +1,8 @@
-import type { MvrDesignInfo, MvrFixtureInfo } from '../../domain/stage/mvr';
+import type { MvrDesignInfo } from '../../domain/stage/mvr';
 import type { StageDesign, StageFixture } from '../../domain/stage/StageDesign';
 import type { FixtureLink, LinkFootprint, LumaStageData } from '../luma/lumaData';
 import type { MvrWarning } from '../MvrWarning';
+import { linkFootprint } from './linkFootprint';
 
 /** One link split once: its desk fields go onto the fixture, its footprint (MVR data) into the MVR facts. */
 interface SplitLink {
@@ -28,25 +29,6 @@ function relink(fixture: StageFixture, links: ReadonlyMap<number, SplitLink>): S
   return { ...link.desk, position, ...(rotation ? { rotation } : {}), ...(patch ? { patch } : {}) };
 }
 
-/** Two GDTF names as `modeChannels` matches them: exactly, or equal after trimming, as writers pad names. */
-const sameName = (a: string, b: string): boolean => a === b || a.trim() === b.trim();
-
-/**
- * The link's footprint and body size when the `<Fixture>` still names the GDTF spec and mode they were measured for.
- * Another tool may change them and keep the desk's `<UserData>`; the old count would then pass as known and hide real
- * overlaps, and the old size would draw another product's body.
- */
-function linkFootprint(
-  info: MvrFixtureInfo,
-  link: SplitLink | undefined,
-): Pick<MvrFixtureInfo, 'footprint' | 'bodySize'> {
-  const footprint = link?.footprint;
-  if (footprint === undefined) return {};
-  const same = sameName(footprint.gdtfSpec, info.gdtfName) && sameName(footprint.gdtfMode, info.gdtfMode);
-  const { channels, bodySize } = footprint;
-  return same ? { footprint: channels, ...(bodySize === undefined ? {} : { bodySize }) } : {};
-}
-
 /**
  * The MVR facts with each fixture's `type` set to the type it has now. The import guessed a type without a GDTF
  * file, and the luma data then restored the desk type; the export reads a type mismatch as "the user re-typed the
@@ -62,7 +44,7 @@ function retype(
 ): MvrDesignInfo {
   const entries = fixtures.flatMap((fixture) => {
     const info = mvr.fixtures[String(fixture.id)];
-    const kept = info && { ...linkFootprint(info, links.get(fixture.id)), ...info, type: fixture.type };
+    const kept = info && { ...linkFootprint(info, links.get(fixture.id)?.footprint), ...info, type: fixture.type };
     return kept ? [[String(fixture.id), kept] as const] : [];
   });
   return { ...mvr, fixtures: Object.fromEntries(entries) };

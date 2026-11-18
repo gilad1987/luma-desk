@@ -9,17 +9,17 @@ import { xmlElement, xmlText } from './xmlWriter';
  * GDTF name and mode: after a re-type both belong to another product, and the next import would trust them. The
  * footprint names the spec and mode written, so the import can tell when another tool changed them. The body size
  * rides in it because the export took the scaled mount shift off the matrix, and the import needs the same size to
- * put the body back where it was.
+ * put the body back where it was. A mode with no DMX footprint still carries its body size, without `channels`.
  */
 function linkWithFootprint(fixture: StageFixture, design: StageDesign): FixtureLink {
   const info = design.mvr?.fixtures[String(fixture.id)];
   const gdtf = gdtfIdentity(fixture, design.mvr);
-  if (info?.footprint === undefined || !gdtf.imported) return linkOf(fixture);
+  if (info === undefined || (info.footprint === undefined && info.bodySize === undefined) || !gdtf.imported) {
+    return linkOf(fixture);
+  }
+  const counted = info.footprint === undefined ? {} : { channels: info.footprint };
   const sized = info.bodySize === undefined ? {} : { bodySize: info.bodySize };
-  return {
-    ...linkOf(fixture),
-    footprint: { channels: info.footprint, ...sized, gdtfSpec: gdtf.spec, gdtfMode: gdtf.mode },
-  };
+  return { ...linkOf(fixture), footprint: { ...counted, ...sized, gdtfSpec: gdtf.spec, gdtfMode: gdtf.mode } };
 }
 
 /**

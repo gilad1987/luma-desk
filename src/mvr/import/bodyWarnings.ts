@@ -23,14 +23,17 @@ export interface BodyEntry {
   readonly noGdtf: boolean;
 }
 
-/** What the user is told per class. "Boxes" are one box per part at the model sizes; the desk body is the desk's own. */
+/**
+ * What the GDTF file holds for the product, per class. It says nothing about what is drawn: the drawing step comes
+ * later and words its own lines from the same fields.
+ */
 function wording({ verdict, noGdtf }: BodyEntry): string {
-  if (verdict.reason === 'bakedPose') return 'the GDTF model has a baked pose; boxes are shown';
-  if (verdict.reason === 'unitSuspect') return 'the GDTF model sizes are not in metres; the desk body is shown';
-  if (verdict.bodyClass === 'mesh') return 'the GDTF model is shown';
-  if (verdict.bodyClass === 'meshVendorSymbol') return 'the GDTF holds the CAD symbol of the product; it is shown';
-  if (verdict.bodyClass === 'boxes') return 'the GDTF has part sizes but no model file; boxes are shown';
-  return noGdtf ? 'there is no GDTF file; the desk body is shown' : 'the GDTF has no model; the desk body is shown';
+  if (verdict.reason === 'bakedPose') return 'the GDTF model has a baked pose';
+  if (verdict.reason === 'unitSuspect') return 'the GDTF model sizes are not in metres';
+  if (verdict.bodyClass === 'mesh') return 'the GDTF holds a 3D model';
+  if (verdict.bodyClass === 'meshVendorSymbol') return 'the GDTF holds the CAD symbol of the product';
+  if (verdict.bodyClass === 'boxes') return 'the GDTF holds model sizes but no mesh files';
+  return noGdtf ? 'no GDTF file in the archive' : 'the GDTF is a stub with no model';
 }
 
 /**

@@ -17,18 +17,26 @@ import { expectRigKept, gdtfMode, makeGdtf, makeMvr, mvrMatrix, sceneXml } from 
 
 const MATRIX = '{1,0,0}{0,1,0}{0,0,1}{40000,25000,8000}';
 const BODY_SIZE = 0.5;
-const GDTF = makeGdtf({
-  models: `<Model Name="Body" Length="0.3" Width="0.3" Height="${BODY_SIZE}"/>`,
-  geometries: '<Geometry Name="Body" Model="Body"><Beam Name="Beam" BeamType="Spot" BeamAngle="20"/></Geometry>',
-  modes: gdtfMode('Std', [
+const MODELS = `<Model Name="Body" Length="0.3" Width="0.3" Height="${BODY_SIZE}"/>`;
+const GEOMETRIES = '<Geometry Name="Body" Model="Body"><Beam Name="Beam" BeamType="Spot" BeamAngle="20"/></Geometry>';
+const sizedGdtf = (modes: string): Uint8Array => makeGdtf({ models: MODELS, geometries: GEOMETRIES, modes });
+const GDTF = sizedGdtf(
+  gdtfMode('Std', [
     ['Dimmer', 'Offset="1"'],
     ['Pan', 'Offset="2"'],
   ]),
-});
-const SCENE = sceneXml(
-  `<Layer uuid="L1" name="Rig"><ChildList><Fixture uuid="U-1" name="Light 1"><Matrix>${MATRIX}</Matrix>` +
-    '<GDTFSpec>Acme@Sized</GDTFSpec><GDTFMode>Std</GDTFMode><FixtureID>1</FixtureID></Fixture></ChildList></Layer>',
 );
+/** Modes with no DMX footprint: no channel at all, or only virtual channels (no offset). */
+const FOOTPRINTLESS = [
+  ['a 0-channel mode of a Custom spec', 'Custom@Bare', gdtfMode('Std', [])],
+  ['a mode of virtual channels only', 'Acme@Virtual', gdtfMode('Std', [['Dimmer', 'Offset=""']])],
+] as const;
+const sceneOf = (spec: string): string =>
+  sceneXml(
+    `<Layer uuid="L1" name="Rig"><ChildList><Fixture uuid="U-1" name="Light 1"><Matrix>${MATRIX}</Matrix>` +
+      `<GDTFSpec>${spec}</GDTFSpec><GDTFMode>Std</GDTFMode><FixtureID>1</FixtureID></Fixture></ChildList></Layer>`,
+  );
+const SCENE = sceneOf('Acme@Sized');
 
 /** Checks a written matrix entry by entry against the file's own, to the 6 decimals the export writes. */
 function expectFileMatrix(written: Iterable<number> | undefined): void {
@@ -54,6 +62,18 @@ describe('MVR round trip of a fixture with a GDTF body size', () => {
     expect(second.design.fixtures[0]?.position).toEqual(first.design.fixtures[0]?.position);
     expectRigKept(first.design, second.design);
     expectFileMatrix(exportedMatrix(bytes));
+  });
+
+  it.each(FOOTPRINTLESS)('keeps the body size and the desk position for %s', async (_label, spec, modes) => {
+    const first = await importMvr(makeMvr(sceneOf(spec), { [`${spec}.gdtf`]: sizedGdtf(modes) }), { name: 'B.mvr' });
+    const { bytes } = exportMvr(first.design);
+    const second = await importMvr(bytes, { name: 'B.mvr' });
+    expect(first.design.mvr?.fixtures['1']?.footprint).toBeUndefined();
+    expect(first.design.mvr?.fixtures['1']?.bodySize).toBe(BODY_SIZE);
+    expect(second.design.mvr?.fixtures['1']?.bodySize).toBe(BODY_SIZE);
+    expect(second.design.fixtures[0]?.position).toEqual(first.design.fixtures[0]?.position);
+    expectFileMatrix(exportedMatrix(bytes));
+    expectFileMatrix(exportedMatrix(exportMvr(second.design).bytes));
   });
 
   it('writes the file matrix for a sized fixture in fixtureXml', async () => {

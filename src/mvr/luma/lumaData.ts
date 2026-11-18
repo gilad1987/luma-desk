@@ -17,10 +17,11 @@ export const LUMA_MESH_PREFIX = 'luma_';
  * The imported GDTF mode's channel count (`MvrFixtureInfo.footprint`) and, when the GDTF gave one, the size the body
  * is drawn at (`MvrFixtureInfo.bodySize`), with the `<GDTFSpec>` and `<GDTFMode>` they were measured for. Another
  * tool may change a fixture's spec or mode and keep the desk's `<UserData>`, so the import trusts `channels` and
- * `bodySize` only while the `<Fixture>` still names this spec and mode.
+ * `bodySize` only while the `<Fixture>` still names this spec and mode. `channels` is absent for a mode with no DMX
+ * footprint (no channel, or only virtual ones): its body size must still travel, or the re-import moves the body.
  */
 export interface LinkFootprint {
-  readonly channels: number;
+  readonly channels?: number;
   readonly bodySize?: number;
   readonly gdtfSpec: string;
   readonly gdtfMode: string;
