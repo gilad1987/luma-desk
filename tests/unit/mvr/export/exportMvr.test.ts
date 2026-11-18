@@ -7,6 +7,7 @@
 import { strFromU8, unzipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { createTemplate, TEMPLATE_IDS } from '../../../../src/domain/stage/templates/index.ts';
+import { mountShift } from '../../../../src/mvr/design/mountShift.ts';
 import { planPatches } from '../../../../src/mvr/export/autoPatch.ts';
 import { exportMvr } from '../../../../src/mvr/export/exportMvr.ts';
 import { pointToThree } from '../../../../src/mvr/math/axes.ts';
@@ -36,10 +37,13 @@ describe.each(TEMPLATE_IDS)('exportMvr of the %s template', (id) => {
     expect([files, ids, scene.warnings]).toEqual([[SCENE_FILE], design.fixtures.map((fixture) => fixture.id), []]);
   });
 
-  it('places every fixture within 1 mm of its design position', () => {
+  // The MVR matrix holds the mounting point; the desk position is the model origin (tilt axis), one mount height off.
+  it('places every fixture within 1 mm of its design position, read back from its mounting point', () => {
     const worst = scene.fixtures.reduce((max, fixture, index) => {
-      const position = pointToThree(transformPoint(fixture.matrix, [0, 0, 0]));
-      const expected = design.fixtures[index]?.position ?? [NaN, NaN, NaN];
+      const own = design.fixtures[index];
+      const mounting = pointToThree(transformPoint(fixture.matrix, [0, 0, 0]));
+      const position = own ? mountShift({ ...own, position: mounting }, 'toBody') : [NaN, NaN, NaN];
+      const expected = own?.position ?? [NaN, NaN, NaN];
       return Math.max(max, ...position.map((value, axis) => Math.abs(value - (expected[axis] ?? NaN))));
     }, 0);
     expect(worst).toBeLessThan(0.001);

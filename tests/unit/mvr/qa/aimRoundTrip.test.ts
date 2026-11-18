@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
+import { strFromU8, unzipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
+import { MOUNT_HEIGHTS } from '../../../../src/domain/fixtureTypes/mountHeights.ts';
 import { exportMvr } from '../../../../src/mvr/export/exportMvr.ts';
 import { importMvr } from '../../../../src/mvr/index.ts';
+import { walkScene } from '../../../../src/mvr/scene/walkScene.ts';
+import { parseXml } from '../../../../src/mvr/xml/parseXml.ts';
 import { expectRigKept, gdtfMode, makeGdtf, makeMvr, sceneXml } from '../../../shared/index.ts';
 
 /** A schema-valid uuid ending in `tail`, so the export can keep it. */
@@ -56,5 +60,29 @@ describe('MVR round trip of hanging, floor and angled fixtures', () => {
     const first = await importMvr(FILE, { name: 'Aim.mvr' });
     const second = await importMvr(exportMvr(first.design).bytes, { name: 'Aim.mvr' });
     expectRigKept(first.design, second.design);
+  });
+
+  it('hangs the hung head below its pipe and stands the floor head on the floor', async () => {
+    const { design } = await importMvr(FILE, { name: 'Aim.mvr' });
+    const lift = design.mvr?.offset[1] ?? NaN;
+    const [hung, floor] = design.fixtures;
+    expect(hung?.position[1]).toBeCloseTo(6 + lift - MOUNT_HEIGHTS.spot.hang, 6);
+    expect(floor?.position[1]).toBeCloseTo(6 + lift + MOUNT_HEIGHTS.spot.floor, 6);
+  });
+
+  it('writes back every original MVR matrix, the mounting point, within 1 mm', async () => {
+    const { design } = await importMvr(FILE, { name: 'Aim.mvr' });
+    const entries = unzipSync(exportMvr(design).bytes);
+    const scene = walkScene(parseXml(strFromU8(entries['GeneralSceneDescription.xml'] ?? new Uint8Array())));
+    const original = walkScene(
+      parseXml(sceneXml(`<Layer uuid="${uuid('900')}" name="Rig"><ChildList>${fixtures()}</ChildList></Layer>`)),
+    );
+    // Translation (entries 12-14) in millimetres within 1 mm; the unitless rotation entries within 1e-6.
+    const worst = scene.fixtures.reduce((max, fixture, index) => {
+      const before = original.fixtures[index]?.matrix ?? [];
+      const error = (value: number, at: number): number => Math.abs(value - (before[at] ?? NaN)) * (at >= 12 ? 1 : 1e6);
+      return Math.max(max, ...Array.from(fixture.matrix, error));
+    }, 0);
+    expect(worst).toBeLessThan(1);
   });
 });
