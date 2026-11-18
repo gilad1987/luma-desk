@@ -24,8 +24,13 @@ function parseFixtureInfo(r: Reader, parent: Raw, key: Key, at: string): MvrFixt
   };
   const focus = r.optional(o, 'focus', path, r.vec3);
   const footprint = r.optional(o, 'footprint', path, (c, k, p) => parseFootprint(r, c, k, p));
+  const bodySize = r.optional(o, 'bodySize', path, r.positive);
   if (!allDefined(info)) return undefined;
-  return { ...info, ...(focus === undefined ? {} : { focus }), ...(footprint === undefined ? {} : { footprint }) };
+  const optional = {
+    ...(footprint === undefined ? {} : { footprint }),
+    ...(bodySize === undefined ? {} : { bodySize }),
+  };
+  return { ...info, ...(focus === undefined ? {} : { focus }), ...optional };
 }
 
 /**

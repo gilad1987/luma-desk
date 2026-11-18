@@ -2,7 +2,7 @@ import type { BufferGeometry, Material } from 'three';
 import { loadMeshParts } from './loadMeshParts';
 import { MaterialPool } from './MaterialPool';
 import type { MeshPart } from './MeshPart';
-import { createMvrScreenMaterial } from './mvrScreenMaterial';
+import { MvrScreenMaterials } from './mvrScreenMaterial';
 import { OfflineLoadingManager } from './OfflineLoadingManager';
 import { styleScenery } from './sceneryStyle';
 
@@ -23,8 +23,8 @@ export class MeshLibrary {
   readonly #loads = new Map<string, Promise<readonly MeshPart[]>>();
   readonly #geometries: BufferGeometry[] = [];
   readonly #materials = new MaterialPool();
-  /** The one LED material every screen placement of the import draws with (`isScreenPlacement`); freed by `dispose`. */
-  readonly screenMaterial = createMvrScreenMaterial();
+  /** The materials the screen placements of the import draw with (`isScreenPlacement`); freed by `dispose`. */
+  readonly screens = new MvrScreenMaterials();
   readonly #failures: MeshFailure[] = [];
   #parsing = 0;
   #isDisposed = false;
@@ -65,7 +65,7 @@ export class MeshLibrary {
     this.#releaseIfIdle();
     for (const geometry of this.#geometries.splice(0)) geometry.dispose();
     this.#materials.dispose();
-    this.screenMaterial.dispose();
+    this.screens.dispose();
   }
 
   async #load(file: string): Promise<readonly MeshPart[]> {

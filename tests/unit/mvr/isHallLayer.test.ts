@@ -7,7 +7,7 @@ import { pointBox, type Aabb } from '../../../src/mvr/math/Aabb.ts';
 const CORE: Aabb = { min: [-10, 0, -5], max: [10, 8, 5] };
 
 const plan = (x0: number, x1: number, z0: number, z1: number): Aabb => ({ min: [x0, 0, z0], max: [x1, 6, z1] });
-const layer = (name: string, box: Aabb, rig = false): LayerBox => ({ layer: name, name, box, rig });
+const layer = (name: string, box: Aabb, rig = false): LayerBox => ({ layer: name, name, box, rig, drapes: false });
 const hall = (l: LayerBox, core: Aabb = CORE): boolean => isHallLayer(l, core);
 
 describe('isHallLayer name rule', () => {

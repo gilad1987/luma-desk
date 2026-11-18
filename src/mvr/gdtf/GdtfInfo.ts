@@ -54,6 +54,14 @@ export interface GdtfReference {
   readonly breaks: readonly GdtfBreak[];
 }
 
+/** The overall size of one top-level geometry tree: the device as it hangs in its GDTF rest pose. */
+export interface GdtfTreeSize {
+  /** The top-level geometry, matched against `GdtfMode.geometry`. */
+  readonly geometry: string;
+  /** Metres on X (length), Y (width) and Z (height), estimated from the model dimensions (`readSizes`). */
+  readonly size: readonly [number, number, number];
+}
+
 /**
  * What the importer reads from one GDTF file: enough to patch a fixture and to pick a desk fixture type. It is plain
  * data, so it can be read once per GDTF and shared by every fixture that uses it.
@@ -72,4 +80,8 @@ export interface GdtfInfo {
   readonly beamType?: string;
   /** The first beam's full `BeamAngle` in degrees; GDTF default 25. Absent without a beam. */
   readonly beamAngle?: number;
+  /** True when any `Display` geometry exists: the device, or the scene object that names it, is a screen. */
+  readonly hasDisplay: boolean;
+  /** One entry per top-level geometry tree that has a sized model; empty when the file sizes nothing. */
+  readonly sizes: readonly GdtfTreeSize[];
 }

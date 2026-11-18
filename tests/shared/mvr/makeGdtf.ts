@@ -6,6 +6,8 @@ export interface GdtfParts {
   readonly geometries?: string;
   /** Inner XML of `<DMXModes>`; `gdtfMode` builds one mode. */
   readonly modes?: string;
+  /** Inner XML of `<Models>`, which gives the body its real size; absent leaves the element out, as many GDTFs do. */
+  readonly models?: string;
 }
 
 /**
@@ -16,6 +18,7 @@ export function makeGdtf(parts: GdtfParts): Uint8Array {
   const xml =
     '<?xml version="1.0" encoding="UTF-8"?><GDTF DataVersion="1.2">' +
     '<FixtureType Name="Test Spot" Manufacturer="Acme">' +
+    (parts.models === undefined ? '' : `<Models>${parts.models}</Models>`) +
     `<Geometries>${parts.geometries ?? ''}</Geometries>` +
     `<DMXModes>${parts.modes ?? ''}</DMXModes>` +
     '</FixtureType></GDTF>';

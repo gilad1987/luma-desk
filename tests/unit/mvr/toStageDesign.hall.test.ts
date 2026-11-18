@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { STAGE } from '../../../src/domain/venue.ts';
 import type { ResolvedFixture } from '../../../src/mvr/design/DesignInput.ts';
 import { toStageDesign } from '../../../src/mvr/design/toStageDesign.ts';
+import type { Aabb } from '../../../src/mvr/math/Aabb.ts';
 import { makeFixtureRecord, makeScene, mvrMatrix } from '../../shared/index.ts';
 
 /** A 10 m x 10 m deck and, around it, a 30 m x 30 m hall shell whose layer name says nothing. */
@@ -51,7 +52,7 @@ describe('toStageDesign hall layers and stage box', () => {
     expect(result.geometry.hallLayers).toEqual(['l2']);
     const notes = result.warnings.filter((w) => w.code === 'hidden-layers');
     expect(notes.map((w) => w.message)).toEqual([
-      'Layers hidden at the start as the venue hall (turn them on in the layer list): Layer 2.',
+      'Layers hidden at the start as the venue hall or stage drapes (turn them on in the layer list): Layer 2.',
     ]);
   });
 
@@ -66,5 +67,26 @@ describe('toStageDesign hall layers and stage box', () => {
       ['l1', z - 5, z + 5],
       ['l2', z - 10, z + 20],
     ]);
+  });
+});
+
+/** The scene with one more layer beside the deck whose one mesh is named `name`: a drape or a plain flat. */
+function withSideLayer(name: string) {
+  const side = { ...placement('side.3ds', 'l3', 'Layer 3'), name };
+  const layers = [...scene.layers, { uuid: 'l3', name: 'Layer 3' }];
+  const sideBox: Aabb = { min: [5000, -5000, 0], max: [8000, 5000, 9000] };
+  const meshBoxes = new Map<string, Aabb>([...MESHES, ['side.3ds', sideBox]]);
+  const sided = { ...scene, layers, placements: [...scene.placements, side] };
+  return toStageDesign({ name: 'Show.mvr', scene: sided, fixtures: FIXTURES, meshBoxes });
+}
+
+describe('toStageDesign drape layers', () => {
+  it('hides a drape-only layer but keeps it in the box that sets the fit offset', () => {
+    const drape = withSideLayer('Side Drape');
+    const flat = withSideLayer('Side Flat');
+    expect(drape.geometry.offset).toEqual(flat.geometry.offset);
+    expect(drape.design.mvr?.hiddenLayers).toEqual(['l2', 'l3']);
+    expect(drape.geometry.hallLayers).toEqual(['l2']);
+    expect(flat.design.mvr?.hiddenLayers).toEqual(['l2']);
   });
 });

@@ -5,15 +5,21 @@ import { gdtfIdentity } from './gdtfIdentity';
 import { xmlElement, xmlText } from './xmlWriter';
 
 /**
- * The fixture's link with its imported footprint, kept only while the export still writes the imported GDTF name and
- * mode: after a re-type the footprint belongs to another product, and the next import would trust it. The footprint
- * names the spec and mode written, so the import can tell when another tool changed them.
+ * The fixture's link with its imported footprint and body size, kept only while the export still writes the imported
+ * GDTF name and mode: after a re-type both belong to another product, and the next import would trust them. The
+ * footprint names the spec and mode written, so the import can tell when another tool changed them. The body size
+ * rides in it because the export took the scaled mount shift off the matrix, and the import needs the same size to
+ * put the body back where it was.
  */
 function linkWithFootprint(fixture: StageFixture, design: StageDesign): FixtureLink {
-  const channels = design.mvr?.fixtures[String(fixture.id)]?.footprint;
+  const info = design.mvr?.fixtures[String(fixture.id)];
   const gdtf = gdtfIdentity(fixture, design.mvr);
-  if (channels === undefined || !gdtf.imported) return linkOf(fixture);
-  return { ...linkOf(fixture), footprint: { channels, gdtfSpec: gdtf.spec, gdtfMode: gdtf.mode } };
+  if (info?.footprint === undefined || !gdtf.imported) return linkOf(fixture);
+  const sized = info.bodySize === undefined ? {} : { bodySize: info.bodySize };
+  return {
+    ...linkOf(fixture),
+    footprint: { channels: info.footprint, ...sized, gdtfSpec: gdtf.spec, gdtfMode: gdtf.mode },
+  };
 }
 
 /**

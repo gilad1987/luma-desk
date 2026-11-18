@@ -1,4 +1,4 @@
-import type { Group } from 'three';
+import type { Group, Material } from 'three';
 import type { MeshPlacement, MvrGeometry } from '../../mvr/index';
 import { layerGroup } from './layerGroup';
 import type { MeshLibrary } from './MeshLibrary';
@@ -62,6 +62,7 @@ export async function buildLayers(
 ): Promise<Map<string, Group>> {
   const layers = byLayerAndFile(geometry.placements);
   const files = [...new Set(geometry.placements.map((placement) => placement.file))];
-  const parts = { byFile: await loadParts(files, library, onProgress), screen: library.screenMaterial };
+  const screen = (source: Material): Material => library.screens.of(source);
+  const parts = { byFile: await loadParts(files, library, onProgress), screen };
   return new Map([...layers].map(([uuid, layerFiles]) => [uuid, layerGroup(layerFiles, parts, geometry.offset)]));
 }

@@ -1,9 +1,12 @@
 import { union, type Aabb } from '../math/Aabb';
 import type { MeshPlacement } from '../scene/MvrScene';
+import { isDrapePlacement } from './isDrapePlacement';
 import { isRigPlacement } from './isRigPlacement';
 import { placementBox } from './surfaces';
 
-/** The placed meshes of one `<Layer>` as one box, so a whole layer can be judged (hall or stage) and left out. */
+/**
+ * The placed meshes of one `<Layer>` as one box, so a whole layer can be judged (hall, drapes or stage) and left out.
+ */
 export interface LayerBox {
   /** The layer's uuid, the key of `design.mvr.hiddenLayers`. */
   readonly layer: string;
@@ -12,6 +15,8 @@ export interface LayerBox {
   readonly box: Aabb;
   /** The layer holds a truss, a fixture body or an LED surface (`isRigPlacement`), so it is never the hall. */
   readonly rig: boolean;
+  /** Every placed mesh of the layer is a drape (`isDrapePlacement`), so the layer starts hidden (`hallLayers`). */
+  readonly drapes: boolean;
 }
 
 /**
@@ -32,6 +37,7 @@ export function layerBoxes(
       name: placement.layerName,
       box: seen ? union(seen.box, box) : box,
       rig: (seen?.rig ?? false) || isRigPlacement(placement),
+      drapes: (seen?.drapes ?? true) && isDrapePlacement(placement),
     });
   }
   return [...byLayer.values()];

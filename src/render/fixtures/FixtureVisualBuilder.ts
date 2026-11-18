@@ -69,12 +69,15 @@ export class FixtureVisualBuilder {
     };
   }
 
-  /** @throws Error when the fixture type has no model or no size. */
+  /**
+   * The model and the size it is drawn at: the type's own, times the fixture's `bodyScale` when an MVR import knows
+   * the product's real size. @throws Error when the fixture type has no model or no size.
+   */
   #modelOf(f: Fixture): [size: number, model: FixtureModelTable[string]] {
     const { size, model } = f.T;
     const buildModel = model === undefined ? undefined : this.#deps.models[model];
     if (size === undefined || !buildModel) throw new Error(`Fixture ${f.id}: type ${f.type} has no model or size`);
-    return [size, buildModel];
+    return [size * (f.bodyScale ?? 1), buildModel];
   }
 
   /** @throws Error when there is no mesh for this screen fixture. */

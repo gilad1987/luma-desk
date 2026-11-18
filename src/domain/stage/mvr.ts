@@ -29,6 +29,11 @@ export interface MvrFixtureInfo {
    * for another product. Absent when unknown; 1 to 512, as one break lies in one universe.
    */
   readonly footprint?: number;
+  /**
+   * The product's overall size in metres: the largest dimension of its GDTF geometry, when the file had a GDTF the
+   * import trusts for it. The desk draws the fixture's model at this size (`bodyScale`); absent, at the type's own.
+   */
+  readonly bodySize?: number;
   /** The `<FocusPoint>` the fixture aims at, in world metres after the fit offset, when the file gives one. */
   readonly focus?: Vec3;
 }

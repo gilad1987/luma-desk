@@ -14,12 +14,14 @@ export const LUMA_DATA_VERSION = '1';
 export const LUMA_MESH_PREFIX = 'luma_';
 
 /**
- * The imported GDTF mode's channel count (`MvrFixtureInfo.footprint`) with the `<GDTFSpec>` and `<GDTFMode>` it was
- * measured for. Another tool may change a fixture's spec or mode and keep the desk's `<UserData>`, so the import
- * trusts `channels` only while the `<Fixture>` still names this spec and mode.
+ * The imported GDTF mode's channel count (`MvrFixtureInfo.footprint`) and, when the GDTF gave one, the size the body
+ * is drawn at (`MvrFixtureInfo.bodySize`), with the `<GDTFSpec>` and `<GDTFMode>` they were measured for. Another
+ * tool may change a fixture's spec or mode and keep the desk's `<UserData>`, so the import trusts `channels` and
+ * `bodySize` only while the `<Fixture>` still names this spec and mode.
  */
 export interface LinkFootprint {
   readonly channels: number;
+  readonly bodySize?: number;
   readonly gdtfSpec: string;
   readonly gdtfMode: string;
 }
@@ -29,8 +31,8 @@ export interface LinkFootprint {
  * hangs on, the desk type and mount (MVR has only a GDTF name and a matrix), and the `fixed` and `pixel` aims that
  * the rig derives special fixtures from. Without them a round trip would turn those fixtures into plain moving heads.
  * `footprint` exists because the export holds no GDTF file, so without it a second export would measure the patch
- * with the desk type's estimate. It is MVR data, not a fixture field, so the import puts it back into the MVR facts,
- * never onto the fixture.
+ * with the desk type's estimate, and the body would lose its GDTF size and move by the change in mount shift. It is
+ * MVR data, not a fixture field, so the import puts it back into the MVR facts, never onto the fixture.
  */
 export type FixtureLink = Pick<StageFixture, 'id' | 'type' | 'role' | 'trussId' | 'mount' | 'fixed' | 'pixel'> & {
   readonly footprint?: LinkFootprint;

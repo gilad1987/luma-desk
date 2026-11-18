@@ -18,6 +18,7 @@ const layer = (id: string, min: LayerBox['box']['min'], max: LayerBox['box']['ma
   name: id,
   box: { min, max },
   rig: false,
+  drapes: false,
 });
 
 /** A 20 m x 10 m set 8 m high, and a 100 m x 100 m hall around it. */

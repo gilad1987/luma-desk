@@ -5,7 +5,7 @@
  * material colour with the night look (dark and matte), not white and not black. jsdom decodes no image, so the
  * decoders are stubbed to fail as a browser fails on the empty data URL a missing file would get.
  */
-import { ImageBitmapLoader, MeshStandardMaterial, Texture, TextureLoader } from 'three';
+import { ImageBitmapLoader, MeshStandardMaterial, SRGBColorSpace, Texture, TextureLoader } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MeshLibrary } from '../../../../src/render/mvr/MeshLibrary.ts';
 import { triangleGlb } from '../../../shared/index.ts';
@@ -42,7 +42,9 @@ describe('a texture missing from the archive', () => {
     const material = part?.material;
     if (!(material instanceof MeshStandardMaterial)) throw new Error('expected the glTF standard material');
     expect(material.map).toBeNull();
-    expect(material.color.r).toBeLessThan(0.1);
+    const { l } = material.color.getHSL({ h: 0, s: 0, l: 0 }, SRGBColorSpace);
+    expect(l).toBeGreaterThan(0.05);
+    expect(l).toBeLessThanOrEqual(0.37);
     expect(material.roughness).toBeGreaterThanOrEqual(0.9);
   });
 });

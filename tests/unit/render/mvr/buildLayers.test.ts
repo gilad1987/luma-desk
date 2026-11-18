@@ -2,7 +2,7 @@
 /**
  * buildLayers parses a large import in batches: it gives the page a task boundary between batches, so progress can
  * paint while synchronous 3DS parsing runs, and it reports progress once per file up to the total. Screen placements
- * draw with the import's one LED screen material, even when other placements of the same file are plain scenery.
+ * draw with the import's screen panel material, even when other placements of the same file are plain scenery.
  */
 import { Mesh } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -37,9 +37,10 @@ describe('buildLayers', () => {
   });
 
   it('draws screen placements with the LED screen material and the rest of the same file as scenery', async () => {
+    // a standing panel: thin along a level axis, so a screen word in its name makes it a screen
     const mesh = make3ds([
       [0, 0, 0],
-      [1000, 1000, 10],
+      [1000, 10, 1000],
     ]);
     const placements = ['a', 'b', 'c'].map((name) => ({ file: 'panel.3ds', layer: name === 'c' ? 'L2' : 'L1' }));
     const imported = await importMvr(meshScene(placements, { 'panel.3ds': mesh }), { name: 'screens' });
@@ -58,8 +59,8 @@ describe('buildLayers', () => {
       return found;
     };
     const layerOne = materialsOf('L1');
-    expect(layerOne).toContain(library.screenMaterial);
-    expect(layerOne.some((material) => material !== library.screenMaterial)).toBe(true);
-    expect(materialsOf('L2')).not.toContain(library.screenMaterial);
+    expect(layerOne).toContain(library.screens.panel);
+    expect(layerOne.some((material) => material !== library.screens.panel)).toBe(true);
+    expect(materialsOf('L2')).not.toContain(library.screens.panel);
   });
 });

@@ -32,22 +32,28 @@ function relink(fixture: StageFixture, links: ReadonlyMap<number, SplitLink>): S
 const sameName = (a: string, b: string): boolean => a === b || a.trim() === b.trim();
 
 /**
- * The link's footprint when the `<Fixture>` still names the GDTF spec and mode it was measured for. Another tool may
- * change them and keep the desk's `<UserData>`; the old count would then pass as known and hide real overlaps.
+ * The link's footprint and body size when the `<Fixture>` still names the GDTF spec and mode they were measured for.
+ * Another tool may change them and keep the desk's `<UserData>`; the old count would then pass as known and hide real
+ * overlaps, and the old size would draw another product's body.
  */
-function linkFootprint(info: MvrFixtureInfo, link: SplitLink | undefined): number | undefined {
+function linkFootprint(
+  info: MvrFixtureInfo,
+  link: SplitLink | undefined,
+): Pick<MvrFixtureInfo, 'footprint' | 'bodySize'> {
   const footprint = link?.footprint;
-  if (footprint === undefined) return undefined;
+  if (footprint === undefined) return {};
   const same = sameName(footprint.gdtfSpec, info.gdtfName) && sameName(footprint.gdtfMode, info.gdtfMode);
-  return same ? footprint.channels : undefined;
+  const { channels, bodySize } = footprint;
+  return same ? { footprint: channels, ...(bodySize === undefined ? {} : { bodySize }) } : {};
 }
 
 /**
  * The MVR facts with each fixture's `type` set to the type it has now. The import guessed a type without a GDTF
  * file, and the luma data then restored the desk type; the export reads a type mismatch as "the user re-typed the
  * fixture" and drops the file's GDTF name and mode, so the stored type must be the restored one. A footprint read
- * from a GDTF file in this archive wins; else the link's footprint comes back (`linkFootprint`), as a desk export
- * holds no GDTF file.
+ * from a GDTF file in this archive wins (spread last); else the link's footprint and body size come back
+ * (`linkFootprint`), as a desk export holds no GDTF file. A body size from such a GDTF is added later and wins too
+ * (`placeBodies`).
  */
 function retype(
   mvr: MvrDesignInfo,
@@ -56,8 +62,7 @@ function retype(
 ): MvrDesignInfo {
   const entries = fixtures.flatMap((fixture) => {
     const info = mvr.fixtures[String(fixture.id)];
-    const footprint = info && (info.footprint ?? linkFootprint(info, links.get(fixture.id)));
-    const kept = info && { ...info, type: fixture.type, ...(footprint === undefined ? {} : { footprint }) };
+    const kept = info && { ...linkFootprint(info, links.get(fixture.id)), ...info, type: fixture.type };
     return kept ? [[String(fixture.id), kept] as const] : [];
   });
   return { ...mvr, fixtures: Object.fromEntries(entries) };

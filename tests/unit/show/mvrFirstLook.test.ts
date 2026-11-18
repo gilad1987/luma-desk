@@ -25,9 +25,6 @@ const isAimed = (f: Fixture): boolean => f.T.moving && inLook(f);
 const isKey = (f: Fixture): boolean => f.T.moving && ['spot', 'beam', 'profile'].includes(f.type);
 const pick = ({ r, g, b }: AttrValues): AttrValues => ({ r, g, b });
 
-/** The look's dimmer for `f` (a key beam is also moving): static fill 15, moving fill 40, key 100, others none. */
-const levelOf = (f: Fixture): number | undefined =>
-  inLook(f) ? [15, 40, 100][Number(f.T.moving) + Number(isKey(f))] : undefined;
 const mirrorOf = (all: readonly Fixture[], f: Fixture): Fixture | undefined =>
   all.find((m) => m.type === f.type && m.pos.x === -f.pos.x && m.pos.y === f.pos.y && m.pos.z === f.pos.z);
 const LOOK_COLORS = ['Magenta', 'Blue', 'White'].map(colorByName);
@@ -37,9 +34,9 @@ describe.each(['theatre', 'festival'] as const)('buildMvrFirstLook on the %s tem
   const { fixtures, cue } = lookOf(id);
   const sided = fixtures.filter((f) => f.pos.x !== 0 && isAimed(f) && f.has('pan'));
 
-  it('is one named cue: key beams full, moving washes 40, static units 15, blinders and strobes off', () => {
+  it('is one named cue that leaves blinders, strobes and follow spots out (levels: lookLevels.test.ts)', () => {
     expect(cue).toMatchObject({ num: 1, name: MVR_FIRST_LOOK_NAME, fx: [] });
-    for (const f of fixtures) expect(cue.vals[f.id]?.dim, `fixture ${f.id} (${f.type})`).toBe(levelOf(f));
+    for (const f of fixtures) expect(cue.vals[f.id] !== undefined, `fixture ${f.id} (${f.type})`).toBe(inLook(f));
   });
 
   it('aims and narrows every mover; static units get colour and dimmer only', () => {

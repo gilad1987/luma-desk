@@ -49,7 +49,13 @@ describe('mvrCameraBounds', () => {
   });
 
   it('counts a shown side screen layer whole, and not a hidden FOH tent layer', () => {
-    const layer = (id: string, { min, max }: SurfaceBox) => ({ layer: id, name: id, box: { min, max }, rig: false });
+    const layer = (id: string, { min, max }: SurfaceBox) => ({
+      layer: id,
+      name: id,
+      box: { min, max },
+      rig: false,
+      drapes: false,
+    });
     const layers = [layer('screen', box([18, 4, -10], [24, 12, -9])), layer('tent', box([-4, 0, 38], [4, 3, 44]))];
     const hidden: StageDesign = { ...WITH_SPOTS, mvr: { ...WITH_SPOTS.mvr, hiddenLayers: ['tent'] } } as StageDesign;
     const bounds = mvrCameraBounds(hidden, { ...geometry([]), layers });

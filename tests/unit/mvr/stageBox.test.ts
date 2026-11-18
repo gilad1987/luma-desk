@@ -4,8 +4,14 @@ import { stageBox } from '../../../src/mvr/design/stageBox.ts';
 import type { Aabb } from '../../../src/mvr/math/Aabb.ts';
 
 const box = (min: Aabb['min'], max: Aabb['max']): Aabb => ({ min, max });
-const DECK: LayerBox = { layer: 'deck', name: 'Deck', box: box([-16, 0, -8], [16, 1.5, 8]), rig: false };
-const HALL: LayerBox = { layer: 'hall', name: 'Walls', box: box([-17, 0, -20], [17, 10, 10]), rig: false };
+const DECK: LayerBox = { layer: 'deck', name: 'Deck', box: box([-16, 0, -8], [16, 1.5, 8]), rig: false, drapes: false };
+const HALL: LayerBox = {
+  layer: 'hall',
+  name: 'Walls',
+  box: box([-17, 0, -20], [17, 10, 10]),
+  rig: false,
+  drapes: false,
+};
 const RIG = [
   [-15, 7, -6],
   [15, 7, 6],

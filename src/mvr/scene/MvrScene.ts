@@ -22,6 +22,12 @@ export interface MeshPlacement {
   readonly symdef?: string;
   /** Uuid of the owning object; several placements share it when one object has several meshes. */
   readonly uuid: string;
+  /** The owning object's `<GDTFSpec>`, when it names one; its GDTF can say the object is a display. */
+  readonly gdtfSpec?: string;
+  /** Whether the GDTF that `gdtfSpec` names holds a `Display` geometry. Absent until the import has read the GDTFs. */
+  readonly display?: boolean;
+  /** Whether the mesh is a standing panel here (`isPanelShape`). Absent until the import has read the mesh bounds. */
+  readonly panel?: boolean;
 }
 
 /** One `<Address>` of a fixture, kept raw: the value is an absolute number or `universe.address` text. */
