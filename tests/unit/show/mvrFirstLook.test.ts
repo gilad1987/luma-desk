@@ -70,7 +70,7 @@ describe.each(['theatre', 'festival'] as const)('buildMvrFirstLook on the %s tem
 
   it('cycles magenta, blue and white over the mirrored places from the centre outwards', () => {
     const look = fixtures.filter((f) => cue.vals[f.id] !== undefined);
-    const place = (f: Fixture): [number, number] => [Math.abs(f.pos.x), f.pos.y];
+    const place = (f: Fixture): [number, number] => [Math.round(Math.abs(f.pos.x) * 1000), Math.round(f.pos.y * 1000)];
     const places = [...new Set(look.map((f) => place(f).join('|')))]
       .map((key) => key.split('|').map(Number))
       .sort(([ax = 0, ay = 0], [bx = 0, by = 0]) => ax - bx || ay - by)

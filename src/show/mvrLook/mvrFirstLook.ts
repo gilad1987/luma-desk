@@ -31,8 +31,11 @@ function colorAt(k: number): NamedColor {
   return color;
 }
 
-/** A fixture's place with its side dropped: a fixture and its mirror image on the other side share it. */
-const mirroredPlace = (f: Fixture): string => `${Math.abs(f.pos.x)}|${f.pos.y}`;
+/**
+ * A fixture's place with its side dropped, to the millimetre: a fixture and its mirror image on the other side share
+ * it even when an imported file places them with float noise.
+ */
+const mirroredPlace = (f: Fixture): string => `${Math.round(Math.abs(f.pos.x) * 1000)}|${Math.round(f.pos.y * 1000)}`;
 
 /**
  * The colour of each mirrored place, cycling from the centre line outwards and, at one distance, from low to high.
