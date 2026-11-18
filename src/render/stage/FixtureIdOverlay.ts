@@ -28,7 +28,7 @@ export class FixtureIdOverlay {
   isVisible = false;
   private readonly canvas: OverlayCanvas;
   private readonly context: OverlayContext;
-  private readonly fixtures: readonly LabelledFixture[];
+  private fixtures: readonly LabelledFixture[];
   private readonly isSelected: (id: number) => boolean;
   /** The backing-store area labels are projected onto; kept in step with the canvas so `draw` allocates nothing. */
   private readonly rect = { left: 0, top: 0, width: 0, height: 0 };
@@ -42,6 +42,11 @@ export class FixtureIdOverlay {
     this.fixtures = fixtures;
     this.isSelected = isSelected;
     this.syncRect();
+  }
+
+  /** Labels a rebuilt rig from the next frame on. */
+  setFixtures(fixtures: readonly LabelledFixture[]): void {
+    this.fixtures = fixtures;
   }
 
   /** Matches the backing store to the viewer size; the DPR cap of 1.5 keeps the text cheap on dense screens. */

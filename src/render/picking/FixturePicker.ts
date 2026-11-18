@@ -31,6 +31,12 @@ export class FixturePicker {
     this.owners.set(object, fixture);
   }
 
+  /** Forgets every pick target, so a rig rebuild can register the new rig's objects without the old ones. */
+  clear(): void {
+    this.pickables.length = 0;
+    this.owners.clear();
+  }
+
   /** The fixture whose registered object is nearest under the client point, or null. Children are not tested. */
   pickAt(clientX: number, clientY: number): Fixture | null {
     clientToNdc(clientX, clientY, this.canvas.getBoundingClientRect(), this.ndc);

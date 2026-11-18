@@ -21,7 +21,7 @@ export interface VisualPose {
   gang: number;
 }
 
-/** The LED screen fixture: the venue's screen mesh is its visual and pick target. */
+/** An LED screen fixture: its stage screen mesh is its visual and pick target. */
 export interface ScreenVisual {
   readonly kind: 'screen';
   readonly fixture: Fixture;
@@ -50,7 +50,7 @@ export interface LightVisual {
   readonly s: number;
   /** Movers with their own yoke and tilt group; null when the pivot turns the head (statics). */
   readonly joints: ModelJoints | null;
-  /** Floor units hang upside down, so their pan turns the other way. */
+  /** Floor units hang upside down, so their pan turns the other way; never set with a `rotation` (G2). */
   readonly flip: boolean;
   readonly pix: Mesh<BoxGeometry, MeshBasicMaterial> | null;
   readonly pose: VisualPose;

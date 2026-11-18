@@ -1,0 +1,75 @@
+import type { Object3D } from 'three';
+import type { Fixture } from '../../domain/Fixture';
+import type { FixturePicker } from '../picking/FixturePicker';
+import { Disposer } from '../shared';
+import type { FixtureIdOverlay } from '../stage/FixtureIdOverlay';
+import type { FixtureVisual } from './FixtureVisual';
+import { FixtureVisualBuilder, type FixtureVisualDeps } from './FixtureVisualBuilder';
+import type { FixtureVisualSync } from './FixtureVisualSync';
+import { releaseLightVisual } from './releaseLightVisual';
+import type { ScreenTargets } from './sync/syncScreen';
+
+/** One LED screen of the stage, keyed by its screen fixture id: the mesh it picks and the targets it drives. */
+export interface ScreenSlot {
+  readonly mesh: Object3D;
+  readonly targets: ScreenTargets;
+}
+
+/** The shared fixture kit (built once at boot) and the parts a rebuild hands the new visuals to. */
+export interface FixtureVisualsDeps extends Omit<FixtureVisualDeps, 'screenMesh' | 'picker'> {
+  readonly picker: Pick<FixturePicker, 'register' | 'clear'>;
+  readonly sync: Pick<FixtureVisualSync, 'setVisuals'>;
+  readonly overlay: Pick<FixtureIdOverlay, 'setFixtures'>;
+}
+
+/**
+ * The fixture visuals of the current rig. A rebuild disposes what the old visuals own, builds the new rig in fixture
+ * array order (decision 24) and hands it to the frame update, the picker and the id overlay. The kit (models,
+ * primitives, beam geometry, atlases) is kept, so rebuilding the same rig twice leaves the same resource count.
+ * The screen meshes and their targets belong to the stage scene; this class never disposes them.
+ */
+export class FixtureVisuals {
+  readonly #deps: FixtureVisualsDeps;
+  readonly #disposer = new Disposer();
+  #visuals: readonly FixtureVisual[] = [];
+
+  constructor(deps: FixtureVisualsDeps) {
+    this.#deps = deps;
+  }
+
+  /** The current visuals, in fixture array order. */
+  get visuals(): readonly FixtureVisual[] {
+    return this.#visuals;
+  }
+
+  /**
+   * Replaces the visuals with those of `fixtures`; `screens` holds a slot for each screen fixture id.
+   * @throws Error when a screen fixture has no slot, or a fixture type has no model.
+   */
+  rebuild(fixtures: readonly Fixture[], screens: ReadonlyMap<number, ScreenSlot>): readonly FixtureVisual[] {
+    this.dispose();
+    const meshes = new Map<number, Object3D>(),
+      targets = new Map<number, ScreenTargets>();
+    for (const [id, slot] of screens) {
+      meshes.set(id, slot.mesh);
+      targets.set(id, slot.targets);
+    }
+    const builder = new FixtureVisualBuilder({ ...this.#deps, screenMesh: meshes });
+    const visuals = fixtures.map((f) => builder.build(f));
+    this.#deps.sync.setVisuals(visuals, targets);
+    this.#deps.overlay.setFixtures(fixtures);
+    this.#visuals = visuals;
+    return visuals;
+  }
+
+  /** Removes every visual from the scene, frees what they own and leaves an empty rig in sync, picker and overlay. */
+  dispose(): void {
+    const { scene, picker, sync, overlay } = this.#deps;
+    for (const v of this.#visuals) if (v.kind === 'light') releaseLightVisual(v, scene, this.#disposer);
+    this.#disposer.dispose();
+    picker.clear();
+    sync.setVisuals([], new Map());
+    overlay.setFixtures([]);
+    this.#visuals = [];
+  }
+}
