@@ -6,7 +6,7 @@ import { asReal, FakeDom, FakeElement } from '../../../shared/dom';
 import { fakeStage } from './fakeStage';
 
 /** A 2D context that records every call and property write, so a test can read what was drawn. */
-function recordingContext(): { ctx: object; calls: unknown[][] } {
+export function recordingContext(): { ctx: object; calls: unknown[][] } {
   const calls: unknown[][] = [];
   const get =
     (_target: object, name: string | symbol) =>
