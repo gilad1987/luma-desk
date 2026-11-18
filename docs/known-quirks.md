@@ -706,6 +706,20 @@ Groups:
 - Pinned by: `tests/unit/render/venue/venueParity.test.ts`.
 - Future fix: none; the new code does not repeat the wrong count.
 
+### F9. A later setView stops a running view tween
+
+- Source: `index.html@48a3b63:888-890`; reachable through the layout switch at `2979`
+- Lives in: `src/render/camera/tweenCamera.ts`, `src/render/camera/CameraViews.ts:66`
+- What it did: an animated view change ran a 700 ms tween that nothing could stop. An instant view set within those
+  700 ms (for example: click FOH, then switch to the MA layout) was overwritten by the old tween, so the camera
+  ended on the desk FOH pose with the MA lens. An animated view set after an animated one already won, because the
+  newer tween wrote last in each frame.
+- Why changed: the Stage Builder refits the camera with an animated `setView` after every stage rebuild, so the
+  overwrite became easy to reach. Every `setView` now stops the running tween first.
+- Pinned by: `tests/unit/render/core/CameraViews.test.ts` ("stops a running tween…"). Screenshots use only instant
+  views at boot, so they do not change.
+- Future fix: none.
+
 ## G. UI
 
 ### G1. The fixture sheet shows output dimmer but programmer-level everything else
