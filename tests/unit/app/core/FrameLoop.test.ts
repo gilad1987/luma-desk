@@ -75,4 +75,14 @@ describe('FrameLoop', () => {
     expect(dts[0]).toBeCloseTo(0.016);
     expect(dts[1]).toBe(0.1);
   });
+
+  it('hands requestAnimationFrame the same callback every frame, so no frame creates one', () => {
+    const { loop, frames } = recordedLoop();
+    loop.start();
+    frames[0]?.(1016);
+    frames[1]?.(1032);
+    expect(frames).toHaveLength(3);
+    expect(frames[1]).toBe(frames[0]);
+    expect(frames[2]).toBe(frames[0]);
+  });
 });

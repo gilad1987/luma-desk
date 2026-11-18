@@ -49,6 +49,8 @@ export class FrameLoop {
   readonly #deps: FrameLoopDeps;
   /** Stamp of the previous frame; it starts when the loop is built, as the legacy `last` did. */
   #last = performance.now();
+  /** The one requestAnimationFrame callback, made once so a frame does not create a closure for the next. */
+  readonly #onFrame = (t: number): void => this.#frame(t);
 
   constructor(deps: FrameLoopDeps) {
     this.#deps = deps;
@@ -56,12 +58,12 @@ export class FrameLoop {
 
   /** Asks for the first frame; call it once, at the end of boot. */
   start(): void {
-    requestAnimationFrame((t) => this.#frame(t));
+    requestAnimationFrame(this.#onFrame);
   }
 
   #frame(t: number): void {
     // first, so an exception later in the frame does not stop the loop
-    requestAnimationFrame((next) => this.#frame(next));
+    requestAnimationFrame(this.#onFrame);
     const d = this.#deps;
     const dt = Math.min((t - this.#last) / 1000, MAX_DT);
     this.#last = t;
