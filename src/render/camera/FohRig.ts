@@ -15,7 +15,7 @@ export class FohRig {
 
   /**
    * Registers the venue's FOH objects in build order. A new object takes the rig's visibility (visible when the rig
-   * is empty), which is how the legacy RoboSpot station joined a rig that a layout change may have hidden.
+   * is empty).
    */
   add(...objects: Object3D[]): void {
     this.resetWhenEmpty();

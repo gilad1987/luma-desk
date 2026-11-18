@@ -81,4 +81,18 @@ describe('FohRig', () => {
     rig.add(riser);
     expect([riser.visible, station.visible]).toEqual([true, true]);
   });
+
+  it('shows the first object of an empty rig whatever the layout set, but not while a rider is registered', () => {
+    const rig = new FohRig();
+    rig.setVisible(false);
+    const riser = new Object3D();
+    rig.add(riser);
+    expect(riser.visible).toBe(true);
+    const ridden = new FohRig();
+    ridden.addRider(new Object3D());
+    ridden.setVisible(false);
+    const late = new Object3D();
+    ridden.add(late);
+    expect(late.visible).toBe(false);
+  });
 });

@@ -25,3 +25,8 @@ export function bootStageScene(design: StageDesign) {
   stage.connect(host, rigFromDesign(design).fixtures);
   return { scene, surfaces, views, host, stage, materials, venue };
 }
+
+/** Rebuilds the booted stage with `design` and its own rig. */
+export function rebuild(boot: ReturnType<typeof bootStageScene>, design: StageDesign): void {
+  boot.stage.rebuild(design, rigFromDesign(design).fixtures);
+}

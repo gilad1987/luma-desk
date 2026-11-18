@@ -1,19 +1,12 @@
 /** A venue switch moves the camera views' FOH rig to the new venue's riser; the RoboSpot station follows the riser. */
 import { Object3D } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { rigFromDesign } from '../../../../src/domain/stage/deriveRig';
-import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { createTemplate } from '../../../../src/domain/stage/templates';
 import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
-import { bootStageScene } from './stageSceneSetup';
+import { bootStageScene, rebuild } from './stageSceneSetup';
 
 afterEach(() => vi.restoreAllMocks());
 afterEach(() => vi.unstubAllGlobals());
-
-/** Rebuilds the booted stage with `design` and its own rig. */
-function rebuild(boot: ReturnType<typeof bootStageScene>, design: StageDesign): void {
-  boot.stage.rebuild(design, rigFromDesign(design).fixtures);
-}
 
 describe('StageScene FOH rig', () => {
   it('takes the old riser and desk out of the FOH rig on a venue switch', () => {

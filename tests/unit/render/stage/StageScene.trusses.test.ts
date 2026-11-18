@@ -1,10 +1,9 @@
 /** The `trusses` scenery switch: off builds no truss part, at boot and on a rebuild; a later rebuild builds them. */
 import { Mesh, type Material, type Object3D } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { rigFromDesign } from '../../../../src/domain/stage/deriveRig';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
-import { bootStageScene } from './stageSceneSetup';
+import { bootStageScene, rebuild } from './stageSceneSetup';
 
 afterEach(() => vi.restoreAllMocks());
 afterEach(() => vi.unstubAllGlobals());
@@ -23,11 +22,6 @@ function trussSections(scene: Object3D, steel: Material): Object3D[] {
     });
     return usesSteel;
   });
-}
-
-/** Rebuilds the booted stage with `design` and its own rig. */
-function rebuild(boot: ReturnType<typeof bootStageScene>, design: StageDesign): void {
-  boot.stage.rebuild(design, rigFromDesign(design).fixtures);
 }
 
 describe('StageScene trusses switch', () => {
