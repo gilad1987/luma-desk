@@ -8,10 +8,13 @@ const buttons = (ok: string): string =>
 
 /**
  * The rename dialog. Only `"` is escaped in the value, as before (known quirk Q11): the value sits in an attribute,
- * and the title is trusted code text such as `Cue 3`.
+ * and the title is trusted code text such as `Cue 3`. Saved shows are not validated, so a cue or group may have no
+ * name; the field then opens empty, as the original `(val || '')` did.
  */
-export const renameMarkup = (title: string, value: string): string =>
-  `<h2>Label ${title}</h2><input id="mIn" style="${FIELD_STYLE}Inter" value="${value.replace(/"/g, '&quot;')}">${buttons('OK')}`;
+export const renameMarkup = (title: string, value: string): string => {
+  const shown = (value || '').replace(/"/g, '&quot;');
+  return `<h2>Label ${title}</h2><input id="mIn" style="${FIELD_STYLE}Inter" value="${shown}">${buttons('OK')}`;
+};
 
 /** The number dialog: a free-step numeric input. */
 export const numberMarkup = (title: string): string =>

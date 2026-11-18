@@ -60,6 +60,13 @@ describe('Modal', () => {
     expect(done).toHaveBeenCalledWith('Front');
   });
 
+  it('rename opens with an empty field for a saved item without a name, as the original (val || "") did', () => {
+    // as JSON.parse gives it from a hand-edited show file: saved shows are not validated on load
+    const saved = JSON.parse('{}') as { name: string };
+    modal.rename('Cue 3', saved.name, vi.fn());
+    expect(box.innerHTML).toBe(`<h2>Label Cue 3</h2><input id="mIn" style="${FIELD}Inter" value="">${ROW('OK')}`);
+  });
+
   it('number: legacy markup, no select; a non-number closes and repaints without answering', () => {
     const done = vi.fn();
     modal.number('Dim', done);

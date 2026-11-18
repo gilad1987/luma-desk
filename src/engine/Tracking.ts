@@ -22,9 +22,11 @@ export function tracked(e: Executor, i: number): TrackedState {
   for (let c = 0; c <= i; c++) {
     const cue = e.cues[c];
     if (!cue) continue;
-    for (const [id, v] of Object.entries(cue.vals)) {
+    // saved shows are not validated, so a cue may lack its values and a fixture entry may be null; the original
+    // for...in loops skipped both, and a null entry still leaves an empty record (Object.assign ignores it)
+    for (const [id, v] of Object.entries(cue.vals ?? {})) {
       vals[id] = Object.assign(vals[id] || {}, v);
-      for (const [a] of attrEntries(v)) delete fx[fxKey(id, ATTR[a].feat)];
+      for (const [a] of attrEntries(v ?? {})) delete fx[fxKey(id, ATTR[a].feat)];
     }
     // saved shows are not validated, so a cue may lack its phaser list
     for (const inst of cue.fx || []) indexFx(fx, inst);

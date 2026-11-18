@@ -26,8 +26,9 @@ function rowClass(e: SequenceView, i: number): string {
  */
 export function cueTable(e: SequenceView): string {
   const rows = e.cues.map((c, i) => {
+    // saved shows are not validated, so a cue may lack its phaser list; the original counted it as none
     const nf = Object.keys(c.vals).length,
-      nx = c.fx.length;
+      nx = c.fx?.length ?? 0;
     return (
       `<tr data-i="${i}" class="${rowClass(e, i)}"><td class="num">${c.num}</td><td class="name">${c.name}</td>` +
       `<td class="fade">${c.fade}s</td><td class="info">${nf} fix${nx ? ` · ${nx} fx` : ''}</td></tr>`
