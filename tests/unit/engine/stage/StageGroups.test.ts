@@ -45,6 +45,27 @@ describe('StageGroups', () => {
     expect(others()).toEqual(['poolsChanged', 'showChanged']);
   });
 
+  it('keeps a user group over any number of changes, even one equal to a default it kept out', () => {
+    const { service, groups } = setup();
+    const mine = structuredClone(defaultsOf(festival)[38]);
+    if (mine === undefined) throw new Error('festival has no truss group in slot 38');
+    groups.all[38] = mine;
+    service.apply(festival, 'builder');
+    const theatre = createTemplate('theatre');
+    service.apply(theatre, 'builder');
+    expect(groups.all).toStrictEqual({ ...defaultsOf(theatre), 38: mine });
+    expect(groups.all[38]).toBe(mine);
+  });
+
+  it('keeps a group stored over an installed default, even with the same ids', () => {
+    const { service, groups } = setup();
+    service.apply(festival, 'builder');
+    groups.store(1, groups.all[1]?.ids ?? []);
+    const mine = groups.all[1];
+    service.apply(createTemplate('theatre'), 'builder');
+    expect(groups.all[1]).toBe(mine);
+  });
+
   it('leaves the pool to the loader on a show load, then compares the next change with the loaded stage', () => {
     const { service, groups, others } = setup();
     const before = groups.all;
