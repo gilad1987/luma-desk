@@ -49,6 +49,7 @@ const panels = wirePanels({
   layoutMode: () => layout.mode(),
   guideOrTourOpen: () => guide.isOpen() || tour.isActive(),
   mvr: mvr.actions,
+  stageDesign: () => stage.design,
 });
 new ViewportPicking({ ...engine, ...render, fixtures: rig.fixtures });
 wireMidi(engine);

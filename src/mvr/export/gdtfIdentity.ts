@@ -1,3 +1,5 @@
+import { gdtfModeOf } from '../../domain/stage/gdtfModeOf';
+import { importedGdtfInfo } from '../../domain/stage/importedGdtfInfo';
 import type { MvrDesignInfo } from '../../domain/stage/mvr';
 import type { StageFixture } from '../../domain/stage/StageDesign';
 import { deskType } from './deskType';
@@ -16,15 +18,12 @@ const DEFAULT_MODE = 'Default';
 /**
  * The GDTF file and mode an exported fixture names. An imported fixture that still has the type the import chose
  * keeps the file's GDTF name and mode, so a re-export names what the source file named. After the user changes the
- * type, or for a desk fixture, the desk type's real product and mode are written together, because a spec with
- * another product's mode cannot be patched. A stored patch mode wins only for a fixture that was never imported.
+ * type, or for a desk fixture, the desk type's real product and mode are written together. The mode rule lives in
+ * `gdtfModeOf` because the Sheet shows the same mode.
  */
 export function gdtfIdentity(fixture: StageFixture, mvr: MvrDesignInfo | undefined): GdtfIdentity {
-  const info = mvr?.fixtures[String(fixture.id)];
-  if (info && info.type === fixture.type && info.gdtfName !== '') {
-    return { spec: info.gdtfName, mode: info.gdtfMode, imported: true };
-  }
-  const type = deskType(fixture);
-  const ownMode = info ? undefined : fixture.patch?.mode;
-  return { spec: type.gdtfSpec ?? '', mode: ownMode ?? type.gdtfMode ?? DEFAULT_MODE, imported: false };
+  const mode = gdtfModeOf(fixture, mvr) ?? DEFAULT_MODE;
+  const info = importedGdtfInfo(fixture, mvr);
+  if (info) return { spec: info.gdtfName, mode, imported: true };
+  return { spec: deskType(fixture).gdtfSpec ?? '', mode, imported: false };
 }

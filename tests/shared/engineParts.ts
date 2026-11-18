@@ -1,13 +1,13 @@
-import { EventBus, type Clock } from '../../../../src/core';
-import { buildRig } from '../../../../src/domain/rig';
-import { AppState } from '../../../../src/engine/AppState';
-import type { EngineEvents } from '../../../../src/engine/events';
-import { ExecutorPool } from '../../../../src/engine/ExecutorPool';
-import { GroupLibrary } from '../../../../src/engine/GroupLibrary';
-import { PresetLibrary } from '../../../../src/engine/PresetLibrary';
-import { Programmer } from '../../../../src/engine/Programmer';
-import { Selection } from '../../../../src/engine/Selection';
-import { Tempo } from '../../../../src/engine/Tempo';
+import { EventBus, type Clock } from '../../src/core';
+import { buildRig } from '../../src/domain/rig';
+import { AppState } from '../../src/engine/AppState';
+import type { EngineEvents } from '../../src/engine/events';
+import { ExecutorPool } from '../../src/engine/ExecutorPool';
+import { GroupLibrary } from '../../src/engine/GroupLibrary';
+import { PresetLibrary } from '../../src/engine/PresetLibrary';
+import { Programmer } from '../../src/engine/Programmer';
+import { Selection } from '../../src/engine/Selection';
+import { Tempo } from '../../src/engine/Tempo';
 
 /** A clock held at zero, so nothing in the engine moves on its own. */
 export const stillClock: Clock = { nowMs: () => 0, nowSeconds: () => 0 };

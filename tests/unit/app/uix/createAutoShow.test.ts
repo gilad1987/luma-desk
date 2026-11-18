@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createAutoShow } from '../../../../src/app/uix/createAutoShow';
 import { autoShowMarkup } from '../../../../src/ui/panels/autoshow/autoShowMarkup';
+import { engineParts, stillClock } from '../../../shared';
 import { asReal, FakeButton, FakeDom, FakeElement, FakeHost } from '../../../shared/dom';
-import { engineParts, stillClock } from './engineParts';
 
 const IDS = ['styleGrid', 'autoBpm', 'autoSec', 'autoStatus', 'songStat', 'aEnergyV', 'aMasterV', 'aBars', 'aPulse'];
 const INPUTS = ['aEnergy', 'aMaster', 'aStrobe', 'aHits', 'aScreen', 'aTake', 'songFile'];

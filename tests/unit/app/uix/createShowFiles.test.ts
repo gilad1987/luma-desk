@@ -1,8 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createShowFiles } from '../../../../src/app/uix/createShowFiles';
 import { PERSIST_DELAY_MS, STORAGE_KEYS } from '../../../../src/show';
-import { MemoryStore } from '../../../shared';
-import { engineParts } from './engineParts';
+import { engineParts, MemoryStore } from '../../../shared';
 
 /** Builds the show objects on a real engine; the page storage is stubbed afterwards, as it is read on each call. */
 function build(parts = engineParts()) {
