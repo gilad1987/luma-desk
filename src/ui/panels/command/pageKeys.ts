@@ -7,8 +7,8 @@ const typingInField = (): boolean => ['INPUT', 'TEXTAREA', 'SELECT'].includes(do
  * The page keyboard. Space is GO+ on the selected executor, Escape leaves store mode, and any other printable key
  * starts typing a command. With a dialog open only Escape works, and closes it. It must stay a bubble listener on
  * `document`: the guide Escape and fullscreen F listeners are capture listeners on `document`, so they run before it
- * whatever the registration order. That is what makes Escape end the tour and then also leave store mode (quirk Q7),
- * and F (stopped by fullscreen) never focus the command line. Registration order does not matter here.
+ * whatever the registration order. That is what makes Escape end the tour and then also leave store mode (quirk Q7,
+ * orig:2887), and F (stopped by fullscreen) never focus the command line. Registration order does not matter here.
  */
 export function listenPageKeys(input: HTMLInputElement, deps: CommandLineDeps): void {
   document.addEventListener('keydown', (ev) => {

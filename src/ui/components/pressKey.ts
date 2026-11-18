@@ -3,7 +3,10 @@ import type { StoreModeGuard } from '../shared';
 /** The command line as the keypad sees it; the command-line panel implements it over `#cmd` and its history. */
 export interface CommandInput {
   value: string;
-  /** Adds `entry` to the history; `resetIndex` also restarts Up/Down browsing (the keypad passes false, quirk Q6). */
+  /**
+   * Adds `entry` to the history; `resetIndex` also restarts Up/Down browsing (the keypad passes false, quirk Q6,
+   * orig:2933).
+   */
   pushHistory(entry: string, resetIndex: boolean): void;
   run(command: string): void;
 }

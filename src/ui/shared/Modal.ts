@@ -53,7 +53,9 @@ export class Modal {
     this.#wire(input, () => done(input.value.trim() || value));
   }
 
-  /** Asks for a number; an entry that is not a number closes the dialog without calling `done` (quirk Q22). */
+  /**
+   * Asks for a number; an entry that is not a number closes the dialog without calling `done` (quirk Q22, orig:2286).
+   */
   number(title: string, done: (value: number) => void): void {
     this.open(numberMarkup(title));
     const input = byId('mIn', HTMLInputElement);

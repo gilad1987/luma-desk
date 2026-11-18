@@ -16,7 +16,10 @@ function cueLineHtml(e: Executor): string {
   return e.cues.length ? 'Off — press GO' : 'No cues';
 }
 
-/** The HUD for the selected executor `e` (0-based `i`); the next line has two spaces before the fade (quirk Q31). */
+/**
+ * The HUD for the selected executor `e` (0-based `i`); the next line has two spaces before the fade (quirk Q31,
+ * orig:2183).
+ */
 export function executorHudText(e: Executor, i: number): CueHudText {
   const nx = e.cues.length > 1 ? e.cues[(e.cur + 1) % e.cues.length] : null;
   return {

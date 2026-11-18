@@ -77,8 +77,8 @@ function bestOffset(on: readonly number[], period: number): number {
 
 /**
  * Detects the tempo of a song from its first channel. It analyses at most 60 s, starting at 20 s (or earlier when the
- * song is short) to skip intros. The BPM is rounded but the offset uses the unrounded tempo (quirk E1), so the grid
- * drifts slowly on a half-step tempo; it is kept because the results must stay identical.
+ * song is short) to skip intros. The BPM is rounded but the offset uses the unrounded tempo (quirk E1, orig:2657), so
+ * the grid drifts slowly on a half-step tempo; it is kept because the results must stay identical.
  */
 export function detectBpm(audio: PcmSource): BpmResult {
   const pcm = audio.getChannelData(0),

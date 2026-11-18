@@ -66,7 +66,7 @@ export class EncodersPanel implements UiPanel {
     this.#actions.delta(attr, d);
   }
 
-  /** FAN changed from the FAN key: the Position extras relabel their Fan button (quirk Q9). */
+  /** FAN changed from the FAN key: the Position extras relabel their Fan button (quirk Q9, orig:2238). */
   fanToggled(): void {
     if (this.#feat === 'pos') this.#extra.render(this.#feat);
   }

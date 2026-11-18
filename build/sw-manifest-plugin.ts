@@ -16,7 +16,7 @@ const WORKER_FILE = 'sw.js';
  * content (ADR 0003), so neither is edited by hand again. Build only: in `npm run dev`, Vite answers /sw.js with the
  * transformed module sw.ts. It contains `export {}`, which a classic worker (src/main.ts registers 'sw.js' without
  * `type: 'module'`) cannot parse, and the placeholders are not written in. So the registration fails, src/main.ts
- * ignores the failure (quirk I10), and the dev server never serves stale files.
+ * ignores the failure (quirk I10, orig:2916), and the dev server never serves stale files.
  */
 export function swManifestPlugin(): Plugin {
   let root = '';

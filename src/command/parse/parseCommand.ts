@@ -16,7 +16,8 @@ function parseLabel(cursor: TokenCursor): Statement {
 
 /**
  * Parses the statement that starts with keyword `word` (already read), for every keyword that is not a selection or
- * a level. Goto, Delete, Label Cue, Fade and Pause take no `Exec n` (quirk C3): they act on the selected executor.
+ * a level. Goto, Delete, Label Cue, Fade and Pause take no `Exec n` (quirk C3, orig:1923): they act on the selected
+ * executor.
  */
 export function parseCommand(word: string | undefined, cursor: TokenCursor): Statement {
   switch (word) {

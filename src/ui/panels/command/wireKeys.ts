@@ -2,8 +2,8 @@ import { byId } from '../../dom';
 import type { CommandLineDeps } from './CommandLineDeps';
 
 /**
- * The eight keys under the command line. CLEAR first empties a half-typed command (quirk Q18). FAN and HIGHLT do not
- * light themselves: the fast tick shows the state (quirk Q10, orig:2539).
+ * The eight keys under the command line. CLEAR first empties a half-typed command (quirk Q18, orig:3068). FAN and
+ * HIGHLT do not light themselves: the fast tick shows the state (quirk Q10, orig:2539).
  */
 export function wireKeys(input: HTMLInputElement, deps: CommandLineDeps): void {
   const { state, selection } = deps;

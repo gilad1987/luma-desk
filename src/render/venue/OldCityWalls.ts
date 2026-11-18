@@ -9,7 +9,7 @@ import { buildTowerOfDavid } from './TowerOfDavid';
 /**
  * Builds the floodlit Old City on the ridges: wall lines, Jaffa Gate, Mount Zion, the crenellation, the Tower of
  * David and a warm floodlight. It returns the floodlight: the fixture sync forces its intensity to 0 every frame
- * (quirk F1, kept for parity), so it needs the handle.
+ * (quirk F1, orig:1783, kept for parity), so it needs the handle.
  */
 export function buildOldCityWalls(scene: Object3D, stone: JerusalemStone): PointLight {
   const merlonGeometry = new BoxGeometry(0.9, 1.3, 2.3),

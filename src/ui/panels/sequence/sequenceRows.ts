@@ -21,8 +21,9 @@ function rowClass(e: SequenceView, i: number): string {
 
 /**
  * The cue table of `e`: header, one row per cue (`data-i` is the cue index), or a hint row when there are no cues.
- * Cue names are not escaped (quirk Q11). The old page appended the hint row with `innerHTML +=`, which re-parsed the
- * table and put the hint row in a second `<tbody>`; the explicit bodies give that same DOM without the re-parse.
+ * Cue names are not escaped (quirk Q11, orig:2197). The old page appended the hint row with `innerHTML +=`, which
+ * re-parsed the table and put the hint row in a second `<tbody>`; the explicit bodies give that same DOM without the
+ * re-parse.
  */
 export function cueTable(e: SequenceView): string {
   const rows = e.cues.map((c, i) => {

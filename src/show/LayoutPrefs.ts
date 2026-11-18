@@ -29,7 +29,8 @@ export class LayoutPrefs {
 
   /**
    * The saved layout, or null when none is saved or it cannot be read. A saved size equal to `adaptiveSize` reads as
-   * adaptive: older versions saved that default without a grip drag (quirk D7). Other sizes are clamped to 0.3-0.7.
+   * adaptive: older versions saved that default without a grip drag (quirk D7, orig:3082). Other sizes are clamped
+   * to 0.3-0.7.
    */
   load(adaptiveSize: number): DeskLayout | null {
     try {

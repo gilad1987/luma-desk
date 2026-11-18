@@ -19,7 +19,7 @@ export class ShowStorage {
 
   /**
    * Asks for a save; each call restarts the delay. A failed write (storage full or blocked) is dropped without a
-   * word, as before: the refactor changes no UI, and the operator is not told (quirk D6).
+   * word, as before: the refactor changes no UI, and the operator is not told (quirk D6, orig:2309).
    */
   persist(): void {
     clearTimeout(this.#timer);
