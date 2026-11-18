@@ -17,7 +17,9 @@ export const i18nRules: Linter.Config[] = [
       'no-restricted-syntax': [
         'error',
         { selector: `Literal[value=${HEBREW}]`, message: MESSAGE },
-        { selector: `TemplateElement[value.raw=${HEBREW}]`, message: MESSAGE },
+        // `cooked` holds the decoded text, so an escaped `א` counts; `raw` covers a tagged template whose
+        // invalid escape leaves `cooked` null.
+        { selector: `TemplateElement:matches([value.cooked=${HEBREW}], [value.raw=${HEBREW}])`, message: MESSAGE },
       ],
     },
   },
