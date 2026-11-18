@@ -2,6 +2,7 @@ import type { BufferGeometry } from 'three';
 import { loadMeshParts } from './loadMeshParts';
 import { MaterialPool } from './MaterialPool';
 import type { MeshPart } from './MeshPart';
+import { createMvrScreenMaterial } from './mvrScreenMaterial';
 import { OfflineLoadingManager } from './OfflineLoadingManager';
 
 /** A mesh file the archive holds but three.js could not parse, with the loader's reason, for the import summary. */
@@ -21,6 +22,8 @@ export class MeshLibrary {
   readonly #loads = new Map<string, Promise<readonly MeshPart[]>>();
   readonly #geometries: BufferGeometry[] = [];
   readonly #materials = new MaterialPool();
+  /** The one LED material every screen placement of the import draws with (`isScreenPlacement`); freed by `dispose`. */
+  readonly screenMaterial = createMvrScreenMaterial();
   readonly #failures: MeshFailure[] = [];
   #parsing = 0;
   #isDisposed = false;
@@ -63,6 +66,7 @@ export class MeshLibrary {
     this.#releaseIfIdle();
     for (const geometry of this.#geometries.splice(0)) geometry.dispose();
     this.#materials.dispose();
+    this.screenMaterial.dispose();
   }
 
   async #load(file: string): Promise<readonly MeshPart[]> {

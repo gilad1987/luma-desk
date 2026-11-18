@@ -14,6 +14,8 @@ export interface MeshPlacement {
   readonly layer: string;
   /** The owning element's tag, for example `SceneObject`, `Truss` or `Symbol`, so render can style kinds apart. */
   readonly kind: string;
+  /** The owning object's `name`, empty when it has none; render reads it to tell an LED wall drawn as scenery. */
+  readonly name: string;
   /** Uuid of the owning object; several placements share it when one object has several meshes. */
   readonly uuid: string;
 }

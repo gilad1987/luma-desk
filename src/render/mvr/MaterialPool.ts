@@ -1,4 +1,5 @@
 import { Color, Source, Texture, type Material } from 'three';
+import { applyNightLook } from './nightLook';
 
 /** Fields that name or track a material or texture but do not change how it draws. */
 const IGNORED_FIELDS = new Set(['uuid', 'name', 'userData', 'version', '_listeners']);
@@ -32,11 +33,15 @@ function signatureOf(object: Material | Texture): string {
 export class MaterialPool {
   readonly #bySignature = new Map<string, Material>();
 
-  /** The pooled material that draws like `material`, which is `material` itself when it is the first of its look. */
+  /**
+   * The pooled material that draws like `material` in its file, which is `material` itself, in the night look, when it
+   * is the first of its look. The look is keyed before the night look, so distinct file colours stay apart.
+   */
   adopt(material: Material): Material {
     const signature = signatureOf(material);
     const pooled = this.#bySignature.get(signature);
     if (!pooled) {
+      applyNightLook(material);
       this.#bySignature.set(signature, material);
       return material;
     }

@@ -19,6 +19,7 @@ export function placementsOf(el: Element, world: Mat4, layer: string, symbols: S
     matrix: multiply(world, mesh.matrix),
     layer,
     kind: el.localName,
+    name: attr(el, 'name') ?? '',
     uuid,
   }));
 }

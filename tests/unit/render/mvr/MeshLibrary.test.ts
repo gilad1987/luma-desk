@@ -2,7 +2,8 @@
 /**
  * MeshLibrary's parse results: a file three.js cannot parse is reported (and `MvrStage.show` passes it on), not
  * silently empty; a 3DS mesh with several
- * material groups keeps a part per group in that group's colour; and a 3DS texture name is never fetched.
+ * material groups keeps a part per group in that group's hue (darkened to the night look); and a 3DS texture name is
+ * never fetched.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { MeshPhongMaterial } from 'three';
@@ -47,8 +48,11 @@ describe('MeshLibrary', () => {
 
   it('gives a 3DS mesh with two material groups one part per group, in its own colour', async () => {
     const parts = await libraryOf('two.3ds', make3dsGroups([RED, BLUE])).parts('two.3ds');
-    const colours = parts.map((part) => (part.material as MeshPhongMaterial).color.getHexString());
-    expect(colours).toEqual(['ff0000', '0000ff']);
+    const hues = parts.map((part) => (part.material as MeshPhongMaterial).color.toArray().map((value) => value > 0));
+    expect(hues).toEqual([
+      [true, false, false],
+      [false, false, true],
+    ]);
     expect(parts.map((part) => [part.geometry.index?.count, part.geometry.getAttribute('position').count])).toEqual([
       [3, 3],
       [3, 3],

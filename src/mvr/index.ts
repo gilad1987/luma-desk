@@ -14,3 +14,4 @@ export { isEmbeddedUri } from './mesh/isEmbeddedUri';
 export { meshFormatOf } from './mesh/meshFormatOf';
 export { MvrError, type MvrWarning, type MvrWarningCode } from './MvrWarning';
 export type { MeshPlacement } from './scene/MvrScene';
+export { isScreenPlacement } from './scene/isScreenPlacement';

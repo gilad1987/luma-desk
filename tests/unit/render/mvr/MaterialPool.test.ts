@@ -3,7 +3,7 @@
  * MaterialPool: materials that draw alike become one instance, whichever loader call made them, so merging and
  * instancing can group parts of different files; and dispose frees the maps that `Material.dispose` leaves behind.
  */
-import { MeshPhongMaterial, Texture } from 'three';
+import { MeshPhongMaterial, MeshStandardMaterial, Texture } from 'three';
 import { describe, expect, it } from 'vitest';
 import { MaterialPool } from '../../../../src/render/mvr/MaterialPool.ts';
 
@@ -48,6 +48,30 @@ describe('MaterialPool', () => {
     const repeated = new MeshPhongMaterial({ map: tiled });
     pool.adopt(plain);
     expect(pool.adopt(repeated)).toBe(repeated);
+  });
+
+  it('turns an untextured light material into dark matte scenery, as the built-in venue draws at night', () => {
+    const pool = new MaterialPool();
+    const beige = pool.adopt(new MeshStandardMaterial({ color: 0xd8cfb8, roughness: 0.3 }));
+    const grey = pool.adopt(new MeshPhongMaterial({ color: 0xc0c0c0, specular: 0xffffff }));
+    expect(beige).toBeInstanceOf(MeshStandardMaterial);
+    expect(grey).toBeInstanceOf(MeshPhongMaterial);
+    if (!(beige instanceof MeshStandardMaterial) || !(grey instanceof MeshPhongMaterial)) return;
+    expect(Math.max(beige.color.r, beige.color.g, beige.color.b)).toBeLessThan(0.05);
+    expect(beige.roughness).toBeGreaterThanOrEqual(0.9);
+    expect(Math.max(grey.color.r, grey.specular.r)).toBeLessThan(0.05);
+  });
+
+  it('keeps a textured material as the file drew it', () => {
+    const pool = new MaterialPool();
+    const textured = pool.adopt(new MeshPhongMaterial({ color: 0xffffff, map: new Texture() }));
+    expect(textured instanceof MeshPhongMaterial && textured.color.getHex()).toBe(0xffffff);
+  });
+
+  it('pools a material by its look in the file, so equal file materials still share one dark instance', () => {
+    const pool = new MaterialPool();
+    const first = pool.adopt(new MeshPhongMaterial({ color: 0xc0c0c0 }));
+    expect(pool.adopt(new MeshPhongMaterial({ color: 0xc0c0c0 }))).toBe(first);
   });
 
   it('frees every pooled material and its textures on dispose', () => {
