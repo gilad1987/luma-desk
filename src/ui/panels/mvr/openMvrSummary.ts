@@ -3,6 +3,7 @@ import { byId } from '../../dom';
 import { createElement, type Modal } from '../../shared';
 import type { ImportSummaryView } from './importSummaryView';
 import { mvrSummaryMarkup } from './mvrSummaryMarkup';
+import { proxiesRow } from './proxiesRow';
 import { wireShowChoice } from './wireShowChoice';
 
 /** What the summary dialog shows after one import. */
@@ -17,6 +18,8 @@ export interface MvrSummaryContent {
    * instead (the default button) or to keep the cues. Missing: the summary offers no choice.
    */
   readonly buildShow?: (() => void) | undefined;
+  /** Present when the import drew proxies: the layer list then starts with a "Show proxies" box that calls it. */
+  readonly showProxies?: ((shown: boolean) => void) | undefined;
 }
 
 /** One layer row: a checkbox and the layer name as text; `dir="auto"` because names are Hebrew or Latin. */
@@ -83,7 +86,9 @@ export function openMvrSummary(
   byId('mvrSummaryClose').onclick = () => modal.close();
   if (content.buildShow) wireShowChoice(content.buildShow);
   fillWarnings(byId('mvrWarnings'), content.view.warnings);
+  fillWarnings(byId('mvrBodies'), content.view.bodies);
   const host = byId('mvrLayers');
+  if (content.showProxies) proxiesRow(host, content.showProxies);
   const rows = content.layers.map((layer) => ({ layer, box: layerRow(host, layer, content.hiddenLayers) }));
   const hiddenNow = (): string[] => rows.filter(({ box }) => !box.checked).map(({ layer }) => layer.uuid);
   for (const { box } of rows) box.onchange = () => onHiddenLayers(hiddenNow());

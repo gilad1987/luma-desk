@@ -42,19 +42,20 @@ function readHiddenLayers(raw: object): { readonly hiddenLayers?: readonly strin
   return hiddenLayers === undefined || r.errors.length > 0 ? undefined : { hiddenLayers };
 }
 
-/** One link's footprint: channels checked like a stored show's (`parseFootprint`), size > 0, spec and mode text. */
+/**
+ * One link's footprint: channels checked like a stored show's (`parseFootprint`), size > 0, spec and mode text. Both
+ * numbers are optional: a mode with no DMX footprint has no channels, and an older export has no size.
+ */
 function readFootprint(r: Reader, parent: Raw, key: Key, at: string): LinkFootprint | undefined {
   const o = r.obj(parent, key, at);
   if (o === undefined) return undefined;
   const path = r.path(at, key);
-  const footprint = {
-    channels: parseFootprint(r, o, 'channels', path),
-    gdtfSpec: r.str(o, 'gdtfSpec', path),
-    gdtfMode: r.str(o, 'gdtfMode', path),
-  };
+  const footprint = { gdtfSpec: r.str(o, 'gdtfSpec', path), gdtfMode: r.str(o, 'gdtfMode', path) };
+  const channels = r.optional(o, 'channels', path, (raw, field, at) => parseFootprint(r, raw, field, at));
   const bodySize = r.optional(o, 'bodySize', path, r.positive);
+  const counted = channels === undefined ? {} : { channels };
   const sized = bodySize === undefined ? {} : { bodySize };
-  return allDefined(footprint) ? { ...footprint, ...sized } : undefined;
+  return allDefined(footprint) ? { ...footprint, ...counted, ...sized } : undefined;
 }
 
 /**

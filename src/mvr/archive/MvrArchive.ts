@@ -5,13 +5,13 @@ import { MvrError } from '../MvrWarning';
  * The largest file the archive unpacks. Real MVR meshes stay well under 100 MB; an entry that claims more is a zip
  * bomb or a broken file, and unpacking it would exhaust the page's memory before any later check could run.
  */
-const MAX_ENTRY_BYTES = 512 * 1024 * 1024;
+export const MAX_ENTRY_BYTES = 512 * 1024 * 1024;
 
 /**
  * The most bytes all unpacked entries of one archive may take together. Many entries just under the entry limit
  * would exhaust memory as surely as one huge entry; the largest real plots unpack to a few hundred MB.
  */
-const MAX_TOTAL_BYTES = 1024 * 1024 * 1024;
+export const MAX_TOTAL_BYTES = 1024 * 1024 * 1024;
 
 /** Which entries `MvrArchive.open` unpacks. */
 export interface ArchiveOptions {

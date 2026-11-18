@@ -1,5 +1,6 @@
 import type { MvrSummary } from '../MvrImport';
 import type { MvrScene } from '../scene/MvrScene';
+import type { BodyLine } from './bodyWarnings';
 import type { ResolvedRig } from './resolveFixtures';
 
 /**
@@ -12,8 +13,14 @@ function countObjects(scene: MvrScene, rig: ResolvedRig): number {
 }
 
 /** Builds the import summary from the steps' results, so the UI shows counts without walking the design again. */
-export function summarize(scene: MvrScene, rig: ResolvedRig, noGeometry: boolean): MvrSummary {
+export function summarize(
+  scene: MvrScene,
+  rig: ResolvedRig,
+  noGeometry: boolean,
+  bodyLines: readonly BodyLine[],
+): MvrSummary {
   return {
+    bodyLines,
     fixtureCount: rig.fixtures.length,
     unpatchedCount: rig.fixtures.filter((fixture) => fixture.patch === undefined).length,
     missingGdtfCount: rig.missingGdtfCount,

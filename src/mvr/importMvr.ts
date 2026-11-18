@@ -1,6 +1,8 @@
 import { MvrArchive } from './archive/MvrArchive';
 import { toStageDesign } from './design/toStageDesign';
+import { fixtureBodies } from './import/fixtureBodies';
 import { placeBodies } from './import/placeBodies';
+import { importProxies } from './import/importProxies';
 import { meshBytes } from './import/meshBytes';
 import { readLumaData } from './import/readLumaData';
 import { resolveFixtures } from './import/resolveFixtures';
@@ -50,7 +52,8 @@ function importNow(bytes: Uint8Array, options: MvrImportOptions): MvrImport {
   const walked = walkScene(doc);
   const bare = withoutLumaMeshes(walked, luma);
   const rig = resolveFixtures(archive, bare.fixtures);
-  const meshWarnings: MvrWarning[] = [];
+  const bodies = fixtureBodies(archive, rig);
+  const meshWarnings: MvrWarning[] = [...bodies.warnings];
   const meshBoxes = readMeshBoxes(archive, bare.placements, (warning) => meshWarnings.push(warning));
   const scene = withScreenEvidence(bare, meshBoxes, archive);
   const meshFiles = meshBytes(archive, scene.placements, (warning) => meshWarnings.push(warning));
@@ -58,12 +61,22 @@ function importNow(bytes: Uint8Array, options: MvrImportOptions): MvrImport {
   const result = toStageDesign({ ...options, scene, fixtures: rig.fixtures, meshBoxes, ...fixed });
   const design = withLumaData(result, luma);
   const noGeometry = design.warnings.some((warning) => warning.code === 'no-geometry');
+  const proxied = importProxies(scene.proxies, design.design, result.geometry);
   return {
     design: placeBodies(design.design, rig.bodySizes),
-    geometry: result.geometry,
+    geometry: proxied.geometry,
     ...meshFiles,
-    summary: summarize(walked, rig, noGeometry),
-    warnings: [...scene.warnings, ...rig.gdtfWarnings, ...rig.patchWarnings, ...meshWarnings, ...design.warnings],
+    gdtfMeshes: bodies.gdtfMeshes,
+    bodies: bodies.bodies,
+    summary: summarize(walked, rig, noGeometry, bodies.lines),
+    warnings: [
+      ...scene.warnings,
+      ...proxied.warnings,
+      ...rig.gdtfWarnings,
+      ...rig.patchWarnings,
+      ...meshWarnings,
+      ...design.warnings,
+    ],
   };
 }
 

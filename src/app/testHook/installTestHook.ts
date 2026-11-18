@@ -5,6 +5,7 @@ import { PHASER_TYPES, type PhaserType } from '../../engine/shared';
 import type { ShowFileV1 } from '../../show/ShowFile';
 import { CommandCapture, type CapturedOutput } from './CommandCapture';
 import { readDeskClock, type DeskClock } from './deskClock';
+import { installFrameStats, type RenderStats } from './frameStats';
 import { readDeskState, type DeskState } from './readDeskState';
 import { readMvrStageInfo, type MvrStageInfo } from './readMvrStageInfo';
 import { createStageHooks } from './stageHooks';
@@ -26,11 +27,17 @@ export interface DeskTestApi extends DeskClock {
   mvrReady(): Promise<void>;
   /** True while the MVR scenery shows the layers of a file; the 3D view itself is not inspectable. */
   mvrScenery(): boolean;
+  /** Draw calls, triangles, lines, points of the last drawn frame (all its passes), programs and GPU memory. */
+  renderStats(): RenderStats;
+  /** The real durations (ms) of the last `n` drawn frames, read around the frame loop's callback. */
+  frameTimes(n: number): number[];
 }
 
 const isPhaserType = (type: string): type is PhaserType => Object.hasOwn(PHASER_TYPES, type);
 
-function createTestApi(clock: DeskClock, deps: TestHookDeps): DeskTestApi {
+type FrameStatsApi = Pick<DeskTestApi, 'renderStats' | 'frameTimes'>;
+
+function createTestApi(clock: DeskClock, deps: TestHookDeps, frameStats: FrameStatsApi): DeskTestApi {
   const capture = new CommandCapture();
   const state = (): DeskState => readDeskState(deps);
   return {
@@ -52,6 +59,7 @@ function createTestApi(clock: DeskClock, deps: TestHookDeps): DeskTestApi {
     mvrStage: () => readMvrStageInfo(deps.stage),
     mvrReady: deps.mvrReady,
     mvrScenery: deps.mvrScenery,
+    ...frameStats,
   };
 }
 
@@ -74,7 +82,7 @@ export function installTestHook(deps: TestHookDeps): void {
       const { geometries, textures } = deps.renderer.info.memory;
       return { geometries, textures };
     },
-    test: createTestApi(clock, deps),
+    test: createTestApi(clock, deps, installFrameStats(deps.renderer)),
   };
   Object.assign(window, { __desk: desk });
 }

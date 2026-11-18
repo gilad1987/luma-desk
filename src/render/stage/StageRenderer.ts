@@ -10,7 +10,7 @@ export interface StageRendererParts {
   };
   readonly scene: Scene;
   readonly views: Pick<CameraViews, 'camera' | 'updateControls'>;
-  readonly postFx: Pick<PostFx, 'setSize' | 'render'>;
+  readonly postFx: Pick<PostFx, 'setSize' | 'render' | 'selectChain'>;
   readonly overlay: Pick<FixtureIdOverlay, 'resize' | 'draw' | 'isVisible'>;
   /** The element whose size the stage fills (`#viewer`). */
   readonly viewer: HTMLElement;
@@ -89,7 +89,8 @@ export class StageRenderer {
   renderFrame(): void {
     const { renderer, scene, views, postFx, overlay } = this.parts;
     views.updateControls();
-    if (this.isGlowOn) postFx.render();
+    // an MVR stage draws through its own chain in both glow states, so it has one tone path
+    if (postFx.selectChain() || this.isGlowOn) postFx.render(this.isGlowOn);
     else renderer.render(scene, views.camera);
     overlay.draw(views.camera);
   }

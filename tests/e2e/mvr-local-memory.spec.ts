@@ -28,12 +28,20 @@ async function importSample(page: Page, desk: JSHandle<DeskTestApi>, name: strin
   await page.locator('#mvrSummaryClose').click();
 }
 
-/** The renderer's GPU counts after three frames, so every mesh of the current stage has been uploaded. */
+/**
+ * The renderer's GPU counts after three frames, so every mesh of the current stage has been uploaded. The MVR post
+ * chain starts to load on the first MVR frame and can arrive later, so one frame starts the load and `mvrReady` waits
+ * for it before the three frames; else the first reading of an import misses the chain's targets.
+ */
 async function renderMemory(
   page: Page,
   desk: JSHandle<DeskTestApi>,
 ): Promise<{ geometries: number; textures: number }> {
-  await desk.evaluate((d) => d.frames(3));
+  await desk.evaluate(async (d) => {
+    await d.frames(1);
+    await d.mvrReady();
+    await d.frames(3);
+  });
   return page.evaluate(() => window.__desk.renderMemory());
 }
 

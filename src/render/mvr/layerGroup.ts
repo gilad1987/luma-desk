@@ -5,11 +5,16 @@ import { instancedMeshes } from './instancedMeshes';
 import type { MeshPart } from './MeshPart';
 import { mergeStatic, type SinglePlacement } from './mergeStatic';
 import { placementMatrix } from './placementMatrix';
+import { sceneryGroups } from './sceneryGroups';
 
-/** What layers draw with: the parsed parts of each file, and the screen look of a part by its scenery material. */
+/**
+ * What layers draw with: the parsed parts of each file, the screen look of a part by its scenery material, and the
+ * class look (`SceneryLooks`) a scenery placement draws a part with, by the part's library material.
+ */
 export interface LayerParts {
   readonly byFile: ReadonlyMap<string, readonly MeshPart[]>;
   readonly screen: (source: Material) => Material;
+  readonly scenery: (source: Material, placement: MeshPlacement) => Material;
 }
 
 /** A layer while it is built: instanced meshes go straight into `group`, single placements wait to be merged. */
@@ -41,7 +46,11 @@ export function layerGroup(
   for (const [file, placements] of files) {
     const fileParts = parts.byFile.get(file) ?? [];
     const screenParts = fileParts.map(({ geometry, material }) => ({ geometry, material: parts.screen(material) }));
-    addPlacements(layer, fileParts, placements.filter((placement) => !isScreenPlacement(placement)).map(matrixOf));
+    const sceneryPlacements = placements.filter((placement) => !isScreenPlacement(placement));
+    // one file can be truss in one place and a deck in another, so each look keeps its own placements
+    for (const g of sceneryGroups(fileParts, sceneryPlacements, parts.scenery)) {
+      addPlacements(layer, g.parts, g.placements.map(matrixOf));
+    }
     addPlacements(layer, screenParts, placements.filter(isScreenPlacement).map(matrixOf));
   }
   mergeStatic(layer.singles).forEach((mesh) => layer.group.add(mesh));

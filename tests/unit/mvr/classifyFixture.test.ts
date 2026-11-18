@@ -3,7 +3,7 @@ import type { GdtfChannel, GdtfInfo } from '../../../src/mvr/gdtf/GdtfInfo.ts';
 import { attributeToAttr } from '../../../src/mvr/gdtf/attributeMap.ts';
 import { classifyFixture } from '../../../src/mvr/import/classifyFixture.ts';
 
-const WASH_BEAM = { hasBeam: true, beamType: 'Wash', beamAngle: 25, hasDisplay: false, sizes: [] };
+const WASH_BEAM = { hasBeam: true, beamType: 'Wash', beamAngle: 25, hasDisplay: false, sizes: [], bodies: [] };
 const GENERIC_WASH: GdtfInfo = {
   fileName: 'Custom@Acme Thing.gdtf',
   name: 'Acme Thing',

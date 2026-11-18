@@ -2,7 +2,9 @@ import { MvrArchive } from '../archive/MvrArchive';
 import { MvrError, type MvrWarning } from '../MvrWarning';
 import { attr, childElement, descendantElements } from '../xml/elements';
 import { parseXml } from '../xml/parseXml';
+import { gdtfEntryNames } from './gdtfEntries';
 import type { GdtfInfo } from './GdtfInfo';
+import { readBodies } from './readGdtfBody';
 import { readBeam, readReferences } from './readGdtfGeometry';
 import { readModes } from './readGdtfModes';
 import { readSizes } from './readGdtfSizes';
@@ -21,9 +23,13 @@ function badGdtf(fileName: string, reason: string): GdtfReadResult {
   return { warnings: [{ code: 'bad-gdtf', message, ref: fileName }] };
 }
 
-/** The facts of a `FixtureType`; a bad `DMXOffset` adds a `bad-gdtf` warning to `warnings` and drops its break. */
-function toInfo(fixtureType: Element, fileName: string, warnings: MvrWarning[]): GdtfInfo {
+/**
+ * The facts of a `FixtureType`; a bad `DMXOffset` adds a `bad-gdtf` warning to `warnings` and drops its break.
+ * `entries` are the entry names of the GDTF archive, where the models' mesh files are looked up.
+ */
+function toInfo(fixtureType: Element, fileName: string, entries: readonly string[], warnings: MvrWarning[]): GdtfInfo {
   const geometries = childElement(fixtureType, 'Geometries');
+  const modes = readModes(fixtureType);
   const bad = (offset: string): void => {
     const message = `The GDTF file "${fileName}" has a DMXOffset "${offset}" that is not an address; it reads as 1.`;
     warnings.push({ code: 'bad-gdtf', message, ref: fileName });
@@ -32,11 +38,12 @@ function toInfo(fixtureType: Element, fileName: string, warnings: MvrWarning[]):
     fileName,
     name: attr(fixtureType, 'Name') ?? '',
     manufacturer: attr(fixtureType, 'Manufacturer') ?? '',
-    modes: readModes(fixtureType),
+    modes,
     references: geometries ? readReferences(geometries, bad) : [],
     ...(geometries ? readBeam(geometries) : { hasBeam: false }),
     hasDisplay: geometries !== undefined && descendantElements(geometries, 'Display').length > 0,
     sizes: readSizes(fixtureType),
+    bodies: readBodies(fixtureType, modes, entries),
   };
 }
 
@@ -47,11 +54,14 @@ function toInfo(fixtureType: Element, fileName: string, warnings: MvrWarning[]):
  */
 export function readGdtf(bytes: Uint8Array, fileName: string): GdtfReadResult {
   let doc: Document;
+  let entries: readonly string[];
   try {
     const only = (name: string): boolean => name.toLowerCase() === DESCRIPTION;
     const text = MvrArchive.open(bytes, { only }).text(DESCRIPTION);
     if (text === undefined) return badGdtf(fileName, `It has no ${DESCRIPTION}.`);
     doc = parseXml(text);
+    // after the open, which has told a file that is no ZIP apart; the names are where the mesh files are looked up
+    entries = gdtfEntryNames(bytes);
   } catch (error) {
     if (!(error instanceof MvrError)) throw error;
     return badGdtf(fileName, error.message);
@@ -59,5 +69,5 @@ export function readGdtf(bytes: Uint8Array, fileName: string): GdtfReadResult {
   const fixtureType = childElement(doc.documentElement, 'FixtureType');
   if (fixtureType === undefined) return badGdtf(fileName, `Its ${DESCRIPTION} has no FixtureType.`);
   const warnings: MvrWarning[] = [];
-  return { info: toInfo(fixtureType, fileName, warnings), warnings };
+  return { info: toInfo(fixtureType, fileName, entries, warnings), warnings };
 }

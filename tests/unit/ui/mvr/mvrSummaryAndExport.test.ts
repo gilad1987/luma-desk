@@ -39,6 +39,7 @@ describe('importSummaryView', () => {
     expect(view.offset).toBe(`Offset x ${x} m, y ${y} m, z ${z} m`);
     expect(view.geometry).toBe('Stage built from MVR');
     expect(view.warnings).toEqual(result.warnings.map((warning) => warning.message));
+    expect(view.bodies).toEqual(result.summary.bodyLines.map((line) => line.message));
     expect(view.warnings.some((text) => text.includes('Ghost@Wash'))).toBe(true);
   });
 

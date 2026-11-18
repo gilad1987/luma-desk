@@ -11,6 +11,7 @@ const view: ImportSummaryView = {
   offset: 'Offset x 0.00 m, y 0.00 m, z 1.50 m',
   geometry: 'No stage geometry in file',
   warnings: ['<b>not markup</b>'],
+  bodies: ['2 fixtures of "<i>Spot</i>": the GDTF model is shown.'],
 };
 const layers = [
   { uuid: 'a', name: 'Truss' },
@@ -27,26 +28,29 @@ function open(warningLines: readonly string[] = view.warnings) {
   const dom = new FakeDom();
   dom.add('mvrSummaryClose', new FakeButton());
   const warnings = dom.add('mvrWarnings');
+  const bodies = dom.add('mvrBodies');
   const host = dom.add('mvrLayers');
   const modal = { open: vi.fn(), close: vi.fn() };
   const onHidden = vi.fn();
   openMvrSummary(modal, { view: { ...view, warnings: warningLines }, layers, hiddenLayers: ['b'] }, onHidden);
   const rows = host.children as Row[];
   const box = (i: number): Box => rows[i]?.children[0] as Box;
-  return { dom, modal, onHidden, warnings, rows, box };
+  return { dom, modal, onHidden, warnings, bodies, rows, box };
 }
 
 describe('openMvrSummary', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it('shows the bare counts in the markup and the file text as text', () => {
-    const { modal, warnings, rows } = open();
+    const { modal, warnings, bodies, rows } = open();
     const html = String(modal.open.mock.calls[0]?.[0]);
     expect(html).toContain('id="mvrSummary"');
     expect(html).toContain('<b data-count="fixtures">2</b>');
     expect(html).toContain('<b data-count="unpatched">1</b>');
     expect(html).not.toContain('not markup');
     expect(warnings.children.map((li) => li.textContent)).toEqual(['<b>not markup</b>']);
+    expect(bodies.children.map((li) => li.textContent)).toEqual(view.bodies);
+    expect(html).toContain('<h3>Fixture bodies</h3>');
     expect(rows.map((row) => [row.dir, row.children[1]?.textContent])).toEqual([
       ['auto', 'Truss'],
       ['auto', 'במה'],

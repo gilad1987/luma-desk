@@ -11,6 +11,7 @@ import { mvrShow } from './mvrShow';
 import { exportStageMvr, type MvrExportOut } from './exportStageMvr';
 import { followStage } from './followStage';
 import { importPickedMvr } from './importPickedMvr';
+import type { PostFx } from '../../render/stage/PostFx';
 import { LazyMvrStage, type MvrSceneryRender } from './LazyMvrStage';
 import { loadDemoRig } from './loadDemoRig';
 import { MvrLoadQueue } from './MvrLoadQueue';
@@ -22,7 +23,7 @@ import { restoreStoredMvr } from './restoreStoredMvr';
 export interface MvrWiringDeps {
   readonly bus: Pick<EngineBus, 'emit' | 'on'>;
   /** The scene the scenery joins and the camera views it fits; read only from the first MVR load on. */
-  readonly render: MvrSceneryRender;
+  readonly render: MvrSceneryRender & { readonly postFx: Pick<PostFx, 'followMvr' | 'mvrChainReady'> };
   /** The flows' stage; the stage follower reads the cause of the last apply, the starting show the rest. */
   readonly stage: MvrFlowDeps['stage'] & Pick<StageService, 'cause' | 'rig' | 'frame' | 'isBuiltIn'>;
   /** The operator's executors; an import rebuilds or keeps their cues. */
@@ -46,7 +47,7 @@ export interface MvrWiring {
   readonly restore: () => void;
   /**
    * The test hook's MVR reads, in its own names so the composition root spreads them: `mvrReady()` resolves after
-   * the latest MVR load or export ended, `mvrScenery()` is true while the scenery shows the layers of a file.
+   * the latest MVR load or export and the latest post chain load ended, `mvrScenery()` is true while the scenery shows the layers of a file.
    */
   readonly testHook: Pick<TestHookDeps, 'mvrReady' | 'mvrScenery'>;
 }
@@ -72,6 +73,8 @@ export function wireMvr(wiring: MvrWiringDeps): MvrWiring {
   };
   const prompt = new MvrMissingPrompt(actions);
   const scenery = new LazyMvrStage(render);
+  // an MVR stage draws through the HDR post chain; a built-in stage keeps the legacy chain
+  render.postFx.followMvr(() => scenery.hasScenery);
   const show = mvrShow(new StartingShow({ ...wiring, execs: pool.execs }), toast);
   const store = openMvrStore();
   const deps: MvrFlowDeps = { stage, store, scenery, prompt, toast, modal, cancelBuilder, show };
@@ -80,6 +83,10 @@ export function wireMvr(wiring: MvrWiringDeps): MvrWiring {
   return {
     actions,
     restore: () => restore(stage.design),
-    testHook: { mvrReady: () => queue.ready(), mvrScenery: () => scenery.hasScenery },
+    // the post chain loads async after the first MVR frame, so a memory reading waits for it too
+    testHook: {
+      mvrReady: () => queue.ready().then(() => render.postFx.mvrChainReady()),
+      mvrScenery: () => scenery.hasScenery,
+    },
   };
 }

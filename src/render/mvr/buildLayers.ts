@@ -3,6 +3,7 @@ import type { MeshPlacement, MvrGeometry } from '../../mvr/index';
 import { layerGroup } from './layerGroup';
 import type { MeshLibrary } from './MeshLibrary';
 import type { MeshPart } from './MeshPart';
+import { addProxyMeshes } from './proxies';
 
 /** Called after each mesh file is parsed, so the UI can show how far a large import has come. */
 export type MvrProgress = (done: number, total: number) => void;
@@ -63,6 +64,11 @@ export async function buildLayers(
   const layers = byLayerAndFile(geometry.placements);
   const files = [...new Set(geometry.placements.map((placement) => placement.file))];
   const screen = (source: Material): Material => library.screens.of(source);
-  const parts = { byFile: await loadParts(files, library, onProgress), screen };
-  return new Map([...layers].map(([uuid, layerFiles]) => [uuid, layerGroup(layerFiles, parts, geometry.offset)]));
+  const scenery = (source: Material, placement: MeshPlacement): Material => library.scenery.of(source, placement);
+  const parts = { byFile: await loadParts(files, library, onProgress), screen, scenery };
+  const groups = new Map(
+    [...layers].map(([uuid, layerFiles]) => [uuid, layerGroup(layerFiles, parts, geometry.offset)]),
+  );
+  addProxyMeshes(groups, geometry);
+  return groups;
 }

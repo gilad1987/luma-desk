@@ -68,12 +68,9 @@ describe('mvrCameraBounds: the stage box', () => {
 });
 
 describe('mvrSurfaces of hidden layers', () => {
-  it('drops the tops of a hidden layer and keeps the shown set inside it', () => {
-    const tops = (hidden: readonly string[]): number =>
-      mvrSurfaces(design(RIG, hidden), geometry([SET, HALL])).length -
-      mvrSurfaces(design(RIG, hidden), { ...geometry([]), surfaces: [] }).length;
-    expect(tops([])).toBe(2);
-    expect(tops(['hall'])).toBe(1);
-    expect(tops(['hall', 'set'])).toBe(0);
+  it('holds no mesh box top, shown or hidden: SceneryHit reads the shown layers from the meshes', () => {
+    expect(geometry([SET, HALL]).surfaces.length).toBeGreaterThan(0);
+    for (const hidden of [[], ['hall'], ['hall', 'set']])
+      expect(mvrSurfaces(design(RIG, hidden))).toEqual(mvrSurfaces(design(RIG, [])));
   });
 });

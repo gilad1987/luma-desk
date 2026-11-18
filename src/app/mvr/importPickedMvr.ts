@@ -23,7 +23,11 @@ function presentSummary(result: MvrImport, failures: readonly MeshFailure[], dep
   }
   const { layers = [], hiddenLayers = [] } = result.design.mvr ?? {};
   const buildShow = kept ? deps.show.build : undefined;
-  openMvrSummary(modal, { view, layers, hiddenLayers, buildShow }, (uuids) => hideMvrLayers(deps, uuids));
+  // The proxies module is part of the scenery chunk, which `deps.scenery.load` fetched before this import drew.
+  const toggle = (shown: boolean): void => void import('../../render/mvr/proxies').then((m) => m.showProxies(shown));
+  const showProxies = result.geometry.proxies?.some((proxy) => proxy.kind !== 'unknown') ? toggle : undefined;
+  const content = { view, layers, hiddenLayers, buildShow, showProxies };
+  openMvrSummary(modal, content, (uuids) => hideMvrLayers(deps, uuids));
 }
 
 /**

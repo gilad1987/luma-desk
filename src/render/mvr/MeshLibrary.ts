@@ -1,16 +1,13 @@
 import type { BufferGeometry, Material } from 'three';
 import { loadMeshParts } from './loadMeshParts';
 import { MaterialPool } from './MaterialPool';
+import type { MeshFailure } from './meshFailure';
 import type { MeshPart } from './MeshPart';
 import { MvrScreenMaterials } from './mvrScreenMaterial';
 import { OfflineLoadingManager } from './OfflineLoadingManager';
+import { SceneryLooks } from './SceneryLooks';
 import { styleScenery } from './sceneryStyle';
-
-/** A mesh file the archive holds but three.js could not parse, with the loader's reason, for the import summary. */
-export interface MeshFailure {
-  readonly file: string;
-  readonly reason: string;
-}
+export type { MeshFailure } from './meshFailure';
 
 /**
  * The parsed meshes of one import, by archive file name. Each file is parsed once, however many placements share it,
@@ -25,6 +22,8 @@ export class MeshLibrary {
   readonly #materials = new MaterialPool();
   /** The materials the screen placements of the import draw with (`isScreenPlacement`); freed by `dispose`. */
   readonly screens = new MvrScreenMaterials();
+  /** The class looks the scenery placements of the import draw with (`SceneryLooks`); freed by `dispose`. */
+  readonly scenery = new SceneryLooks();
   readonly #failures: MeshFailure[] = [];
   #parsing = 0;
   #isDisposed = false;
@@ -66,6 +65,7 @@ export class MeshLibrary {
     for (const geometry of this.#geometries.splice(0)) geometry.dispose();
     this.#materials.dispose();
     this.screens.dispose();
+    this.scenery.dispose();
   }
 
   async #load(file: string): Promise<readonly MeshPart[]> {

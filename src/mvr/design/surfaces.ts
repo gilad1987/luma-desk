@@ -21,8 +21,9 @@ export function placementBoxes(
 }
 
 /**
- * The landing surfaces of the placed meshes: each box moved by the fit offset, marked `face: 'top'`. Beams that hit
- * an imported set piece then land on its top, the way they land on the deck, instead of passing through to the ground.
+ * The top of each placed mesh's box, moved by the fit offset and marked `face: 'top'`: `MvrGeometry.surfaces`. The
+ * render does not land beams on them any more: a box top is not the mesh, so beams meet the real triangles instead
+ * (`SurfaceHit.setScenery`). They stay as scene data for code without the parsed meshes.
  */
 export function topSurfaces(boxes: readonly Aabb[], offset: Vec3): readonly SurfaceBox[] {
   return boxes.map((box) => ({ ...shiftBox(box, offset), face: 'top' }));

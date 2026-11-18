@@ -4,8 +4,8 @@
  * `description.xml`, and the rule that says when the desk may draw its body at that size. All products are invented.
  */
 import { describe, expect, it } from 'vitest';
-import type { GdtfChannel, GdtfInfo } from '../../../src/mvr/gdtf/GdtfInfo.ts';
-import { gdtfBodySize } from '../../../src/mvr/gdtf/gdtfBodySize.ts';
+import type { GdtfInfo } from '../../../src/mvr/gdtf/GdtfInfo.ts';
+import { gdtfBodySize, isVendorSymbol } from '../../../src/mvr/gdtf/gdtfBodySize.ts';
 import { readSizes } from '../../../src/mvr/gdtf/readGdtfSizes.ts';
 import { parseXml } from '../../../src/mvr/xml/parseXml.ts';
 
@@ -26,8 +26,6 @@ const pixel = (x: number): string => `<GeometryReference Name="P" Geometry="Cell
 const BATTEN = `<Geometry Name="Body" Model="Body">${[-0.375, -0.125, 0.125, 0.375].map(pixel).join('')}</Geometry>`;
 const CELL = '<Geometry Name="Cell" Model="Cell"><Beam Name="B"/></Geometry>';
 
-const channels = (count: number): GdtfChannel[] =>
-  Array.from({ length: count }, (_, i) => ({ attribute: 'Dimmer', dmxBreak: 1, offset: [i + 1] }));
 const info = (sizes: GdtfInfo['sizes'], manufacturer = 'Acme'): GdtfInfo => ({
   fileName: `${manufacturer}@Thing.gdtf`,
   name: 'Thing',
@@ -37,6 +35,7 @@ const info = (sizes: GdtfInfo['sizes'], manufacturer = 'Acme'): GdtfInfo => ({
   hasBeam: true,
   hasDisplay: false,
   sizes,
+  bodies: [],
 });
 const MOVER_SIZE = [{ geometry: 'Base', size: [0.26, 0.2, 0.36] }] as const;
 
@@ -71,24 +70,23 @@ describe('readSizes', () => {
 
 describe('gdtfBodySize', () => {
   it('is the largest dimension of the tree the mode names', () => {
-    expect(gdtfBodySize(info(MOVER_SIZE), 'Std', channels(16), 'Acme@Thing')).toBe(0.36);
-    expect(gdtfBodySize(info([{ geometry: 'Base', size: [1, 0.12, 0.15] }]), 'Std', channels(8), 'Acme@Thing')).toBe(1);
+    expect(gdtfBodySize(info(MOVER_SIZE), 'Std')).toBe(0.36);
+    expect(gdtfBodySize(info([{ geometry: 'Base', size: [1, 0.12, 0.15] }]), 'Std')).toBe(1);
   });
 
-  it('trusts no stand-in: a Custom GDTF or a one-channel stub', () => {
-    expect(gdtfBodySize(info(MOVER_SIZE, 'Custom'), 'Std', channels(16), 'Custom@Thing')).toBeUndefined();
-    expect(gdtfBodySize(info(MOVER_SIZE), 'Std', channels(16), 'custom@Thing')).toBeUndefined();
-    expect(gdtfBodySize(info(MOVER_SIZE), 'Std', channels(1), 'Acme@Thing')).toBeUndefined();
+  it('trusts the geometry of a Custom GDTF, whose type and beam stay untrusted', () => {
+    expect(gdtfBodySize(info(MOVER_SIZE, 'Custom'), 'Std')).toBe(0.36);
+    expect(isVendorSymbol(info(MOVER_SIZE, 'Custom'), 'Custom@Thing')).toBe(true);
+    expect(isVendorSymbol(info(MOVER_SIZE), 'custom@Thing')).toBe(true);
+    expect(isVendorSymbol(info(MOVER_SIZE), 'Acme@Thing')).toBe(false);
   });
 
   it('trusts no size outside 0.05 m to 3 m and none for a tree the file did not size', () => {
     const sized = (largest: number) => info([{ geometry: 'Base', size: [largest, 0.01, 0.01] }]);
-    expect(gdtfBodySize(sized(0.04), 'Std', channels(8), 'Acme@Thing')).toBeUndefined();
-    expect(gdtfBodySize(sized(3.5), 'Std', channels(8), 'Acme@Thing')).toBeUndefined();
-    expect(gdtfBodySize(sized(3), 'Std', channels(8), 'Acme@Thing')).toBe(3);
-    expect(gdtfBodySize(info([]), 'Std', channels(8), 'Acme@Thing')).toBeUndefined();
-    expect(
-      gdtfBodySize(info([{ geometry: 'Other', size: [1, 1, 1] }]), 'Std', channels(8), 'Acme@Thing'),
-    ).toBeUndefined();
+    expect(gdtfBodySize(sized(0.04), 'Std')).toBeUndefined();
+    expect(gdtfBodySize(sized(3.5), 'Std')).toBeUndefined();
+    expect(gdtfBodySize(sized(3), 'Std')).toBe(3);
+    expect(gdtfBodySize(info([]), 'Std')).toBeUndefined();
+    expect(gdtfBodySize(info([{ geometry: 'Other', size: [1, 1, 1] }]), 'Std')).toBeUndefined();
   });
 });
