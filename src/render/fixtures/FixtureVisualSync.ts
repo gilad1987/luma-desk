@@ -1,14 +1,16 @@
 import { Vector3, type Texture } from 'three';
-import { clamp, D2R, type Rgb01 } from '../../core';
+import { clamp, D2R } from '../../core';
 import type { AttrValues } from '../../domain/attributes';
 import type { Selection } from '../../engine/Selection';
 import type { LightFrame } from '../lights/LightFrame';
 import type { SharedUniform } from './BeamMaterial';
 import type { FixtureVisual, LightVisual } from './FixtureVisual';
 import { hitSurface } from '../surface/hitSurface';
-import { outputValue } from './sync/BeamFrame';
+import { outputValue, type BeamFrameSlot } from './sync/BeamFrame';
+import { gatedIntensity } from './sync/gatedIntensity';
 import { syncBeam } from './sync/syncBeam';
 import { syncGlow } from './sync/syncGlow';
+import { syncLens } from './sync/syncLens';
 import { syncPool } from './sync/syncPool';
 import { syncPose } from './sync/syncPose';
 import { syncScreen, type ScreenTargets } from './sync/syncScreen';
@@ -26,17 +28,6 @@ export interface FixtureVisualSyncDeps {
   readonly lights: LightFrame;
 }
 
-/** The strobe shutter: open 22 % of each period, at 1 to 23 Hz. */
-function gatedIntensity(o: Readonly<AttrValues>, now: number): number {
-  let intensity = clamp(outputValue(o, 'dim') / 100, 0, 1);
-  const strobe = outputValue(o, 'strobe');
-  if (strobe > 0.5) {
-    const hz = 1 + (strobe / 100) * 22;
-    intensity *= (now * hz) % 1 < 0.22 ? 1 : 0;
-  }
-  return intensity;
-}
-
 /**
  * Per-frame update of every fixture visual from the engine output (legacy `updateVisuals` up to the end of its
  * fixture loop). It resets and fills the render core light frame; render core turns it into the scene lights.
@@ -46,6 +37,10 @@ export class FixtureVisualSync {
   readonly #camera = new Vector3();
   readonly #dir = new Vector3();
   readonly #origin = new Vector3();
+  /** The fixture colour, 0..1, refilled per fixture; a step that keeps it past the fixture's sync copies it. */
+  readonly #col: [number, number, number] = [0, 0, 0];
+  /** The beam carrier, made by the first lit fixture and refilled for every later one. */
+  #frame: BeamFrameSlot | null = null;
 
   constructor(deps: FixtureVisualSyncDeps) {
     this.#deps = deps;
@@ -70,17 +65,14 @@ export class FixtureVisualSync {
     const deps = this.#deps,
       f = v.fixture,
       spec = f.T,
-      dir = this.#dir;
+      dir = this.#dir,
+      col = this.#col;
     syncPose(v, o, dt, dir);
-    const col: Rgb01 = [outputValue(o, 'r') / 100, outputValue(o, 'g') / 100, outputValue(o, 'b') / 100];
+    col[0] = outputValue(o, 'r') / 100;
+    col[1] = outputValue(o, 'g') / 100;
+    col[2] = outputValue(o, 'b') / 100;
     v.bodyMat.emissive.setHex(deps.selection.has(f.id) ? 0x7a5a00 : 0x000000);
-    v.lensMat.color.setRGB(0.03 + col[0] * intensity * 3, 0.03 + col[1] * intensity * 3, 0.03 + col[2] * intensity * 3);
-    if (v.pix)
-      v.pix.material.color.setRGB(
-        0.02 + col[0] * intensity * 2.2,
-        0.02 + col[1] * intensity * 2.2,
-        0.02 + col[2] * intensity * 2.2,
-      );
+    syncLens(v, col, intensity);
     const on = intensity > 0.004;
     v.beam.visible = v.pool.visible = v.glow.visible = on;
     if (!on) return;
@@ -89,7 +81,15 @@ export class FixtureVisualSync {
       tz = Math.tan((zoom / 2) * D2R);
     const hit = hitSurface(origin, dir),
       length = hit ? hit.t : 85;
-    const frame = { visual: v, o, intensity, col, dir, origin, zoom, tz, hit, length };
+    // col, dir and origin are this sync's own buffers, so the carrier keeps them from its first fill
+    const frame = (this.#frame ??= { visual: v, o, intensity, col, dir, origin, zoom, tz, hit, length });
+    frame.visual = v;
+    frame.o = o;
+    frame.intensity = intensity;
+    frame.zoom = zoom;
+    frame.tz = tz;
+    frame.hit = hit;
+    frame.length = length;
     const gob = syncBeam(frame);
     syncPool(frame, gob, deps.goboTextures, deps.lights);
     if (f.type === 'blinder') deps.lights.addBlinder(intensity);
