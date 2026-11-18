@@ -45,6 +45,13 @@ describe('import warnings', () => {
     expect(unknown[0]?.message).toContain('"Nope"');
   });
 
+  it('reads the vendor@name.gdtf file for a spec that names the fixture bare, with no vendor and no .gdtf', async () => {
+    const bytes = mvrOf([fixture('A', 'Spot', 'Std'), fixture('B', 'Acme@Spot.gdtf', 'Std')]);
+    const { summary, warnings } = await importMvr(bytes, { name: 'x' });
+    expect(summary.missingGdtfCount).toBe(0);
+    expect(warnings.filter((w) => w.code === 'missing-gdtf' || w.code === 'ambiguous-gdtf')).toEqual([]);
+  });
+
   it('gives one ambiguous-gdtf warning per spec that matches several files', async () => {
     const gdtf = makeGdtf({ geometries: BEAM, modes: gdtfMode('Std', []) });
     const fixtures = fixture('A', 'Spot', 'Std') + fixture('B', 'Spot', 'Std');
