@@ -6,12 +6,16 @@ import type { GroupLibrary } from '../../engine/GroupLibrary';
 import type { PresetLibrary } from '../../engine/PresetLibrary';
 import type { Programmer } from '../../engine/Programmer';
 import type { Selection } from '../../engine/Selection';
+import type { StageService } from '../../engine/stage/StageService';
 import type { Tempo } from '../../engine/Tempo';
-import { DemoShow, GuideFlag, type KeyValueStore, LayoutPrefs, ShowSerializer, ShowStorage } from '../../show';
+import { he } from '../../i18n/he';
+import { DemoShow, GuideFlag, LayoutPrefs, ShowSerializer, ShowStorage } from '../../show';
+import { browserStore } from '../shared';
 
 /** The engine parts a show file holds, named as the composition root names them. */
 export interface ShowFilesDeps {
-  readonly rig: Rig;
+  /** The stage: a show saves a custom design and a load applies the show's design first. */
+  readonly stage: StageService;
   readonly groupLibrary: GroupLibrary;
   readonly presetLibrary: PresetLibrary;
   /** The ten playback executors (`pool.execs`); the auto executor is not part of a show. */
@@ -33,23 +37,16 @@ export interface ShowFiles {
 }
 
 /**
- * `localStorage` behind the store boundary. It is read on each call, not captured at boot, as the original wrapper
- * did: a browser that blocks storage fails only the save or load that touches it, never the boot.
- */
-const browserStore: KeyValueStore = {
-  getItem: (key) => localStorage.getItem(key),
-  setItem: (key, value) => localStorage.setItem(key, value),
-};
-
-/**
  * Builds the show serializer, its delayed browser save (started by every `showChanged`), the demo show and the two
  * small stored flags. None of them touches the DOM, three.js or `Math.random` when built, so the root can build them
- * before the UI that uses them.
+ * before the UI that uses them. The serializer and the demo read the rig from the stage at each call.
  */
 export function createShowFiles(deps: ShowFilesDeps): ShowFiles {
-  const { rig, execs, tempo, programmer, selection, bus } = deps;
+  const { stage, execs, tempo, programmer, selection, bus } = deps;
   const serializer = new ShowSerializer({
-    rig,
+    get rig(): Rig {
+      return stage.rig;
+    },
     groups: deps.groupLibrary,
     presets: deps.presetLibrary,
     execs,
@@ -57,14 +54,25 @@ export function createShowFiles(deps: ShowFilesDeps): ShowFiles {
     state: deps.appState,
     programmer,
     selection,
+    stage: { service: stage, badStage: he.builder.badStage, toast: (message) => bus.emit('message', message) },
   });
   const showStorage = new ShowStorage(browserStore, () => serializer.serialize());
   // every show edit reports `showChanged`; the delayed browser save is its one listener
   bus.on('showChanged', () => showStorage.persist());
+  const demo = new DemoShow({
+    get rig(): Rig {
+      return stage.rig;
+    },
+    source: stage,
+    serializer,
+    execs,
+    state: deps.appState,
+    bus,
+  });
   return {
     serializer,
     showStorage,
-    demo: new DemoShow({ rig, serializer, execs, state: deps.appState, bus }),
+    demo,
     layoutPrefs: new LayoutPrefs(browserStore),
     guideFlag: new GuideFlag(browserStore),
   };

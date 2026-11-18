@@ -4,6 +4,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { wireGuide } from '../../../../src/app/io/wireGuide';
 import { buildRig } from '../../../../src/domain/rig';
+import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import { he } from '../../../../src/i18n/he';
 import { GuideFlag, type KeyValueStore } from '../../../../src/show';
 import { MemoryStore } from '../../../shared';
@@ -19,7 +20,8 @@ function setup(store: KeyValueStore = new MemoryStore()) {
   vi.stubGlobal('addEventListener', vi.fn());
   vi.stubGlobal('requestAnimationFrame', vi.fn());
   const sideTabs = { show: vi.fn() };
-  const handles = wireGuide({ rig: buildRig(), sideTabs, isMa: () => false, guideFlag: new GuideFlag(store) });
+  const stage = { rig: buildRig(), design: BUILT_IN_DESIGN, isBuiltIn: true };
+  const handles = wireGuide({ stage, sideTabs, isMa: () => false, guideFlag: new GuideFlag(store) });
   return { dom, store, handles };
 }
 

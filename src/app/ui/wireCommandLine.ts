@@ -1,11 +1,11 @@
 import type { CommandRunner } from '../../command/CommandRunner';
-import type { Rig } from '../../domain/rig/Rig';
 import type { AppState } from '../../engine/AppState';
 import type { EngineBus } from '../../engine/events';
 import type { Executor } from '../../engine/Executor';
 import type { ExecutorPool } from '../../engine/ExecutorPool';
 import type { Programmer } from '../../engine/Programmer';
 import type { Selection } from '../../engine/Selection';
+import type { RigSource } from '../../engine/stage/RigSource';
 import { showStoreMode } from '../../ui/components/showStoreMode';
 import { CommandLine } from '../../ui/panels/command/CommandLine';
 import type { UiServices } from './createUiServices';
@@ -21,7 +21,8 @@ export interface CommandLineWiringDeps extends UiServices {
   readonly pool: Pick<ExecutorPool, 'go'>;
   readonly execs: readonly Executor[];
   readonly runner: Pick<CommandRunner, 'run'>;
-  readonly rig: Pick<Rig, 'lightIds'>;
+  /** The stage: the light ids come from its current rig. */
+  readonly stage: Pick<RigSource, 'rig'>;
   /** FAN key pressed: `() => encoders.fanToggled()`; the encoders are built after the command line. */
   readonly fanToggled: () => void;
   /** The guide (`#guide.show`) or the tour (`tIdx >= 0`) covers the page; from the io area. */
@@ -44,7 +45,7 @@ export function wireCommandLine(deps: CommandLineWiringDeps): CommandLine {
     execs: deps.execs,
     modal: deps.modal,
     runCommand: (raw) => deps.runner.run(raw),
-    lightIds: () => deps.rig.lightIds(),
+    lightIds: () => deps.stage.rig.lightIds(),
     fanToggled: deps.fanToggled,
     guideOrTourOpen: deps.guideOrTourOpen,
   });

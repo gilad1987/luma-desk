@@ -1,9 +1,12 @@
 /**
- * The Stage Builder: the soft-limit and bad-stage messages first, then the Hebrew tooltips and help of the builder
- * screens. The control labels stay English, as on the rest of the desk.
+ * The Stage Builder: the soft-limit and bad-stage messages first (the engine and the show file hold no UI language,
+ * so the app passes these in), then the Hebrew tooltips and help of the builder screens. The control labels stay
+ * English, as on the rest of the desk.
  */
 export const builder = {
-  tooManyFixtures: (n: number) => `בבמה ${n} גופי תאורה, יותר מ-500. ייתכן שהתצוגה תאט.`,
+  /** The toast after a stage change that leaves more fixtures than the soft limit (500). */
+  tooManyFixtures: (n: number): string => `בבמה ${n} גופי תאורה, יותר מ-500. ייתכן שהתצוגה תאט.`,
+  /** The toast when a show file's `stage` key does not parse; the rest of the show still loads. */
   badStage: 'נתוני הבמה בקובץ ההופעה פגומים. נטענה במת ברירת המחדל.',
   done: 'שמירת הבמה וחזרה לקונסולה',
   cancel: 'ביטול כל השינויים וחזרה לקונסולה',

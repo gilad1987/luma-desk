@@ -11,7 +11,7 @@ const newLamp = (): Fixture => new Fixture({ id: 7, type: 'spot', pos: new Vecto
 function readout(lamp: Fixture, ids: readonly number[], vals: FixtureValues = {}) {
   return maReadout({
     selection: { ids },
-    rig: { get: (id: number) => (id === lamp.id ? lamp : undefined) },
+    stage: { rig: { get: (id: number) => (id === lamp.id ? lamp : undefined) } },
     programmer: { vals, set: () => undefined, colorTargets: () => [] },
   });
 }

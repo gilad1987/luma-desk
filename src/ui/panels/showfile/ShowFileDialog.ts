@@ -1,4 +1,4 @@
-import { defaultGroups } from '../../../engine/defaultGroups';
+import { defaultPoolOf } from '../../../engine/stage/defaultPool';
 import { he } from '../../../i18n/he';
 import { byId } from '../../dom';
 import type { ShowFileDeps } from './ShowFileDeps';
@@ -20,7 +20,7 @@ export class ShowFileDialog {
 
   /** Opens the dialog in the shared modal and wires its buttons. */
   open(): void {
-    const { modal, bus, serializer, storage, demo, rig, loadShow, download, stamp } = this.#deps;
+    const { modal, bus, serializer, storage, demo, stage, loadShow, download, stamp } = this.#deps;
     const toast = (text: string): void => bus.emit('message', { kind: 'toast', text });
     modal.open(showFileMarkup);
     byId('fSave').onclick = () => {
@@ -35,7 +35,7 @@ export class ShowFileDialog {
       toast('Demo show loaded');
     };
     byId('fNew').onclick = () => {
-      loadShow({ groups: defaultGroups(rig) });
+      loadShow({ groups: defaultPoolOf(stage) });
       storage.persist();
       modal.close();
       toast('New show');

@@ -1,9 +1,9 @@
-import type { Rig } from '../../domain/rig/Rig';
 import type { AppState } from '../../engine/AppState';
 import type { EngineBus } from '../../engine/events';
 import type { Executor } from '../../engine/Executor';
 import type { Programmer } from '../../engine/Programmer';
 import type { Selection } from '../../engine/Selection';
+import type { RigSource } from '../../engine/stage/RigSource';
 import type { CameraViews } from '../../render/camera/CameraViews';
 import type { StageRenderer } from '../../render/stage/StageRenderer';
 import type { LayoutPrefs } from '../../show';
@@ -15,13 +15,14 @@ import type { StoreModeGuard } from '../../ui/shared';
 
 /**
  * Everything the layouts and the MA hardware use from the rest of the app. The field names are the old `main.ts`
- * variables, so the composition root maps them one to one; `rig` replaces the old `FX` lookup.
+ * variables, so the composition root maps them one to one; `stage.rig`, read at each call, replaces the old `FX`
+ * lookup.
  */
 export interface LayoutDeps {
   readonly bus: EngineBus;
   readonly programmer: Pick<Programmer, 'vals' | 'set' | 'colorTargets'>;
   readonly selection: Pick<Selection, 'ids'>;
-  readonly rig: Pick<Rig, 'get'>;
+  readonly stage: { readonly rig: Pick<RigSource['rig'], 'get'> };
   readonly aimHeight: AimHeight;
   readonly appState: Pick<AppState, 'selExec'>;
   readonly execs: readonly Pick<Executor, 'name'>[];

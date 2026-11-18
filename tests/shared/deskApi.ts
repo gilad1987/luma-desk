@@ -56,13 +56,24 @@ export interface DeskTestApi {
   applyFx(type: string): void;
 }
 
+/** window.__desk.stage(): the fixture count and the design's source and venue kinds. */
+export interface DeskStage {
+  count: number;
+  source: string;
+  venue: string;
+}
+
 declare global {
   interface Window {
     __desk: {
       /** Present only with ?test in the URL; waitForTestApi() narrows it once for every spec. */
       test?: DeskTestApi;
       setView(view: string, instant?: boolean): void;
+      /** The current rig's fixtures, read at each access. */
       fixtures: { id: number; out: AttrValues }[];
+      stage(): DeskStage;
+      /** Applies a template id (`empty`, `theatre`, `festival`, `sultans-pool`) or `built-in` as the builder would. */
+      applyTemplate(id: string): void;
     };
   }
 }

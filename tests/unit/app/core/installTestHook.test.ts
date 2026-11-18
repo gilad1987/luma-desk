@@ -23,7 +23,8 @@ class FakeObserver {
 /** The hook over a real engine and serializer, on a fake page whose window holds `clock` (or no clock at all). */
 function install(clock?: object) {
   const engine = wireEngine();
-  const { rig, groupLibrary: groups, presetLibrary: presets, pool, tempo, appState: state, programmer } = engine;
+  const { groupLibrary: groups, presetLibrary: presets, pool, tempo, appState: state, programmer } = engine;
+  const { rig } = engine.stage;
   const execs = pool.execs;
   const selection = engine.selection;
   const serializer = new ShowSerializer({ rig, groups, presets, execs, tempo, state, programmer, selection });
@@ -38,7 +39,6 @@ function install(clock?: object) {
   const setView = vi.fn();
   const deps = {
     ...engine,
-    fixtures: rig.fixtures,
     setView,
     execs: pool.execs,
     serializer,
@@ -60,8 +60,8 @@ describe('installTestHook', () => {
 
   it('keeps exactly the fields the specs read', () => {
     const { page, engine, setView } = install(fakeClock());
-    expect(Object.keys(page.__desk ?? {})).toEqual(['setView', 'fixtures', 'test']);
-    expect(page.__desk?.fixtures).toBe(engine.rig.fixtures);
+    expect(Object.keys(page.__desk ?? {})).toEqual(['setView', 'fixtures', 'stage', 'applyTemplate', 'test']);
+    expect(page.__desk?.fixtures).toBe(engine.stage.rig.fixtures);
     expect(page.__desk?.setView).toBe(setView);
   });
 
@@ -72,7 +72,7 @@ describe('installTestHook', () => {
     expect(test?.now()).toBe(12000);
     test?.outputAt(5);
     expect(test?.now()).toBe(12000);
-    expect(out?.map((o) => o.id)).toEqual(engine.rig.fixtures.map((f) => f.id));
+    expect(out?.map((o) => o.id)).toEqual(engine.stage.rig.fixtures.map((f) => f.id));
   });
 
   it('runs a command and returns its log lines with the span class, no toast, and the state after it', () => {

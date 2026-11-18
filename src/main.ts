@@ -28,7 +28,7 @@ import { ViewportPicking } from './ui/panels/viewport/ViewportPicking';
 document.body.insertAdjacentHTML('afterbegin', appShellMarkup({ viewer: viewerMarkup, side: '', desk: '' }));
 
 const engine = wireEngine();
-const { rig, bus, pool } = engine;
+const { stage, bus, pool } = engine;
 const { execs } = pool;
 const render = wireRender(engine);
 const files = createShowFiles({ ...engine, execs });
@@ -42,12 +42,13 @@ const panels = wirePanels({
   layoutMode: () => layout.mode(),
   guideOrTourOpen: () => guide.isOpen() || tour.isActive(),
 });
-new ViewportPicking({ ...engine, ...render, fixtures: rig.fixtures });
+// the picking meshes are the boot rig's until the render rebuilds them on a stage change
+new ViewportPicking({ ...engine, ...render, fixtures: stage.rig.fixtures });
 wireMidi(engine);
 render.stageRenderer.observeViewer();
 
 const { guide, tour } = wireGuide({
-  rig,
+  stage,
   sideTabs: panels.sideTabs,
   isMa: () => layout.mode() === 'ma',
   guideFlag: files.guideFlag,
@@ -77,7 +78,6 @@ new FrameLoop({ ...engine, ...render, ...auto, fps, ui }).start();
 installTestHook({
   ...engine,
   ...files,
-  fixtures: rig.fixtures,
   setView: render.setView,
   execs,
   autoShow: auto.autoShow,

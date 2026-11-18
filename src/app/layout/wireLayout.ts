@@ -29,14 +29,14 @@ export interface LayoutHandles {
  * object and draws no random number; it moves no panel until {@link LayoutHandles.restore}.
  */
 export function wireLayout(deps: LayoutDeps): LayoutHandles {
-  const { programmer, selection, rig } = deps;
+  const { programmer, selection, stage } = deps;
   colorPad(byId('tsCol', HTMLCanvasElement), programmer);
   // built before MaLayout, which redraws it when the selection changes
   const redrawFocus = focusPad(byId('tsPos', HTMLCanvasElement), {
     bus: deps.bus,
     selection,
     programmer,
-    rig,
+    rig: { get: (id) => stage.rig.get(id) },
     aimHeight: deps.aimHeight,
   });
   const layout = new LayoutManager(layoutHost(deps));

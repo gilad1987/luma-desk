@@ -1,10 +1,12 @@
 import type { AttrValues } from '../../domain/attributes';
 import { jsonClone } from '../../core';
+import type { Fixture } from '../../domain/Fixture';
 import { PHASER_TYPES, type PhaserType } from '../../engine/shared';
 import type { ShowFileV1 } from '../../show/ShowFile';
 import { CommandCapture, type CapturedOutput } from './CommandCapture';
 import { readDeskClock, type DeskClock } from './deskClock';
 import { readDeskState, type DeskState } from './readDeskState';
+import { createStageHooks } from './stageHooks';
 import type { TestHookDeps } from './TestHookDeps';
 
 /** `window.__desk.test`: the only door the Playwright suite uses into the app (see tests/shared/deskApi.ts). */
@@ -33,7 +35,7 @@ function createTestApi(clock: DeskClock, deps: TestHookDeps): DeskTestApi {
       const now = clock.now() / 1000;
       deps.pool.stepFades(now);
       deps.merger.compute(now, deps.autoShow.modulation);
-      return deps.fixtures.map((f) => ({ id: f.id, ...f.out }));
+      return deps.stage.rig.fixtures.map((f) => ({ id: f.id, ...f.out }));
     },
     run: (line) => ({ ...capture.capture(line, (raw) => deps.runner.run(raw)), state: state() }),
     applyFx: (type) => {
@@ -45,12 +47,19 @@ function createTestApi(clock: DeskClock, deps: TestHookDeps): DeskTestApi {
 
 /**
  * Publishes `window.__desk` for the Playwright suite, only when the page runs with `?test` (decision 23, every
- * build). It keeps exactly what the specs read: `setView`, `fixtures` and `test`. Call it at the end of boot, after
- * the command line has built `#cmdFb`.
+ * build). It keeps exactly what the specs read: `setView`, `fixtures`, the stage hooks and `test`. `fixtures` is a
+ * getter, so it is always the current rig's. Call it at the end of boot, after the command line has built `#cmdFb`.
  */
 export function installTestHook(deps: TestHookDeps): void {
   const clock = readDeskClock();
   if (!clock) return;
-  const desk = { setView: deps.setView, fixtures: deps.fixtures, test: createTestApi(clock, deps) };
+  const desk = {
+    setView: deps.setView,
+    get fixtures(): readonly Fixture[] {
+      return deps.stage.rig.fixtures;
+    },
+    ...createStageHooks(deps.stage),
+    test: createTestApi(clock, deps),
+  };
   Object.assign(window, { __desk: desk });
 }
