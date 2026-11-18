@@ -1,0 +1,18 @@
+// The builder top view (src/ui/builder/TopView.ts): one canvas that fills the view panel. The canvas draws with the
+// `--top-view-*` colours, read at draw time, so the palette stays in CSS. `touch-action: none` keeps a finger drag
+// on iPad a drag of the selection instead of a page scroll.
+.top-view {
+  --top-view-background: var(--bg);
+  --top-view-grid: #16161a;
+  --top-view-deck: var(--p3);
+  --top-view-riser: var(--line2);
+  --top-view-screen: var(--blue);
+  --top-view-truss: var(--mut);
+  --top-view-fixture: var(--txt);
+  --top-view-selected: var(--acc);
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}

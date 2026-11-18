@@ -32,4 +32,10 @@ export const builder = {
     blackBox: 'אולם שחור וסגור, בלי נוף מסביב.',
     openField: 'שטח פתוח עם קהל.',
   },
+  /** The title of a pool slot whose computed preset aims at a part this stage does not have (G10). */
+  presetMissing: {
+    ring: 'אין טבעת בבמה הזאת, ולכן הפריסט הזה לא זמין.',
+    screen: 'אין מסך לד בבמה הזאת, ולכן הפריסט הזה לא זמין.',
+    band: 'הלהקה מוסתרת בבמה הזאת, ולכן הפריסט הזה לא זמין.',
+  },
 } as const;
