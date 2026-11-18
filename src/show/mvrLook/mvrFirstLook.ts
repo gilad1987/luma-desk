@@ -6,6 +6,7 @@ import { colorByName } from '../../engine/colorByName';
 import { buildCueVals, type CueValueStep } from '../../engine/cueValues';
 import type { RigSource } from '../../engine/stage/RigSource';
 import { colorByPlaceOf } from './colorByPlace';
+import { levelSteps } from './lookLevels';
 import { lookTargetOf } from './lookTarget';
 
 /** The name of the first-look cue and of the executor that holds it; a re-import finds its own look by this name. */
@@ -20,7 +21,7 @@ const LOOK_TYPES: ReadonlySet<FixtureTypeId> = new Set(['spot', 'beam', 'wash', 
 /** The moving types whose narrow beams in haze carry the look; other moving types fill colour under them. */
 const KEY_TYPES: ReadonlySet<FixtureTypeId> = new Set(['spot', 'beam', 'profile']);
 
-/** Key beams at full: they are narrow, so even many of them leave the haze between them dark. */
+/** Key beams at full on a small rig: they are narrow, so a few dozen of them leave the haze between them dark. */
 const KEY_DIM = 100;
 /** Moving washes at 40 %: they colour the stage under the beams, but their cones do not fog the haze. */
 const WASH_DIM = 40;
@@ -43,7 +44,8 @@ const idsOf = (fixtures: readonly Fixture[]): number[] => fixtures.map((f) => f.
 /**
  * The first look an MVR import plays, designed like a rock look on a dark stage: the moving spots, beams and profiles
  * at full with the narrowest zoom, the moving washes at a moderate level, the static units as a low glow, and the
- * blinders and strobes off. Every mover is fanned at a point on the design's own deck (`lookTargetOf`), mirrored, so
+ * blinders and strobes off. On a big rig each group shares a light budget (`levelSteps`), so the stage, band and set
+ * stay readable from 10 to 500 fixtures. Every mover is fanned at a point on the design's own deck (`lookTargetOf`), mirrored, so
  * the left and right fans cross over the stage and front-of-house units light the stage. Colours mirror left and
  * right (`colorByPlaceOf`). It uses only desk attributes and colours, so the operator edits it like any cue. Returns
  * null for a rig without a look fixture. Pure: the same stage always gives the same cue.
@@ -54,11 +56,13 @@ export function buildMvrFirstLook(source: Pick<RigSource, 'rig' | 'frame'>): Cue
   const aimed = look.filter((f) => f.T.moving);
   const key = aimed.filter((f) => KEY_TYPES.has(f.type));
   const fill = look.filter((f) => !key.includes(f));
+  const washes = aimed.filter((f) => !key.includes(f));
+  const statics = look.filter((f) => !f.T.moving);
   const target = lookTargetOf(source.frame);
   const steps: CueValueStep[] = [
-    [idsOf(key), { dim: KEY_DIM }],
-    [idsOf(aimed.filter((f) => !key.includes(f))), { dim: WASH_DIM }],
-    [idsOf(look.filter((f) => !f.T.moving)), { dim: GLOW_DIM }],
+    ...levelSteps(key, KEY_DIM),
+    ...levelSteps(washes, WASH_DIM),
+    ...levelSteps(statics, GLOW_DIM),
     [idsOf(key), colorByPlaceOf(key, KEY_COLORS)],
     [idsOf(fill), colorByPlaceOf(fill, FILL_COLORS)],
     [idsOf(aimed), narrowest],

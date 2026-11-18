@@ -51,7 +51,7 @@ describe('toStageDesign hall layers and stage box', () => {
     expect(result.geometry.hallLayers).toEqual(['l2']);
     const notes = result.warnings.filter((w) => w.code === 'hidden-layers');
     expect(notes.map((w) => w.message)).toEqual([
-      'Layers hidden at the start as the venue hall (turn them on in the layer list): Layer 2.',
+      'Layers hidden at the start as the venue hall or stage drapes (turn them on in the layer list): Layer 2.',
     ]);
   });
 

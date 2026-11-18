@@ -2,7 +2,7 @@
 /**
  * MeshLibrary's parse results: a file three.js cannot parse is reported (and `MvrStage.show` passes it on), not
  * silently empty; a 3DS mesh with several
- * material groups keeps a part per group, each in the dark stage material; and a 3DS texture name is
+ * material groups keeps a part per group, each in its own colour moved into the stage range; and a 3DS texture name is
  * never fetched.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -46,10 +46,10 @@ describe('MeshLibrary', () => {
     expect(library.failures()).toEqual([]);
   });
 
-  it('gives a 3DS mesh with two material groups one part per group, both in the dark stage material', async () => {
+  it('gives a 3DS mesh with two material groups one part per group, each a dark tint of its own colour', async () => {
     const parts = await libraryOf('two.3ds', make3dsGroups([RED, BLUE])).parts('two.3ds');
-    const colours = parts.map((part) => (part.material as MeshStandardMaterial).color.getHex());
-    expect(colours).toEqual([0x17171b, 0x17171b]);
+    const [red, blue] = parts.map((part) => (part.material as MeshStandardMaterial).color);
+    expect([red && red.r > red.b, blue && blue.b > blue.r]).toEqual([true, true]);
     expect(parts.map((part) => [part.geometry.index?.count, part.geometry.getAttribute('position').count])).toEqual([
       [3, 3],
       [3, 3],
