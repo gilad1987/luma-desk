@@ -5,7 +5,7 @@
 > quirk cites its id (for example `quirk C2`), so `grep -rn "quirk C2" src` finds every place. The citation also
 > gives the original line: `// quirk A1 (orig:1689)` as a line comment, `(quirk C2, orig:1921)` inside a sentence.
 > `orig:` is a line of `tests/shared/legacy/original-index.html`, the frozen copy of `index.html@48a3b63`. The
-> service worker entries (I) are cited in `sw.ts`. `tests/unit/knownQuirks.test.ts` fails when an entry is not
+> service worker entries (I) are cited in `sw.ts`, and in `build/` as `orig:sw.js:<line>`. `tests/unit/knownQuirks.test.ts` fails when an entry is not
 > cited; it lists the entries whose code is gone, with the reason.
 
 ## Why this file exists
@@ -75,6 +75,8 @@ Groups:
 - Why kept: the refactor gives both shapes one `Executor` type. The type must allow `flashOnly` to be absent (or
   default to `false`) without a change in behavior. This entry records that the asymmetry is known.
 - Future fix: build both from one factory; give AUTO `flashOnly: false`.
+- Status: no longer in the code — one `Executor` class (`src/engine/Executor.ts`) gives every executor, AUTO
+  included, `flashOnly = false`; nothing reads it on AUTO, so the output is the same.
 
 ### A3. A cross-fade keeps a value that has no target with a check that is always true
 
@@ -234,6 +236,8 @@ Groups:
 - What it does: nothing more than `applyPreset`. The Narrow / Medium / Wide buttons of the Beam tab call it.
 - Why kept: the refactor moves code, it does not rename call paths in Phase 3-5. It is harmless.
 - Future fix: call `applyPreset` directly and delete the wrapper.
+- Status: no longer in the code — the Narrow / Medium / Wide buttons call `applyPreset` directly
+  (`src/ui/panels/encoders/extra/beamExtra.ts`); the call they make is the same.
 
 ### B2. Empty branch for position presets
 
@@ -642,6 +646,8 @@ Groups:
   so `UP3` must not be used in its place.
 - Why kept: the identity check makes merging them a behavior risk.
 - Future fix: one shared constant, and compare surfaces by a tag instead of by object identity.
+- Status: no longer in the code — one shared `UP` (`src/domain/venue.ts`) serves the rotations and the surface hits,
+  and the hit code still compares by identity with that one object.
 
 ### F3. Redundant checks in the beam hit and pool code
 
@@ -654,6 +660,8 @@ Groups:
 - What it does: `!best` is always true inside `if (!best)`; `hit` is always truthy inside `if (hit)`. No effect.
 - Why kept: no effect; keep the code shape so a reviewer can compare it line by line.
 - Future fix: delete the dead terms.
+- Status: no longer in the code — `src/render/surface/hitSurface.ts` and
+  `src/render/fixtures/sync/poolContributions.ts` leave the two terms out; they had no effect.
 
 ### F4. Comment says 3 shadow lights; the code has 4
 
@@ -668,6 +676,8 @@ Groups:
 - Why kept: the value (4) is the behavior; the comment is wrong.
 - Future fix: correct the comment when the code moves (this is a comment fix, not a behavior change, so it may be
   done in the refactor).
+- Status: no longer in the code — `src/render/lights/KeyLights.ts` keeps `SHADOW_COUNT = 4` under a comment that
+  no longer gives a count.
 
 ### F5. Turning off "Real light" switches the shadow map at runtime
 
@@ -1093,7 +1103,7 @@ Q18 = B8, Q33 = D7). All are kept for DOM and interaction parity; the panel mark
 | --- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Q1  | 267, 2151, 2157  | `.ex-sel{display:none}` is global: the SEL button is built and wired but hidden in **all** layouts.                                                                                                                                   |
 | Q2  | 1802             | `uiDirty.sel` is set but never read. Removing the flag changes nothing; keep `setSel` side effects otherwise.                                                                                                                         |
-| Q3  | 2133, 2122       | `applyPresetTo(t,n)` only calls `applyPreset` (also in plan).                                                                                                                                                                         |
+| Q3  | 2133, 2122       | `applyPresetTo(t,n)` only calls `applyPreset` (also in plan). Status: no longer in the code — see B1.                                                                                                                                 |
 | Q4  | 82, 576, 1959    | `.slot.active` style is never applied; `#grpHint` is never written; pools do not re-render on selection change.                                                                                                                       |
 | Q5  | 2911             | `F` toggles fullscreen even when a SELECT is focused, the modal is open or the tour runs (only guide and INPUT/TEXTAREA block it).                                                                                                    |
 | Q6  | 2933             | Keypad ENTER pushes history but does not reset `hi`; it pushes before the `store` check (same as 2260). Empty ENTER only clears.                                                                                                      |
@@ -1119,7 +1129,7 @@ Q18 = B8, Q33 = D7). All are kept for DOM and interaction parity; the panel mark
 | Q26 | 2290             | `#hClose` is handled by a document-level click listener, not on the button.                                                                                                                                                           |
 | Q27 | 3059–3066        | The `#maBody` wheel handler is registered in all layouts; it scrolls panes in 20 px steps (`deltaMode` lines ×20) and hands off from `#groupPool` to its pane at the ends.                                                            |
 | Q28 | 2239, 1906       | `ALL` key and `All` command use the same "not screen" filter (→ `rig.lightIds()` per plan).                                                                                                                                           |
-| Q29 | 2242             | REVERSE mutates `sel` in place, then calls `setSel([...sel])`.                                                                                                                                                                        |
+| Q29 | 2242             | REVERSE mutates `sel` in place, then calls `setSel([...sel])`. Status: no longer in the code — `Selection.reverse` sets a reversed copy; the selection is the same.                                                                   |
 | Q30 | 3010–3014        | MA special faders dispatch `input` on every move and `change` only when the value changed between pointer-down and `lostpointercapture` (or on dblclick if changed since last send).                                                  |
 | Q31 | 2183             | `Next:` text has two spaces before `(fade …)`.                                                                                                                                                                                        |
 | Q32 | 2537             | Selection chip: ids joined with spaces when < 6, else `first…last`.                                                                                                                                                                   |
