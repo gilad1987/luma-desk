@@ -10,7 +10,7 @@ import { buildVenue, type BuiltVenue, type Venue } from '../venue/Venue';
 import type { SceneryRegistry } from './SceneryRegistry';
 import { StageParts } from './StageParts';
 import type { StageSceneDeps } from './StageSceneDeps';
-import type { StageSlots } from './StageSlots';
+import { materialList, type StageSlots } from './StageSlots';
 
 /**
  * The venue around the stage, live: the frame loop and the lights hold this one object and it reads the venue built
@@ -34,11 +34,16 @@ export class StageVenue implements Venue {
     this.#isStagePart = isStagePart;
   }
 
-  /** Builds the venue of `kind`, which calls the stage slots, and puts its FOH riser in the camera views' rig. */
+  /**
+   * Builds the venue of `kind`, which calls the stage slots, and puts its FOH riser in the camera views' rig. Its
+   * materials are freed with it, also those that only the stage parts draw with.
+   */
   build(kind: VenueKind): void {
     const scene = this.#scene;
     this.#parts.capture(scene, () => (this.#built = buildVenue(scene, this.#stage, kind)), this.#isStagePart);
-    this.#fohRig.add(...this.#current().fohRig);
+    const built = this.#current();
+    this.#parts.track(...materialList(built.materials));
+    this.#fohRig.add(...built.fohRig);
   }
 
   /** Frees the current venue and builds the venue of `kind`; free the stage parts first, as they use its materials. */

@@ -1,4 +1,14 @@
-import { InstancedMesh, Line, Mesh, Points, Texture, type BufferGeometry, type Material, type Object3D } from 'three';
+import {
+  InstancedMesh,
+  Line,
+  Mesh,
+  Points,
+  ShaderMaterial,
+  Texture,
+  type BufferGeometry,
+  type Material,
+  type Object3D,
+} from 'three';
 import { Disposer, type DisposableResource } from '../shared';
 
 /** An object that draws a geometry with a material: a mesh, the sky's star points or a line. */
@@ -8,9 +18,10 @@ const isDrawable = (o: Object3D): o is Drawable => o instanceof Mesh || o instan
 
 /** The textures a material holds in its own fields (`map`, `emissiveMap`, ...) and in its shader uniforms. */
 function texturesOf(material: Material): Texture[] {
-  const uniforms = 'uniforms' in material ? Object.values(material.uniforms as Record<string, { value: unknown }>) : [];
-  const values = [...Object.values(material as unknown as Record<string, unknown>), ...uniforms.map((u) => u.value)];
-  return values.filter((v): v is Texture => v instanceof Texture);
+  const own: unknown[] = Object.values(material);
+  const uniforms =
+    material instanceof ShaderMaterial ? Object.values(material.uniforms).map((u): unknown => u.value) : [];
+  return [...own, ...uniforms].filter((v): v is Texture => v instanceof Texture);
 }
 
 /**
@@ -38,6 +49,14 @@ export class StageParts {
   /** Whether `o` is a scene child this owner recorded. */
   owns(o: Object3D): boolean {
     return this.#roots.includes(o);
+  }
+
+  /**
+   * Frees `materials` and their textures with the next {@link dispose}, also when no recorded object draws with them:
+   * the venue owns the materials of the stage parts, and the design may hide every part that uses one.
+   */
+  track(...materials: Material[]): void {
+    for (const material of materials) for (const r of [material, ...texturesOf(material)]) this.#disposer.track(r);
   }
 
   /** Takes every recorded object out of the scene and disposes what it owns, except the `shared` resources. */

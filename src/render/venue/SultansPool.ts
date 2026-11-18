@@ -33,5 +33,5 @@ export function buildSultansPool(scene: Object3D, stage: StageSlots): BuiltVenue
   const { performers, band } = buildBandArea(scene, materials, scenery);
   const crowd = buildCrowdArea(scene, TIERED_GROUND, scenery);
   stage.screens(materials);
-  return { sky, fohRig, wallFloodlight, performers, crowd, scenery, band };
+  return { sky, fohRig, wallFloodlight, performers, crowd, scenery, band, materials };
 }

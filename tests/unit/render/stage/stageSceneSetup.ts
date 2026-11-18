@@ -4,6 +4,7 @@ import type { Fixture } from '../../../../src/domain/Fixture';
 import { rigFromDesign } from '../../../../src/domain/stage/deriveRig';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { FohRig } from '../../../../src/render/camera/FohRig';
+import { StageBuild } from '../../../../src/render/stage/StageBuild';
 import { StageScene } from '../../../../src/render/stage/StageScene';
 import type { StageMaterials } from '../../../../src/render/stage/StageSlots';
 import { stubCanvasDocument } from '../stubCanvasDocument';
@@ -17,7 +18,7 @@ export function bootStageScene(design: StageDesign) {
   const visuals = { assertBuildable: vi.fn<(fixtures: readonly Fixture[]) => void>(), rebuild: vi.fn() };
   const host = { visuals, overlay: { setFixtures: vi.fn() }, screenLight: new PointLight() };
   const stage = new StageScene({ scene, surfaces, views }, design);
-  const deck = vi.spyOn(stage, 'deck');
+  const deck = vi.spyOn(StageBuild.prototype, 'deck');
   const venue = stage.buildVenue();
   const materials = deck.mock.calls[0]?.[0] as StageMaterials;
   deck.mockRestore();

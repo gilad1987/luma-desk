@@ -36,5 +36,5 @@ export function buildOpenField(scene: Object3D, stage: StageSlots): BuiltVenue {
   const { performers, band } = buildBandArea(scene, materials, scenery);
   const crowd = buildCrowdArea(scene, FLAT_GROUND, scenery);
   stage.screens(materials);
-  return { sky, fohRig: [], wallFloodlight: null, performers, crowd, scenery, band };
+  return { sky, fohRig: [], wallFloodlight: null, performers, crowd, scenery, band, materials };
 }

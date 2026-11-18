@@ -5,6 +5,7 @@ import type { StageSlots } from '../stage/StageSlots';
 import type { BandFit } from './BandFit';
 import { buildBlackBox } from './BlackBox';
 import type { CrowdBounceUniforms } from './crowdBounce';
+import type { VenueMaterials } from './materials';
 import { buildOpenField } from './OpenField';
 import type { Performer } from './performerSpec';
 import type { Sky } from './Sky';
@@ -27,6 +28,8 @@ export interface Venue {
 /** A venue as one build returns it: the handles plus the fit that moves its band with the deck. */
 export interface BuiltVenue extends Venue {
   readonly band: BandFit;
+  /** The materials the venue lends the stage parts; the venue frees them, also when the design hides those parts. */
+  readonly materials: VenueMaterials;
 }
 
 /**
