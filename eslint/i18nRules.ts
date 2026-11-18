@@ -7,7 +7,7 @@ const MESSAGE = 'Hebrew text belongs in src/i18n/he (rule I1); import it from th
 /**
  * Rule I1 (docs/rules/docs-tests.md): the locale is the one source of user text, so a copy edit touches one file and
  * `tsc` catches a missing key. Tests stay out: a spec may assert the text it reads (T26) and oracles keep the original
- * code. It is the only `no-restricted-syntax` user, so the legacy block can turn the whole rule off for src/main.ts.
+ * code.
  */
 export const i18nRules: Linter.Config[] = [
   {

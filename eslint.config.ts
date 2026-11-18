@@ -5,10 +5,8 @@ import tseslint from 'typescript-eslint';
 import { codeRules } from './eslint/codeRules.ts';
 import { i18nRules } from './eslint/i18nRules.ts';
 import { layerRules } from './eslint/layerRules.ts';
-import { legacyRules } from './eslint/legacyRules.ts';
 import { SHARED_INTERNALS } from './eslint/sharedInternals.ts';
 
-// The order matters: the legacy block must come after every block that sets a type-aware rule (see codeRules.ts).
 export default defineConfig(
   { ignores: ['dist/', 'test-results/', 'playwright-report/'] },
   {
@@ -25,6 +23,5 @@ export default defineConfig(
   codeRules,
   i18nRules,
   layerRules,
-  legacyRules,
   prettier,
 );
