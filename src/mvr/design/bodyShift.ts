@@ -2,7 +2,7 @@ import { bodyScale } from '../../domain/fixtureTypes/bodyScale';
 import type { MvrDesignInfo } from '../../domain/stage/mvr';
 import type { StageFixture } from '../../domain/stage/StageDesign';
 import type { Vec3 } from '../../domain/stage/types';
-import { mountShift, type MountDirection } from '../design/mountShift';
+import { mountShift, type MountDirection } from './mountShift';
 
 /**
  * `mountShift` for the body the desk really draws. A fixture whose GDTF gave its real size is drawn at `bodyScale`,

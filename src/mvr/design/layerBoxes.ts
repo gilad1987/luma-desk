@@ -4,7 +4,9 @@ import { isDrapePlacement } from './isDrapePlacement';
 import { isRigPlacement } from './isRigPlacement';
 import { placementBox } from './surfaces';
 
-/** The placed meshes of one `<Layer>` as one box, so a whole layer can be judged (hall, drapes or stage) and left out. */
+/**
+ * The placed meshes of one `<Layer>` as one box, so a whole layer can be judged (hall, drapes or stage) and left out.
+ */
 export interface LayerBox {
   /** The layer's uuid, the key of `design.mvr.hiddenLayers`. */
   readonly layer: string;

@@ -53,19 +53,30 @@ describe('levelSteps', () => {
   });
 });
 
-describe.each(['theatre', 'festival'] as const)('the first look on the %s template', (id) => {
+/** Pinned levels by base level, so the test does not compute its expectation with the function under test. */
+const PINNED = [
+  ['theatre', { 100: 100, 40: 40, 15: 15 }],
+  ['festival', { 100: 33, 40: 20, 15: 15 }],
+] as const;
+
+describe.each(PINNED)('the first look on the %s template', (id, levels) => {
   const design = createTemplate(id);
   const rig = rigFromDesign(design);
   const cue = buildMvrFirstLook({ rig, frame: frameOf(design) });
   const { fixtures } = rig;
 
-  it('gives each group its budget level: key 100, moving fill 40, static fill 15 on a small rig', () => {
+  it('gives each group its pinned level: key spots and beams, moving washes and bars, static fill', () => {
     for (const f of fixtures) {
       const base = baseOf(f);
-      const group = fixtures.filter((g) => baseOf(g) === base).length;
-      const want = base === undefined ? undefined : groupLevel(base, group).level;
+      const want = base === 100 || base === 40 || base === 15 ? levels[base] : undefined;
       expect(cue?.vals[f.id]?.dim, `fixture ${f.id} (${f.type})`).toBe(want);
     }
+  });
+
+  it('has the group sizes the pinned levels are for', () => {
+    const sizes = [100, 40].map((base) => fixtures.filter((f) => baseOf(f) === base).length);
+    if (id === 'festival') expect(sizes).toEqual([72, 48]);
+    else expect(sizes.every((size) => size <= LOOK_BUDGET)).toBe(true);
   });
 
   it('keeps the summed key level within the budget, so the stage is not white-hot', () => {

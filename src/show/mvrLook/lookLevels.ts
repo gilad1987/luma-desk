@@ -5,6 +5,8 @@ import type { CueValueStep } from '../../engine/cueValues';
  * Light adds up: every mover aims at the same few points on the deck (`lookTargetOf`) and the haze between the fans
  * takes the sum of every beam through it, so a level that reads on a club rig turns a big rig's stage and haze white.
  * Each group of the look therefore has a budget of this many units at its base level; a bigger group shares it.
+ * The festival template (72 key spots and beams, 48 moving washes and bars) so starts at 33, 20 and 15 for static
+ * fill; a theatre-size rig keeps 100, 40 and 15.
  */
 export const LOOK_BUDGET = 24;
 

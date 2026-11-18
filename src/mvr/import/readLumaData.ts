@@ -42,7 +42,7 @@ function readHiddenLayers(raw: object): { readonly hiddenLayers?: readonly strin
   return hiddenLayers === undefined || r.errors.length > 0 ? undefined : { hiddenLayers };
 }
 
-/** One link's footprint: channels checked like a stored show's (`parseFootprint`), spec and mode as text. */
+/** One link's footprint: channels checked like a stored show's (`parseFootprint`), size > 0, spec and mode text. */
 function readFootprint(r: Reader, parent: Raw, key: Key, at: string): LinkFootprint | undefined {
   const o = r.obj(parent, key, at);
   if (o === undefined) return undefined;
@@ -52,7 +52,9 @@ function readFootprint(r: Reader, parent: Raw, key: Key, at: string): LinkFootpr
     gdtfSpec: r.str(o, 'gdtfSpec', path),
     gdtfMode: r.str(o, 'gdtfMode', path),
   };
-  return allDefined(footprint) ? footprint : undefined;
+  const bodySize = r.optional(o, 'bodySize', path, r.positive);
+  const sized = bodySize === undefined ? {} : { bodySize };
+  return allDefined(footprint) ? { ...footprint, ...sized } : undefined;
 }
 
 /**

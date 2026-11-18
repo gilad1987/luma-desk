@@ -69,7 +69,7 @@ export function toStageDesign(input: DesignInput): DesignResult {
   if (boxes.length === 0) warn({ code: 'no-geometry', message: 'No mesh could be read; only fixtures are shown.' });
   const raw = input.fixtures.map((fixture) => pointToThree(transformPoint(fixture.record.matrix, [0, 0, 0])));
   const layers = layerBoxes(placements, input.meshBoxes);
-  const hall = hallLayers(layers, stageCore(placements, input.meshBoxes, raw), warn);
+  const { hall, hidden } = hallLayers(layers, stageCore(placements, input.meshBoxes, raw), warn);
   const fitted = fitScene({ positions: raw, meshBoxes: boxes, layers, hall }, warn, input.fixed);
   const fixtures = input.fixtures.map((fixture, index) =>
     stageFixture(fixture, ids[index] ?? index + 1, fitted.positions[index] ?? [0, 0, 0], fitted),
@@ -89,7 +89,7 @@ export function toStageDesign(input: DesignInput): DesignResult {
     risers: [],
     trusses: [],
     fixtures,
-    mvr: { ...mvrInfo(input.fixtures, ids, input.scene, fitted.offset), hiddenLayers: hall },
+    mvr: { ...mvrInfo(input.fixtures, ids, input.scene, fitted.offset), hiddenLayers: hidden },
   };
   const { offset, bounds, surfaces } = fitted;
   const geometry = { placements, offset, bounds, surfaces, layers: fitted.layers, hallLayers: hall };

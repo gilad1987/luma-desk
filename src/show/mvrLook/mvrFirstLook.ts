@@ -45,10 +45,10 @@ const idsOf = (fixtures: readonly Fixture[]): number[] => fixtures.map((f) => f.
  * The first look an MVR import plays, designed like a rock look on a dark stage: the moving spots, beams and profiles
  * at full with the narrowest zoom, the moving washes at a moderate level, the static units as a low glow, and the
  * blinders and strobes off. On a big rig each group shares a light budget (`levelSteps`), so the stage, band and set
- * stay readable from 10 to 500 fixtures. Every mover is fanned at a point on the design's own deck (`lookTargetOf`), mirrored, so
- * the left and right fans cross over the stage and front-of-house units light the stage. Colours mirror left and
- * right (`colorByPlaceOf`). It uses only desk attributes and colours, so the operator edits it like any cue. Returns
- * null for a rig without a look fixture. Pure: the same stage always gives the same cue.
+ * stay readable from 10 to 500 fixtures. Every mover is fanned at a point on the design's own deck (`lookTargetOf`),
+ * mirrored, so the left and right fans cross over the stage and front-of-house units light the stage. Colours mirror
+ * left and right (`colorByPlaceOf`). It uses only desk attributes and colours, so the operator edits it like any cue.
+ * Returns null for a rig without a look fixture. Pure: the same stage always gives the same cue.
  */
 export function buildMvrFirstLook(source: Pick<RigSource, 'rig' | 'frame'>): Cue | null {
   const look = source.rig.fixtures.filter((f) => LOOK_TYPES.has(f.type));

@@ -28,7 +28,9 @@ export function createMvrScreenMaterial(): MeshStandardMaterial {
   });
 }
 
-/** The image a scenery material draws with, when it has one. `Material` declares no `map`; each subclass has its own. */
+/**
+ * The image a scenery material draws with, when it has one. `Material` declares no `map`; each subclass has its own.
+ */
 function imageOf(material: Material): Texture | undefined {
   const map: unknown = 'map' in material ? material.map : undefined;
   return map instanceof Texture ? map : undefined;

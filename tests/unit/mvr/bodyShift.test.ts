@@ -8,9 +8,10 @@ import { BODY_SPANS } from '../../../src/domain/fixtureTypes/bodySpans.ts';
 import { MOUNT_HEIGHTS } from '../../../src/domain/fixtureTypes/mountHeights.ts';
 import type { MvrDesignInfo } from '../../../src/domain/stage/mvr.ts';
 import type { StageDesign, StageFixture } from '../../../src/domain/stage/StageDesign.ts';
+import { createTemplate } from '../../../src/domain/stage/templates/index.ts';
 import { FIXTURE_ROLES } from '../../../src/domain/stage/types.ts';
 import { mountShift } from '../../../src/mvr/design/mountShift.ts';
-import { bodyShift } from '../../../src/mvr/import/bodyShift.ts';
+import { bodyShift } from '../../../src/mvr/design/bodyShift.ts';
 import { placeBodies } from '../../../src/mvr/import/placeBodies.ts';
 
 const BEAM: StageFixture = {
@@ -22,6 +23,11 @@ const BEAM: StageFixture = {
   mount: 'hang',
 };
 const HALF_SIZE = BODY_SPANS.beam / 2;
+
+/** A full design (the theatre template) holding only `BEAM`, with the MVR facts `mvrOf(bodySize)`. */
+function designOf(bodySize?: number): StageDesign {
+  return { ...createTemplate('theatre'), fixtures: [BEAM], mvr: mvrOf(bodySize) };
+}
 
 function mvrOf(bodySize?: number): MvrDesignInfo {
   const info = { uuid: 'U7', layer: 'L1', gdtfName: 'Acme@Small Beam', gdtfMode: 'Std', type: 'beam' as const };
@@ -62,14 +68,13 @@ describe('bodyShift', () => {
 
 describe('placeBodies', () => {
   it('stores each GDTF size by fixture uuid and places the body by it', () => {
-    const design = { fixtures: [BEAM], mvr: mvrOf() } as unknown as StageDesign;
-    const placed = placeBodies(design, new Map([['U7', HALF_SIZE]]));
+    const placed = placeBodies(designOf(), new Map([['U7', HALF_SIZE]]));
     expect(placed.mvr?.fixtures['7']?.bodySize).toBe(HALF_SIZE);
     expect(placed.fixtures[0]?.position[1]).toBeCloseTo(6 - MOUNT_HEIGHTS.beam.hang / 2, 9);
   });
 
   it('leaves a design without sizes as the plain mount shift leaves it', () => {
-    const design = { fixtures: [BEAM], mvr: mvrOf() } as unknown as StageDesign;
+    const design = designOf();
     const placed = placeBodies(design);
     expect(placed.mvr).toBe(design.mvr);
     expect(placed.fixtures[0]?.position).toEqual(mountShift(BEAM, 'toBody'));

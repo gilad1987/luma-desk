@@ -3,10 +3,18 @@
  * real show save and load: the stage parser keeps only known keys, so a field it does not read is lost on reload.
  */
 import { describe, expect, it } from 'vitest';
+import type { StageDesign } from '../../../src/domain/stage/StageDesign';
 import { BAD_STAGE, importedDesign, jsonRoundTrip, stageWorld } from '../../shared';
 
 /** A complete MVR fixture entry, so only its missing fixture can reject it. */
 const ORPHAN = { uuid: 'F-9', layer: 'L-1', gdtfName: 'Spot', gdtfMode: 'Mode 1', type: 'spot' };
+
+/** The imported design with `bodySize` on its one MVR fixture entry. */
+function sized(bodySize: number): StageDesign {
+  const design = importedDesign();
+  const fixtures = Object.entries(design.mvr?.fixtures ?? {}).map(([id, info]) => [id, { ...info, bodySize }] as const);
+  return { ...design, ...(design.mvr ? { mvr: { ...design.mvr, fixtures: Object.fromEntries(fixtures) } } : {}) };
+}
 
 describe('show stage field: MVR fields', () => {
   it('a design with patch and mvr survives save -> JSON -> load deep-equal', () => {
@@ -19,6 +27,22 @@ describe('show stage field: MVR fields', () => {
     expect(world.service.design).toEqual(design);
     expect(world.json()).toBe(saved);
     expect([...source.messages, ...world.messages]).toEqual([]);
+  });
+
+  it('a GDTF body size survives save -> JSON -> load', () => {
+    const design = sized(0.42);
+    const source = stageWorld();
+    source.serializer.load({ stage: jsonRoundTrip(design) });
+    const world = stageWorld();
+    world.serializer.load(JSON.parse(source.json()));
+    expect(world.service.design.mvr?.fixtures[String(design.fixtures[0]?.id)]?.bodySize).toBe(0.42);
+    expect(world.service.design).toEqual(design);
+  });
+
+  it('a body size that is not positive rejects the stage', () => {
+    const world = stageWorld();
+    world.serializer.load({ stage: jsonRoundTrip(sized(0)) });
+    expect(world.messages).toEqual([{ kind: 'toast', text: BAD_STAGE }]);
   });
 
   it('a bad patch rejects the stage like any other bad field', () => {

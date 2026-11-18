@@ -1,8 +1,10 @@
 import type { MvrDesignInfo } from '../../domain/stage/mvr';
 import type { StageDesign } from '../../domain/stage/StageDesign';
-import { bodyShift } from './bodyShift';
+import { bodyShift } from '../design/bodyShift';
 
-/** The MVR facts with each fixture's GDTF size added, matched by fixture uuid; a fixture without a size is unchanged. */
+/**
+ * The MVR facts with each fixture's GDTF size added, matched by fixture uuid; a fixture without a size is unchanged.
+ */
 function withBodySizes(mvr: MvrDesignInfo, sizes: ReadonlyMap<string, number>): MvrDesignInfo {
   const entries = Object.entries(mvr.fixtures).map(([id, info]) => {
     const bodySize = sizes.get(info.uuid);

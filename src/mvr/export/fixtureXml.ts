@@ -1,6 +1,6 @@
 import type { DmxPatch } from '../../domain/stage/DmxPatch';
 import type { StageFixture } from '../../domain/stage/StageDesign';
-import { bodyShift } from '../import/bodyShift';
+import { bodyShift } from '../design/bodyShift';
 import { restRotation } from '../math/restRotation';
 import { toAbsoluteAddress } from '../patch/address';
 import { deskType } from './deskType';
