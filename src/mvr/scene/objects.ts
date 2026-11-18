@@ -1,6 +1,6 @@
 import { multiply, type Mat4 } from '../math/Mat4';
 import { attr, childElement } from '../xml/elements';
-import type { MeshPlacement } from './MvrScene';
+import type { MeshPlacement, MvrLayerInfo } from './MvrScene';
 import type { SymbolExpander } from './symbols';
 
 /**
@@ -10,16 +10,18 @@ import type { SymbolExpander } from './symbols';
  * `Speaker` and `SpeakerBumper`, and any tag a newer writer invents all give stage geometry the same way. `kind` is
  * the tag, so render can style kinds apart; an element without `<Geometries>` gives no placements.
  */
-export function placementsOf(el: Element, world: Mat4, layer: string, symbols: SymbolExpander): MeshPlacement[] {
+export function placementsOf(el: Element, world: Mat4, layer: MvrLayerInfo, symbols: SymbolExpander): MeshPlacement[] {
   const geometries = childElement(el, 'Geometries');
   if (!geometries) return [];
   const uuid = attr(el, 'uuid') ?? '';
   return symbols.meshesOf(geometries).map((mesh) => ({
     file: mesh.file,
     matrix: multiply(world, mesh.matrix),
-    layer,
+    layer: layer.uuid,
+    layerName: layer.name,
     kind: el.localName,
     name: attr(el, 'name') ?? '',
     uuid,
+    ...(mesh.symdef === undefined ? {} : { symdef: mesh.symdef }),
   }));
 }

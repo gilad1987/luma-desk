@@ -37,6 +37,7 @@ describe('surfaces', () => {
     file,
     matrix: mvrMatrix('{1,0,0}{0,1,0}{0,0,1}{3000,0,1000}'),
     layer: 'l',
+    layerName: 'Set',
     kind: 'SceneObject',
     name: 'Deck',
     uuid: file,

@@ -1,4 +1,6 @@
+import { mvrNameWords } from '../../i18n/he/mvrNameWords';
 import type { MeshPlacement } from './MvrScene';
+import { nameWords } from './nameWords';
 
 /** Words, in lower case, that name an LED surface: `LED Panel`, `Video Screen`, `LED-Wand`, `Videowand`, `Display`. */
 const SCREEN_WORDS: ReadonlySet<string> = new Set([
@@ -10,6 +12,7 @@ const SCREEN_WORDS: ReadonlySet<string> = new Set([
   'led',
   'ledwall',
   'ledwand',
+  ...mvrNameWords.screen,
 ]);
 
 /**
@@ -31,21 +34,32 @@ const PART_WORDS: ReadonlySet<string> = new Set([
   'cable',
 ]);
 
-/**
- * A name's words in lower case. Words break at anything but letters and digits and where an upper-case run meets a
- * capitalised word (`LEDWall` is `led`, `wall`), so letters inside a word (`Angled`) never form a word of their own.
- */
-function wordsOf(name: string): string[] {
-  return (name.match(/\p{Lu}+(?!\p{Ll})|\p{Lu}?\p{Ll}+|\d+/gu) ?? []).map((word) => word.toLowerCase());
+/** Element tags that are steel by what they are, whatever their name or layer says. */
+const STEEL_KINDS: ReadonlySet<string> = new Set(['Truss', 'Support']);
+
+/** The names the rule reads: the element tag, the object, its innermost Symdef and its layer. */
+export type ScreenNames = Pick<MeshPlacement, 'kind' | 'name' | 'layerName' | 'symdef'>;
+
+/** Whether a name says LED surface: a screen word, and no word for a part that holds the screen. */
+function namesScreen(name: string): boolean {
+  const words = nameWords(name);
+  return words.some((word) => SCREEN_WORDS.has(word)) && !words.some((word) => PART_WORDS.has(word));
+}
+
+/** Whether a name says the part holds or frames a screen. */
+function namesPart(name: string): boolean {
+  return nameWords(name).some((word) => PART_WORDS.has(word));
 }
 
 /**
  * Whether a placement draws as an emissive LED screen rather than as scenery. MVR has a `<VideoScreen>` element, but
- * writers often export an LED wall as a plain `SceneObject` and say what it is only in its name, so a name with a
- * screen word counts too, unless another word says it is a part that holds or frames the screen.
+ * writers often export an LED wall as a plain `SceneObject` and say what it is only in its own name, its Symdef's
+ * name or its layer's name, so a screen word in any of them counts too. The object itself has the last word: a truss
+ * or support, or an object or Symdef named as a part that holds or frames a screen, stays steel even on an LED layer.
  */
-export function isScreenPlacement(placement: Pick<MeshPlacement, 'kind' | 'name'>): boolean {
+export function isScreenPlacement(placement: ScreenNames): boolean {
   if (placement.kind === 'VideoScreen') return true;
-  const words = wordsOf(placement.name);
-  return words.some((word) => SCREEN_WORDS.has(word)) && !words.some((word) => PART_WORDS.has(word));
+  const { name, symdef = '', layerName } = placement;
+  if (STEEL_KINDS.has(placement.kind) || namesPart(name) || namesPart(symdef)) return false;
+  return [name, symdef, layerName].some(namesScreen);
 }

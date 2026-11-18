@@ -6,7 +6,7 @@ import { makeFixtureRecord, makeScene, mvrMatrix } from '../../shared/index.ts';
 
 /** A 10 m x 10 m x 1 m deck mesh, centred on the MVR origin. */
 const DECK_MESH = new Map([['deck.3ds', { min: [-5000, -5000, 0], max: [5000, 5000, 1000] } as const]]);
-const DECK = { file: 'deck.3ds', layer: 'l1', kind: 'SceneObject', name: 'Deck', uuid: 'd' };
+const DECK = { file: 'deck.3ds', layer: 'l1', layerName: 'Rig', kind: 'SceneObject', name: 'Deck', uuid: 'd' };
 const PLACEMENT = { ...DECK, matrix: mvrMatrix(undefined) };
 const UPSIDE_DOWN = '{1,0,0}{0,-1,0}{0,0,-1}';
 
