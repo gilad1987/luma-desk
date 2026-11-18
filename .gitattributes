@@ -1,0 +1,2 @@
+# The frozen original page is a byte-exact oracle (48a3b63:index.html): never convert its line endings on checkout.
+tests/shared/legacy/original-index.html -text
