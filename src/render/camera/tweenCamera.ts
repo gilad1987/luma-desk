@@ -18,11 +18,14 @@ function smoothstep01(k: number): number {
 /**
  * Moves the camera and the orbit target from one pose to another over 700 ms on its own requestAnimationFrame
  * chain. It reads `performance.now()` directly, as the legacy code did, so the `?test` time freeze still applies.
- * The first step runs at once; a new tween does not cancel a running one (legacy behaviour).
+ * The first step runs at once. Returns a stop function: the caller stops a running tween before it moves the camera
+ * again, so two moves never fight over the pose (a stage rebuild's refit, then a view button within 700 ms).
  */
-export function tweenCamera(camera: Camera, orbitTarget: Vector3, from: CameraPose, to: CameraPose): void {
+export function tweenCamera(camera: Camera, orbitTarget: Vector3, from: CameraPose, to: CameraPose): () => void {
   const start = performance.now();
+  let isStopped = false;
   const step = (): void => {
+    if (isStopped) return;
     const k = clamp((performance.now() - start) / TWEEN_MS, 0, 1);
     const eased = smoothstep01(k);
     camera.position.lerpVectors(from.position, to.position, eased);
@@ -30,4 +33,7 @@ export function tweenCamera(camera: Camera, orbitTarget: Vector3, from: CameraPo
     if (k < 1) requestAnimationFrame(step);
   };
   step();
+  return () => {
+    isStopped = true;
+  };
 }

@@ -28,6 +28,8 @@ export class CameraViews {
   private current: ViewName = 'foh';
   /** The views `setView` moves to: the built-in table, or a copy fitted by `fitTo`. */
   private views: ViewTable = VIEWS;
+  /** Stops the running view tween; every `setView` calls it first, so the latest view wins. */
+  private stopTween: () => void = () => {};
 
   constructor(canvas: HTMLCanvasElement, options: CameraViewsOptions) {
     this.options = options;
@@ -58,9 +60,10 @@ export class CameraViews {
 
   /**
    * Moves to a named view, at once or with a 700 ms tween. Only the animated path reports the change, as in the
-   * legacy code where the instant path returned before the button update.
+   * legacy code where the instant path returned before the button update. It stops a running tween first.
    */
   setView(view: ViewName, isInstant = false): void {
+    this.stopTween();
     const ma = view === 'foh' && this.options.isMaLayout();
     const next: CameraView = this.views[ma ? 'fohMa' : view];
     this.current = view;
@@ -75,7 +78,7 @@ export class CameraViews {
       this.controls.update();
       return;
     }
-    tweenCamera(this.camera, this.controls.target, from, to);
+    this.stopTween = tweenCamera(this.camera, this.controls.target, from, to);
     this.options.onViewChanged(view);
   }
 }
