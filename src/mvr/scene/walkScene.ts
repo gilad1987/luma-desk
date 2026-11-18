@@ -25,10 +25,10 @@ interface Walk {
   readonly warnings: MvrWarning[];
 }
 
-/** Where an element sits: its parent's world matrix, its layer uuid and how many `<ChildList>`s enclose it. */
+/** Where an element sits: its parent's world matrix, its layer and how many `<ChildList>`s enclose it. */
 interface Frame {
   readonly parent: Mat4;
-  readonly layer: string;
+  readonly layer: MvrLayerInfo;
   readonly depth: number;
 }
 
@@ -38,7 +38,7 @@ interface Frame {
  */
 function walkElement(el: Element, frame: Frame, walk: Walk): void {
   const world = multiply(frame.parent, localMatrix(el, walk.bad));
-  if (el.localName === 'Fixture') walk.fixtures.push(readFixture(el, world, frame.layer));
+  if (el.localName === 'Fixture') walk.fixtures.push(readFixture(el, world, frame.layer.uuid));
   if (el.localName === 'FocusPoint') walk.focusPoints.set(attr(el, 'uuid') ?? '', world);
   else addPlacements(placementsOf(el, world, frame.layer, walk.symbols), walk);
   walkChildren(el, { parent: world, layer: frame.layer, depth: frame.depth + 1 }, walk);
@@ -81,9 +81,9 @@ export function walkScene(doc: Document): MvrScene {
   const layers: MvrLayerInfo[] = [];
   const layerList = childElement(scene, 'Layers');
   for (const layer of layerList ? childElements(layerList, 'Layer') : []) {
-    const uuid = attr(layer, 'uuid') ?? '';
-    layers.push({ uuid, name: attr(layer, 'name') ?? '' });
-    walkChildren(layer, { parent: localMatrix(layer, bad), layer: uuid, depth: 0 }, walk);
+    const info = { uuid: attr(layer, 'uuid') ?? '', name: attr(layer, 'name') ?? '' };
+    layers.push(info);
+    walkChildren(layer, { parent: localMatrix(layer, bad), layer: info, depth: 0 }, walk);
   }
   const { fixtures, placements, focusPoints } = walk;
   return { layers, fixtures, placements, focusPoints, warnings };

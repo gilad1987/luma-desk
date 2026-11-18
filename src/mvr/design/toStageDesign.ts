@@ -10,7 +10,10 @@ import { assignRole, mountOf } from './assignRole';
 import { bodyRotation } from './bodyRotation';
 import type { DesignInput, ResolvedFixture } from './DesignInput';
 import { fitScene, type FittedScene } from './fitScene';
+import { hallLayers } from './hallLayers';
+import { layerBoxes } from './layerBoxes';
 import { mvrInfo } from './mvrInfo';
+import { stageCore } from './stageCore';
 import { placementBoxes } from './surfaces';
 
 /** All scenery off: the file brings its own stage, and the venue's deck, trusses and band would stand in it. */
@@ -60,10 +63,13 @@ export function toStageDesign(input: DesignInput): DesignResult {
     input.fixtures.map((fixture) => fixture.record),
     warn,
   );
-  const boxes = placementBoxes(input.scene.placements, input.meshBoxes);
+  const { placements } = input.scene;
+  const boxes = placementBoxes(placements, input.meshBoxes);
   if (boxes.length === 0) warn({ code: 'no-geometry', message: 'No mesh could be read; only fixtures are shown.' });
   const raw = input.fixtures.map((fixture) => pointToThree(transformPoint(fixture.record.matrix, [0, 0, 0])));
-  const fitted = fitScene(raw, boxes, warn, input.fixed);
+  const layers = layerBoxes(placements, input.meshBoxes);
+  const hall = hallLayers(layers, stageCore(placements, input.meshBoxes, raw), warn);
+  const fitted = fitScene({ positions: raw, meshBoxes: boxes, layers, hall }, warn, input.fixed);
   const fixtures = input.fixtures.map((fixture, index) =>
     stageFixture(fixture, ids[index] ?? index + 1, fitted.positions[index] ?? [0, 0, 0], fitted),
   );
@@ -82,8 +88,9 @@ export function toStageDesign(input: DesignInput): DesignResult {
     risers: [],
     trusses: [],
     fixtures,
-    mvr: mvrInfo(input.fixtures, ids, input.scene, fitted.offset),
+    mvr: { ...mvrInfo(input.fixtures, ids, input.scene, fitted.offset), hiddenLayers: hall },
   };
   const { offset, bounds, surfaces } = fitted;
-  return { design, geometry: { placements: input.scene.placements, offset, bounds, surfaces }, warnings };
+  const geometry = { placements, offset, bounds, surfaces, layers: fitted.layers, hallLayers: hall };
+  return { design, geometry, warnings };
 }

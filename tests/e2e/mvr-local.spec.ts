@@ -18,21 +18,17 @@ import {
  */
 test.describe.configure({ mode: 'default', timeout: 300_000 });
 
-/** A known defect of one sample file: the summary warning the import gives for it, and the console errors it causes. */
+/** A known defect of one sample file: the summary warning the import gives for it. */
 interface KnownIssue {
   readonly warning: RegExp;
-  readonly errors: RegExp;
 }
 
 /**
- * Demostage_MVR's glTF mesh names a texture its archive lacks: the import warns, and three.js logs the failed texture
- * load once per import. Any other console error fails its sample.
+ * Demostage_MVR's glTF mesh names a texture its archive lacks: the import warns once, and the mesh draws without the
+ * texture and without a console error. Any console error fails its sample.
  */
 const KNOWN_ISSUES: Readonly<Record<string, KnownIssue>> = {
-  'Demostage_MVR.mvr': {
-    warning: /need "vsBlkSatinTexture\.png", which is not in the archive/,
-    errors: /^console: THREE\.GLTFLoader: Couldn't load texture vsBlkSatinTexture\.png$/,
-  },
+  'Demostage_MVR.mvr': { warning: /need "vsBlkSatinTexture\.png", which is not in the archive/ },
 };
 
 test.beforeEach(() => {
@@ -58,6 +54,6 @@ for (const name of sampleFiles()) {
     const reimported = await readMvrStage(desk);
     expect(reimported.fixtureCount).toBe(imported.fixtureCount);
     expectPatchesKept(imported.patches, reimported.patches);
-    expect(errors.filter((error) => !known?.errors.test(error))).toEqual([]);
+    expect(errors).toEqual([]);
   });
 }

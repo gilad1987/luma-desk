@@ -1,15 +1,9 @@
 import { Matrix4, Texture, type Material } from 'three';
-import type { GLTFLoaderPlugin } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { meshFormatOf, mvrToThreeMatrix } from '../../mvr/index';
+import { archiveTexturePlugin } from './archiveTexturePlugin';
 import type { MeshPart } from './MeshPart';
 import { meshPartsOf } from './meshPartsOf';
 import { OfflineLoadingManager } from './OfflineLoadingManager';
-
-/**
- * The plugin GLTFLoader gets back from the callback that reads its parser's texture loader. GLTFLoader needs a name
- * for every plugin (the types omit it); this one handles no extension.
- */
-const DECODE_PLUGIN: GLTFLoaderPlugin & { readonly name: string } = { name: 'luma_archive_texture_decode' };
 
 /**
  * Drops the texture maps of a 3DS material. They name image files the archive does not hand to render, so they never
@@ -25,15 +19,12 @@ function removeTextures(material: Material): void {
 }
 
 /**
- * Parses a GLB; the files it names load through `manager`. The parser picks how this browser decodes images before
- * it loads one, and `manager` decodes the archive images the same way.
+ * Parses a GLB; the files it names load through `manager`, and a texture whose file the archive lacks is skipped
+ * (`archiveTexturePlugin`).
  */
 async function parseGlb(buffer: ArrayBuffer, manager: OfflineLoadingManager): Promise<MeshPart[]> {
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
-  const loader = new GLTFLoader(manager).register((parser) => {
-    manager.decodeLike(parser.textureLoader);
-    return DECODE_PLUGIN;
-  });
+  const loader = new GLTFLoader(manager).register((parser) => archiveTexturePlugin(parser, manager));
   const gltf = await loader.parseAsync(buffer, '');
   return meshPartsOf(gltf.scene, new Matrix4());
 }

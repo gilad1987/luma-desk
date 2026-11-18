@@ -1,5 +1,6 @@
 import type { StageDesign } from '../domain/stage/StageDesign';
 import type { StageBounds, SurfaceBox, Vec3 } from '../domain/stage/types';
+import type { LayerBox } from './design/layerBoxes';
 import type { MeshPlacement } from './scene/MvrScene';
 import type { MvrWarning } from './MvrWarning';
 
@@ -16,6 +17,10 @@ export interface MvrGeometry {
   readonly bounds: StageBounds;
   /** Top faces of the placed meshes in the fitted world frame, where beams land. */
   readonly surfaces: readonly SurfaceBox[];
+  /** One mesh box per layer in the fitted world frame, so `stageBox` can be recomputed when the user toggles layers. */
+  readonly layers: readonly LayerBox[];
+  /** Uuids of the layers the import judged the venue hall; `stageBox` leaves them out even when they are shown. */
+  readonly hallLayers: readonly string[];
 }
 
 /** The counts the import summary shows, so the user sees at once what came in and what is missing. */

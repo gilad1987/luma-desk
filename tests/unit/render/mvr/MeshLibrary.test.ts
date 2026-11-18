@@ -2,10 +2,11 @@
 /**
  * MeshLibrary's parse results: a file three.js cannot parse is reported (and `MvrStage.show` passes it on), not
  * silently empty; a 3DS mesh with several
- * material groups keeps a part per group in that group's colour; and a 3DS texture name is never fetched.
+ * material groups keeps a part per group, each in the dark stage material; and a 3DS texture name is
+ * never fetched.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { MeshPhongMaterial } from 'three';
+import type { MeshStandardMaterial } from 'three';
 import { importMvr } from '../../../../src/mvr/index.ts';
 import { MeshLibrary } from '../../../../src/render/mvr/MeshLibrary.ts';
 import { MvrStage } from '../../../../src/render/mvr/MvrStage.ts';
@@ -45,10 +46,10 @@ describe('MeshLibrary', () => {
     expect(library.failures()).toEqual([]);
   });
 
-  it('gives a 3DS mesh with two material groups one part per group, in its own colour', async () => {
+  it('gives a 3DS mesh with two material groups one part per group, both in the dark stage material', async () => {
     const parts = await libraryOf('two.3ds', make3dsGroups([RED, BLUE])).parts('two.3ds');
-    const colours = parts.map((part) => (part.material as MeshPhongMaterial).color.getHexString());
-    expect(colours).toEqual(['ff0000', '0000ff']);
+    const colours = parts.map((part) => (part.material as MeshStandardMaterial).color.getHex());
+    expect(colours).toEqual([0x17171b, 0x17171b]);
     expect(parts.map((part) => [part.geometry.index?.count, part.geometry.getAttribute('position').count])).toEqual([
       [3, 3],
       [3, 3],
@@ -65,6 +66,6 @@ describe('MeshLibrary', () => {
     const textured = { ...RED, texture: 'wood.jpg' };
     const parts = await libraryOf('wood.3ds', make3dsGroups([textured, BLUE])).parts('wood.3ds');
     expect(sources.filter((url) => !/^(blob|data):/.test(url))).toEqual([]);
-    expect(parts.map((part) => (part.material as MeshPhongMaterial).map)).toEqual([null, null]);
+    expect(parts.map((part) => (part.material as MeshStandardMaterial).map)).toEqual([null, null]);
   });
 });
