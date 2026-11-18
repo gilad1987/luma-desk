@@ -24,6 +24,9 @@ function importedDesign(): StageDesign {
   return { ...theatre, fixtures, mvr };
 }
 
+/** A complete MVR fixture entry, so only its missing fixture can reject it. */
+const ORPHAN = { uuid: 'F-9', layer: 'L-1', gdtfName: 'Spot', gdtfMode: 'Mode 1', type: 'spot' };
+
 describe('show stage field: MVR fields', () => {
   it('a design with patch and mvr survives save -> JSON -> load deep-equal', () => {
     const design = importedDesign();
@@ -41,6 +44,18 @@ describe('show stage field: MVR fields', () => {
     const design = importedDesign();
     const [first, ...rest] = design.fixtures;
     const bad = { ...design, fixtures: [{ ...first, patch: { universe: 0, address: 1, mode: 'x' } }, ...rest] };
+    const world = stageWorld();
+    world.serializer.load({ stage: jsonRoundTrip(bad) });
+    expect(world.service.isBuiltIn).toBe(true);
+    expect(world.messages).toEqual([{ kind: 'toast', text: BAD_STAGE }]);
+  });
+
+  it.each([
+    ['a short offset', { offset: [0, 0] }],
+    ['an entry for a fixture the design does not have', { fixtures: { '9999': ORPHAN } }],
+  ])('a bad mvr block (%s) rejects the stage', (_, change) => {
+    const design = importedDesign();
+    const bad = { ...design, mvr: { ...design.mvr, ...change } };
     const world = stageWorld();
     world.serializer.load({ stage: jsonRoundTrip(bad) });
     expect(world.service.isBuiltIn).toBe(true);

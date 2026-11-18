@@ -15,10 +15,17 @@ import * as items from '../../../../../src/domain/stage/edit/itemOps.ts';
 import { setLedWall } from '../../../../../src/domain/stage/edit/ledWall.ts';
 import { mirrorLeftToRight } from '../../../../../src/domain/stage/edit/mirror.ts';
 import { addPresetTruss, moveTruss, setTrussProps } from '../../../../../src/domain/stage/edit/trussOps.ts';
+import type { MvrDesignInfo } from '../../../../../src/domain/stage/mvr.ts';
 import type { StageDesign } from '../../../../../src/domain/stage/StageDesign.ts';
 import { sampleDesign } from './sampleDesign.ts';
 
-const mvr = { layers: ['Layer 1'], hiddenLayers: [] };
+/** A real `mvr` block with no fixture entries, so the delete ops, which drop the entries of deleted fixtures, keep it. */
+const mvr: MvrDesignInfo = {
+  fixtures: {},
+  layers: [{ uuid: 'L-1', name: 'Layer 1' }],
+  hiddenLayers: [],
+  offset: [0, 0, 0],
+};
 
 const OPS: readonly (readonly [string, (d: StageDesign) => StageDesign])[] = [
   ['addFixturesOnTruss', (d) => addFixturesOnTruss(d, { trussId: 'pipe-1', type: 'spot', count: 3 })],

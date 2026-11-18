@@ -5,6 +5,7 @@ import { newTrussId } from './ids';
 import { patchedFixtures } from './patchedFixtures';
 import { isSameData } from '../sameData';
 import { moveTruss, shiftFixture } from './trussOps';
+import { withoutFixtures } from './withoutFixtures';
 
 /** The fixture fields the property panel edits; the id stays, because groups and cues point at it. */
 export type FixturePatch = Partial<Omit<StageFixture, 'id'>>;
@@ -42,8 +43,7 @@ export function duplicateTruss(d: StageDesign, trussId: string): StageDesign {
 export function deleteFixtures(d: StageDesign, ids: readonly number[]): StageDesign {
   const gone = new Set(ids);
   if (!d.fixtures.some((f) => gone.has(f.id))) return d;
-  const screens = d.screens.filter((s) => !gone.has(s.fixtureId));
-  return { ...d, screens, fixtures: d.fixtures.filter((f) => !gone.has(f.id)) };
+  return { ...withoutFixtures(d, gone), screens: d.screens.filter((s) => !gone.has(s.fixtureId)) };
 }
 
 /**

@@ -1,6 +1,7 @@
 /**
  * Owns the key handling of `parseStageDesign`: unknown keys are dropped at every level, so a later optional field (as
- * MVR `patch` and `mvr` were) is additive, and an absent optional field stays absent, so the design is exactOptionalPropertyTypes-safe.
+ * MVR `patch` and `mvr` were) is additive, and an absent optional field stays absent, so the design is
+ * exactOptionalPropertyTypes-safe.
  */
 import { describe, expect, it } from 'vitest';
 import { parseStageDesign } from '../../../../src/domain/stage/parse/parseStageDesign.ts';

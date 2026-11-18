@@ -46,6 +46,15 @@ const FORBIDDEN_THREE: Partial<Record<Layer, readonly (typeof THREE_ADDONS)[]>> 
 const MAX_DEPTH = 6;
 
 /**
+ * The exact rules see a layer only in the shortest relative path, so a longer form of the same path is refused:
+ * `./../`, a folder step undone by `..`, an empty or `.` step, or a climb out of `src/` and back in.
+ */
+const SHORTEST_PATH = {
+  regex: '^\\./\\.\\.|/\\.?/|(^|/)[^./][^/]*/\\.\\.(/|$)|^(\\.\\./)+src/',
+  message: 'Write the shortest relative path, so the layer rule can see it.',
+};
+
+/**
  * Rules for the files of one layer that sit `depth` folders below `src/`. An import string does not say which folder
  * it reaches, but a file at a known depth reaches `src/` with exactly `depth` `../` steps. So only `../../mvr` from
  * `src/domain/stage/x.ts` is the mvr layer; `./stage/mvr` and `../domain/stage/mvr` are files inside a layer.
@@ -64,7 +73,7 @@ function depthRules(layer: Layer, forbidden: readonly Layer[], depth: number): L
     rules: {
       'no-restricted-imports': [
         'error',
-        { patterns: [SHARED_INTERNALS, ...layers, ...(FORBIDDEN_THREE[layer] ?? [])] },
+        { patterns: [SHARED_INTERNALS, SHORTEST_PATH, ...layers, ...(FORBIDDEN_THREE[layer] ?? [])] },
       ],
     },
   };

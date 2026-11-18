@@ -4,6 +4,7 @@ import { type DeckSize, setSceneryPart } from './deckOps';
 import { nextIdBlock } from './ids';
 import { checkSizes } from './inputChecks';
 import { isSameLength } from '../sameData';
+import { withoutFixtures } from './withoutFixtures';
 
 /** LED wall size in metres: `width` along x, `height` from the deck top. */
 export type WallSize = Pick<DeckSize, 'width' | 'height'>;
@@ -30,7 +31,7 @@ export function setLedWall(d: StageDesign, size: WallSize | null): StageDesign {
 }
 
 function removeWall(d: StageDesign, wall: StageScreen): StageDesign {
-  return { ...d, screens: d.screens.slice(1), fixtures: d.fixtures.filter((f) => f.id !== wall.fixtureId) };
+  return { ...withoutFixtures(d, new Set([wall.fixtureId])), screens: d.screens.slice(1) };
 }
 
 function resizeWall(d: StageDesign, wall: StageScreen, size: WallSize): StageDesign {

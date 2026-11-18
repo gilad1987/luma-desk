@@ -4,7 +4,7 @@
  * itemOps.test.ts and mirror.test.ts.
  */
 import { describe, expect, it } from 'vitest';
-import { duplicateFixtures } from '../../../../../src/domain/stage/edit/itemOps.ts';
+import { duplicateFixtures, duplicateTruss } from '../../../../../src/domain/stage/edit/itemOps.ts';
 import { mirrorLeftToRight } from '../../../../../src/domain/stage/edit/mirror.ts';
 import type { StageDesign } from '../../../../../src/domain/stage/StageDesign.ts';
 import { sampleDesign } from './sampleDesign.ts';
@@ -29,6 +29,13 @@ describe('appendCopies drops the DMX patch', () => {
     expect(added.length).toBeGreaterThan(0);
     expect(added.filter(([, patched]) => patched)).toEqual([]);
     expect(next.fixtures.slice(0, d.fixtures.length)).toEqual(d.fixtures);
+  });
+
+  it('truss duplicate gives the copied fixtures no patch', () => {
+    const d = patchedDesign();
+    const added = addedPatches(d, duplicateTruss(d, 'pipe-1'));
+    expect(added.length).toBeGreaterThan(0);
+    expect(added.filter(([, patched]) => patched)).toEqual([]);
   });
 
   it('mirror gives the copies no patch', () => {

@@ -1,3 +1,4 @@
+import type { MvrDesignInfo } from '../mvr';
 import { STAGE_DESIGN_VERSION, type StageDesign } from '../StageDesign';
 import { SOURCE_KINDS, VENUE_KINDS, type SceneryPart, type StageSource } from '../types';
 import { parseDeck, parseRisers } from './parseDeck';
@@ -15,8 +16,8 @@ export type StageParseResult =
 /**
  * Checks a stored stage (the show's `stage` key) before the rig is built from it, so a hand-edited or corrupt show
  * falls back to the built-in stage instead of breaking the rig. It collects every error instead of throwing, keeps
- * only known keys (a later optional field such as MVR `patch` or `mvr` is therefore additive), normalizes rotations and fills
- * a missing scenery part with `true` (G3). An unknown version stops the read, as its fields may mean something else.
+ * only known keys, so a new optional field is additive, normalizes rotations and fills a missing scenery part with
+ * `true` (G3). An unknown version stops the read, as its fields may mean something else.
  */
 export function parseStageDesign(raw: unknown): StageParseResult {
   const r = new Reader();
@@ -35,9 +36,22 @@ export function parseStageDesign(raw: unknown): StageParseResult {
     risers: parseRisers(r, o),
   };
   const mvr = r.optional(o, 'mvr', '', (c, k, p) => parseMvrInfo(r, c, k, p));
+  if (mvr) checkMvrFixtureIds(r, mvr, parsed.ids);
   if (!allDefined(design) || r.errors.length > 0) return { ok: false, errors: r.errors };
   const mvrField = mvr === undefined ? {} : { mvr };
   return { ok: true, design: { v: STAGE_DESIGN_VERSION, ...design, trusses, fixtures: parsed.fixtures, ...mvrField } };
+}
+
+/**
+ * Each `mvr.fixtures` key must be the id of a fixture in the design, as a fixture's `trussId` must name a truss. Ids
+ * are given out again after a delete, so an entry without its fixture would hand its MVR uuid and GDTF name to a
+ * later fixture. `ids` holds fixtures that failed on another field too, so they get no second error.
+ */
+function checkMvrFixtureIds(r: Reader, mvr: MvrDesignInfo, ids: ReadonlySet<number>): void {
+  const at = r.path(r.path('', 'mvr'), 'fixtures');
+  for (const key of Object.keys(mvr.fixtures)) {
+    if (!ids.has(Number(key))) r.fail(r.path(at, key), `no fixture has id ${key}`);
+  }
 }
 
 function parseSource(r: Reader, stage: Raw): StageSource | undefined {
