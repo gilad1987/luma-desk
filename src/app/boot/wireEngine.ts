@@ -53,7 +53,8 @@ function createStage(bus: EngineBus): StageService {
 /**
  * Builds the stage and the engine in the legacy order. It creates no three.js object and draws no random number, so
  * it may run before the scene without moving any seeded uuid (decision 24). The bus is synchronous, so construction
- * order is the `rigChanged` delivery order (plan §3.2): selection prune, group pool, notice reset.
+ * order is the `rigChanged` delivery order (plan §3.2): selection prune, group pool, notice reset, then the programmer
+ * prune (built last, in `wireProgrammer`).
  */
 export function wireEngine(): EngineHandles {
   const bus = new EventBus<EngineEvents>();

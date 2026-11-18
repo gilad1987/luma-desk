@@ -11,6 +11,7 @@ import type { Selection } from '../Selection';
  * clock, and so the programmer never reaches the UI: it reports only through `bus`.
  */
 export interface ProgrammerDeps {
+  /** Read at call time: the app passes a live getter on the stage, so after `rigChanged` it is the new rig. */
   readonly rig: Rig;
   /** Most operations act on the selected fixtures, in selection order. */
   readonly selection: Selection;
