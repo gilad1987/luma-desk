@@ -949,8 +949,9 @@ The refactor keeps this logic (see ADR 0003). Only the shell list and the cache 
 
 Strict types (`noUncheckedIndexedAccess`) make every indexed read handle the missing case. Where the original read
 `undefined` and then crashed with a `TypeError` somewhere else, the new code throws a `RangeError` at the read, with
-a message that names the bad value. These are the only behavior changes the refactor accepts: each path is either
-unreachable from the UI or crashed in the original too.
+a message that names the bad value. J4 to J6 change other details of a path that fails: J5 removes a data loss on
+a failed import, J6 changes an error text. These are the only behavior changes the refactor accepts: each path is
+either unreachable from the UI or crashed in the original too.
 
 ### J1. `hsv` throws a `RangeError` for a hue that is not finite
 
@@ -992,6 +993,44 @@ unreachable from the UI or crashed in the original too.
   (fewer than 3 bytes) still reads the missing bytes as `NaN`, as before (`src/io/midiMessage.ts`).
 - Why kept: the original only crashed on this path; a real device always sends data.
 - Pinned by: `tests/unit/io/Midi.test.ts` ("ignores a message whose data is null and does not throw (quirk)").
+
+### J5. A failed import no longer drops the user's presets
+
+- Source: `index.html:2301` (`presets = defaultPresets()`), `2304` (the copy loop that throws), caught at `2320`
+  and `2321` (`toast('Invalid JSON')`, `toast('Invalid file')`)
+- Code:
+  <!-- prettier-ignore -->
+  ```js
+  groups = d.groups || defaultGroups(); presets = defaultPresets(); // 2301
+  for (const t in d.presets || {}) for (const s in d.presets[t]) presets[t][s] = d.presets[t][s]; // 2304
+  ```
+- Lives in: `src/show/ShowSerializer.ts:62` (`load`: `presets.replace(withSavedPresets(defaultPresets(), d.presets))`),
+  `src/show/savedPresets.ts` (`withSavedPresets` throws `Unknown preset pool ...`)
+- What it does: a show whose `presets` has a slot in a pool number the desk does not have throws at 2304. The
+  original had already reset the presets to the defaults at 2301, so the import failed and the user's own presets
+  were gone too; the next save stored the loss. The new code builds the presets first and replaces them only when
+  the build succeeds, so a failed import keeps the user's presets. The groups are still replaced before the throw,
+  as at 2301, and the executors stay as they were, as before.
+- Accepted change: the import fails in both versions; only the data loss on that failure is gone. It is fixed on
+  purpose, and no golden covers it.
+- Pinned by: `tests/unit/show/showSerializer.test.ts` ("quirk J5: a preset pool the desk lacks throws, keeps the
+  presets and executors, replaces the groups (accepted change)").
+
+### J6. `Pause` on a fractional executor names `pause`, not `fade`, in its error
+
+- Source: `index.html:1920` (`selExec = clamp(num() - 1, 0, 9)`, no rounding), `1924`
+  (`execPause(execs[selExec])`), `1640` (`execPause` reads `e.fade` first)
+- Lives in: `src/command/run/runPlayback.ts:30` (`runPause`: `executorAt(..., 'reading', 'pause')`)
+- What it does: `Exec 2.5` selects index 1.5, which has no executor. A following `Pause` failed in the original
+  with `Cannot read properties of undefined (reading 'fade')`, because `execPause` read `e.fade`. The new code
+  logs `Cannot read properties of undefined (reading 'pause')`, the call it makes on the missing executor.
+- Accepted change: the error text differs. Both versions fail the command, change no state and show a red line in
+  the command feedback. The change is accepted because this path only crashes, on an executor index that is not
+  valid. C7 keeps the original text for `Go`, `Off` and `Label Exec`; this `Pause` text is the one case that C7
+  does not cover.
+- Pinned by: `tests/unit/command/CommandRunner.test.ts` ("quirk J6: Pause on a fractional executor logs (reading
+  'pause') (accepted change)").
+- Future fix: goes with C2 (validate the executor number, and round or reject a fraction, in the parser).
 
 ## K. Test mode (`?test`)
 

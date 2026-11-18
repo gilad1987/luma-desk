@@ -24,6 +24,15 @@ describe('CommandRunner', () => {
     expect(world.run('Store Exec 20').log).toEqual([['er', 'No such executor']]);
   });
 
+  // known quirk J6: the original failed in execPause with (reading 'fade'); see docs/known-quirks.md
+  it("quirk J6: Pause on a fractional executor logs (reading 'pause') (accepted change)", () => {
+    const world = commandWorld();
+    expect(world.run('Exec 2.5').log).toEqual([['ok', 'Exec 2.5 selected']]);
+    expect(world.run('Pause').log).toEqual([
+      ['er', "TypeError: Cannot read properties of undefined (reading 'pause')"],
+    ]);
+  });
+
   it('clamps Exec n and lets a later Store in the same line use the newly selected executor', () => {
     const world = commandWorld();
     expect(world.run('Exec 99').log).toEqual([['ok', 'Exec 10 selected']]);

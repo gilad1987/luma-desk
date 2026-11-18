@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="icons/icon-192.png" width="96" alt="LUMA DESK icon">
+<img src="public/icons/icon-192.png" width="96" alt="LUMA DESK icon">
 
 # LUMA DESK
 
@@ -8,7 +8,7 @@
 
 ### [▶ Open the app](https://gilad1987.github.io/luma-desk/)
 
-No install and no build step. Works offline once loaded, and can be installed as an app on desktop or iPad.
+No install needed to use it. Works offline once loaded, and can be installed as an app on desktop or iPad.
 
 ![LUMA DESK: console and 3D stage](docs/screenshots/hero.png)
 
@@ -161,13 +161,29 @@ orchestrator approves them.
 
 `.github/workflows/deploy.yml` checks every pull request and deploys `main` to GitHub Pages
 ([ADR 0004](docs/adr/0004-actions-deploy.md)). The Pages source changes from the `gh-pages` branch to the workflow
-once, after the refactor is merged, and only with the owner's approval:
+once, after the refactor is merged, and only with the owner's approval. Run the steps in this order. Step 1 is
+needed because the `github-pages` environment allows only the `gh-pages` branch, so a deploy from `main` is rejected
+until `main` is added.
 
 ```bash
+# 1. Allow main to deploy to the github-pages environment
+gh api -X POST repos/gilad1987/luma-desk/environments/github-pages/deployment-branch-policies -f name=main -f type=branch
+# 2. Switch the Pages source to the workflow
 gh api -X PUT repos/gilad1987/luma-desk/pages -f build_type=workflow
+# 3. Deploy main
 gh workflow run deploy.yml --ref main
-gh api repos/gilad1987/luma-desk/pages --jq .build_type   # prints: workflow
 ```
+
+Then check the result:
+
+```bash
+gh api repos/gilad1987/luma-desk/pages --jq .build_type   # prints: workflow
+run=$(gh run list --workflow deploy.yml --branch main --limit 1 --json databaseId --jq '.[0].databaseId')
+gh run watch "$run"                                       # waits until the run ends
+gh run view "$run" --json conclusion --jq .conclusion     # prints: success
+```
+
+Open https://gilad1987.github.io/luma-desk/ and make sure that it serves the new build.
 
 ## Performance
 
