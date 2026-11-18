@@ -62,8 +62,9 @@ export class LazyMvrChain {
         this.#chain = chain;
         emitters.isHdr = true;
       },
-      // a chunk that does not load (offline, a new deploy) leaves this stage on the built-in chain
-      () => undefined,
+      // a chunk that does not load (offline, a new deploy) or a chain that cannot be made leaves this stage on the
+      // built-in chain; the warning keeps the cause visible, as the stage still draws and nothing else reports it
+      (error: unknown) => console.warn('MVR post chain not created; the built-in chain stays', error),
     );
   }
 

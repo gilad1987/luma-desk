@@ -1,12 +1,6 @@
 import { unzipSync, type UnzipFileInfo } from 'fflate';
+import { MAX_ENTRY_BYTES, MAX_TOTAL_BYTES } from '../archive/MvrArchive';
 import { MvrError } from '../MvrWarning';
-
-/**
- * The limits `MvrArchive` puts on the entries of the outer file, for the entries of the GDTF archives inside it: a
- * GDTF is a ZIP in a ZIP, and its model files could unpack to far more than the outer limits ever counted.
- */
-export const GDTF_ENTRY_BYTES = 512 * 1024 * 1024;
-export const GDTF_TOTAL_BYTES = 1024 * 1024 * 1024;
 
 /** How much the model files of one import may still unpack to; one budget is shared by all its GDTF files. */
 export interface ByteBudget {
@@ -16,9 +10,12 @@ export interface ByteBudget {
   left: number;
 }
 
-/** A budget with the limits of the outer archive. */
+/**
+ * A budget with the limits `MvrArchive` puts on the outer file: a GDTF is a ZIP in a ZIP, and its model files could
+ * unpack to far more than the outer limits ever counted.
+ */
 export function gdtfBudget(): ByteBudget {
-  return { entry: GDTF_ENTRY_BYTES, left: GDTF_TOTAL_BYTES };
+  return { entry: MAX_ENTRY_BYTES, left: MAX_TOTAL_BYTES };
 }
 
 /** The names of all entries of a GDTF archive, folders included, as stored. Nothing is inflated. */

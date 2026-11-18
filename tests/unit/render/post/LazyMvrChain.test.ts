@@ -18,7 +18,10 @@ function slot() {
 /** Lets the settled `create` promise run its handlers. */
 const settle = (): Promise<void> => new Promise((resolve) => setTimeout(resolve));
 
-afterEach(() => (emitters.isHdr = false));
+afterEach(() => {
+  emitters.isHdr = false;
+  vi.restoreAllMocks();
+});
 
 describe('LazyMvrChain', () => {
   it('creates nothing for a built-in stage', () => {
@@ -75,14 +78,18 @@ describe('LazyMvrChain', () => {
     expect(emitters.isHdr).toBe(false);
   });
 
-  it('keeps the built-in chain when the chunk does not load, and tries again for the next MVR stage', async () => {
+  it('keeps the built-in chain when the chunk does not load, warns once, and tries again for the next MVR stage', async () => {
     const { lazy, create, show } = slot();
-    create.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(fakeChain());
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const offline = new Error('offline');
+    create.mockRejectedValueOnce(offline).mockResolvedValueOnce(fakeChain());
     show(true);
     lazy.select();
     await settle();
     expect(lazy.select()).toBeUndefined();
     expect(create).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn).toHaveBeenCalledWith(expect.any(String), offline);
     show(false);
     lazy.select();
     show(true);
