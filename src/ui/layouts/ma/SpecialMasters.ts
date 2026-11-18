@@ -73,7 +73,7 @@ function buildStrip(host: HTMLElement, input: HTMLInputElement, key: string, nam
 /**
  * The sliders also act on `change` (Energy starts a new auto look on release), so a strip fires it only for a real
  * change: on release when the value moved since pointer-down, or on double-click when it moved since the last send
- * (known quirk Q30).
+ * (known quirk Q30, orig:3010-3014).
  */
 function sendChangeOnRelease(root: HTMLElement, fader: HTMLElement, input: HTMLInputElement): void {
   let atDown = input.value,

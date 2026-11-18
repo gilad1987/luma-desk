@@ -39,8 +39,8 @@ export class ExecutorPool {
       this.#bus.emit('message', { kind: 'toast', text: 'Executor is empty — STORE a cue first' });
       return;
     }
-    if (e.resume()) return;
-    if (!e.on && e.level === 0) e.level = 1;
+    if (e.resume()) return; // quirk A11 (orig:1634): a paused fade resumes, whatever the direction
+    if (!e.on && e.level === 0) e.level = 1; // quirk A10 (orig:1635)
     const n = stepCueIndex(e.cues, e.cur, dir);
     e.goto(n);
     const cue = cueAt(e.cues, n);
@@ -56,7 +56,7 @@ export class ExecutorPool {
   setLevel(e: Executor, v: number): void {
     const was = e.level;
     e.level = v;
-    if (v > 0 && !e.on && e.cues.length) e.goto(Math.max(0, e.cur));
+    if (v > 0 && !e.on && e.cues.length) e.goto(Math.max(0, e.cur)); // quirk Q25 (orig:2143-2147)
     if (v === 0 && was > 0 && !e.flash) e.off();
   }
 

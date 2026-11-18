@@ -5,6 +5,7 @@ import { rigFromDesign } from '../../../../src/domain/stage/deriveRig';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { FixtureVisualSync, FixtureVisuals } from '../../../../src/render/fixtures';
 import { LightFrame } from '../../../../src/render/lights/LightFrame';
+import { builtInSurfaces } from '../builtInSurfaces';
 import { stubCanvasDocument } from '../stubCanvasDocument';
 import { buildFixtureScene } from './buildFixtureScene';
 
@@ -17,7 +18,14 @@ export function setupFixtureVisuals(design: StageDesign) {
   const targets = { uniforms, light: new PointLight(), strip: { material: { color: new Color() } } };
   const lights = new LightFrame();
   const goboTextures = gobo.textures;
-  const sync = new FixtureVisualSync({ selection: { has: () => false }, beamTime: beam.time, goboTextures, lights });
+  const surface = builtInSurfaces();
+  const sync = new FixtureVisualSync({
+    selection: { has: () => false },
+    beamTime: beam.time,
+    goboTextures,
+    lights,
+    surface,
+  });
   const picker = { register: vi.fn(), clear: vi.fn() };
   const visuals = new FixtureVisuals({ scene, prims, beam, gobo, models, lensTextures, picker, sync });
   const fixtures = rigFromDesign(design).fixtures;

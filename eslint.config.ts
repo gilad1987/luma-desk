@@ -3,6 +3,7 @@ import prettier from 'eslint-config-prettier';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 import { codeRules } from './eslint/codeRules.ts';
+import { domGlobalRules } from './eslint/domGlobalRules.ts';
 import { i18nRules } from './eslint/i18nRules.ts';
 import { layerRules } from './eslint/layerRules.ts';
 import { SHARED_INTERNALS } from './eslint/sharedInternals.ts';
@@ -24,6 +25,7 @@ export default defineConfig(
   codeRules,
   i18nRules,
   layerRules,
+  domGlobalRules,
   testRules,
   prettier,
 );

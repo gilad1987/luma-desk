@@ -29,10 +29,10 @@ const paintMonitor = (x: CanvasRenderingContext2D): void => {
 
 /**
  * The RoboSpot BaseStation on a flight case at FOH: pan/tilt handles, fader panel, hooded monitor, clipboard. It
- * joins the camera views' `FohRig` after the riser, so it hides with the riser in the MA view and `FohRig.add` gives
- * it the visibility the riser has now.
+ * stands on the riser in the camera views' `FohRig`, so it hides with the riser in the MA view and stays hidden in
+ * a venue without a FOH riser.
  */
-export function buildRoboSpotStation(scene: Object3D, { prims }: ModelKit, fohRig: Pick<FohRig, 'add'>): void {
+export function buildRoboSpotStation(scene: Object3D, { prims }: ModelKit, fohRig: Pick<FohRig, 'addRider'>): void {
   const { box, cylinder, cylinderX } = prims;
   const m = new MeshStandardMaterial({ color: 0x232328, roughness: 0.5, metalness: 0.4 });
   const body = merge([
@@ -55,5 +55,5 @@ export function buildRoboSpotStation(scene: Object3D, { prims }: ModelKit, fohRi
   scene.add(g);
   const sc = addMesh(g, prims.planeGeo, new MeshBasicMaterial({ map: scr }), { position: [0, 1.3, 0.012] });
   sc.scale.set(0.56, 0.32, 1);
-  fohRig.add(g);
+  fohRig.addRider(g);
 }

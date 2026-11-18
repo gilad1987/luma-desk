@@ -7,12 +7,10 @@ import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { rng } from '../../../../src/core';
 import { TERRACE_NORMAL } from '../../../../src/domain/audienceTerrain';
-import { surfacesOf } from '../../../../src/domain/stage/surfaces';
-import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import { DECK, UP } from '../../../../src/domain/venue';
-import { hitSurface } from '../../../../src/render/surface/hitSurface';
-import { SCREEN_NORMAL, SurfaceHit } from '../../../../src/render/surface/SurfaceHit';
+import { SCREEN_NORMAL, type BeamHit } from '../../../../src/render/surface/SurfaceHit';
 import { hitTerraces } from '../../../../src/render/surface/surfacePlanes';
+import { builtInSurfaces } from '../builtInSurfaces';
 import { legacyHitSurface } from './legacyHitSurface';
 
 const ray = (o: [number, number, number], d: [number, number, number]): [Vector3, Vector3] => [
@@ -27,8 +25,8 @@ function surfaceName(normal: Readonly<Vector3> | undefined): string {
   return 'none';
 }
 
-const surfaces = new SurfaceHit();
-surfaces.setSurfaces(surfacesOf(BUILT_IN_DESIGN));
+const surfaces = builtInSurfaces();
+const hitSurface = (o: Vector3, d: Vector3): BeamHit | null => surfaces.hit(o, d);
 
 describe('SurfaceHit on the built-in stage', () => {
   it('matches the legacy t and normal object for 20000 seeded rays from rig positions', () => {

@@ -4,11 +4,11 @@ import type { FixtureVisuals } from '../fixtures/FixtureVisuals';
 import type { SurfaceHit } from '../surface/SurfaceHit';
 import type { FixtureIdOverlay } from './FixtureIdOverlay';
 
-/** The scene the parts go in, where beams land, and the camera views a new stage refits. */
+/** The scene the parts go in, where beams land, and the camera views a new stage refits and a venue joins its FOH. */
 export interface StageSceneDeps {
   readonly scene: Object3D;
   readonly surfaces: Pick<SurfaceHit, 'setSurfaces'>;
-  readonly views: Pick<CameraViews, 'fitTo' | 'setView' | 'currentView'>;
+  readonly views: Pick<CameraViews, 'fitTo' | 'setView' | 'currentView' | 'fohRig'>;
 }
 
 /**

@@ -41,7 +41,7 @@ export function sheetRowView(f: SheetFixture, selected: boolean, prog: AttrValue
   const inProg = (a: AttrName): string => (prog[a] !== undefined && prog[a] !== null ? 'p' : '');
   const rounded = (v: number | undefined): string => String(Math.round(v ?? NaN));
   const cells: (readonly [number, string, AttrName])[] = [
-    [2, rounded(f.out.dim), 'dim'],
+    [2, rounded(f.out.dim), 'dim'], // quirk G1 (orig:2225): output dimmer, programmer-level rest
     [3, f.has('pan') ? rounded(base.pan) : '', 'pan'],
     [4, f.has('tilt') ? rounded(base.tilt) : '', 'tilt'],
     [6, f.has('gobo') ? rounded(base.gobo) : '', 'gobo'],

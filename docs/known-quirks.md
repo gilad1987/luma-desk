@@ -2,7 +2,11 @@
 
 > "Source" lines refer to the original single-file app: `index.html` at commit `48a3b63` (3,096 lines) and
 > `sw.js` at the same commit. "Lives in" names the TypeScript file that keeps the quirk today. Code that keeps a
-> quirk cites its id (for example `quirk C2`), so `grep -rn "quirk C2" src` finds every place.
+> quirk cites its id (for example `quirk C2`), so `grep -rn "quirk C2" src` finds every place. The citation also
+> gives the original line: `// quirk A1 (orig:1689)` as a line comment, `(quirk C2, orig:1921)` inside a sentence.
+> `orig:` is a line of `tests/shared/legacy/original-index.html`, the frozen copy of `index.html@48a3b63`; the
+> service worker entries (I) give `orig:sw.js:<line>`. `tests/unit/knownQuirks.test.ts` fails when an entry is not
+> cited or a citation has no original line; it lists the entries whose code is gone, with the reason.
 
 ## Why this file exists
 
@@ -71,6 +75,8 @@ Groups:
 - Why kept: the refactor gives both shapes one `Executor` type. The type must allow `flashOnly` to be absent (or
   default to `false`) without a change in behavior. This entry records that the asymmetry is known.
 - Future fix: build both from one factory; give AUTO `flashOnly: false`.
+- Status: no longer in the code — one `Executor` class (`src/engine/Executor.ts`) gives every executor, AUTO
+  included, `flashOnly = false`; nothing reads it on AUTO, so the output is the same.
 
 ### A3. A cross-fade keeps a value that has no target with a check that is always true
 
@@ -230,6 +236,8 @@ Groups:
 - What it does: nothing more than `applyPreset`. The Narrow / Medium / Wide buttons of the Beam tab call it.
 - Why kept: the refactor moves code, it does not rename call paths in Phase 3-5. It is harmless.
 - Future fix: call `applyPreset` directly and delete the wrapper.
+- Status: no longer in the code — the Narrow / Medium / Wide buttons call `applyPreset` directly
+  (`src/ui/panels/encoders/extra/beamExtra.ts`); the call they make is the same.
 
 ### B2. Empty branch for position presets
 
@@ -415,8 +423,8 @@ Groups:
 ### C8. `Off Exec n` writes `e.on = false` before `e.off()`
 
 - Source: `index.html:1925` (`execOff(execs[ex])`)
-- Lives in: `src/main.ts` (`case 'off'` in the command runner that `main.ts` still holds; Phase 6 removes it),
-  `src/command/run/runPlayback.ts` (`executorAt(..., 'setting', 'on')`)
+- Lives in: `src/command/run/runPlayback.ts` (`runOff`: `executorAt(..., 'setting', 'on')`, then
+  `executor.on = false` before `executor.off()`)
 - What it does: the extra write has no effect on a real executor, because `off()` also clears `on`. On an unknown
   executor it is the write that fails, so the log shows the C2 text `Cannot set properties of undefined (setting
 'on')`, as the original `execOff` did.
@@ -638,6 +646,8 @@ Groups:
   so `UP3` must not be used in its place.
 - Why kept: the identity check makes merging them a behavior risk.
 - Future fix: one shared constant, and compare surfaces by a tag instead of by object identity.
+- Status: no longer in the code — one shared `UP` (`src/domain/venue.ts`) serves the rotations and the surface hits,
+  and the hit code still compares by identity with that one object.
 
 ### F3. Redundant checks in the beam hit and pool code
 
@@ -650,6 +660,8 @@ Groups:
 - What it does: `!best` is always true inside `if (!best)`; `hit` is always truthy inside `if (hit)`. No effect.
 - Why kept: no effect; keep the code shape so a reviewer can compare it line by line.
 - Future fix: delete the dead terms.
+- Status: no longer in the code — `src/render/surface/hitSurface.ts` and
+  `src/render/fixtures/sync/poolContributions.ts` leave the two terms out; they had no effect.
 
 ### F4. Comment says 3 shadow lights; the code has 4
 
@@ -664,6 +676,8 @@ Groups:
 - Why kept: the value (4) is the behavior; the comment is wrong.
 - Future fix: correct the comment when the code moves (this is a comment fix, not a behavior change, so it may be
   done in the refactor).
+- Status: no longer in the code — `src/render/lights/KeyLights.ts` keeps `SHADOW_COUNT = 4` under a comment that
+  no longer gives a count.
 
 ### F5. Turning off "Real light" switches the shadow map at runtime
 
@@ -705,6 +719,8 @@ Groups:
 - Why kept: the scene is the behavior; the comment was wrong. The README already says 30.
 - Pinned by: `tests/unit/render/venue/venueParity.test.ts`.
 - Future fix: none; the new code does not repeat the wrong count.
+- Status: no longer in the code — the wrong count was only in a comment, and `src/render/venue/Orchestra.ts` does
+  not repeat it.
 
 ### F9. A later setView stops a running view tween
 
@@ -780,6 +796,7 @@ Groups:
   (`no-shadow`) will flag it.
 - Why kept: no effect; the name changes when the code moves, which is not a behavior change.
 - Future fix: rename to `target`.
+- Status: no longer in the code — the tour code in `src/ui/guide/` has no variable that shadows the selection.
 
 ### G7. `buildExecs` slices a list that always has 10 items
 
@@ -787,11 +804,12 @@ Groups:
 - Code: `execs.slice(0, 10).forEach(...)`
 - Why kept: no effect.
 - Future fix: iterate `execs`.
+- Status: no longer in the code — no executor loop in `src/` slices the list.
 
 ### G8. The MA colour marker computes its hue inline
 
 - Source: `index.html:3025-3026` (`updateMaUI`)
-- Lives in: `src/ui/layouts/ma/colorMarker.ts` (and inline in `src/main.ts` until Phase 6)
+- Lives in: `src/ui/layouts/ma/colorMarker.ts` (`hueSixths`)
 - What it does: the marker position uses `((g - b) / dl + 6) % 6` instead of `core` `rgb2hsv`. The two are equal in
   exact arithmetic, but in floating point they differ in the last digits of `style.left` for about 177,000 of
   1.03 million tested inputs (about 17%).
@@ -809,16 +827,17 @@ Groups:
 - Pinned by: `tests/unit/i18n/he.test.ts` (`toHaveLength(17)`).
 - Future fix: none.
 
-### G10. The top bar scrolls sideways; the legacy bar clipped its controls at 1280 px
+### G11. The top bar scrolls sideways; the legacy bar clipped its controls at 1280 px
 
-- Source: `index.html` `#top` (`overflow: hidden`)
+- Source: `index.html@48a3b63:260` (`#top{gap:10px;overflow:hidden}`)
 - Lives in: `src/styles/desk/_top-bar-layout.scss` (`#top`), `src/ui/panels/top/topBarMarkup.ts`
   (`buildStageButton`)
 - What it did: at 1280 px the legacy bar ended after "Real light". The layout selects, REC, fullscreen, MIDI, Show
-  File, Guide and the clock were cut off and could not be reached.
+  File, Guide and the clock were cut off and could not be reached with the mouse.
 - What it does now: the bar scrolls sideways with a hidden scrollbar (trackpad, Shift+wheel, or Tab to a control), so
   every control is reachable. The scroll position is 0 at boot. The Stage Builder's "Build Stage" button opens the
-  Glow group, so it shows at 1280 px in all three layouts; it pushes Fixture IDs and Real light to the scrolled part.
+  Glow group, so it shows at 1280 px in all three layouts. It pushes Real light to the scrolled part; Glow and
+  Fixture IDs stay visible at 1280 px.
 - Why changed: a new control must be visible, and the clipped controls were a defect, not a behavior to keep.
 - Pinned by: `tests/e2e/screenshots.spec.ts` (the 9 baselines differ from the legacy bar only in the top bar).
 - Future fix: a bar that wraps or folds its groups at narrow widths.
@@ -959,8 +978,8 @@ The refactor keeps this logic (see ADR 0003). Only the shell list and the cache 
   the app folder.
 - Why kept: parity. `playwright.config.ts` blocks service workers (`serviceWorkers: 'block'`); the worker specs
   `tests/e2e/swOffline.spec.ts` and `tests/e2e/swCaching.spec.ts` allow them with `test.use`.
-- Lives in: `src/main.ts` today; the page-side registration moves to `src/io/` (in progress at the time of
-  writing).
+- Lives in: `src/io/serviceWorkerRegistration.ts` (`registerServiceWorker`, called from
+  `src/app/io/wireAppFeatures.ts`).
 - Future fix: log the failure in dev builds.
 
 ### I11. Shell URLs are not passed through `encodeURI`
@@ -978,8 +997,9 @@ The refactor keeps this logic (see ADR 0003). Only the shell list and the cache 
 
 Strict types (`noUncheckedIndexedAccess`) make every indexed read handle the missing case. Where the original read
 `undefined` and then crashed with a `TypeError` somewhere else, the new code throws a `RangeError` at the read, with
-a message that names the bad value. These are the only behavior changes the refactor accepts: each path is either
-unreachable from the UI or crashed in the original too.
+a message that names the bad value. J4 to J6 change other details of a path that fails: J5 removes a data loss on
+a failed import, J6 changes an error text. These are the only behavior changes the refactor accepts (see also
+section L): each path is either unreachable from the UI or crashed in the original too.
 
 ### J1. `hsv` throws a `RangeError` for a hue that is not finite
 
@@ -1022,6 +1042,44 @@ unreachable from the UI or crashed in the original too.
 - Why kept: the original only crashed on this path; a real device always sends data.
 - Pinned by: `tests/unit/io/Midi.test.ts` ("ignores a message whose data is null and does not throw (quirk)").
 
+### J5. A failed import no longer drops the user's presets
+
+- Source: `index.html:2301` (`presets = defaultPresets()`), `2304` (the copy loop that throws), caught at `2320`
+  and `2321` (`toast('Invalid JSON')`, `toast('Invalid file')`)
+- Code:
+  <!-- prettier-ignore -->
+  ```js
+  groups = d.groups || defaultGroups(); presets = defaultPresets(); // 2301
+  for (const t in d.presets || {}) for (const s in d.presets[t]) presets[t][s] = d.presets[t][s]; // 2304
+  ```
+- Lives in: `src/show/ShowSerializer.ts:62` (`load`: `presets.replace(withSavedPresets(defaultPresets(), d.presets))`),
+  `src/show/savedPresets.ts` (`withSavedPresets` throws `Unknown preset pool ...`)
+- What it does: a show whose `presets` has a slot in a pool number the desk does not have throws at 2304. The
+  original had already reset the presets to the defaults at 2301, so the import failed and the user's own presets
+  were gone too; the next save stored the loss. The new code builds the presets first and replaces them only when
+  the build succeeds, so a failed import keeps the user's presets. The groups are still replaced before the throw,
+  as at 2301, and the executors stay as they were, as before.
+- Accepted change: the import fails in both versions; only the data loss on that failure is gone. It is fixed on
+  purpose, and no golden covers it.
+- Pinned by: `tests/unit/show/showSerializer.test.ts` ("quirk J5: a preset pool the desk lacks throws, keeps the
+  presets and executors, replaces the groups (accepted change)").
+
+### J6. `Pause` on a fractional executor names `pause`, not `fade`, in its error
+
+- Source: `index.html:1920` (`selExec = clamp(num() - 1, 0, 9)`, no rounding), `1924`
+  (`execPause(execs[selExec])`), `1640` (`execPause` reads `e.fade` first)
+- Lives in: `src/command/run/runPlayback.ts:30` (`runPause`: `executorAt(..., 'reading', 'pause')`)
+- What it does: `Exec 2.5` selects index 1.5, which has no executor. A following `Pause` failed in the original
+  with `Cannot read properties of undefined (reading 'fade')`, because `execPause` read `e.fade`. The new code
+  logs `Cannot read properties of undefined (reading 'pause')`, the call it makes on the missing executor.
+- Accepted change: the error text differs. Both versions fail the command, change no state and show a red line in
+  the command feedback. The change is accepted because this path only crashes, on an executor index that is not
+  valid. C7 keeps the original text for every other command that reaches `executorAt`; this `Pause` text is the
+  one case that C7 does not cover.
+- Pinned by: `tests/unit/command/CommandRunner.test.ts` ("quirk J6: Pause on a fractional executor logs (reading
+  'pause') (accepted change)").
+- Future fix: goes with C2 (validate the executor number, and round or reject a fraction, in the parser).
+
 ## K. Test mode (`?test`)
 
 ### K1. Test mode freezes the clock and frames, but not timers
@@ -1048,13 +1106,14 @@ right types, and `JSON.stringify` turns `NaN` into `null`, which gives the same 
 `null ?? 0.62`, `null ?? 0`). Pinned by: `tests/unit/show/showFileInput.test.ts` (show rows) and
 `tests/unit/ui/layouts/layoutPrefsParity.test.ts` (layout row).
 
-| Saved value                                                | Original (`index.html@48a3b63`)                                       | Now                     |
-| ---------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------- |
-| `bpm` or `haze` not a number                               | used as it was (`d.bpm \|\| 120`, `d.haze ?? .62`, line 2306)         | default (120, 0.62)     |
-| executor `name`, `level` or `cues` of the wrong type       | used as it was (line 2305)                                            | default (`''`, 0, `[]`) |
-| `groups` a truthy primitive, or `presets` a non-empty text | threw part-way in strict mode, e.g. `{ groups: 7 }` (lines 2301-2304) | ignored                 |
-| `execs` an object with number keys                         | read by index (`(d.execs \|\| [])[i]`)                                | ignored                 |
-| `deskMode` or `deskZoom` in the layout not text            | used as it was (`L.deskMode \|\| 'ma'`, line 3080)                    | `ma` / `auto`           |
+| Saved value                                                | Original (`index.html@48a3b63`)                                                                                                                                                                                                                                                                             | Now                                                                                                                                  |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `bpm` or `haze` not a number                               | used as it was (`d.bpm \|\| 120`, `d.haze ?? .62`, line 2306)                                                                                                                                                                                                                                               | default (120, 0.62)                                                                                                                  |
+| executor `name`, `level` or `cues` of the wrong type       | used as it was (line 2305)                                                                                                                                                                                                                                                                                  | default (`''`, 0, `[]`)                                                                                                              |
+| `groups` a truthy primitive, or `presets` a non-empty text | threw part-way in strict mode, e.g. `{ groups: 7 }` (lines 2301-2304)                                                                                                                                                                                                                                       | ignored                                                                                                                              |
+| `execs` an object with number keys                         | read by index (`(d.execs \|\| [])[i]`)                                                                                                                                                                                                                                                                      | ignored                                                                                                                              |
+| `deskMode` or `deskZoom` in the layout not text            | used as it was (`L.deskMode \|\| 'ma'`, line 3080)                                                                                                                                                                                                                                                          | `ma` / `auto`                                                                                                                        |
+| group `ids` saved as text (`"101"`)                        | kept as text in the selection (`FX[id]` matched, line 1796); later `sel.includes(101)` missed it, so add and toggle (lines 1798, 1800), applying a phaser (line 1827), the phaser encoders such as spread (line 1834), Remove Phasers (line 2129) and Store Group treated `"101"` and `101` as two fixtures | read as numbers (`Number(id)`); text that `Number` reads but an object key did not (`" 101"`, `"0x65"`, `"1.01e2"`) now also matches |
 
 Notes:
 
@@ -1063,6 +1122,8 @@ Notes:
   `groups` and the presets were already replaced. Now a truthy `groups` that is not an object gives an empty pool
   that only the newer default groups fill, and a `presets` that is not an object is skipped.
 - A saved show of JSON `null` still throws before anything changes, as reading a field of it always did.
+- Group `ids` saved as text: the show reader does not check them; `Selection.set` (`src/engine/Selection.ts`) reads
+  each id with `Number` before the rig lookup. Pinned by: `tests/unit/engine/state/Selection.test.ts`.
 
 ## Q. UI quirks from the Phase 5 extraction map
 
@@ -1072,38 +1133,38 @@ UI code cites them (for example `quirk Q11` in `src/ui/panels/command/CommandLin
 Q18 = B8, Q33 = D7). All are kept for DOM and interaction parity; the panel markup tests
 (`tests/unit/ui/panels/`) and the screenshot suite (`tests/e2e/screenshots.spec.ts`) pin the visible ones.
 
-| #   | Line             | Quirk                                                                                                                                                                                                                                 |
-| --- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Q1  | 267, 2151, 2157  | `.ex-sel{display:none}` is global: the SEL button is built and wired but hidden in **all** layouts.                                                                                                                                   |
-| Q2  | 1802             | `uiDirty.sel` is set but never read. Removing the flag changes nothing; keep `setSel` side effects otherwise.                                                                                                                         |
-| Q3  | 2133, 2122       | `applyPresetTo(t,n)` only calls `applyPreset` (also in plan).                                                                                                                                                                         |
-| Q4  | 82, 576, 1959    | `.slot.active` style is never applied; `#grpHint` is never written; pools do not re-render on selection change.                                                                                                                       |
-| Q5  | 2911             | `F` toggles fullscreen even when a SELECT is focused, the modal is open or the tour runs (only guide and INPUT/TEXTAREA block it).                                                                                                    |
-| Q6  | 2933             | Keypad ENTER pushes history but does not reset `hi`; it pushes before the `store` check (same as 2260). Empty ENTER only clears.                                                                                                      |
-| Q7  | 2887 + 2271      | Escape during the tour ends the tour **and** cancels STORE (capture then bubble).                                                                                                                                                     |
-| Q8  | 2159             | Exec off button: `e.level = i === 0 ? e.level : 0` — exec 1 keeps its fader level, others go to 0.                                                                                                                                    |
-| Q9  | 2105, 2101, 2238 | `#encExtra` is not re-rendered when the selection changes: the gobo tab keeps "LED screen content" vs "Gobo wheel" from the last render; `Fan ON/off` button text refreshes only via its own button or `#kFan` when `feat === 'pos'`. |
-| Q10 | 2238, 2101, 2539 | `#kFan` click does not toggle its `.on` class itself; the 50 ms tick does (2539). The encExtra Fan button toggles it at once (2101).                                                                                                  |
-| Q11 | 1888, 2182, 2184 | `log` and `#hudCue` use `innerHTML` with user names (cue/group names are not escaped). Rename input escapes only `"` (2280).                                                                                                          |
-| Q12 | 2201             | Sequence row click ignores `ev.detail > 1`, so a double-click on a row does not re-goto; a click on a stopped exec at level 0 sets level 1.                                                                                           |
-| Q13 | 2157, 2160       | STORE + exec name stores and also selects the exec; STORE + GO+ stores, selects, does **not** GO.                                                                                                                                     |
-| Q14 | 2163–2165        | FLASH: `pointerleave` also releases; a flash on an off exec sets `flashOnly` and goes to the cue with fade 0; release turns it off only if `level === 0`. A fader drag clears `flashOnly` (2166).                                     |
-| Q15 | 2260–2261        | Bare `store` (any case, spaces) in `#cmd` enters store mode instead of running; Escape in `#cmd` clears, blurs and cancels STORE.                                                                                                     |
-| Q16 | 2249             | TAP: every tap moves `beatOrigin`; taps older than 2.5 s drop; bpm = round(60000 / mean interval), clamp 40–220, needs ≥ 2 taps.                                                                                                      |
-| Q17 | 2543–2546        | A dirty flag forces the slow tick early, and fps is computed over that shorter window.                                                                                                                                                |
-| Q18 | 3068             | CLEAR first clears a half-typed command line, else `doClear` (double press < 400 ms = Clear All, 1837–1843).                                                                                                                          |
-| Q19 | 2845, 2963, 2977 | `sideTo` clicks the tab button (synthetic click → `uiDirty`); in MA `sideTo('pools')` does nothing. Entering MA on the Pools tab forces Sheet and gives Pools back on leaving.                                                        |
-| Q20 | 1996             | In MA the encoder row is padded to ≥ 5 encoders with `ENC_FILL`; other layouts show only the feature's encoders.                                                                                                                      |
-| Q21 | 2083             | Color pad paints with one `fillRect` per pixel (204×124 at load, 3016).                                                                                                                                                               |
-| Q22 | 2281, 2286       | Rename keeps the old name if the input is blank; number dialog closes on NaN without calling back; both set `uiDirty.all`.                                                                                                            |
-| Q23 | 2184             | When Auto is on, the HUD shows the auto status and `return`s before the `#pauseBtn` state update (2186).                                                                                                                              |
-| Q24 | 2491–2497        | MIDI ignores the channel; each button click requests access again and rebinds; `onstatechange` rebinds all inputs.                                                                                                                    |
-| Q25 | 2143–2147        | `setLevel`: level > 0 on a stopped exec with cues starts `max(0,cur)`; level to 0 from > 0 turns it off unless flashing.                                                                                                              |
-| Q26 | 2290             | `#hClose` is handled by a document-level click listener, not on the button.                                                                                                                                                           |
-| Q27 | 3059–3066        | The `#maBody` wheel handler is registered in all layouts; it scrolls panes in 20 px steps (`deltaMode` lines ×20) and hands off from `#groupPool` to its pane at the ends.                                                            |
-| Q28 | 2239, 1906       | `ALL` key and `All` command use the same "not screen" filter (→ `rig.lightIds()` per plan).                                                                                                                                           |
-| Q29 | 2242             | REVERSE mutates `sel` in place, then calls `setSel([...sel])`.                                                                                                                                                                        |
-| Q30 | 3010–3014        | MA special faders dispatch `input` on every move and `change` only when the value changed between pointer-down and `lostpointercapture` (or on dblclick if changed since last send).                                                  |
-| Q31 | 2183             | `Next:` text has two spaces before `(fade …)`.                                                                                                                                                                                        |
-| Q32 | 2537             | Selection chip: ids joined with spaces when < 6, else `first…last`.                                                                                                                                                                   |
-| Q33 | 3082             | A stored `maSize` equal to `MA_SIZE` (.47) is read as "no grip size" (adaptive).                                                                                                                                                      |
+| #   | Line                   | Quirk                                                                                                                                                                                                                                 |
+| --- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Q1  | 267, 2151, 2157        | `.ex-sel{display:none}` is global: the SEL button is built and wired but hidden in **all** layouts.                                                                                                                                   |
+| Q2  | 1802                   | `uiDirty.sel` is set but never read. Removing the flag changes nothing; keep `setSel` side effects otherwise.                                                                                                                         |
+| Q3  | 2133, 2122             | `applyPresetTo(t,n)` only calls `applyPreset` (also in plan). Status: no longer in the code — see B1.                                                                                                                                 |
+| Q4  | 82, 576, 1959          | `.slot.active` style is never applied; `#grpHint` is never written; pools do not re-render on selection change.                                                                                                                       |
+| Q5  | 2911                   | `F` toggles fullscreen even when a SELECT is focused, the modal is open or the tour runs (only guide and INPUT/TEXTAREA block it).                                                                                                    |
+| Q6  | 2933                   | Keypad ENTER pushes history but does not reset `hi`; it pushes before the `store` check (same as 2260). Empty ENTER only clears.                                                                                                      |
+| Q7  | 2887 + 2271            | Escape during the tour ends the tour **and** cancels STORE (capture then bubble).                                                                                                                                                     |
+| Q8  | 2159                   | Exec off button: `e.level = i === 0 ? e.level : 0` — exec 1 keeps its fader level, others go to 0.                                                                                                                                    |
+| Q9  | 2105, 2101, 2238       | `#encExtra` is not re-rendered when the selection changes: the gobo tab keeps "LED screen content" vs "Gobo wheel" from the last render; `Fan ON/off` button text refreshes only via its own button or `#kFan` when `feat === 'pos'`. |
+| Q10 | 2238, 2101, 2539       | `#kFan` click does not toggle its `.on` class itself; the 50 ms tick does (2539). The encExtra Fan button toggles it at once (2101).                                                                                                  |
+| Q11 | 1888, 2182, 2184, 2197 | `log` and `#hudCue` use `innerHTML` with user names (cue/group names are not escaped). Rename input escapes only `"` (2280).                                                                                                          |
+| Q12 | 2201                   | Sequence row click ignores `ev.detail > 1`, so a double-click on a row does not re-goto; a click on a stopped exec at level 0 sets level 1.                                                                                           |
+| Q13 | 2157, 2160             | STORE + exec name stores and also selects the exec; STORE + GO+ stores, selects, does **not** GO.                                                                                                                                     |
+| Q14 | 2163–2165              | FLASH: `pointerleave` also releases; a flash on an off exec sets `flashOnly` and goes to the cue with fade 0; release turns it off only if `level === 0`. A fader drag clears `flashOnly` (2166).                                     |
+| Q15 | 2260–2261              | Bare `store` (any case, spaces) in `#cmd` enters store mode instead of running; Escape in `#cmd` clears, blurs and cancels STORE.                                                                                                     |
+| Q16 | 2249                   | TAP: every tap moves `beatOrigin`; taps older than 2.5 s drop; bpm = round(60000 / mean interval), clamp 40–220, needs ≥ 2 taps.                                                                                                      |
+| Q17 | 2543–2546              | A dirty flag forces the slow tick early, and fps is computed over that shorter window.                                                                                                                                                |
+| Q18 | 3068                   | CLEAR first clears a half-typed command line, else `doClear` (double press < 400 ms = Clear All, 1837–1843).                                                                                                                          |
+| Q19 | 2845, 2963, 2977       | `sideTo` clicks the tab button (synthetic click → `uiDirty`); in MA `sideTo('pools')` does nothing. Entering MA on the Pools tab forces Sheet and gives Pools back on leaving.                                                        |
+| Q20 | 1996                   | In MA the encoder row is padded to ≥ 5 encoders with `ENC_FILL`; other layouts show only the feature's encoders.                                                                                                                      |
+| Q21 | 2083                   | Color pad paints with one `fillRect` per pixel (204×124 at load, 3016).                                                                                                                                                               |
+| Q22 | 2281, 2286             | Rename keeps the old name if the input is blank; number dialog closes on NaN without calling back; both set `uiDirty.all`.                                                                                                            |
+| Q23 | 2184                   | When Auto is on, the HUD shows the auto status and `return`s before the `#pauseBtn` state update (2186).                                                                                                                              |
+| Q24 | 2491–2497              | MIDI ignores the channel; each button click requests access again and rebinds; `onstatechange` rebinds all inputs.                                                                                                                    |
+| Q25 | 2143–2147              | `setLevel`: level > 0 on a stopped exec with cues starts `max(0,cur)`; level to 0 from > 0 turns it off unless flashing.                                                                                                              |
+| Q26 | 2290                   | `#hClose` is handled by a document-level click listener, not on the button.                                                                                                                                                           |
+| Q27 | 3059–3066              | The `#maBody` wheel handler is registered in all layouts; it scrolls panes in 20 px steps (`deltaMode` lines ×20) and hands off from `#groupPool` to its pane at the ends.                                                            |
+| Q28 | 2239, 1906             | `ALL` key and `All` command use the same "not screen" filter (→ `rig.lightIds()` per plan).                                                                                                                                           |
+| Q29 | 2242                   | REVERSE mutates `sel` in place, then calls `setSel([...sel])`. Status: no longer in the code — `Selection.reverse` sets a reversed copy; the selection is the same.                                                                   |
+| Q30 | 3010–3014              | MA special faders dispatch `input` on every move and `change` only when the value changed between pointer-down and `lostpointercapture` (or on dblclick if changed since last send).                                                  |
+| Q31 | 2183                   | `Next:` text has two spaces before `(fade …)`.                                                                                                                                                                                        |
+| Q32 | 2537                   | Selection chip: ids joined with spaces when < 6, else `first…last`.                                                                                                                                                                   |
+| Q33 | 3082                   | A stored `maSize` equal to `MA_SIZE` (.47) is read as "no grip size" (adaptive).                                                                                                                                                      |

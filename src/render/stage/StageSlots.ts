@@ -1,6 +1,9 @@
 import type { Material } from 'three';
 
-/** The venue materials the stage parts are drawn with; the venue owns them, so a stage rebuild never frees them. */
+/**
+ * The venue materials the stage parts are drawn with. The venue owns them: a stage rebuild never frees them, and a
+ * venue switch frees them with the old venue.
+ */
 export interface StageMaterials {
   readonly deck: Material;
   readonly black: Material;

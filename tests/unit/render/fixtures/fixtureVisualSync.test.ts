@@ -4,13 +4,13 @@ import { clamp } from '../../../../src/core';
 import { FixtureVisualSync } from '../../../../src/render/fixtures';
 import type { BeamSurface } from '../../../../src/render/fixtures/sync/LightSync';
 import { LightFrame } from '../../../../src/render/lights/LightFrame';
-import { hitSurface } from '../../../../src/render/surface/hitSurface';
+import { builtInSurfaces } from '../builtInSurfaces';
 import { buildFixtureScene } from './buildFixtureScene';
 import { stubCanvasDocument } from '../stubCanvasDocument';
 
 afterEach(() => vi.unstubAllGlobals());
 
-function setup(surface: BeamSurface = { hit: hitSurface }) {
+function setup(surface: BeamSurface = builtInSurfaces()) {
   stubCanvasDocument();
   const built = buildFixtureScene();
   const u = () => ({ value: 0 });

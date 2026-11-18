@@ -20,8 +20,9 @@ const LACING: readonly (readonly [x: number, z: number, aboutX: boolean])[] = [
 
 /**
  * The shared parts of the rig steel: one thin unit tube (every chord, diagonal and chain is this tube, scaled), the
- * truss aluminium and the dark chain material. Sharing one geometry keeps thousands of truss meshes cheap, and the
- * stage scene keeps one kit for its whole life, so a rebuild never frees or recreates these three resources.
+ * truss aluminium and the dark chain material. Sharing one geometry keeps thousands of truss meshes cheap. The stage
+ * keeps one kit per venue: a rebuild on the same venue never frees or recreates these three resources, and a venue
+ * switch frees the kit, as the new venue brings new steel, and creates it again.
  */
 export class TrussKit {
   readonly tube = new CylinderGeometry(0.03, 0.03, 1, 6);
@@ -36,6 +37,12 @@ export class TrussKit {
   /** The resources every build shares; a rebuild must not dispose them. */
   get shared(): readonly (CylinderGeometry | Material)[] {
     return [this.tube, this.chainMaterial, this.steel];
+  }
+
+  /** Frees the tube and the chain material; the steel belongs to the venue, which frees it with its materials. */
+  dispose(): void {
+    this.tube.dispose();
+    this.chainMaterial.dispose();
   }
 
   /**

@@ -52,6 +52,12 @@ describe('sequence rows (same strings as the original renderSeq)', () => {
     );
   });
 
+  it('counts no phasers for a saved cue without its phaser list, as the original (c.fx || []) did', () => {
+    // as JSON.parse gives it from a hand-edited show file: saved shows are not validated on load
+    const saved = JSON.parse('{"num":1,"name":"A","fade":2,"vals":{"101":{}}}') as Cue;
+    expect(cueTable(exec({ cues: [saved] }))).toContain('<td class="info">1 fix</td>');
+  });
+
   it('keeps one implicit tbody when there are cues', () => {
     expect(cueTable(exec({ cues: [cue({ num: 1, name: 'A', fade: 2 })] }))).not.toContain('tbody');
   });

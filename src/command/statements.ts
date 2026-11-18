@@ -1,4 +1,6 @@
-/** How a selection statement combines with the current selection (quirk C1: only the first list replaces). */
+/**
+ * How a selection statement combines with the current selection: only the first list replaces (quirk C1, orig:1897).
+ */
 export type SelectionMerge = 'replace' | 'add' | 'sub';
 
 /** What a selection statement picks; fixture ranges and groups resolve when the statement runs. */
