@@ -16,7 +16,7 @@ const GEOMETRY: MvrGeometry = {
   placements: [],
   offset: [0, 0, 0],
   bounds: { min: [-30, 0, -40], max: [30, 12, 40] },
-  surfaces: [],
+  surfaces: [{ min: [-30, 0, -40], max: [30, 12, 40], face: 'top' }],
 };
 const BOUNDS = mvrCameraBounds(createTemplate('theatre'), GEOMETRY);
 

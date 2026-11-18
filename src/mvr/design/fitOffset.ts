@@ -11,8 +11,8 @@ const STAGE_CENTRE_Z = (STAGE.z0 + STAGE.z1) / 2;
  * the fixtures and every placed mesh) goes to x = 0 and the middle of the stage depth, and MVR Z = 0 stays on the
  * ground (y = 0). Plots are drawn around arbitrary origins, so centring is needed; there is no scaling, because the
  * file's real sizes must stay true. A footprint wider or deeper than the stage gets an `oversize` warning in whole
- * metres, which says what the desk does about it: the shown scenery fits the camera views (`LazyMvrStage`), so the
- * user knows the wider framing is on purpose. An empty box gives the offset of the stage centre.
+ * metres, which says what the desk does about it: the camera views frame the main stage group (`mvrCameraBounds`), so
+ * the user knows why far objects such as FOH follow spots can be out of view. An empty box gives the offset of the stage centre.
  */
 export function fitOffset(box: Aabb, warn: (warning: MvrWarning) => void): Vec3 {
   if (isEmpty(box)) return [0, 0, STAGE_CENTRE_Z];
@@ -20,8 +20,8 @@ export function fitOffset(box: Aabb, warn: (warning: MvrWarning) => void): Vec3 
   const depth = box.max[2] - box.min[2];
   if (width > STAGE.x1 - STAGE.x0 || depth > STAGE.z1 - STAGE.z0) {
     const size = `${width.toFixed(0)} m x ${depth.toFixed(0)} m`;
-    const message = `The file covers ${size}, larger than the stage; the camera views are fitted to all of it.`;
-    warn({ code: 'oversize', message });
+    const framing = 'the camera views frame the main stage, so objects far from it can be out of view.';
+    warn({ code: 'oversize', message: `The file covers ${size}, larger than the stage; ${framing}` });
   }
   return [-(box.min[0] + box.max[0]) / 2, 0, STAGE_CENTRE_Z - (box.min[2] + box.max[2]) / 2];
 }
