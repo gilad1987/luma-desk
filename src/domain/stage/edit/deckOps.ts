@@ -3,7 +3,7 @@ import { SCENERY_PARTS, type SceneryPart, type Vec3, type VenueKind } from '../t
 import { sceneryFor } from '../venueScenery';
 import { newUniqueId } from './ids';
 import { checkFinite, checkSizes } from './inputChecks';
-import { isSameLength } from './sameData';
+import { isSameLength } from '../sameData';
 
 /** Deck size in metres: `width` along x, `depth` along z, `height` of the top above the ground. */
 export interface DeckSize {

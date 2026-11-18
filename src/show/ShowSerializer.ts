@@ -61,12 +61,12 @@ export class ShowSerializer {
    * Replaces the show with parsed show JSON, narrowed by `readShowFile`, keeping the original defaults rule by rule:
    * `bpm` 0 or missing becomes 120 while `haze` 0 stays 0; shows saved before the newer default groups get them only
    * in empty slots; missing or extra executors are ignored. It stops all executors and clears the programmer and the
-   * selection. Bad data may throw part-way, as it always did; callers catch it. The stage loads first (`readStage`), so
-   * the groups below come from its rig.
+   * selection. Bad data may throw part-way, as it always did; callers catch it. `readShowFile` runs first, so JSON
+   * `null` throws before the stage changes; the stage loads next (`readStage`), so the groups below come from its rig.
    */
   load(data: unknown): void {
-    if (this.#deps.stage) readStage(data, this.#deps.stage);
     const d = readShowFile(data);
+    if (this.#deps.stage) readStage(data, this.#deps.stage);
     const { rig, groups, presets, execs, tempo, state, programmer, selection } = this.#deps;
     groups.replace(d.groups ? addNewDefaultGroups(d.groups, defaultGroups(rig)) : defaultGroups(rig));
     presets.replace(withSavedPresets(defaultPresets(), d.presets));
