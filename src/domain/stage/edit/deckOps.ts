@@ -30,10 +30,13 @@ export function setDeckSize(d: StageDesign, size: DeckSize): StageDesign {
   return { ...d, deck, risers: risersOn(d.risers, height - d.deck.height) };
 }
 
-/** The risers moved up by `rise` metres; no rise (float noise aside) keeps the list, so a width edit leaves them be. */
+/**
+ * The risers moved up by `rise` metres, rounded to 1 mm as `moveRiser` stores them; no rise (float noise aside) keeps
+ * the list, so a width edit leaves them be.
+ */
 function risersOn(risers: StageDesign['risers'], rise: number): StageDesign['risers'] {
   if (isSameLength(rise, 0)) return risers;
-  return risers.map((r) => ({ ...r, at: [r.at[0], r.at[1] + rise, r.at[2]] }));
+  return risers.map((r) => ({ ...r, at: roundToMillimetre([r.at[0], r.at[1] + rise, r.at[2]]) }));
 }
 
 /**

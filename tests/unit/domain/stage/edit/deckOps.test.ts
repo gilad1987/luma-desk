@@ -26,6 +26,12 @@ describe('setDeckSize', () => {
     expect(raised.risers[0]?.at).toEqual([1, 2.25, 0]);
     expect(setDeckSize(raised, { width: 10, depth: 8, height: 1.75 }).risers).toBe(raised.risers);
   });
+
+  it('stores the moved riser height rounded to 1 mm, as a riser move does', () => {
+    const withRiser = addRiser(sampleDesign(), [1, 1.1, 0], [2, 0.1, 2]);
+    // without the rounding 1.1 + (1.3 - 1) gives 1.4000000000000001
+    expect(setDeckSize(withRiser, { width: 12, depth: 8, height: 1.3 }).risers[0]?.at[1]).toBe(1.4);
+  });
 });
 
 describe('setLedWall', () => {

@@ -11,7 +11,7 @@ export type TopPick =
 
 /** Half of the 44 px touch target (U9): a tap this far from an item still picks it. */
 const PICK_RADIUS_PX = 22;
-/** A tap this close to a fixture's centre is on its drawn 6 px mark, so the fixture wins. */
+/** A tap within one mark width (the drawn mark is 6 px square) of a fixture's centre is on it, so the fixture wins. */
 const FIXTURE_MARK_PX = 6;
 /** A tap this close to a tower is on the ring around its fixtures' marks, so the tower wins over a truss line. */
 const TOWER_MARK_PX = 12;

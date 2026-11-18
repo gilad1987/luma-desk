@@ -51,3 +51,15 @@ The follow-up commit rewrites the `withoutFixtures` comment and the headers of `
 `deletedMvrEntries.test.ts`, which said a deleted id is given out again. `tests/unit/mvr/qa/reusedFixtureId.test.ts`
 keeps its file and changes its premise: after `deleteFixtures(d, [1, 2])` and `addFloorRow` the ids are `[101, 102]`,
 and the old uuid and GDTF name are still absent from the export.
+
+## Review and QA follow-ups
+
+- `2a90db85` removes the stale LED wall spill light from a stage without a screen. The synthetic MVR stage of
+  `mvr-render-screenshots.spec.ts` has no wall, so its blue deck glow goes away: the `mvr-stage-foh.png` and
+  `mvr-stage-wide.png` baselines are recorded again in their own commit. The 9 baselines of `screenshots.spec.ts` and
+  the goldens do not change.
+- A deck height change stores the moved riser heights rounded to 1 mm, as `moveRiser` does.
+- The stricter parser (truss sizes 0.1-60 m, ring chains, one wall per screen fixture) rejects an old saved show that
+  breaks a limit; the desk then loads the built-in stage with a toast. The builder could not make such a design.
+- Not fixed: the parser accepts a `nextFixtureId` (or fixture id) above `Number.MAX_SAFE_INTEGER`; only a damaged
+  file can hold one, and fixture ids already had this gap.
