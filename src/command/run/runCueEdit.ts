@@ -18,8 +18,8 @@ export function runDeleteCue({ cue }: StatementOf<'deleteCue'>, { pool, state, b
 }
 
 /**
- * Names a cue of the selected executor, a group or an executor; saves. Quirk C6: the name goes into the log as-is,
- * and the UI inserts log text as HTML. A missing cue reports "Cue not found", unlike Goto and Delete.
+ * Names a cue of the selected executor, a group or an executor; saves. quirk C6 (orig:1934): the name goes into the
+ * log as-is, and the UI inserts log text as HTML. A missing cue reports "Cue not found", unlike Goto and Delete.
  */
 export function runLabel({ target, num, name }: StatementOf<'label'>, deps: CommandDeps): void {
   const { pool, state, groups, bus } = deps;
@@ -39,7 +39,10 @@ export function runLabel({ target, num, name }: StatementOf<'label'>, deps: Comm
   bus.emit('showChanged', undefined);
 }
 
-/** Quirk C4: changes the current cue's fade of the selected executor without saving; silent when no cue is active. */
+/**
+ * quirk C4 (orig:1937): changes the current cue's fade of the selected executor without saving; silent when no cue is
+ * active.
+ */
 export function runCueFade({ seconds }: StatementOf<'cueFade'>, { pool, state, bus }: CommandDeps): void {
   const executor = executorAt(pool, state.selExec, 'reading', 'cur');
   if (executor.cur < 0) return;
