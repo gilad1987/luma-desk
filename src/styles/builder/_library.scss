@@ -1,0 +1,41 @@
+@use '../abstracts/breakpoints' as *;
+
+// The builder library column (Phase 1: the title and a hint; the cards come in Phase 2).
+.builder {
+  .builder-library {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: var(--p1);
+    border-inline-end: 1px solid var(--line);
+  }
+  .library-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-block-size: var(--builder-target);
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .library-hint {
+    margin: 0;
+    color: var(--mut);
+    font-size: 12px;
+  }
+}
+
+// Narrow: the 56 px rail keeps only the title icon, centred on a 44 px target; its tooltip names it.
+@include below($builder-narrow) {
+  .builder {
+    .builder-library {
+      padding-inline: 0;
+      align-items: center;
+    }
+    .library-label,
+    .library-hint {
+      display: none;
+    }
+  }
+}

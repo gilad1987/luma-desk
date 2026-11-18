@@ -1,0 +1,61 @@
+@use '../abstracts/breakpoints' as *;
+
+// The builder bar (docs/plan/stage-builder-ux/toolbar.md): title, edit group, view-mode group, count badge, then the
+// session buttons. One row that never wraps; the buttons get their colours from the Web Awesome tokens.
+.builder {
+  .builder-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-inline: 12px;
+    background: var(--p1);
+    border-block-end: 1px solid var(--line);
+  }
+  .builder-title {
+    margin-inline-end: 8px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .edit-tools,
+  .view-modes {
+    display: flex;
+    gap: 4px;
+    padding-inline: 8px;
+    border-inline-start: 1px solid var(--line);
+  }
+  .count-badge {
+    margin-inline-start: auto;
+    padding-inline: 10px;
+    color: var(--mut);
+    font-variant-numeric: tabular-nums;
+    &.is-warning {
+      color: var(--prog);
+      font-weight: 600;
+    }
+  }
+  .view-modes wa-button.is-pressed::part(base) {
+    background: var(--wa-color-brand-fill-normal);
+    color: var(--wa-color-brand-on-normal);
+    border-color: var(--wa-color-brand-border-normal);
+  }
+  // wa-button dims a disabled host to 0.5; the spec keeps full opacity and greys the text instead.
+  .builder-bar wa-button[disabled] {
+    opacity: 1;
+  }
+  .builder-bar wa-button[disabled]::part(base) {
+    color: var(--mut);
+  }
+}
+
+// Narrow: the edit and mode buttons keep only the icon (44 x 44) and their tooltip; Cancel and Done keep the text.
+@include below($builder-narrow) {
+  .builder .edit-tools wa-button,
+  .builder .view-modes wa-button {
+    &::part(label) {
+      display: none;
+    }
+    .wa-icon-svg {
+      margin-inline-end: 0;
+    }
+  }
+}

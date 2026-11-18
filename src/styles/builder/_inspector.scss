@@ -1,0 +1,19 @@
+// The builder inspector: a scrolling column on wide screens, a wa-drawer at the end edge below $builder-narrow
+// (the .builder-panel moves between the two; _panel.scss styles it in both).
+.builder {
+  .builder-inspector {
+    background: var(--p1);
+    border-inline-start: 1px solid var(--line);
+  }
+  .inspector-drawer {
+    --size: 320px;
+    --spacing: 12px;
+  }
+  .inspector-drawer::part(dialog) {
+    background: var(--p1);
+    color: var(--txt);
+  }
+  .inspector-drawer::part(body) {
+    padding: 0;
+  }
+}

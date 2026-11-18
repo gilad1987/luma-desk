@@ -1,0 +1,78 @@
+// Web Awesome's interaction, shape, motion, form, type, spacing and tooltip tokens for the builder
+// (docs/plan/stage-builder-ux/00-overview.md). Flat and calm: no movement on press, one shadow on the drawer and tooltip.
+.builder.wa-dark {
+  // Interaction.
+  --wa-color-focus: var(--acc);
+  --wa-focus-ring-width: 2px;
+  --wa-focus-ring-offset: 1px;
+  --wa-focus-ring-style: solid;
+  --wa-color-mix-hover: var(--txt) 8%;
+  --wa-color-mix-active: var(--bg) 16%;
+  --wa-color-overlay-modal: color-mix(in srgb, var(--bg) 60%, transparent);
+  --wa-color-shadow: rgb(0 0 0 / 0.6);
+  --wa-shadow-l: -8px 0 24px -8px var(--wa-color-shadow);
+  --wa-shadow-s: 0 2px 8px -2px var(--wa-color-shadow);
+
+  // Shape and motion.
+  --wa-border-radius-s: 4px;
+  --wa-border-radius-m: 4px;
+  --wa-border-radius-l: 4px;
+  --wa-panel-border-radius: 4px;
+  --wa-form-control-border-radius: 4px;
+  --wa-button-transform-hover: none;
+  --wa-button-transform-active: none;
+  --wa-transition-fast: 120ms;
+  --wa-transition-normal: 120ms;
+  --wa-transition-slow: 200ms;
+  --wa-transition-easing: ease-out;
+
+  // Form controls: every control is a 44 px touch target (U9).
+  --wa-form-control-height: var(--builder-target);
+  --wa-form-control-padding-inline: 12px;
+  --wa-form-control-padding-block: 0;
+  --wa-form-control-border-color: var(--line2);
+  --wa-form-control-background-color: var(--bg);
+
+  // Typography: Inter at the desk's sizes, line height 1.3.
+  --wa-font-family-body: Inter, system-ui, sans-serif;
+  --wa-font-family-code: var(--mono);
+  --wa-font-size-xs: 11px;
+  --wa-font-size-s: 12px;
+  --wa-font-size-m: 13px;
+  --wa-font-size-l: 14px;
+  --wa-font-weight-action: 500;
+  --wa-font-weight-semibold: 600;
+  --wa-line-height-normal: 1.3;
+
+  // Spacing.
+  --wa-space-2xs: 2px;
+  --wa-space-xs: 4px;
+  --wa-space-s: 8px;
+  --wa-space-m: 12px;
+  --wa-space-l: 16px;
+  --wa-space-xl: 24px;
+
+  // Tooltips: 12 px on --p3 with a --line2 border, no arrow.
+  --wa-tooltip-arrow-size: 0;
+  --wa-tooltip-background-color: var(--p3);
+  --wa-tooltip-border-color: var(--line2);
+  --wa-tooltip-content-color: var(--txt);
+  --wa-tooltip-font-size: 12px;
+}
+
+// The control height above already gives 44 px; the part rule keeps the target if a size or theme rule resets it.
+.builder {
+  wa-button::part(base) {
+    min-block-size: var(--builder-target);
+    min-inline-size: var(--builder-target);
+  }
+  wa-button .wa-icon-svg {
+    inline-size: 20px;
+    block-size: 20px;
+    flex: none;
+    margin-inline-end: 6px;
+  }
+  wa-tooltip {
+    --max-width: 240px;
+  }
+}

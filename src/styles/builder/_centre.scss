@@ -1,0 +1,49 @@
+// The builder centre: a vertical wa-split-panel with the 3D preview on top and the plan below. The mode classes
+// (`is-mode-plan|split|3d`, ViewModeSwitch) move the split; in Plan and 3D the divider is gone.
+.builder {
+  .builder-centre {
+    display: grid;
+    min-height: 0;
+    background: var(--bg);
+  }
+  .centre-split {
+    --divider-width: 1px;
+    --divider-hit-area: 44px;
+    block-size: 100%;
+    min-height: 0;
+  }
+  .centre-split::part(divider) {
+    background: var(--line);
+  }
+  .centre-split::part(divider):focus-visible {
+    outline: 2px solid var(--acc);
+    outline-offset: 1px;
+  }
+  .builder-3d,
+  .builder-plan {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+  }
+  // The 3D well is black like #viewer (base/_viewer.scss).
+  .builder-3d {
+    background: #000;
+  }
+  .builder-plan {
+    background: var(--bg);
+  }
+  // The desk's #viewer, moved into the pane while the builder is open: it fills the pane exactly, with no border.
+  .builder-3d > #viewer {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    block-size: auto;
+    inline-size: auto;
+  }
+  // Hidden, not removed: the split panel places its panes in a fixed `start divider end` grid, and a divider with
+  // `display: none` would shift the end pane into the divider's track. Hidden also takes it out of the tab order.
+  .builder-centre.is-mode-plan .centre-split::part(divider),
+  .builder-centre.is-mode-3d .centre-split::part(divider) {
+    visibility: hidden;
+  }
+}
