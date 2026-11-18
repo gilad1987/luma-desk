@@ -9,13 +9,9 @@ import { trussPoints } from '../../../../../src/domain/stage/bounds.ts';
 import type { StageDesign } from '../../../../../src/domain/stage/StageDesign.ts';
 import { createTemplate } from '../../../../../src/domain/stage/templates/index.ts';
 import type { Vec3 } from '../../../../../src/domain/stage/types.ts';
-import { MvrArchive } from '../../../../../src/mvr/archive/MvrArchive.ts';
 import { exportContext } from '../../../../../src/mvr/export/ExportContext.ts';
-import { exportMvr } from '../../../../../src/mvr/index.ts';
-import { shiftBox, transformBox, type Aabb } from '../../../../../src/mvr/math/Aabb.ts';
-import { boxToThree } from '../../../../../src/mvr/math/axes.ts';
-import { meshBounds } from '../../../../../src/mvr/mesh/meshBounds.ts';
-import { exportRoundTrip } from '../../../../shared/index.ts';
+import type { Aabb } from '../../../../../src/mvr/math/Aabb.ts';
+import { exportedBoxes } from '../../../../shared/index.ts';
 
 const MM = 0.001;
 /** No template has risers yet, so the test adds two on the deck. */
@@ -28,18 +24,7 @@ const design: StageDesign = {
 };
 const { uuidOf } = exportContext(design);
 
-/** World boxes (three frame) of the imported placements by object uuid. */
-async function placedBoxes(): Promise<ReadonlyMap<string, Aabb>> {
-  const { meshes, result } = await exportRoundTrip(design);
-  const archive = MvrArchive.open(exportMvr(design, { meshes }).bytes);
-  const boxes = new Map<string, Aabb>();
-  for (const placement of result.geometry.placements) {
-    const local = meshBounds(archive, placement.file, () => undefined);
-    if (!local) throw new Error(`exportedBounds: ${placement.file} has no bounds`);
-    boxes.set(placement.uuid, shiftBox(boxToThree(transformBox(local, placement.matrix)), result.geometry.offset));
-  }
-  return boxes;
-}
+const placedBoxes = (): Promise<ReadonlyMap<string, Aabb>> => exportedBoxes(design);
 
 function expectBox(actual: Aabb | undefined, min: Vec3, max: Vec3): void {
   min.forEach((value, axis) => expect(Math.abs((actual?.min[axis] ?? NaN) - value)).toBeLessThan(MM));

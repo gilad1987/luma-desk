@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 /**
  * MvrStage's draw-call shape: a file several placements share becomes one InstancedMesh per sub-mesh, files placed
- * once merge per material, every layer is its own group to hide, and dispose frees every geometry it drew with.
+ * once merge per material (alike materials of different files are one), every layer is its own group to hide, and
+ * dispose frees every geometry it drew with.
  */
 import { InstancedMesh, type BufferGeometry, type Mesh, type Object3D } from 'three';
 import { describe, expect, it } from 'vitest';
@@ -60,17 +61,19 @@ describe('MvrStage', () => {
     const [layerOne, layerTwo] = stage.group.children;
     const instanced = drawnMeshes(stage.group).filter((mesh): mesh is InstancedMesh => mesh instanceof InstancedMesh);
     expect(instanced.map((mesh) => mesh.count)).toEqual([3, 3]);
-    expect(drawnMeshes(layerOne ?? stage.group)).toHaveLength(4);
-    expect(drawnMeshes(layerTwo ?? stage.group)).toHaveLength(2);
+    // L1: a.3ds as two instanced meshes, b.3ds and c.3ds (same default material) merged into one.
+    expect(drawnMeshes(layerOne ?? stage.group)).toHaveLength(3);
+    // L2: the two parts of the single a.3ds share that material, so they merge too.
+    expect(drawnMeshes(layerTwo ?? stage.group)).toHaveLength(1);
     expect(drawnMeshes(stage.group).every((mesh) => mesh.receiveShadow && !mesh.castShadow)).toBe(true);
   });
 
   it('hides a layer and shows it again', async () => {
     const stage = await shownStage();
     stage.setHiddenLayers(['L2']);
-    expect(drawnMeshes(stage.group)).toHaveLength(4);
+    expect(drawnMeshes(stage.group)).toHaveLength(3);
     stage.setHiddenLayers([]);
-    expect(drawnMeshes(stage.group)).toHaveLength(6);
+    expect(drawnMeshes(stage.group)).toHaveLength(4);
   });
 
   it('frees every geometry it drew with on dispose and empties the group', async () => {
@@ -90,6 +93,6 @@ describe('MvrStage', () => {
     await stage.show(input);
     await first;
     expect(stage.group.children).toHaveLength(2);
-    expect(drawnMeshes(stage.group)).toHaveLength(6);
+    expect(drawnMeshes(stage.group)).toHaveLength(4);
   });
 });

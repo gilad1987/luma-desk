@@ -13,7 +13,10 @@ interface MergeGroup {
   readonly geometries: BufferGeometry[];
 }
 
-/** Geometries merge only with the same material and the same attribute layout, which `mergeGeometries` requires. */
+/**
+ * Geometries merge only with the same material and the same attribute layout, which `mergeGeometries` requires. The
+ * library pools materials that look alike, so the material instance is the right key across files.
+ */
 function mergeKey({ geometry, material }: MeshPart): string {
   const attributes = Object.entries(geometry.attributes).map(([name, attribute]) => `${name}:${attribute.itemSize}`);
   return `${material.uuid}|${geometry.index ? 'indexed' : 'flat'}|${attributes.sort().join(',')}`;

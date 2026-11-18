@@ -3,23 +3,24 @@ import { boxFromThree } from '../math/axes';
 import { isFiniteBox, type Aabb } from '../math/Aabb';
 import type { MvrWarning } from '../MvrWarning';
 import { glbBounds } from './glbBounds';
+import { meshFormatOf } from './meshFormatOf';
 import { tdsBounds } from './tdsBounds';
 
 /** Results per archive and file name, so a mesh that 500 symbols share is read and warned about once. */
 const cache = new WeakMap<MvrArchive, Map<string, Aabb | undefined>>();
 
-/**
- * The box of a mesh file in the MVR frame, by extension: `.glb` is glTF (m, Y up); `.3ds` or none is 3DS (mm, Z
- * up).
- */
+/** The box of a mesh file in the MVR frame; a glTF box (m, Y up) is turned into it, a 3DS box already is. */
 function readBounds(bytes: Uint8Array, file: string): Aabb | undefined {
-  const name = file.toLowerCase();
-  if (name.endsWith('.glb')) {
-    const box = glbBounds(bytes);
-    return box && boxFromThree(box);
+  switch (meshFormatOf(file)) {
+    case 'glb': {
+      const box = glbBounds(bytes);
+      return box && boxFromThree(box);
+    }
+    case '3ds':
+      return tdsBounds(bytes);
+    case undefined:
+      return undefined;
   }
-  const hasExtension = /\.[^.]*$/.test(name);
-  return !hasExtension || name.endsWith('.3ds') ? tdsBounds(bytes) : undefined;
 }
 
 /** Reads one mesh file; a missing or unreadable file gives a warning and `undefined`, never an exception. */
