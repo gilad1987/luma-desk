@@ -3,17 +3,22 @@ import { FEAT_ATTRS } from '../domain/attributes';
 import type { EngineBus } from './events';
 import type { PresetPools, PresetType } from './presetTypes';
 import { PRESET_TYPES, PT_FEAT } from './presetTypes';
+import { isPresetAvailable } from './stage/presetTargets';
+import type { RigSource } from './stage/RigSource';
 
 /**
  * The show's preset pools. It owns the pools object so a loaded show or the demo can swap it whole, and so storing a
- * preset always announces the change to the pool view and to persistence.
+ * preset always announces the change to the pool view and to persistence. With a `RigSource` (the StageService) it
+ * also knows which computed presets the current stage cannot aim (G10); without one every preset is available.
  */
 export class PresetLibrary {
   #presets: PresetPools = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {} };
   readonly #bus: EngineBus;
+  readonly #source: RigSource | undefined;
 
-  constructor(bus: EngineBus) {
+  constructor(bus: EngineBus, source?: RigSource) {
     this.#bus = bus;
+    this.#source = source;
   }
 
   /** The live pools. Show save, the pool view and the command line read them. */
@@ -27,6 +32,17 @@ export class PresetLibrary {
    */
   replace(presets: PresetPools): void {
     this.#presets = presets;
+  }
+
+  /**
+   * False for a computed preset whose stage part (ring, screen, band) the current stage lacks (G10), so the pool view
+   * can hide it and applying it can refuse. Its data stays, for a later stage that has the part. Any other slot, an
+   * empty one included, is available; the stage is read at call time, so no cache waits for `rigChanged`.
+   */
+  isAvailable(type: PresetType, slot: number): boolean {
+    const pr = this.#presets[type][slot];
+    if (pr?.kind !== 'fn' || this.#source === undefined) return true;
+    return isPresetAvailable(pr.fn, this.#source.frame);
   }
 
   /**

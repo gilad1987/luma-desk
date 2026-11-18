@@ -13,4 +13,6 @@ export interface RigSource {
   readonly frame: StageFrame;
   /** The cause of the last change; `boot` until the first `apply`. */
   readonly cause: RigChangeCause;
+  /** True only on the built-in design itself; the built-in stage keeps the old 37-slot default group pool. */
+  readonly isBuiltIn: boolean;
 }
