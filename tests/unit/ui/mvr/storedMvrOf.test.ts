@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { createTemplate } from '../../../../src/domain/stage/templates';
-import { storedMvrOf } from '../../../../src/ui/panels/mvr/missingMvr';
+import { storedMvrOf } from '../../../../src/ui/panels/mvr/storedMvrOf';
 
 const BYTES = new Uint8Array([1, 2, 3]);
 const theatre = createTemplate('theatre');

@@ -18,17 +18,18 @@ export type MvrImportOutcome =
   | { readonly kind: 'imported'; readonly result: MvrImport; readonly stored: boolean };
 
 /**
- * Imports a chosen `.mvr` file: store the bytes, read them, then apply the design with cause `import`. The bytes are
- * stored before the apply, because the apply saves the show, and a reload must never find a show whose file is not in
- * IndexedDB. The parser is a lazy chunk (`import()`), so the boot bundle does not grow. A file the parser rejects is
- * taken out of the store again; other errors are code bugs and reject.
+ * Imports a chosen `.mvr` file: load the parser, store the bytes, read them, then apply the design with cause
+ * `import`. The parser is a lazy chunk (`import()`), so the boot bundle does not grow; it loads first, so a chunk that
+ * does not load (offline, a new deploy) rejects before any bytes are stored. The bytes are stored before the apply,
+ * because the apply saves the show, and a reload must never find a show whose file is not in IndexedDB. A file the
+ * parser rejects is taken out of the store again; other errors are code bugs and reject.
  */
 export async function importMvrFile(
   file: { readonly name: string; readonly bytes: Uint8Array<ArrayBuffer> },
   deps: MvrImportDeps,
 ): Promise<MvrImportOutcome> {
-  const hash = await deps.store.put(file.bytes);
   const { importMvr, MvrError } = await import('../../../mvr');
+  const hash = await deps.store.put(file.bytes);
   let result: MvrImport;
   try {
     result = await importMvr(file.bytes, hash === null ? { name: file.name } : { name: file.name, fileHash: hash });

@@ -1,6 +1,7 @@
 /**
  * Owns `StageService.updateMeta` (G8): it swaps a design that differs only in MVR `hiddenLayers`, emits only
- * `showChanged`, keeps the rig object, refuses rig changes and re-entry during an emit.
+ * `showChanged`, keeps the rig object, refuses rig changes and designs without MVR data. Re-entry is in
+ * `updateMeta.reentry.test.ts`.
  */
 import { describe, expect, it } from 'vitest';
 import { EventBus } from '../../../../src/core';
@@ -48,18 +49,14 @@ describe('StageService.updateMeta', () => {
     expect(events).toEqual([]);
   });
 
-  it('refuses a call from a rigChanged listener before it changes state', () => {
-    const { bus, service } = setup();
-    let error: unknown;
-    bus.on('rigChanged', ({ design }) => {
-      try {
-        service.updateMeta(withHidden(design, ['a']));
-      } catch (caught) {
-        error = caught;
-      }
+  it('refuses a design without MVR data, even when its rig is the same', () => {
+    const theatre = createTemplate('theatre');
+    const service = new StageService(new EventBus<EngineEvents>(), {
+      builtIn,
+      initial: theatre,
+      tooManyFixtures: String,
     });
-    service.apply(imported, 'builder');
-    expect(error).toBeInstanceOf(Error);
-    expect(service.design.mvr?.hiddenLayers).toEqual([]);
+    expect(() => service.updateMeta({ ...theatre })).toThrow('StageService.updateMeta: the design has no MVR data');
+    expect(service.design).toBe(theatre);
   });
 });

@@ -1,82 +1,70 @@
+import { FakeConnection } from './idb/FakeConnection';
+import { FakeRequest } from './idb/FakeRequest';
+
 /**
- * A small in-memory IndexedDB for `MvrStore` tests: open with upgrade, one object store, put, get and delete. Request
- * handlers run in a later microtask and transactions end in a later macrotask, as in a browser, so code that does not
- * wait for the commit shows up. The repo has no fake-indexeddb dependency; this covers only the calls the store makes.
+ * A small in-memory IndexedDB for `MvrStore` tests: versioned open with upgrade, object stores, put, get, delete,
+ * `versionchange` and a browser-side close. Requests settle in a later microtask and transactions end in a later
+ * macrotask, as in a browser. The repo has no fake-indexeddb dependency; this covers only the calls the store makes.
+ * The public fields are the test controls: the stored records, the number of opens, and switches for later calls.
  */
-type Handler = (() => void) | null;
-
-class FakeRequest<T> {
-  result: T | undefined = undefined;
-  error: Error | null = null;
-  onsuccess: Handler = null;
-  onerror: Handler = null;
-  onupgradeneeded: Handler = null;
-
-  /** Settles in a later microtask: success with `act()` (after the upgrade when `upgrade`), or an error. */
-  settle(failed: boolean, act: () => T, upgrade = false): this {
-    queueMicrotask(() => {
-      if (failed) {
-        this.error = new Error('fake request failed');
-        this.onerror?.();
-        return;
-      }
-      this.result = act();
-      if (upgrade) this.onupgradeneeded?.();
-      this.onsuccess?.();
-    });
-    return this;
-  }
-}
-
-class FakeTransaction {
-  error: Error | null = null;
-  oncomplete: Handler = null;
-  onerror: Handler = null;
-  onabort: Handler = null;
-  #failed = false;
-  readonly db: FakeIndexedDb;
-
-  constructor(db: FakeIndexedDb) {
-    this.db = db;
-    setTimeout(() => {
-      if (!this.#failed) return this.oncomplete?.();
-      this.error = new Error('fake transaction failed');
-      this.onerror?.();
-    }, 0);
-  }
-
-  objectStore(): object {
-    const write = <T>(act: () => T): FakeRequest<T> => {
-      this.#failed ||= this.db.failWrites;
-      return new FakeRequest<T>().settle(this.db.failWrites, act);
-    };
-    return {
-      put: (value: unknown, key: string) => write(() => this.db.records.set(key, value)),
-      get: (key: string) => new FakeRequest<unknown>().settle(false, () => this.db.records.get(key)),
-      delete: (key: string) => write(() => this.db.records.delete(key)),
-    };
-  }
-}
-
-/** The test controls: the stored records, the number of opens, and switches that make later calls fail. */
 export class FakeIndexedDb {
   readonly records = new Map<string, unknown>();
+  /** The open request fails with an `error` event. */
   failOpen = false;
+  /** `open` itself throws, as when the browser blocks storage (SecurityError). */
+  throwOnOpen = false;
+  /** A write request fails, and its transaction ends with `error`. */
   failWrites = false;
+  /** A write request succeeds, then its transaction ends with only `abort` (quota) and the write rolls back. */
+  abortWrites = false;
   opens = 0;
-  #hasStore = false;
+  readonly #stores = new Set<string>();
+  readonly #connections: FakeConnection[] = [];
+  #version = 0;
 
-  /** The fake as the `IDBFactory` the store expects; only `open` exists. */
+  /**
+   * The fake as the `IDBFactory` the store expects. The one cast of the fake, at its boundary: it has only the members
+   * `MvrStore` calls, not the whole DOM interface.
+   */
   get factory(): IDBFactory {
-    return { open: () => this.#open() } as unknown as IDBFactory;
+    return { open: (_name: string, version: number) => this.#open(version) } as unknown as IDBFactory;
   }
 
-  #open(): FakeRequest<object> {
+  /**
+   * Deletes the database as `indexedDB.deleteDatabase` does: open connections get `versionchange` first. False, and
+   * nothing deleted, when a connection stays open (the browser would report `blocked`).
+   */
+  deleteDatabase(): boolean {
+    this.#openConnections().forEach((connection) => connection.onversionchange?.());
+    if (this.#openConnections().length > 0) return false;
+    this.records.clear();
+    this.#stores.clear();
+    this.#version = 0;
+    return true;
+  }
+
+  /** Closes every connection without `close()`, as a browser does when the user clears site data; fires `close`. */
+  closeByBrowser(): void {
+    this.#openConnections().forEach((connection) => {
+      connection.close();
+      connection.onclose?.();
+    });
+  }
+
+  #openConnections(): FakeConnection[] {
+    return this.#connections.filter((connection) => !connection.closed);
+  }
+
+  #open(version: number): FakeRequest<FakeConnection> {
+    if (this.throwOnOpen) throw new Error('SecurityError');
     this.opens += 1;
-    const database = {
-      createObjectStore: () => (this.#hasStore = true),
-      transaction: () => new FakeTransaction(this),
+    const upgrade = version > this.#version;
+    const connect = (): FakeConnection => {
+      this.#version = Math.max(this.#version, version);
+      const connection = new FakeConnection(this, this.#stores);
+      this.#connections.push(connection);
+      return connection;
     };
-    return new FakeRequest<object>().settle(this.failOpen, () => database, !this.#hasStore);
+    return new FakeRequest<FakeConnection>().settle(this.failOpen, connect, upgrade);
   }
 }

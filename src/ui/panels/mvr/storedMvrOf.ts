@@ -12,7 +12,7 @@ export type StoredMvr =
   | { readonly kind: 'missing'; readonly fileName: string }
   | { readonly kind: 'found'; readonly bytes: Uint8Array };
 
-/** Looks up the stored `.mvr` bytes of `design` (plan §6, `missingMvr`); the store never rejects. */
+/** Looks up the stored `.mvr` bytes of `design` (the `missingMvr` step of plan §6); the store never rejects. */
 export async function storedMvrOf(design: StageDesign, store: Pick<MvrStore, 'get'>): Promise<StoredMvr> {
   const { kind, fileHash, name } = design.source;
   if (kind !== 'mvr' || fileHash === undefined) return { kind: 'none' };

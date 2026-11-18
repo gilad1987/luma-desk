@@ -1,6 +1,6 @@
 /**
- * Owns `MvrStore`: SHA-256 hex keys, put/get/delete through IndexedDB, a reload that finds the bytes again, and the
- * rule that every failure resolves `null` or `false` and never rejects. The database is the in-memory fake.
+ * Owns `MvrStore` reads and writes: SHA-256 hex keys, put/get/delete through IndexedDB, the `files` store made on the
+ * first open, and a reload that finds the bytes again. The database is the in-memory fake.
  */
 import { describe, expect, it } from 'vitest';
 import { MvrStore } from '../../../src/io/mvrStore';
@@ -52,36 +52,20 @@ describe('MvrStore', () => {
     expect(await store.get(ABC_HASH)).toBeNull();
   });
 
-  it('resolves null or false when the database does not open, and opens again on the next call', async () => {
+  it('closes its connection for a database delete from another tab, then opens a new database', async () => {
     const { db, store } = setup();
-    db.failOpen = true;
-    expect(await store.put(abc())).toBeNull();
+    await store.put(abc());
+    expect(db.deleteDatabase()).toBe(true);
     expect(await store.get(ABC_HASH)).toBeNull();
-    expect(await store.delete(ABC_HASH)).toBe(false);
-    db.failOpen = false;
     expect(await store.put(abc())).toBe(ABC_HASH);
+    expect(db.opens).toBe(2);
   });
 
-  it('resolves null when a write does not commit, and keeps nothing', async () => {
+  it('opens again after the browser closed the connection', async () => {
     const { db, store } = setup();
-    db.failWrites = true;
-    expect(await store.put(abc())).toBeNull();
-    expect(await store.delete(ABC_HASH)).toBe(false);
-    expect(db.records.size).toBe(0);
-  });
-
-  it('resolves null when hashing fails', async () => {
-    const db = new FakeIndexedDb();
-    const subtle = { digest: () => Promise.reject(new Error('no crypto')) } as unknown as SubtleCrypto;
-    expect(await new MvrStore(db.factory, subtle).put(abc())).toBeNull();
-  });
-
-  it('resolves null when IndexedDB itself throws on open', async () => {
-    const idb = {
-      open: () => {
-        throw new Error('SecurityError');
-      },
-    } as unknown as IDBFactory;
-    expect(await new MvrStore(idb, globalThis.crypto.subtle).get(ABC_HASH)).toBeNull();
+    await store.put(abc());
+    db.closeByBrowser();
+    expect(await store.get(ABC_HASH)).toEqual(abc());
+    expect(db.opens).toBe(2);
   });
 });

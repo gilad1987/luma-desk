@@ -27,7 +27,7 @@ function openDatabase(idb: IDBFactory): Promise<IDBDatabase> {
 export class MvrStore {
   readonly #idb: IDBFactory;
   readonly #subtle: SubtleCrypto;
-  /** Opened on first use and kept; reset after a failed open so a later call tries again. */
+  /** Opened on first use and kept; reset after a failed open or a close, so a later call opens again. */
   #db: Promise<IDBDatabase> | null = null;
 
   constructor(idb: IDBFactory, subtle: SubtleCrypto) {
@@ -72,10 +72,29 @@ export class MvrStore {
   }
 
   #open(): Promise<IDBDatabase> {
-    this.#db ??= openDatabase(this.#idb).catch((error: unknown) => {
-      this.#db = null;
-      throw error;
-    });
+    this.#db ??= openDatabase(this.#idb).then(
+      (db) => this.#watch(db),
+      (error: unknown) => {
+        this.#db = null;
+        throw error;
+      },
+    );
     return this.#db;
+  }
+
+  /**
+   * Closes the connection when another tab deletes or upgrades the database, so that tab is not blocked, and forgets a
+   * closed connection (also one the browser closed, as when site data is cleared), so the next call opens again.
+   */
+  #watch(db: IDBDatabase): IDBDatabase {
+    const forget = (): void => {
+      this.#db = null;
+    };
+    db.onversionchange = () => {
+      db.close();
+      forget();
+    };
+    db.onclose = forget;
+    return db;
   }
 }
