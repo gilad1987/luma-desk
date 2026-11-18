@@ -3,37 +3,31 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { wireGuide } from '../../../../src/app/io/wireGuide';
 import { buildRig } from '../../../../src/domain/rig';
 import { he } from '../../../../src/i18n/he';
-import { GuideFlag } from '../../../../src/show';
-import type { KeyValueStore } from '../../../../src/show/KeyValueStore';
+import { GuideFlag, type KeyValueStore } from '../../../../src/show';
+import { MemoryStore } from '../../../shared';
 import { FakeDom, FakeHost } from '../../../shared/dom';
 
 const OVERLAY_IDS = ['guide', 'gClose', 'gPrev', 'gNext', 'gTitle', 'gBody', 'gTour'];
 const TOUR_IDS = ['tNext', 'tPrev', 'tEnd', 'tourHole', 'tourTip', 'tTitle', 'tText', 'tCount'];
 
-function setup(store: KeyValueStore = new MapStore()) {
+function setup(store: KeyValueStore = new MemoryStore()) {
   const dom = new FakeDom();
   for (const id of [...OVERLAY_IDS, ...TOUR_IDS]) dom.add(id);
   dom.add('gNav', new FakeHost());
   vi.stubGlobal('addEventListener', vi.fn());
   vi.stubGlobal('requestAnimationFrame', vi.fn());
-  const handles = wireGuide({ rig: buildRig(), isMa: () => false, guideFlag: new GuideFlag(store) });
+  const sideTabs = { show: vi.fn() };
+  const handles = wireGuide({ rig: buildRig(), sideTabs, isMa: () => false, guideFlag: new GuideFlag(store) });
   return { dom, store, handles };
 }
 
-class MapStore implements KeyValueStore {
-  readonly stored = new Map<string, string>();
-  getItem = (key: string): string | null => this.stored.get(key) ?? null;
-  setItem = (key: string, value: string): void => void this.stored.set(key, value);
+/** A store that throws on every read and write, like a blocked localStorage. */
+function blockedStore(): MemoryStore {
+  const store = new MemoryStore();
+  store.failReads = true;
+  store.failWrites = true;
+  return store;
 }
-
-const blockedStore: KeyValueStore = {
-  getItem: () => {
-    throw new Error('storage blocked');
-  },
-  setItem: () => {
-    throw new Error('storage blocked');
-  },
-};
 
 describe('wireGuide', () => {
   afterEach(() => {
@@ -43,10 +37,10 @@ describe('wireGuide', () => {
 
   it('opens the guide 600 ms after a first visit only; blocked storage counts as seen', () => {
     vi.useFakeTimers();
-    const seenStore = new MapStore();
+    const seenStore = new MemoryStore();
     seenStore.setItem('lumadesk-guide-seen', '1');
     // each setup replaces the global document, so every case runs to the end before the next starts
-    const openStates = [new MapStore(), seenStore, blockedStore].map((store) => {
+    const openStates = [new MemoryStore(), seenStore, blockedStore()].map((store) => {
       const { guide } = setup(store).handles;
       guide.openOnFirstRun();
       vi.advanceTimersByTime(599);
@@ -62,7 +56,7 @@ describe('wireGuide', () => {
   });
 
   it('closes without throwing when storage is blocked', () => {
-    const { handles } = setup(blockedStore);
+    const { handles } = setup(blockedStore());
     handles.guide.open(0);
     handles.guide.close();
     expect(handles.guide.isOpen()).toBe(false);

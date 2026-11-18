@@ -1,4 +1,4 @@
-/** Checks the tour's tab switches: they click the real tab buttons, and skip `pools` in the MA layout (legacy `sideTo`). */
+/** Checks the tour's view switches: side panes go through SideTabs.show (legacy `sideTo`), features click their tab. */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createTourHooks } from '../../../../src/app/io/createTourHooks';
 import { FakeElement } from '../../../shared/dom';
@@ -17,28 +17,26 @@ function setup() {
       return element;
     },
   });
-  return clicked;
+  return { clicked, sideTabs: { show: vi.fn() } };
 }
 
 describe('createTourHooks', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('clicks the side tab, except pools while the MA layout is on', () => {
-    const clicked = setup();
-    const ma = createTourHooks(() => true),
-      desk = createTourHooks(() => false);
-    ma.showSide('pools');
-    ma.showSide('sheet');
-    desk.showSide('pools');
-    expect(clicked).toEqual(['#sideTabs [data-t=sheet]', '#sideTabs [data-t=pools]']);
+  it('switches the side pane through SideTabs.show, which owns the MA skip of pools', () => {
+    const { clicked, sideTabs } = setup();
+    const hooks = createTourHooks(sideTabs, () => true);
+    hooks.showSide('pools');
+    hooks.showSide('auto');
+    expect([sideTabs.show.mock.calls, clicked]).toEqual([[['pools'], ['auto']], []]);
   });
 
   it('clicks the feature tab and reports the layout through isMa', () => {
-    const clicked = setup();
+    const { clicked, sideTabs } = setup();
     let isMa = false;
-    const hooks = createTourHooks(() => isMa);
+    const hooks = createTourHooks(sideTabs, () => isMa);
     hooks.showFeature('pos');
     isMa = true;
-    expect([clicked, hooks.isMa()]).toEqual([['#featTabs [data-f=pos]'], true]);
+    expect([clicked, hooks.isMa(), sideTabs.show.mock.calls]).toEqual([['#featTabs [data-f=pos]'], true, []]);
   });
 });

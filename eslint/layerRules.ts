@@ -34,10 +34,14 @@ function forbiddenThree(layer: Layer): (typeof THREE_CORE)[] {
   return [];
 }
 
-/** `src/app` is the composition root's wiring: only `src/main.ts` and `src/app` itself may import it. */
+/**
+ * `src/app` is the composition root's wiring: only `src/main.ts` and `src/app` itself may import it. Every file this
+ * applies to sits in a `src/<area>/` folder, so it reaches `src/app` only through `../` steps. It is a regex, not a
+ * glob, because the old glob also matched package paths such as `firebase/app`. No other src folder is named `app`.
+ */
 const APP_WIRING = {
-  group: ['**/app', '**/app/*'],
-  message: 'Only src/main.ts may import src/app: the wiring knows every area, so no area may depend on it.',
+  regex: '^(\\.\\./)+app(/|$)',
+  message: 'Only src/main.ts and src/app may import src/app.',
 };
 
 /** Rules for one layer; it repeats the shared-folder rule because a later no-restricted-imports entry replaces it. */

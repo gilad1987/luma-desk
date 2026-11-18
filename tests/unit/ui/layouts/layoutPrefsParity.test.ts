@@ -3,20 +3,22 @@
  * desk writes. Applying a layout to the page is DOM work that the Playwright parity suite checks.
  */
 import { describe, expect, it } from 'vitest';
-import { LayoutPrefs, STORAGE_KEYS, type KeyValueStore } from '../../../../src/show';
+import { LayoutPrefs, STORAGE_KEYS } from '../../../../src/show';
 import { MA_SIZE, zoomFactor } from '../../../../src/ui/layouts/fitMath';
 import { toLayoutMode } from '../../../../src/ui/layouts/toLayoutMode';
+import { MemoryStore } from '../../../shared';
 
 /** LayoutPrefs over an in-memory store holding `stored` under the layout key (nothing when null). */
-function prefsWith(stored: string | null): { prefs: LayoutPrefs; items: Map<string, string> } {
-  const items = new Map<string, string>(stored === null ? [] : [[STORAGE_KEYS.layout, stored]]);
-  const store: KeyValueStore = { getItem: (k) => items.get(k) ?? null, setItem: (k, v) => void items.set(k, v) };
-  return { prefs: new LayoutPrefs(store), items };
+function prefsWith(stored: string | null): { prefs: LayoutPrefs; store: MemoryStore } {
+  const store = new MemoryStore();
+  if (stored !== null) store.setItem(STORAGE_KEYS.layout, stored);
+  return { prefs: new LayoutPrefs(store), store };
 }
 
 describe('saved layout parity', () => {
-  it('keeps an unknown saved layout name, so the select shows no option and the page is classic', () => {
-    const { prefs, items } = prefsWith(JSON.stringify({ deskMode: 'tablet', deskZoom: '.85' }));
+  // known quirk D9: an unknown stored deskMode is kept as it is, so the select shows no option
+  it('keeps an unknown saved layout name, so the select shows no option and the page is classic (quirk)', () => {
+    const { prefs, store } = prefsWith(JSON.stringify({ deskMode: 'tablet', deskZoom: '.85' }));
     const loaded = prefs.load(MA_SIZE);
     if (!loaded) throw new Error('the saved layout did not load');
     prefs.save(loaded);
@@ -25,18 +27,24 @@ describe('saved layout parity', () => {
       'classic',
       0.85,
     ]);
-    expect(items.get(STORAGE_KEYS.layout)).toBe('{"deskMode":"tablet","deskZoom":".85"}');
+    expect(store.items.get(STORAGE_KEYS.layout)).toBe('{"deskMode":"tablet","deskZoom":".85"}');
   });
 
   it('round-trips the values the selects and the grip write', () => {
-    const { prefs, items } = prefsWith(null);
+    const { prefs, store } = prefsWith(null);
     prefs.save({ deskMode: 'desk', deskZoom: '0.85', maSize: 0.55 });
-    expect(items.get(STORAGE_KEYS.layout)).toBe('{"deskMode":"desk","deskZoom":"0.85","maSize":0.55}');
+    expect(store.items.get(STORAGE_KEYS.layout)).toBe('{"deskMode":"desk","deskZoom":"0.85","maSize":0.55}');
     expect(prefs.load(MA_SIZE)).toEqual({ deskMode: 'desk', deskZoom: '0.85', maSize: 0.55 });
   });
 
   it('falls back to the MA console at auto zoom for empty fields', () => {
     const { prefs } = prefsWith(JSON.stringify({ deskMode: '', deskZoom: '' }));
+    expect(prefs.load(MA_SIZE)).toEqual({ deskMode: 'ma', deskZoom: 'auto', maSize: undefined });
+  });
+
+  // the original (`L.deskMode || 'ma'`) kept 5 and true as they were; LayoutPrefs keeps text only
+  it('reads saved names that are not text as the MA console at auto zoom (accepted change)', () => {
+    const { prefs } = prefsWith('{"deskMode":5,"deskZoom":true}');
     expect(prefs.load(MA_SIZE)).toEqual({ deskMode: 'ma', deskZoom: 'auto', maSize: undefined });
   });
 

@@ -1,12 +1,13 @@
 import type { Scene, WebGLRenderer } from 'three';
 import { CameraViews } from '../../render/camera/CameraViews';
-import { VIEWS, type ViewName } from '../../render/camera/viewTable';
+import type { ViewName } from '../../render/camera/viewTable';
 import { addEnvironmentLights } from '../../render/lights/addEnvironmentLights';
 import { SceneLights } from '../../render/lights/SceneLights';
 import { createStageGraphics } from '../../render/stage/createStageGraphics';
 import { PostFx } from '../../render/stage/PostFx';
 import { buildVenue, type Venue } from '../../render/venue/Venue';
 import { byId } from '../../ui/dom';
+import { isViewName } from './isViewName';
 
 /** The renderer, camera and venue: everything the fixture visuals hang in. */
 export interface StageHandles {
@@ -22,8 +23,6 @@ export interface StageHandles {
   readonly venue: Venue;
   readonly sceneLights: SceneLights;
 }
-
-const isViewName = (view: string): view is ViewName => Object.hasOwn(VIEWS, view);
 
 /** Lights the `[data-view]` button of the current view, as the top bar showed it before any area owned it. */
 function markViewButtons(view: ViewName): void {

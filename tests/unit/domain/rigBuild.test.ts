@@ -55,8 +55,4 @@ describe('buildRig', () => {
       expect(f.T.attrs.length).toBeGreaterThan(0);
     }
   });
-
-  it('leaves fixtures extensible, because the legacy script still adds render and UI fields', () => {
-    expect(rig.fixtures.every((f) => Object.isExtensible(f))).toBe(true);
-  });
 });

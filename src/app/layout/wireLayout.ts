@@ -12,7 +12,6 @@ import { maReadout } from './maReadout';
 
 /** What the composition root keeps of the layouts. */
 export interface LayoutHandles {
-  readonly layout: LayoutManager;
   /** The shown layout, for the panels that read it at call time. */
   readonly mode: () => LayoutMode;
   /**
@@ -51,7 +50,6 @@ export function wireLayout(deps: LayoutDeps): LayoutHandles {
   const mode = (): LayoutMode => layout.mode;
   startConsoleInfo(mode, consoleInfoSource(deps));
   return {
-    layout,
     mode,
     restore: () => layout.restore(),
     fast: () => {

@@ -24,8 +24,7 @@ export interface PixelStrip {
 
 /**
  * One fixture of the rig: its identity, type and place in the venue, plus the engine's output for the current frame.
- * Render and UI state (`vis`, `vo`, `sel`, `dom`) is not part of it; until Phases 4-5 the legacy script still adds
- * those fields to the object at run time, so instances stay plain extensible objects.
+ * Render and UI state (`vis`, `vo`, `sel`, `dom`) is not part of it.
  */
 export class Fixture {
   readonly id: number;

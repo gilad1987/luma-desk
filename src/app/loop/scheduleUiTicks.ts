@@ -23,8 +23,8 @@ export interface UiTickPanels {
 }
 
 /**
- * Registers the panel repaints in the order of the original frame loop, which is the order the DOM writes happened
- * in. Fast: executors, encoders, the auto-show pane, the MA read-outs, the selection chips, the command keys. Slow:
+ * Registers the panel repaints of the original frame loop: the same panels each tick; the writes do not read layout
+ * between them. Fast: executors, encoders, the auto-show pane, the MA read-outs, the selection chips, the command keys. Slow:
  * the sequence and the sheet (each only while its tab shows), then the frame rate and the clock.
  */
 export function scheduleUiTicks(ui: UiTickScheduler, panels: UiTickPanels): void {

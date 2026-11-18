@@ -8,8 +8,9 @@ import { indexFx, type FxIndex, type PhaserInstance, type PhaserType } from './s
 /**
  * The operator's working look: values and phasers that override every executor until CLEAR. The field names `vals`,
  * `fxList` and `fx` are public API: the panels and the Playwright test hook (`window.__desk.test.state()`) read them.
- * Clearing replaces the three objects, so readers look them up each time instead of keeping them. The rules of each operation live in
- * `programmerActions/`, one file each; a method here only hands that rule this programmer and its collaborators.
+ * Clearing replaces the three objects, so readers look them up each time instead of keeping them. The rules of each
+ * operation live in `programmerActions/`, one file each; a method here only hands that rule this programmer and its
+ * collaborators.
  */
 export class Programmer {
   /** Values per fixture id; a fixture with no value left has no key. */
