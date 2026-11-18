@@ -57,9 +57,10 @@ describe('focus keys', () => {
     const truss = start.trusses[0]?.id ?? '';
     const fixture = start.fixtures.find((f) => f.trussId === truss)?.id ?? 0;
     const stage = keysOf(rootOf(new StageTab(session)));
-    const trusses = keysOf(rootOf(new TrussTab(session)));
     const fixtures = keysOf(rootOf(new FixtureTab(session)));
+    // a selected truss adds its size fields to the Trusses tab
     session.select({ fixtures: [], trusses: [truss] });
+    const trusses = keysOf(rootOf(new TrussTab(session)));
     const trussProps = keysOf(rootOf(new PropertyPanel(session)));
     session.select({ fixtures: [fixture], trusses: [] });
     const fixtureProps = keysOf(rootOf(new PropertyPanel(session)));
