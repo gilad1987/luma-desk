@@ -7,8 +7,11 @@ import { STATIC_LENS_FACES } from './lens/staticLensFaces';
 /** One lens face per fixture model (`FixtureType.model`); FORTE FS shares the FORTE face. */
 export type LensTextureSet = Readonly<Record<string, CanvasTexture>>;
 
-/** A face drawn on black, so the unlit parts of the lens stay dark under the fixture colour tint. */
-const lensTexture = (paint: CanvasPainter, w = 128, h = 128): CanvasTexture =>
+/**
+ * A face drawn on black, so the unlit parts of the lens stay dark under the fixture colour tint. Exported for the
+ * product families, whose faces are painted lazily (`LazyLensTextures`) and so cannot join the set below.
+ */
+export const lensTexture = (paint: CanvasPainter, w = 128, h = 128): CanvasTexture =>
   srgbCanvasTexture(w, h, (x) => {
     x.fillStyle = '#000';
     x.fillRect(0, 0, w, h);

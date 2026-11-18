@@ -3,6 +3,9 @@ import type { FixtureProduct } from './FixtureProduct';
 /**
  * The Robe products of the catalogue, checked against the Robe data sheets. The base type `spot` copies the Robe
  * FORTE (FORTE sheet: 843 mm high, head vertical; HP engine 50,000 lm integrating sphere, 40,000 lm goniophotometer).
+ * Robe FORTE FS data sheet 4/16/2026, https://cdn.aws.robe.cz/print/en_product_4251.pdf: height 843 mm head
+ * vertical, width 483.5 mm, depth 335 mm, TE 1000 W HP engine 50,000 lm integrating sphere / 40,000 lm
+ * goniophotometer, lens 180 mm, zoom 5-55°.
  */
 export const ROBE_PRODUCTS = {
   // Robe "Esprite" data sheet 27.11.2019 and "ESPRITE FS" data sheet 4/16/2026: zoom 5.5°-50° (9:1), lens 150 mm,
@@ -18,19 +21,20 @@ export const ROBE_PRODUCTS = {
     optics: { zr: [5.5, 50], power: 0.68 },
     // model units; the FORTE head (src/render/fixtures/models/forteHead.ts) is the reference, lens 150/180 of the
     // FORTE's; size = TYPES.spot.size 0.72 * 733 / 843 = 0.626 (drawn at the desk's scale relative to the base
-    // model, see ADR 0007)
+    // model, see ADR 0007). The barrel is slimmer than the FORTE's by the sheets' depth-to-height ratios
+    // (264/733 over 335/843 = 0.91): 0.335 * 0.91 = 0.305. Barrel length, ax and ribs stay the FORTE's.
     body: {
       family: 'mover',
       size: 0.626,
       ax: 0.43,
-      barrel: { r: 0.335, rear: 0.45, front: -0.78 },
+      barrel: { r: 0.305, rear: 0.45, front: -0.78 },
       lens: { r: 0.196, y: 0.772, off: 0.78 },
       ribs: [0.12, 0.17, 0.22, 0.27],
       face: 'rings',
     },
-    // provisional: the render lane pins both against the built model (productSpans.test.ts)
-    span: 1.17,
-    mountHeight: { hang: 0.683, floor: 0.683 },
+    // measured from the built model and pinned by tests/unit/render/fixtures/productSpans.test.ts
+    span: 1.171,
+    mountHeight: { hang: 0.682, floor: 0.682 },
     dataSheet: 'https://www.robe.cz/esprite (Robe data sheets "Esprite" 27.11.2019 and "ESPRITE FS" 4/16/2026)',
     unmodelled: ['colour wheels', 'framing shutters', 'animation wheel', 'prism', 'iris', 'frosts'],
   },
