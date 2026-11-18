@@ -50,10 +50,12 @@ test('an added truss, undone, leaves the chosen stage as Done keeps it', async (
   await bootApp(page);
   await openAndChoose(page, 'theatre');
   const trusses = page.locator('.builder-tools .truss-item');
+  // the panels render on the next task after an edit, so the counts are awaited, not read once
+  const before = await trusses.count();
   await addTruss(page);
-  const added = await trusses.count();
+  await expect(trusses).toHaveCount(before + 1);
   await page.locator('[data-edit="undo"]').click();
-  await expect(trusses).toHaveCount(added - 1);
+  await expect(trusses).toHaveCount(before);
   await page.locator('[data-builder="done"]').click();
   // `source` names the last apply (the preview, then Done), not the design, so the check leaves it out
   const { count, venue } = await stageInfo(page);
@@ -71,8 +73,6 @@ test('while the builder is open, Space (GO+) does nothing to the desk', async ({
 });
 
 test('the property panel keeps the Tab order: X, then Tab, lands on Y', async ({ page }) => {
-  // known defect, owned by F24 (src/ui/builder): after a change of X, Tab does not land on Y. Remove this line with the fix.
-  test.fail();
   await bootApp(page);
   await openAndChoose(page, 'theatre');
   await addTruss(page);
