@@ -1,5 +1,6 @@
 import { PointLight, Scene } from 'three';
 import { vi } from 'vitest';
+import type { Fixture } from '../../../../src/domain/Fixture';
 import { rigFromDesign } from '../../../../src/domain/stage/deriveRig';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { StageScene } from '../../../../src/render/stage/StageScene';
@@ -12,7 +13,8 @@ export function bootStageScene(design: StageDesign) {
   const scene = new Scene();
   const surfaces = { setSurfaces: vi.fn() };
   const views = { fitTo: vi.fn(), setView: vi.fn(), currentView: 'top' as const };
-  const host = { visuals: { rebuild: vi.fn() }, overlay: { setFixtures: vi.fn() }, screenLight: new PointLight() };
+  const visuals = { assertBuildable: vi.fn<(fixtures: readonly Fixture[]) => void>(), rebuild: vi.fn() };
+  const host = { visuals, overlay: { setFixtures: vi.fn() }, screenLight: new PointLight() };
   const stage = new StageScene({ scene, surfaces, views }, design);
   const materials = createVenueMaterials();
   stage.deck(materials);

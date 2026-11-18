@@ -1,33 +1,15 @@
-import type { Object3D, PointLight } from 'three';
 import type { Fixture } from '../../domain/Fixture';
 import { boundsOf } from '../../domain/stage/bounds';
 import type { StageDesign } from '../../domain/stage/StageDesign';
 import { surfacesOf } from '../../domain/stage/surfaces';
 import { ROOF } from '../../domain/venue';
-import type { CameraViews } from '../camera/CameraViews';
-import type { FixtureVisuals } from '../fixtures/FixtureVisuals';
-import type { SurfaceHit } from '../surface/SurfaceHit';
 import { buildDeck } from './DeckBuilder';
-import type { FixtureIdOverlay } from './FixtureIdOverlay';
 import { buildScreens, screenSlotsOf, withWalls, type BuiltScreen } from './ScreenBuilder';
 import { StageParts } from './StageParts';
+import type { StageFixtureHost, StageSceneDeps } from './StageSceneDeps';
 import { materialList, type StageMaterials, type StageSlots } from './StageSlots';
 import { buildTrusses } from './TrussBuilder';
 import { TrussKit } from './TrussKit';
-
-/** The scene the parts go in, where beams land, and the camera views a new stage refits. */
-export interface StageSceneDeps {
-  readonly scene: Object3D;
-  readonly surfaces: Pick<SurfaceHit, 'setSurfaces'>;
-  readonly views: Pick<CameraViews, 'fitTo' | 'setView' | 'currentView'>;
-}
-
-/** The fixture side a stage hands its rig to: the visuals, the id overlay and the screens' spill light. */
-export interface StageFixtureHost {
-  readonly visuals: Pick<FixtureVisuals, 'rebuild'>;
-  readonly overlay: Pick<FixtureIdOverlay, 'setFixtures'>;
-  readonly screenLight: PointLight;
-}
 
 /**
  * The 3D stage of the current design: deck and risers, trusses, LED walls and the fixture visuals. At boot the venue
@@ -44,7 +26,8 @@ export class StageScene implements StageSlots {
   #host: StageFixtureHost | null = null;
 
   constructor(deps: StageSceneDeps, design: StageDesign) {
-    [this.#deps, this.#design] = [deps, design];
+    this.#deps = deps;
+    this.#design = design;
     deps.surfaces.setSurfaces(surfacesOf(design));
   }
 
@@ -70,31 +53,36 @@ export class StageScene implements StageSlots {
   /** Builds the boot rig's fixture visuals into the walls built so far; later rigs come with {@link rebuild}. */
   connect(host: StageFixtureHost, fixtures: readonly Fixture[]): void {
     this.#host = host;
-    this.#rebuildVisuals(fixtures);
+    this.#buildRig(host, fixtures);
   }
 
-  /** @throws Error before boot ({@link connect} not called yet): there is nothing to rebuild into. */
+  /**
+   * Checks the rig first, so a rig the visuals cannot build leaves the old stage whole.
+   * @throws Error before boot ({@link connect} not called yet), or when a light type of `fixtures` has no model.
+   */
   rebuild(design: StageDesign, fixtures: readonly Fixture[]): void {
     const materials = this.#materials,
       kit = this.#kit,
       host = this.#host;
     if (!materials || !kit || !host) throw new Error('StageScene: rebuild before the boot build');
+    host.visuals.assertBuildable(fixtures);
     this.#parts.dispose(new Set([...kit.shared, ...materialList(materials)]));
     this.#design = design;
     this.deck(materials);
     this.trusses(materials);
     this.screens(materials);
     this.#deps.surfaces.setSurfaces(surfacesOf(design));
-    this.#rebuildVisuals(fixtures);
-    host.overlay.setFixtures(fixtures);
+    this.#buildRig(host, fixtures);
     const { views } = this.#deps;
     views.fitTo(boundsOf(design));
     views.setView(views.currentView);
   }
 
-  #rebuildVisuals(fixtures: readonly Fixture[]): void {
-    if (!this.#host) return;
-    const slots = screenSlotsOf(this.#screens, this.#host.screenLight);
-    this.#host.visuals.rebuild(withWalls(fixtures, slots), slots);
+  /** Hands the fixtures with a built wall to the visuals and the overlay: a screen without a wall gets no label. */
+  #buildRig(host: StageFixtureHost, fixtures: readonly Fixture[]): void {
+    const slots = screenSlotsOf(this.#screens, host.screenLight),
+      shown = withWalls(fixtures, slots);
+    host.visuals.rebuild(shown, slots);
+    host.overlay.setFixtures(shown);
   }
 }

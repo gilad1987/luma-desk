@@ -79,4 +79,17 @@ describe('CameraViews', () => {
     expect(v.camera.position.toArray()).toEqual([62, 13, -8]);
     expect(frames.pending()).toBe(0);
   });
+
+  it('stops a running tween on the next setView, so an instant view within 700 ms stays put', () => {
+    const frames = queuedAnimationFrames();
+    let now = 1000;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const { views: v } = views();
+    v.setView('side');
+    v.setView('top', true);
+    const top = v.camera.position.toArray();
+    now = 1350;
+    frames.run();
+    expect([v.camera.position.toArray(), frames.pending()]).toEqual([top, 0]);
+  });
 });

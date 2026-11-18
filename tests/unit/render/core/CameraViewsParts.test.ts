@@ -35,6 +35,19 @@ describe('tweenCamera', () => {
     frames.run();
     expect([camera.position.x, target.y, frames.pending()]).toEqual([10, 10, 0]);
   });
+
+  it('moves the camera no more after its stop function runs', () => {
+    const frames = queuedAnimationFrames();
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const camera = new PerspectiveCamera();
+    const pose = (x: number) => ({ position: new Vector3(x, 0, 0), target: new Vector3() });
+    const stop = tweenCamera(camera, new Vector3(), pose(0), pose(10));
+    stop();
+    now = 350;
+    frames.run();
+    expect([camera.position.x, frames.pending()]).toEqual([0, 0]);
+  });
 });
 
 describe('FohRig', () => {
