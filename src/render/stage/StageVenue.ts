@@ -1,6 +1,7 @@
 import type { Mesh, Object3D, PointLight } from 'three';
 import { deckFitOf } from '../../domain/stage/deckFit';
 import type { StageDesign } from '../../domain/stage/StageDesign';
+import { highestTrussY } from '../../domain/stage/trussTop';
 import { SCENERY_PARTS, type VenueKind } from '../../domain/stage/types';
 import type { FohRig } from '../camera/FohRig';
 import type { CrowdBounceUniforms } from '../venue/crowdBounce';
@@ -52,11 +53,11 @@ export class StageVenue implements Venue {
     this.build(kind);
   }
 
-  /** Shows or hides the scenery parts of `design` and moves the band onto its deck, without a rebuild. */
-  apply(design: Pick<StageDesign, 'scenery' | 'deck'>): void {
+  /** Shows or hides the scenery parts of `design`, moves the band onto its deck and the PA under its trusses. */
+  apply(design: Pick<StageDesign, 'scenery' | 'deck' | 'trusses'>): void {
     const built = this.#current();
     for (const part of SCENERY_PARTS) built.scenery.setVisible(part, design.scenery[part]);
-    this.#performers = built.band.fit(deckFitOf(design.deck));
+    this.#performers = built.band.fit(deckFitOf(design.deck), highestTrussY(design));
   }
 
   /** Takes the venue out of the scene and frees all it owns. */
