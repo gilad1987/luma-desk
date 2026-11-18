@@ -1,5 +1,6 @@
 import type { Mat4 } from '../math/Mat4';
 import type { MvrWarning } from '../MvrWarning';
+import type { ProxyPlacement } from './ProxyPlacement';
 
 /**
  * One mesh file drawn at one place: a scene object, truss or symbol instance reduced to "this file, this transform".
@@ -75,6 +76,8 @@ export interface MvrScene {
   /** Fixtures in file order, which is the order fixture ids are assigned in. */
   readonly fixtures: readonly MvrFixtureRecord[];
   readonly placements: readonly MeshPlacement[];
+  /** Every placement of a Symdef that has no geometry, in file order; none of them is in `placements`. */
+  readonly proxies: readonly ProxyPlacement[];
   /** `<FocusPoint>` world matrices by uuid, so a fixture's `focus` resolves to a point to aim at. */
   readonly focusPoints: ReadonlyMap<string, Mat4>;
   /** Problems the walk survived, in the order it met them. */

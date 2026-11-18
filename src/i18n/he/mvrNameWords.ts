@@ -16,4 +16,6 @@ export const mvrNameWords = {
   drape: ['וילון', 'וילונות', 'סגירה', 'סגירות'],
   /** "Cloth screen", a curtain: "screen" alone is an LED surface, so only the pair is a drape. */
   drapePairs: [['מסך', 'בד']],
+  /** "Chair" (written with and without the yod), "chairs", "seat" and "seats": an audience seat (`namedProxyKind`). */
+  seat: ['כיסא', 'כסא', 'כיסאות', 'כסאות', 'מושב', 'מושבים'],
 } as const;

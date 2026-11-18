@@ -7,6 +7,8 @@ import { localMatrix } from './localMatrix';
 import { MeshLimit } from './MeshLimit';
 import type { MeshPlacement, MvrFixtureRecord, MvrLayerInfo, MvrScene } from './MvrScene';
 import { placementsOf } from './objects';
+import type { ProxyPlacement } from './ProxyPlacement';
+import { toProxyPlacement } from './proxySeed';
 import { SymbolExpander } from './symbols';
 
 /**
@@ -21,6 +23,7 @@ interface Walk {
   readonly bad: BadMatrices;
   readonly fixtures: MvrFixtureRecord[];
   readonly placements: MeshPlacement[];
+  readonly proxies: ProxyPlacement[];
   readonly focusPoints: Map<string, Mat4>;
   readonly warnings: MvrWarning[];
 }
@@ -41,6 +44,8 @@ function walkElement(el: Element, frame: Frame, walk: Walk): void {
   if (el.localName === 'Fixture') walk.fixtures.push(readFixture(el, world, frame.layer.uuid));
   if (el.localName === 'FocusPoint') walk.focusPoints.set(attr(el, 'uuid') ?? '', world);
   else addPlacements(placementsOf(el, world, frame.layer, walk.symbols), walk);
+  // A FocusPoint reads no geometry, so this takes nothing for it; every other element owns the seeds it just met.
+  for (const seed of walk.symbols.empty.swap([])) walk.proxies.push(toProxyPlacement(seed, el, world, frame.layer));
   walkChildren(el, { parent: world, layer: frame.layer, depth: frame.depth + 1 }, walk);
 }
 
@@ -77,7 +82,7 @@ export function walkScene(doc: Document): MvrScene {
   const warnings: MvrWarning[] = [];
   const bad = new BadMatrices(warnings);
   const symbols = new SymbolExpander(childElement(scene, 'AUXData'), warnings, new MeshLimit(warnings), bad);
-  const walk: Walk = { symbols, bad, fixtures: [], placements: [], focusPoints: new Map(), warnings };
+  const walk: Walk = { symbols, bad, fixtures: [], placements: [], proxies: [], focusPoints: new Map(), warnings };
   const layers: MvrLayerInfo[] = [];
   const layerList = childElement(scene, 'Layers');
   for (const layer of layerList ? childElements(layerList, 'Layer') : []) {
@@ -85,6 +90,6 @@ export function walkScene(doc: Document): MvrScene {
     layers.push(info);
     walkChildren(layer, { parent: localMatrix(layer, bad), layer: info, depth: 0 }, walk);
   }
-  const { fixtures, placements, focusPoints } = walk;
-  return { layers, fixtures, placements, focusPoints, warnings };
+  const { fixtures, placements, proxies, focusPoints } = walk;
+  return { layers, fixtures, placements, proxies, focusPoints, warnings };
 }

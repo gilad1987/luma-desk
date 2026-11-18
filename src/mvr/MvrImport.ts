@@ -2,6 +2,7 @@ import type { StageDesign } from '../domain/stage/StageDesign';
 import type { StageBounds, SurfaceBox, Vec3 } from '../domain/stage/types';
 import type { LayerBox } from './design/layerBoxes';
 import type { MeshPlacement } from './scene/MvrScene';
+import type { MvrProxy } from './scene/ProxyPlacement';
 import type { MvrWarning } from './MvrWarning';
 
 /**
@@ -21,6 +22,11 @@ export interface MvrGeometry {
   readonly layers: readonly LayerBox[];
   /** Uuids of the layers the import judged the venue hall; `stageBox` leaves them out even when they are shown. */
   readonly hallLayers: readonly string[];
+  /**
+   * Every placement of a Symdef that has no geometry, with what the import inferred about it (`classifyProxies`).
+   * Render draws the panels and seats as marked proxies; absent means the file has none. Never part of an export.
+   */
+  readonly proxies?: readonly MvrProxy[];
 }
 
 /** The counts the import summary shows, so the user sees at once what came in and what is missing. */

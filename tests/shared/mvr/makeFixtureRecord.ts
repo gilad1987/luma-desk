@@ -21,5 +21,5 @@ export function makeFixtureRecord(
 
 /** A scene with the given parts and no warnings, for design tests that skip the scene walk. */
 export function makeScene(fields: Partial<MvrScene> = {}): MvrScene {
-  return { layers: [], fixtures: [], placements: [], focusPoints: new Map(), warnings: [], ...fields };
+  return { layers: [], fixtures: [], placements: [], proxies: [], focusPoints: new Map(), warnings: [], ...fields };
 }
