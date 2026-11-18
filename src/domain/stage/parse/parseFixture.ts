@@ -4,6 +4,7 @@ import { TYPES } from '../../fixtureTypes';
 import type { StageFixture } from '../StageDesign';
 import { FIXTURE_ROLES } from '../types';
 import type { Choices, Key } from './fieldReader';
+import { parsePatch } from './parsePatch';
 import { allDefined, type Raw } from './rawValues';
 import type { Reader } from './readers';
 import { UniqueIds } from './UniqueIds';
@@ -55,12 +56,14 @@ function parseFields(
   const rotation = r.optional(o, 'rotation', path, r.quat);
   const fixed = r.optional(o, 'fixed', path, (c, k, p) => parseFixed(r, c, k, p));
   const pixel = r.optional(o, 'pixel', path, (c, k, p) => parsePixel(r, c, k, p));
+  const patch = r.optional(o, 'patch', path, (c, k, p) => parsePatch(r, c, k, p));
   if (!allDefined(fixture)) return undefined;
   return {
     ...fixture,
     ...(rotation === undefined ? {} : { rotation }),
     ...(fixed === undefined ? {} : { fixed }),
     ...(pixel === undefined ? {} : { pixel }),
+    ...(patch === undefined ? {} : { patch }),
   };
 }
 

@@ -2,6 +2,7 @@ import { STAGE_DESIGN_VERSION, type StageDesign } from '../StageDesign';
 import { SOURCE_KINDS, VENUE_KINDS, type SceneryPart, type StageSource } from '../types';
 import { parseDeck, parseRisers } from './parseDeck';
 import { parseFixtures } from './parseFixture';
+import { parseMvrInfo } from './parseMvrInfo';
 import { parseScreens } from './parseScreens';
 import { parseTrusses } from './parseTruss';
 import { allDefined, type Raw } from './rawValues';
@@ -14,7 +15,7 @@ export type StageParseResult =
 /**
  * Checks a stored stage (the show's `stage` key) before the rig is built from it, so a hand-edited or corrupt show
  * falls back to the built-in stage instead of breaking the rig. It collects every error instead of throwing, keeps
- * only known keys (a later optional field such as MVR `patch` is therefore additive), normalizes rotations and fills
+ * only known keys (a later optional field such as MVR `patch` or `mvr` is therefore additive), normalizes rotations and fills
  * a missing scenery part with `true` (G3). An unknown version stops the read, as its fields may mean something else.
  */
 export function parseStageDesign(raw: unknown): StageParseResult {
@@ -33,8 +34,10 @@ export function parseStageDesign(raw: unknown): StageParseResult {
     screens: parseScreens(r, o, parsed),
     risers: parseRisers(r, o),
   };
+  const mvr = r.optional(o, 'mvr', '', (c, k, p) => parseMvrInfo(r, c, k, p));
   if (!allDefined(design) || r.errors.length > 0) return { ok: false, errors: r.errors };
-  return { ok: true, design: { v: STAGE_DESIGN_VERSION, ...design, trusses, fixtures: parsed.fixtures } };
+  const mvrField = mvr === undefined ? {} : { mvr };
+  return { ok: true, design: { v: STAGE_DESIGN_VERSION, ...design, trusses, fixtures: parsed.fixtures, ...mvrField } };
 }
 
 function parseSource(r: Reader, stage: Raw): StageSource | undefined {
