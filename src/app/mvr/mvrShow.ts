@@ -19,6 +19,9 @@ export interface MvrShow {
 /**
  * The show steps of an import and of Load demo rig on top of `StartingShow`, with the first-look toasts. A kept show
  * still gets the first look on a free executor, so the new rig has one working cue whatever the operator chooses.
+ * The import drops the dead ids before the operator chooses, because the summary's Escape ends the choice without a
+ * callback: the applied state therefore is exactly "Keep my cues", and "Build a starting show" afterwards loads a
+ * whole demo show file (executors, groups, presets), which replaces everything the drop touched.
  */
 export function mvrShow(show: StartingShow, toast: (text: string) => void): MvrShow {
   const look = (): void => applyFirstLook(() => show.placeFirstLook(), toast);
