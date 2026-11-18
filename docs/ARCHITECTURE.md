@@ -183,7 +183,8 @@ green unchanged; a change that alters them is re-recorded only with the orchestr
 
 1. `src/domain/FixtureType.ts`: add the key to `FixtureTypeId`.
 2. `src/domain/fixtureTypes/movingTypes.ts` (`MOVING_TYPES`) or `staticTypes.ts` (`STATIC_TYPES`): add its
-   `FixtureType`. `moving` gates position presets and phasers; every type except the screen needs `model` and `size`.
+   `FixtureType`. `moving` gates position phasers, the All Movers group and the focus pad; every type except the
+   screen needs `model` and `size`.
 3. `src/domain/fixtureTypes/index.ts`: add it at the end of `TYPES`, because the key order is the iteration order.
 4. A new `FixtureModel` file in `src/render/fixtures/models/` (see `strike4Model.ts`). Register it under the `model`
    key in `createFixtureModels` (`src/render/fixtures/FixtureModels.ts`) and its lens in `createLensTextures`
