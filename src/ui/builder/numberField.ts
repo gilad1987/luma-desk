@@ -22,7 +22,7 @@ export interface NumberFieldOptions {
   readonly onInvalid?: () => void;
 }
 
-/** Digits shown after the point; the draft keeps full floats (round only at the display boundary). */
+/** Digits shown after the point: the move ops store positions on whole millimetres, so 3 digits show them exactly. */
 const DISPLAY_DECIMALS = 3;
 
 /**
