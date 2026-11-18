@@ -424,20 +424,6 @@ Groups:
 - Pinned by: `tests/unit/command/CommandRunner.test.ts`.
 - Future fix: goes with C2.
 
-### C9. `Pause` on a fractional executor names `pause`, not `fade`, in its error
-
-- Source: `index.html:1920` (`selExec = clamp(num() - 1, 0, 9)`, no rounding), `1924`
-  (`execPause(execs[selExec])`), `1640` (`execPause` reads `e.fade` first)
-- Lives in: `src/command/run/runPlayback.ts:30` (`runPause`: `executorAt(..., 'reading', 'pause')`)
-- What it does: `Exec 2.5` selects index 1.5, which has no executor. A following `Pause` failed in the original
-  with `Cannot read properties of undefined (reading 'fade')`, because `execPause` read `e.fade`. The new code
-  logs `Cannot read properties of undefined (reading 'pause')`, the call it makes on the missing executor.
-- Accepted change: only the property name in the error text differs. Both versions fail the command, change no
-  state and show a red line in the command feedback. The text of a `TypeError` on a path that only crashes is not
-  user behavior, so C7's text parity does not extend to it.
-- Pinned by: no test.
-- Future fix: goes with C2 (validate the executor number, and round or reject a fraction, in the parser).
-
 ## D. Show file and boot
 
 ### D1. A saved show with no cues is replaced by the demo on the next load
@@ -963,8 +949,8 @@ The refactor keeps this logic (see ADR 0003). Only the shell list and the cache 
 
 Strict types (`noUncheckedIndexedAccess`) make every indexed read handle the missing case. Where the original read
 `undefined` and then crashed with a `TypeError` somewhere else, the new code throws a `RangeError` at the read, with
-a message that names the bad value. J4 and J5 change other details of a path that fails: J5 removes a data loss on
-a failed import. These are the only behavior changes the refactor accepts: each path is
+a message that names the bad value. J4 to J6 change other details of a path that fails: J5 removes a data loss on
+a failed import, J6 changes an error text. These are the only behavior changes the refactor accepts: each path is
 either unreachable from the UI or crashed in the original too.
 
 ### J1. `hsv` throws a `RangeError` for a hue that is not finite
@@ -1029,6 +1015,22 @@ either unreachable from the UI or crashed in the original too.
   purpose, and no golden covers it.
 - Pinned by: `tests/unit/show/showSerializer.test.ts` ("quirk J5: a preset pool the desk lacks throws, keeps the
   presets and executors, replaces the groups (accepted change)").
+
+### J6. `Pause` on a fractional executor names `pause`, not `fade`, in its error
+
+- Source: `index.html:1920` (`selExec = clamp(num() - 1, 0, 9)`, no rounding), `1924`
+  (`execPause(execs[selExec])`), `1640` (`execPause` reads `e.fade` first)
+- Lives in: `src/command/run/runPlayback.ts:30` (`runPause`: `executorAt(..., 'reading', 'pause')`)
+- What it does: `Exec 2.5` selects index 1.5, which has no executor. A following `Pause` failed in the original
+  with `Cannot read properties of undefined (reading 'fade')`, because `execPause` read `e.fade`. The new code
+  logs `Cannot read properties of undefined (reading 'pause')`, the call it makes on the missing executor.
+- Accepted change: the error text differs. Both versions fail the command, change no state and show a red line in
+  the command feedback. The change is accepted because this path only crashes, on an executor index that is not
+  valid. C7 keeps the original text for `Go`, `Off` and `Label Exec`; this `Pause` text is the one case that C7
+  does not cover.
+- Pinned by: `tests/unit/command/CommandRunner.test.ts` ("quirk J6: Pause on a fractional executor logs (reading
+  'pause') (accepted change)").
+- Future fix: goes with C2 (validate the executor number, and round or reject a fraction, in the parser).
 
 ## K. Test mode (`?test`)
 
