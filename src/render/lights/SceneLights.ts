@@ -1,4 +1,5 @@
 import { PointLight, type Light, type Scene } from 'three';
+import type { Venue } from '../venue/Venue';
 import { addHouseLights } from './addHouseLights';
 import { addZoneLights, type ZoneLights } from './addZoneLights';
 import { ZONE_INDICES, type LightFrame, type RgbSum } from './LightFrame';
@@ -22,14 +23,14 @@ export class SceneLights {
   private readonly houseLights: readonly Light[];
   /** Lit by the LED screen fixture in its own branch of the fixture sync. */
   readonly screenLight: PointLight;
-  private readonly wallLight: Light | null;
+  private readonly venue: Pick<Venue, 'wallFloodlight'>;
   private houseLevel = 0.3;
 
   /**
-   * `wallLight` is the old-city floodlight; it exists but is forced dark every frame (render quirk, 02 §4.8). A boot
-   * venue other than Sultan's Pool has none (null); a floodlight built later starts dark and nothing lights it.
+   * `venue` is the live venue: its old-city floodlight exists but is forced dark every frame (render quirk, 02 §4.8),
+   * and a venue switch brings a new floodlight or none.
    */
-  constructor(scene: Scene, wallLight: Light | null) {
+  constructor(scene: Scene, venue: Pick<Venue, 'wallFloodlight'>) {
     this.stageLight = new PointLight(0xffffff, 0, 34, 1.5);
     this.stageLight.position.set(0, 9, -10);
     scene.add(this.stageLight);
@@ -41,7 +42,7 @@ export class SceneLights {
     this.screenLight = new PointLight(0xffffff, 0, 40, 1.2);
     this.screenLight.position.set(0, 8, -16);
     scene.add(this.screenLight);
-    this.wallLight = wallLight;
+    this.venue = venue;
   }
 
   /** The house light dimmer, 0..1 (the UI slider divided by 100). */
@@ -65,6 +66,7 @@ export class SceneLights {
       const light = this.houseLights[i];
       if (light) light.intensity = this.houseLevel * (i === 2 ? 500 : 1100);
     }
-    if (this.wallLight) this.wallLight.intensity = 0;
+    const wallLight = this.venue.wallFloodlight;
+    if (wallLight) wallLight.intensity = 0;
   }
 }

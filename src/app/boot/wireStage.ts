@@ -61,7 +61,7 @@ export function wireStage(design: StageDesign): StageHandles {
   const surfaceHit = new SurfaceHit();
   const stageScene = new StageScene({ scene, surfaces: surfaceHit, views }, design);
   const venue = stageScene.buildVenue();
-  const sceneLights = new SceneLights(scene, venue.wallFloodlight);
+  const sceneLights = new SceneLights(scene, venue);
   const { camera, controls } = views;
   return {
     canvas,
