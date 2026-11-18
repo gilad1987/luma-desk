@@ -20,15 +20,17 @@ const layers = [
 /** The checkbox and name span of each layer row, as `openMvrSummary` appends them. */
 type Row = FakeElement & { dir?: string };
 type Box = FakeElement & { checked?: boolean; onchange?: () => void };
+/** A warning line; `hidden` is set only on the lines past the cap. */
+type Line = FakeElement & { hidden?: boolean };
 
-function open() {
+function open(warningLines: readonly string[] = view.warnings) {
   const dom = new FakeDom();
   dom.add('mvrSummaryClose', new FakeButton());
   const warnings = dom.add('mvrWarnings');
   const host = dom.add('mvrLayers');
   const modal = { open: vi.fn(), close: vi.fn() };
   const onHidden = vi.fn();
-  openMvrSummary(modal, { view, layers, hiddenLayers: ['b'] }, onHidden);
+  openMvrSummary(modal, { view: { ...view, warnings: warningLines }, layers, hiddenLayers: ['b'] }, onHidden);
   const rows = host.children as Row[];
   const box = (i: number): Box => rows[i]?.children[0] as Box;
   return { dom, modal, onHidden, warnings, rows, box };
@@ -57,6 +59,25 @@ describe('openMvrSummary', () => {
     box(0).checked = false;
     box(0).onchange?.();
     expect(onHidden).toHaveBeenLastCalledWith(['a', 'b']);
+  });
+
+  it('shows 8 warning lines and no toggle when there are 8', () => {
+    const { warnings } = open(Array.from({ length: 8 }, (_, i) => `w${i}`));
+    expect((warnings.children as Line[]).map((line) => [line.textContent, line.hidden ?? false])).toEqual(
+      Array.from({ length: 8 }, (_, i) => [`w${i}`, false]),
+    );
+  });
+
+  it('hides the warning lines past 8 behind a "Show all (N)" toggle that shows them all', () => {
+    const { warnings } = open(Array.from({ length: 10 }, (_, i) => `w${i}`));
+    const lines = (): Line[] => warnings.children;
+    const toggle = lines()[10]?.children[0];
+    expect(lines().map((line) => line.hidden ?? false)).toEqual([...Array<boolean>(8).fill(false), true, true, false]);
+    expect(toggle?.textContent).toBe('Show all (10)');
+    toggle?.onclick?.({ target: toggle });
+    expect(lines().map((line) => [line.textContent, line.hidden ?? false])).toEqual(
+      Array.from({ length: 10 }, (_, i) => [`w${i}`, false]),
+    );
   });
 
   it('closes the modal from #mvrSummaryClose', () => {

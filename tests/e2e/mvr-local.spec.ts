@@ -30,7 +30,7 @@ interface KnownIssue {
  */
 const KNOWN_ISSUES: Readonly<Record<string, KnownIssue>> = {
   'Demostage_MVR.mvr': {
-    warning: /needs vsBlkSatinTexture\.png, which is not in the archive/,
+    warning: /need "vsBlkSatinTexture\.png", which is not in the archive/,
     errors: /^console: THREE\.GLTFLoader: Couldn't load texture vsBlkSatinTexture\.png$/,
   },
 };
