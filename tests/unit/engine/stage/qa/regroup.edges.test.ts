@@ -31,6 +31,14 @@ describe('regroup edges (QA4)', () => {
     expect(regroup(sultans, sultans, defaultsOf(createTemplate('empty')))).toStrictEqual({});
   });
 
+  it('reads a null slot from a loaded show as empty, as the show load does, so the new default fills it', () => {
+    const pool: GroupPool = { ...sultans };
+    for (const slot of [5, 50]) Reflect.set(pool, slot, null);
+    const next = regroup(pool, sultans, theatre);
+    expect([next[5], 50 in next]).toEqual([theatre[5], false]);
+    expect(Object.values(next).every((g) => g !== null)).toBe(true);
+  });
+
   it('keeps a user group stored in a default slot, as the same object, over the new default', () => {
     const user = { name: 'Mine', ids: [1, 2, 3] };
     const next = regroup({ ...sultans, 1: user }, sultans, theatre);
