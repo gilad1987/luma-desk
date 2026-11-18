@@ -7,8 +7,8 @@ import { ExecutorPool } from '../../../src/engine/ExecutorPool';
 import { Midi, type MidiHost, type MidiPorts } from '../../../src/io/Midi';
 
 class FakeMidiMessage extends Event {
-  readonly data: Uint8Array<ArrayBuffer>;
-  constructor(data: Uint8Array<ArrayBuffer>) {
+  readonly data: Uint8Array<ArrayBuffer> | null;
+  constructor(data: Uint8Array<ArrayBuffer> | null) {
     super('midimessage');
     this.data = data;
   }
@@ -27,8 +27,7 @@ function setup(host: MidiHost) {
   const toasts: string[] = [];
   bus.on('message', (message: EngineMessage) => toasts.push(message.text));
   const pool = new ExecutorPool({ nowMs: () => 0, nowSeconds: () => 0 }, bus);
-  const setLevel = vi.fn(),
-    go = vi.fn();
+  const [setLevel, go] = [vi.fn(), vi.fn()];
   const state = new AppState(bus);
   const classes = new Set<string>();
   const button = { classList: { add: (...tokens: string[]) => tokens.forEach((t) => classes.add(t)) } };
@@ -36,8 +35,13 @@ function setup(host: MidiHost) {
   return { midi, toasts, setLevel, go, state, classes, execs: pool.execs };
 }
 
-function send(input: FakeInput, bytes: number[]): void {
-  input.onmidimessage?.(new FakeMidiMessage(new Uint8Array(bytes)));
+function oneInputHost(input: FakeInput): MidiHost {
+  const access: MidiPorts = { inputs: new Map([['in-1', input]]), onstatechange: null };
+  return { requestMIDIAccess: () => Promise.resolve(access) };
+}
+
+function send(input: FakeInput, bytes: number[] | null): void {
+  input.onmidimessage?.(new FakeMidiMessage(bytes && new Uint8Array(bytes)));
 }
 
 describe('Midi', () => {
@@ -49,10 +53,7 @@ describe('Midi', () => {
 
   it('binds every input and drives faders, GO and the grand master', async () => {
     const input: FakeInput = { onmidimessage: null };
-    const access: MidiPorts = { inputs: new Map([['in-1', input]]), onstatechange: null };
-    const { midi, toasts, classes, setLevel, go, state, execs } = setup({
-      requestMIDIAccess: () => Promise.resolve(access),
-    });
+    const { midi, toasts, classes, setLevel, go, state, execs } = setup(oneInputHost(input));
     await midi.connect();
     send(input, [0xb1, 3, 127]);
     send(input, [0x90, 40, 90]);
@@ -78,16 +79,21 @@ describe('Midi', () => {
     expect([toasts, go.mock.calls]).toEqual([['MIDI enabled — no devices found yet'], [[execs[0], 1]]]);
   });
 
+  // known-quirk J4 (docs/known-quirks.md): the original destructured `m.data` and threw a TypeError on null
+  it('ignores a message whose data is null and does not throw (quirk)', async () => {
+    const input: FakeInput = { onmidimessage: null };
+    const { midi, setLevel, go, state } = setup(oneInputHost(input));
+    await midi.connect();
+    expect(() => send(input, null)).not.toThrow();
+    expect([setLevel.mock.calls, go.mock.calls, state.gm]).toEqual([[], [], 1]);
+  });
+
   it('toasts when the browser blocks access and asks again on the next click', async () => {
     const requestMIDIAccess = vi.fn(() => Promise.reject(new Error('SecurityError')));
     const { midi, toasts, classes } = setup({ requestMIDIAccess });
     await midi.connect();
     await midi.connect();
-    expect([toasts.length, toasts[0], requestMIDIAccess.mock.calls.length, [...classes]]).toEqual([
-      2,
-      'MIDI blocked here — open the page in its own tab in Chrome',
-      2,
-      [],
-    ]);
+    const blocked = 'MIDI blocked here — open the page in its own tab in Chrome';
+    expect([toasts, requestMIDIAccess.mock.calls.length, [...classes]]).toEqual([[blocked, blocked], 2, []]);
   });
 });
