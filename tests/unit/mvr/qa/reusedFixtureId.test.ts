@@ -1,6 +1,6 @@
 /**
- * A deleted fixture's id is given out again (`nextIdBlock`), so the export must not give the new fixture the deleted
- * one's MVR uuid or GDTF name: the delete drops the `mvr.fixtures` entry with the fixture.
+ * A delete keeps the design's `nextFixtureId`, so a new row takes fresh ids, and it drops the `mvr.fixtures` entry
+ * with the fixture, so the export never carries the deleted fixture's MVR uuid or GDTF name.
  */
 import { strFromU8, unzipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
@@ -23,13 +23,13 @@ function importedRow(): StageDesign {
 const sceneOf = (d: StageDesign): string =>
   strFromU8(unzipSync(exportMvr(d).bytes)['GeneralSceneDescription.xml'] ?? new Uint8Array());
 
-describe('MVR export after a fixture id is reused', () => {
-  it('gives the new fixture its own uuid and GDTF name', () => {
+describe('MVR export after a fixture is deleted and a new row is added', () => {
+  it('gives the new fixtures fresh ids and neither the old uuid nor the old GDTF name', () => {
     const d = importedRow();
     expect(sceneOf(d)).toContain(OLD_UUID);
-    const reused = addFloorRow(deleteFixtures(d, [1, 2]), ROW);
-    expect(reused.fixtures.map((f) => f.id)).toEqual([1, 2]);
-    const xml = sceneOf(reused);
+    const added = addFloorRow(deleteFixtures(d, [1, 2]), ROW);
+    expect(added.fixtures.map((f) => f.id)).toEqual([101, 102]);
+    const xml = sceneOf(added);
     expect([xml.includes(OLD_UUID), xml.includes('Acme@Old')]).toEqual([false, false]);
   });
 });

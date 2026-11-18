@@ -1,6 +1,6 @@
 /**
  * Owns the reference rule of a stored `mvr` block: each `mvr.fixtures` key must name a fixture of the design, as a
- * `trussId` must name a truss, because a reused fixture id would take over an orphan entry's MVR identity.
+ * `trussId` must name a truss, because an entry without its fixture means a damaged file.
  */
 import { describe, expect, it } from 'vitest';
 import { parseStageDesign } from '../../../../src/domain/stage/parse/parseStageDesign.ts';

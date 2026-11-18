@@ -1,6 +1,6 @@
 /**
  * Owns the `mvr.fixtures` rule of the edits that delete fixtures: the entry of a deleted fixture goes with it, because
- * `nextIdBlock` gives its id out again and a later fixture with that id must not take over its MVR identity.
+ * the parser rejects an entry without its fixture and the export must not carry a dead fixture's MVR identity.
  */
 import { describe, expect, it } from 'vitest';
 import { deleteFixtures, deleteTruss } from '../../../../../src/domain/stage/edit/itemOps.ts';
