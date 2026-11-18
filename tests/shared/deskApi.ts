@@ -74,7 +74,8 @@ export interface DeskTestApi {
   outputAt(sec: number): FixtureOutput[];
   run(line: string): CommandResult;
   applyFx(type: string): void;
-  stage(): StageInfo;
+  /** The MVR hook's stage; named apart from Stage Builder's `__desk.stage()`, which reads its own state. */
+  mvrStage(): StageInfo;
   /**
    * Resolves after the latest MVR load ended, with success or failure: a picked file, or the restore from IndexedDB
    * at boot. Both run off the frame loop, so a spec cannot see the end in frames or the DOM. The app queues the load
