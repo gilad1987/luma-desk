@@ -4,6 +4,7 @@ import { he } from '../../i18n/he';
 import type { EditorSession } from './EditorSession';
 import { ErrorText, type RunEdit } from './ErrorText';
 import { makeHeading } from './formControls';
+import { renderKeepingFocus } from './keepFocus';
 import { numberField } from './numberField';
 import { riserControls } from './riserControls';
 import { MIN_SIZE_M, SIZE_STEP_M } from './sizeLimits';
@@ -37,14 +38,14 @@ export class StageTab {
     const d = this.#session.draft;
     const error = new ErrorText();
     const run: RunEdit = (op) => error.show(this.#session.edit(op));
-    this.root.replaceChildren(
+    renderKeepingFocus(this.root, [
       makeHeading('Deck'),
       ...this.#deckFields(d),
       ...wallControls(d, this.#session, run),
       ...riserControls(d, this.#session, run),
       ...venueControls(d, run),
       error.root,
-    );
+    ]);
   }
 
   #deckFields(d: StageDesign): HTMLElement[] {

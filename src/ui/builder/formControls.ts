@@ -19,8 +19,12 @@ export interface SelectOptions {
 /** Every fixture role as a choice; role names are console terms, so they stay English (decision 16). */
 export const ROLE_CHOICES: readonly Choice[] = FIXTURE_ROLES.map((role) => ({ value: role, text: role }));
 
-/** A `<label class="field">`: its English text, then `control`, so the label names the control for screen readers. */
+/**
+ * A `<label class="field">`: its English text, then `control`, so the label names the control for screen readers.
+ * The text is also the control's focus key (`renderKeepingFocus`), unless the caller set a more exact one.
+ */
 export function labelled(text: string, control: HTMLElement): HTMLLabelElement {
+  control.dataset['focusKey'] ??= text;
   const label = document.createElement('label');
   label.className = 'field';
   const name = document.createElement('span');
@@ -30,9 +34,10 @@ export function labelled(text: string, control: HTMLElement): HTMLLabelElement {
   return label;
 }
 
-/** A plain button with an English text and a Hebrew tooltip. */
+/** A plain button with an English text and a Hebrew tooltip; the text is its focus key (`renderKeepingFocus`). */
 export function makeButton(text: string, title: string, onPress: () => void): HTMLButtonElement {
   const button = document.createElement('button');
+  button.dataset['focusKey'] = text;
   button.type = 'button';
   button.textContent = text;
   button.title = title;

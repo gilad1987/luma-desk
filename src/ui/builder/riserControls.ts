@@ -5,7 +5,7 @@ import { he } from '../../i18n/he';
 import type { EditorSession } from './EditorSession';
 import type { RunEdit } from './ErrorText';
 import { makeButton, makeHeading } from './formControls';
-import { positionFields } from './positionFields';
+import { positionFields, type SendPosition } from './positionFields';
 
 /** A new riser in metres: 2 x 2 m, 0.4 m high, the size of a standard stage platform. */
 const RISER_SIZE_M: Vec3 = [2, 0.4, 2];
@@ -16,10 +16,10 @@ const RISER_SIZE_M: Vec3 = [2, 0.4, 2];
  * on the deck. The top view draws risers but does not move them.
  */
 export function riserControls(d: StageDesign, session: Pick<EditorSession, 'edit'>, run: RunEdit): HTMLElement[] {
-  const rows = d.risers.flatMap((riser) => [
-    riserRow(riser, run),
-    ...positionFields(riser.at, (_target, delta) => session.edit((draft) => moveRiser(draft, riser.id, delta)), [0, 2]),
-  ]);
+  const rows = d.risers.flatMap((riser) => {
+    const move: SendPosition = (_target, delta) => session.edit((draft) => moveRiser(draft, riser.id, delta));
+    return [riserRow(riser, run), ...positionFields(riser.at, move, [0, 2], `${riser.id} `)];
+  });
   const add = makeButton('Add riser', he.builder.tools.addRiser, () =>
     run((draft) => addRiser(draft, deckCentreTop(draft), RISER_SIZE_M)),
   );

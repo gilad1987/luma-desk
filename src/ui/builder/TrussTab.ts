@@ -6,6 +6,7 @@ import { he } from '../../i18n/he';
 import type { EditorSession } from './EditorSession';
 import { ErrorText } from './ErrorText';
 import { makeButton, makeHeading } from './formControls';
+import { renderKeepingFocus } from './keepFocus';
 import { trussSizeFields } from './trussSizeFields';
 
 const PRESETS: readonly { preset: TrussPreset; label: string }[] = [
@@ -53,7 +54,8 @@ export class TrussTab {
     const selected = d.trusses.find((t) => t.id === this.#session.selection.trusses[0]);
     const sizes = selected ? trussSizeFields(this.#session, selected) : [];
     const list = d.trusses.map((truss) => this.#trussButton(truss, truss === selected));
-    this.root.replaceChildren(makeHeading('Add truss'), presets, error.root, makeHeading('Trusses'), ...list, ...sizes);
+    const heads = [makeHeading('Add truss'), presets, error.root, makeHeading('Trusses')];
+    renderKeepingFocus(this.root, [...heads, ...list, ...sizes]);
   }
 
   #addPreset(preset: TrussPreset): string | null {

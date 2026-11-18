@@ -4,6 +4,7 @@ import { he } from '../../i18n/he';
 import type { EditorSession } from './EditorSession';
 import { fixtureProps } from './fixtureProps';
 import { makeHeading } from './formControls';
+import { renderKeepingFocus } from './keepFocus';
 import { trussProps } from './trussProps';
 
 /**
@@ -25,7 +26,7 @@ export class PropertyPanel {
     const { draft, selection } = this.#session;
     const fixture = draft.fixtures.find((f) => f.id === selection.fixtures[0]);
     const truss = draft.trusses.find((t) => t.id === selection.trusses[0]);
-    this.root.replaceChildren(makeHeading('Properties'), ...this.#fieldsOf(fixture, truss));
+    renderKeepingFocus(this.root, [makeHeading('Properties'), ...this.#fieldsOf(fixture, truss)]);
   }
 
   #fieldsOf(fixture: StageFixture | undefined, truss: StageTruss | undefined): HTMLElement[] {

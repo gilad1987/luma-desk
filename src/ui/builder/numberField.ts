@@ -5,6 +5,8 @@ import { labelled } from './formControls';
 /** One numeric field of a builder panel. */
 export interface NumberFieldOptions {
   readonly label: string;
+  /** The focus key when the label repeats in one panel (the X field of each riser); the label otherwise. */
+  readonly key?: string;
   /** The Hebrew tooltip. */
   readonly title: string;
   readonly value: number;
@@ -36,6 +38,7 @@ export function numberField(options: NumberFieldOptions): HTMLElement {
   input.min = String(options.min);
   input.max = String(options.max);
   input.title = options.title;
+  if (options.key !== undefined) input.dataset['focusKey'] = options.key;
   input.value = String(Number(options.value.toFixed(DISPLAY_DECIMALS)));
   const error = new ErrorText();
   input.onchange = () => error.show(submit(input, options));

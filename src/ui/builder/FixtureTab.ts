@@ -5,6 +5,7 @@ import { addFixturesOp } from './addFixturesOp';
 import type { EditorSession } from './EditorSession';
 import { ErrorText } from './ErrorText';
 import { makeButton, makeHeading } from './formControls';
+import { renderKeepingFocus } from './keepFocus';
 
 /**
  * The Fixtures tab: "Add N fixtures" of a type, on a truss or as a floor row, with a role. The choices live here, not
@@ -31,7 +32,7 @@ export class FixtureTab {
       add.disabled = !this.#form.isCountValid;
     };
     const fields = addFixtureFields(this.#form, this.#targetIn(d), d.trusses, onCount);
-    this.root.replaceChildren(makeHeading('Add fixtures'), ...fields, add, error.root);
+    renderKeepingFocus(this.root, [makeHeading('Add fixtures'), ...fields, add, error.root]);
   }
 
   /** Reads the target at click time: a target picked after the last render must count. */
