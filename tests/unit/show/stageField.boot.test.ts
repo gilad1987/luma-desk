@@ -1,7 +1,7 @@
 /** Owns the boot read of the stored stage: a valid `stage` key becomes the design, anything else `undefined`. */
 import { describe, expect, it } from 'vitest';
 import { createTemplate } from '../../../src/domain/stage/templates';
-import { savedStageOf } from '../../../src/show/savedStage';
+import { savedStageOf } from '../../../src/show/stageField';
 import { readSavedShow } from './showWorld';
 
 describe('savedStageOf', () => {
