@@ -20,31 +20,35 @@ function lookOf(id: TemplateId): { readonly fixtures: readonly Fixture[]; readon
 }
 
 const valsOf = (cue: Cue, f: Fixture): AttrValues => cue.vals[f.id] ?? {};
-const isAimed = (f: Fixture): boolean => f.T.moving && (f.type === 'spot' || f.type === 'beam');
+const inLook = (f: Fixture): boolean => ['spot', 'beam', 'wash', 'par', 'bar', 'profile'].includes(f.type);
+const isAimed = (f: Fixture): boolean => f.T.moving && inLook(f);
+const isKey = (f: Fixture): boolean => f.T.moving && ['spot', 'beam', 'profile'].includes(f.type);
+const pick = ({ r, g, b }: AttrValues): AttrValues => ({ r, g, b });
+
+/** The look's dimmer for `f` (a key beam is also moving): static fill 15, moving fill 40, key 100, others none. */
+const levelOf = (f: Fixture): number | undefined =>
+  inLook(f) ? [15, 40, 100][Number(f.T.moving) + Number(isKey(f))] : undefined;
 const mirrorOf = (all: readonly Fixture[], f: Fixture): Fixture | undefined =>
   all.find((m) => m.type === f.type && m.pos.x === -f.pos.x && m.pos.y === f.pos.y && m.pos.z === f.pos.z);
 const LOOK_COLORS = ['Magenta', 'Blue', 'White'].map(colorByName);
-
 afterEach(() => vi.restoreAllMocks());
 
 describe.each(['theatre', 'festival'] as const)('buildMvrFirstLook on the %s template', (id) => {
   const { fixtures, cue } = lookOf(id);
-  const sided = fixtures.filter((f) => f.pos.x !== 0 && isAimed(f));
+  const sided = fixtures.filter((f) => f.pos.x !== 0 && isAimed(f) && f.has('pan'));
 
-  it('is one named cue that opens the dimmers of the look fixtures only', () => {
+  it('is one named cue: key beams full, moving washes 40, static units 15, blinders and strobes off', () => {
     expect(cue).toMatchObject({ num: 1, name: MVR_FIRST_LOOK_NAME, fx: [] });
-    for (const f of fixtures) {
-      const inLook = ['spot', 'beam', 'wash', 'par', 'bar', 'profile'].includes(f.type);
-      expect(cue.vals[f.id]?.dim, `fixture ${f.id} (${f.type})`).toBe(inLook ? 100 : undefined);
-    }
+    for (const f of fixtures) expect(cue.vals[f.id]?.dim, `fixture ${f.id} (${f.type})`).toBe(levelOf(f));
   });
 
-  it('aims only the spots and beams; washes, pars and bars get colour and dimmer only', () => {
+  it('aims and narrows every mover; static units get colour and dimmer only', () => {
     for (const f of fixtures.filter((x) => cue.vals[x.id] !== undefined)) {
-      const keys = Object.keys(valsOf(cue, f)).sort();
-      expect(keys, `fixture ${f.id} (${f.type})`).toEqual(
-        isAimed(f) ? ['b', 'dim', 'g', 'pan', 'r', 'tilt'] : ['b', 'dim', 'g', 'r'],
-      );
+      const vals = valsOf(cue, f);
+      const keys = Object.keys(vals).sort();
+      const moverKeys = (['b', 'dim', 'g', 'pan', 'r', 'tilt', 'zoom'] as const).filter((a) => f.has(a));
+      expect(keys, `fixture ${f.id} (${f.type})`).toEqual(isAimed(f) ? moverKeys : ['b', 'dim', 'g', 'r']);
+      if (isAimed(f) && f.has('zoom')) expect(vals.zoom).toBe(f.T.zr[0]);
     }
   });
 
@@ -68,18 +72,17 @@ describe.each(['theatre', 'festival'] as const)('buildMvrFirstLook on the %s tem
     }
   });
 
-  it('cycles magenta, blue and white over the mirrored places from the centre outwards', () => {
-    const look = fixtures.filter((f) => cue.vals[f.id] !== undefined);
-    const place = (f: Fixture): [number, number] => [Math.round(Math.abs(f.pos.x) * 1000), Math.round(f.pos.y * 1000)];
-    const places = [...new Set(look.map((f) => place(f).join('|')))]
-      .map((key) => key.split('|').map(Number))
-      .sort(([ax = 0, ay = 0], [bx = 0, by = 0]) => ax - bx || ay - by)
-      .map((p) => p.join('|'));
-    for (const f of look) {
-      const { r, g, b } = valsOf(cue, f);
-      expect({ r, g, b }, `fixture ${f.id}`).toEqual(LOOK_COLORS[places.indexOf(place(f).join('|')) % 3]);
-    }
-    expect(new Set(look.map((f) => valsOf(cue, f).g)).size).toBe(3);
+  it('gives white to at most about a third of the key beams and never to a fill unit', () => {
+    const colorOf = (f: Fixture): string => JSON.stringify(pick(valsOf(cue, f)));
+    const [magenta = '', blue = '', white = ''] = LOOK_COLORS.map((c) => JSON.stringify(c));
+    const key = fixtures.filter((f) => cue.vals[f.id] !== undefined && isKey(f));
+    const fill = fixtures.filter((f) => cue.vals[f.id] !== undefined && !isKey(f));
+    const whiteShare = key.filter((f) => colorOf(f) === white).length / key.length;
+    expect(whiteShare).toBeGreaterThan(0);
+    expect(whiteShare).toBeLessThanOrEqual(0.45);
+    expect(fill.every((f) => [magenta, blue].includes(colorOf(f)))).toBe(true);
+    const all = new Set([...key, ...fill].map(colorOf));
+    expect(all.has(magenta) && all.has(blue)).toBe(true);
   });
 
   it('is deterministic and draws no random number', () => {
