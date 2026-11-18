@@ -30,6 +30,7 @@ function openDialog() {
     showStorage,
     demo,
     showLoaded: vi.fn(),
+    cancelBuilder: vi.fn(),
   });
   const click = (id: string): void => dom.get(id).onclick?.({ target: null });
   return { engine, open: () => click('fileBtn'), click };

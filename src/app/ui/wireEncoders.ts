@@ -17,7 +17,7 @@ export interface EncodersWiringDeps {
   readonly programmer: EncoderProgrammer;
   readonly selection: Pick<Selection, 'ids' | 'set'>;
   /** The stage: the encoders look fixtures up in its current rig. */
-  readonly stage: Pick<RigSource, 'rig'>;
+  readonly stage: Pick<RigSource, 'rig' | 'frame'>;
   readonly modal: Pick<Modal, 'number'>;
   /** The active layout (the layout area's `deskMode`). */
   readonly layoutMode: () => LayoutMode;
@@ -47,6 +47,7 @@ export function wireEncoders(deps: EncodersWiringDeps): EncodersWiring {
     modal: deps.modal,
     layoutMode: deps.layoutMode,
     aimHeight,
+    frame: () => deps.stage.frame,
     goboIcons: deps.goboIcons,
   });
   return { encoders, aimHeight };

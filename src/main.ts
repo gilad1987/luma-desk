@@ -15,6 +15,7 @@ import { scheduleUiTicks } from './app/loop/scheduleUiTicks';
 import { UiTickScheduler } from './app/loop/UiTickScheduler';
 import { installTestHook } from './app/testHook/installTestHook';
 import { FpsClock } from './app/ui/FpsClock';
+import { wireBuilder } from './app/ui/wireBuilder';
 import { wirePanels } from './app/ui/wirePanels';
 import { createAutoShow } from './app/uix/createAutoShow';
 import { createShowFiles } from './app/uix/createShowFiles';
@@ -41,6 +42,7 @@ const panels = wirePanels({
   auto,
   layoutMode: () => layout.mode(),
   guideOrTourOpen: () => guide.isOpen() || tour.isActive(),
+  builder: { isOpen: () => builder.isOpen, cancel: () => builder.exit(false) },
 });
 // a getter: box selection reads the current rig at each drag, so it follows every stage change
 new ViewportPicking({
@@ -69,7 +71,10 @@ const layout = wireLayout({
   execs,
   storeMode: panels.store,
   layoutPrefs: files.layoutPrefs,
+  builderOpen: () => builder.isOpen,
 });
+// before restore: the restore refits the console, and the refit asks whether the builder is open
+const builder = wireBuilder({ ...engine, ...render, fitLayout: () => layout.fit() });
 layout.restore();
 
 const fps = new FpsClock();

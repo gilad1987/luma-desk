@@ -1,6 +1,7 @@
-import { CommandRunner } from '../../command/CommandRunner';
-import { OutputMerger } from '../../engine/OutputMerger';
+import { CommandRunner, type CommandDeps } from '../../command/CommandRunner';
+import { OutputMerger, type OutputSources } from '../../engine/OutputMerger';
 import { Programmer } from '../../engine/Programmer';
+import type { ProgrammerDeps } from '../../engine/programmerActions/ProgrammerDeps';
 import { withLiveRig } from '../shared';
 import type { EngineHandles } from './wireEngine';
 
@@ -25,9 +26,19 @@ export function wireProgrammer(deps: ProgrammerWiringDeps): ProgrammerHandles {
   const { stage, bus, clock, appState, selection, tempo, pool } = deps;
   const presets = deps.presetLibrary;
   const programmer = new Programmer(
-    withLiveRig(stage, { selection, presets, pool, state: appState, clock, bus, source: stage }),
+    withLiveRig(stage, {
+      selection,
+      presets,
+      pool,
+      state: appState,
+      clock,
+      bus,
+      source: stage,
+    } satisfies Omit<ProgrammerDeps, 'rig'>),
   );
-  const merger = new OutputMerger(withLiveRig(stage, { pool, programmer, master: appState, selection, tempo }));
+  const merger = new OutputMerger(
+    withLiveRig(stage, { pool, programmer, master: appState, selection, tempo } satisfies Omit<OutputSources, 'rig'>),
+  );
   const runner = new CommandRunner(
     withLiveRig(stage, {
       selection,
@@ -37,7 +48,7 @@ export function wireProgrammer(deps: ProgrammerWiringDeps): ProgrammerHandles {
       groups: deps.groupLibrary,
       presets,
       bus,
-    }),
+    } satisfies Omit<CommandDeps, 'rig'>),
   );
   return { programmer, merger, runner };
 }

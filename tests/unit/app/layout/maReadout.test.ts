@@ -2,6 +2,8 @@ import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { maReadout } from '../../../../src/app/layout/maReadout';
 import { Fixture } from '../../../../src/domain/Fixture';
+import { frameOf } from '../../../../src/domain/stage/StageFrame';
+import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import type { FixtureValues } from '../../../../src/engine/CueList';
 
 /** A fresh fixture 7 per test, so one test's base values never reach another. */
@@ -11,7 +13,7 @@ const newLamp = (): Fixture => new Fixture({ id: 7, type: 'spot', pos: new Vecto
 function readout(lamp: Fixture, ids: readonly number[], vals: FixtureValues = {}) {
   return maReadout({
     selection: { ids },
-    stage: { rig: { get: (id: number) => (id === lamp.id ? lamp : undefined) } },
+    stage: { rig: { get: (id: number) => (id === lamp.id ? lamp : undefined) }, frame: frameOf(BUILT_IN_DESIGN) },
     programmer: { vals, set: () => undefined, colorTargets: () => [] },
   });
 }

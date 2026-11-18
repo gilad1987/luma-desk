@@ -18,6 +18,11 @@ export interface PanelsDeps {
   readonly layoutMode: () => LayoutMode;
   /** The guide or the tour covers the page; the io area builds them after the panels. */
   readonly guideOrTourOpen: () => boolean;
+  /**
+   * The Stage Builder, built after the panels: while it is open the page keys do nothing, and a show load cancels it
+   * first, so neither Done nor Cancel can later overwrite the loaded show's stage.
+   */
+  readonly builder: { readonly isOpen: () => boolean; readonly cancel: () => void };
 }
 
 /** {@link PanelsDeps} with the dialog and store-mode services that every panel after the top bar takes. */

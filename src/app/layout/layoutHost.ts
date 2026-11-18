@@ -5,7 +5,15 @@ import type { LayoutDeps } from './LayoutDeps';
 /** The part of {@link LayoutDeps} a layout change touches. */
 export type LayoutHostDeps = Pick<
   LayoutDeps,
-  'sideTabs' | 'encoders' | 'commandLine' | 'storeMode' | 'stageRenderer' | 'views' | 'setView' | 'layoutPrefs'
+  | 'sideTabs'
+  | 'encoders'
+  | 'commandLine'
+  | 'storeMode'
+  | 'stageRenderer'
+  | 'views'
+  | 'setView'
+  | 'layoutPrefs'
+  | 'builderOpen'
 >;
 
 /**
@@ -27,6 +35,7 @@ export function layoutHost(deps: LayoutHostDeps): LayoutHost {
     resize: () => deps.stageRenderer.resize(),
     currentView: () => deps.views.currentView,
     setView: (view, instant) => deps.setView(view, instant),
-    setConsoleHeight: (px) => deps.stageRenderer.setConsoleHeight(px),
+    // the Stage Builder owns the console height while it is open: a refit (window resize) must not restore it
+    setConsoleHeight: (px) => deps.stageRenderer.setConsoleHeight(deps.builderOpen() ? 0 : px),
   };
 }

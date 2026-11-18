@@ -22,7 +22,8 @@ describe('wireEngine after a stage change', () => {
     const { engine, builtInIds } = bootEngine();
     applyTheatre(engine);
     const fixture = engine.stage.rig.fixtures[0];
-    const gone = [...builtInIds].find((id) => !engine.stage.rig.get(id)) ?? 0;
+    const gone = [...builtInIds].find((id) => !engine.stage.rig.get(id));
+    if (gone === undefined) throw new Error('the theatre rig removed no built-in fixture id');
     const logs: string[] = [];
     engine.bus.on('message', (m) => logs.push(m.text));
     engine.runner.run(`Fixture ${gone} Thru ${gone}`);

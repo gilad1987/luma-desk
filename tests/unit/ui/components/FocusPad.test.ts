@@ -3,6 +3,8 @@ import { EventBus } from '../../../../src/core';
 import { aimAt } from '../../../../src/domain/aim';
 import type { Fixture } from '../../../../src/domain/Fixture';
 import { buildRig } from '../../../../src/domain/rig';
+import type { StageDeck } from '../../../../src/domain/stage/StageDesign';
+import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import { DECK } from '../../../../src/domain/venue';
 import type { EngineEvents } from '../../../../src/engine/events';
 import { he } from '../../../../src/i18n/he';
@@ -35,11 +37,12 @@ describe('focusPad aim', () => {
   beforeEach(() => (dom = new FakeDom()));
   afterEach(() => vi.unstubAllGlobals());
 
-  const setup = (ids: number[]) => {
+  const setup = (ids: number[], deck: StageDeck = BUILT_IN_DESIGN.deck) => {
     const bus = new EventBus<EngineEvents>(),
       toasts: string[] = [];
     bus.on('message', (m) => void (m.kind === 'toast' && toasts.push(m.text)));
-    const deps = { bus, selection: { ids }, programmer: { set: vi.fn() }, rig, aimHeight: new AimHeight() };
+    const programmer = { set: vi.fn() };
+    const deps = { bus, selection: { ids }, programmer, rig, aimHeight: new AimHeight(), frame: () => ({ deck }) };
     const canvas = new MapCanvas();
     canvas.rect = { left: 0, top: 0, width: 500, height: 280 };
     canvas.offsetParent = dom.body;
@@ -65,6 +68,16 @@ describe('focusPad aim', () => {
     const { canvas, deps, set } = setup([mover.id]);
     canvas.onpointerdown?.(pointer(490, 120)); // x 24: right of the stage
     expect(set.mock.calls).toEqual(aimed(24, deps.aimHeight.value, -10));
+  });
+
+  it('aims at the current stage frame: a raised, narrower deck', () => {
+    const deck = { x0: -10, x1: 10, z0: -15, z1: 0, height: 3 };
+    const { canvas, deps, set } = setup([mover.id], deck);
+    canvas.onpointerdown?.(pointer(250, 120)); // x 0, z -10: on this deck
+    expect(set.mock.calls).toEqual(aimed(0, 3 + deps.aimHeight.value, -10));
+    set.mockClear();
+    canvas.onpointerdown?.(pointer(400, 120)); // x 15: on the built-in deck, off this one
+    expect(set.mock.calls).toEqual(aimed(15, deps.aimHeight.value, -10));
   });
 
   it('toasts without a selection and does not capture the pointer', () => {

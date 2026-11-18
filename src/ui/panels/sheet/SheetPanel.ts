@@ -42,12 +42,22 @@ export class SheetPanel implements UiPanel {
     if (this.#deps.sideTab() === 'sheet') this.render();
   }
 
+  /**
+   * Drops the built rows, so the next repaint builds them from `fixtures` again. A stage change can keep the fixture
+   * count and still change the ids and types, which the count check in {@link render} would miss.
+   */
+  rebuild(): void {
+    this.#rows = null;
+    if (this.#deps.sideTab() === 'sheet') this.render();
+  }
+
   /** Writes every row's current values, building the rows first when the fixture count changed. */
   render(): void {
     const { fixtures, programmer, selection } = this.#deps;
     if (!this.#rows || this.#rows.length !== fixtures.length) {
       this.#table.innerHTML = sheetTable(fixtures);
-      this.#rows = [...this.#table.querySelectorAll<HTMLTableRowElement>('tr[data-id]')].map((tr) => new SheetRow(tr));
+      const trs = this.#table.querySelectorAll<HTMLTableRowElement>('tr[data-id]');
+      this.#rows = Array.from(trs, (tr) => new SheetRow(tr));
     }
     const rows = this.#rows;
     fixtures.forEach((f, i) => {

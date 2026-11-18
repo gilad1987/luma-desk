@@ -16,6 +16,8 @@ const setup = () => {
     views: { currentView: 'foh' as const },
     setView: vi.fn(),
     layoutPrefs: { load: () => null, save: vi.fn() },
+    building: false,
+    builderOpen: () => deps.building,
   };
   return { deps, host: layoutHost(deps) };
 };
@@ -59,5 +61,14 @@ describe('layoutHost', () => {
     expect(host.currentView()).toBe('foh');
     expect(host.sideTabs).toBe(deps.sideTabs);
     expect(host.prefs).toBe(deps.layoutPrefs);
+  });
+
+  it('passes console height 0 while the Stage Builder is open, so a refit cannot shrink the 3D view', () => {
+    const { deps, host } = setup();
+    deps.building = true;
+    host.setConsoleHeight(312.5);
+    deps.building = false;
+    host.setConsoleHeight(200);
+    expect(deps.stageRenderer.setConsoleHeight.mock.calls).toEqual([[0], [200]]);
   });
 });
