@@ -1,20 +1,18 @@
-import type { ShaderMaterial } from 'three';
-import { createLedWallMaterial } from '../stage/ledWallMaterial';
-
-/** The LED wall shader's plain content mode: one colour over the LED pixel grid, whatever UVs the mesh file has. */
-const PLAIN_MODE = 0;
-
-/** A saturated LED blue (linear RGB); the wall shader's 1.35 gain lifts it past 1, so the bloom pass makes it glow. */
-const SCREEN_BLUE: readonly [number, number, number] = [0.1, 0.22, 1];
+import { MeshBasicMaterial } from 'three';
 
 /**
- * The look of an MVR screen: the desk's own LED wall picture at full output in a saturated blue. No screen fixture
- * drives it (an imported screen is scenery, not patched), so its content stays still until the user builds a screen.
+ * A saturated LED blue (sRGB). It is set below full blue because the renderer's filmic tone mapping lifts it: on screen
+ * it ends near this colour, where a full blue would wash out towards a pale periwinkle.
  */
-export function createMvrScreenMaterial(): ShaderMaterial {
-  const material = createLedWallMaterial();
-  material.uniforms.uDim.value = 1;
-  material.uniforms.uMode.value = PLAIN_MODE;
-  material.uniforms.uCol.value.setRGB(...SCREEN_BLUE);
-  return material;
+const SCREEN_BLUE = 0x2a4bd7;
+
+/**
+ * The look of an MVR screen: one flat, unlit LED blue. The desk's LED wall shader draws its pixel grid and content
+ * from UVs in 0..1, which imported meshes do not have (their UVs are arbitrary or absent), so on them the grid turns
+ * into a wavy moire; a flat colour needs no UVs. Fog would grey the far upstage screen, so it ignores fog, as the
+ * desk's LED walls do. It is tone mapped with the scene, so it reads alike with the glow pass on or off. No screen
+ * fixture drives it: an imported screen is scenery, not patched.
+ */
+export function createMvrScreenMaterial(): MeshBasicMaterial {
+  return new MeshBasicMaterial({ color: SCREEN_BLUE, fog: false });
 }
