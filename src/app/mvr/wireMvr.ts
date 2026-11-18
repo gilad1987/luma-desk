@@ -1,4 +1,3 @@
-import type { Scene } from 'three';
 import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { EngineBus } from '../../engine/events';
 import type { StageService } from '../../engine/stage/StageService';
@@ -8,7 +7,7 @@ import { MvrMissingPrompt } from '../../ui/panels/mvr/MvrMissingPrompt';
 import { exportStageMvr, type MvrExportOut } from './exportStageMvr';
 import { followStage } from './followStage';
 import { importPickedMvr } from './importPickedMvr';
-import { LazyMvrStage } from './LazyMvrStage';
+import { LazyMvrStage, type MvrSceneryRender } from './LazyMvrStage';
 import { loadDemoRig } from './loadDemoRig';
 import { MvrLoadQueue } from './MvrLoadQueue';
 import type { MvrFlowDeps } from './MvrFlowDeps';
@@ -18,7 +17,8 @@ import { restoreStoredMvr } from './restoreStoredMvr';
 /** What the MVR wiring needs from the composition root. */
 export interface MvrWiringDeps {
   readonly bus: Pick<EngineBus, 'emit' | 'on'>;
-  readonly scene: Pick<Scene, 'add'>;
+  /** The scene the scenery joins and the camera views it fits; read only from the first MVR load on. */
+  readonly render: MvrSceneryRender;
   /** The flows' stage; the stage follower also reads the cause of the last apply. */
   readonly stage: MvrFlowDeps['stage'] & Pick<StageService, 'cause'>;
   /** The shared modal; the panels build it after `wireMvr`, so it is read when a flow runs. */
@@ -53,7 +53,7 @@ const messageOf = (error: unknown): string => (error instanceof Error ? error.me
  */
 export function wireMvr({
   bus,
-  scene,
+  render,
   stage,
   modal,
   cancelBuilder,
@@ -67,7 +67,7 @@ export function wireMvr({
     exportMvr: () => queue.run(() => exportStageMvr(stage.design, { toast, download })),
   };
   const prompt = new MvrMissingPrompt(actions);
-  const scenery = new LazyMvrStage(scene);
+  const scenery = new LazyMvrStage(render);
   const deps: MvrFlowDeps = { stage, store: openMvrStore(), scenery, prompt, toast, modal, cancelBuilder };
   const restore = (design: StageDesign): void => queue.run(() => restoreStoredMvr(deps, design));
   followStage({ bus, stage, scenery, prompt, restore });

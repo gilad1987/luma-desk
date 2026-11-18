@@ -36,9 +36,12 @@ function wired(design?: StageDesign) {
   const flow = fakeMvrFlowDeps(design);
   const emit = vi.fn();
   const download = vi.fn();
-  const scene = { add: vi.fn() };
+  const render = {
+    scene: { add: vi.fn() },
+    views: { fitTo: vi.fn(), setView: vi.fn(), currentView: 'foh' as const },
+  };
   const { modal, cancelBuilder } = flow.deps;
-  const mvr = wireMvr({ bus: { emit, on: vi.fn() }, scene, stage: flow.stage, modal, cancelBuilder, download });
+  const mvr = wireMvr({ bus: { emit, on: vi.fn() }, render, stage: flow.stage, modal, cancelBuilder, download });
   return { mvr, flow, emit, download };
 }
 

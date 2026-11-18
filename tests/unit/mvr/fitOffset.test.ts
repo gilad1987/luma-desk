@@ -26,6 +26,14 @@ describe('fitOffset', () => {
     expect(fit({ min: [0, 0, -15], max: [1, 1, 15] }).codes).toEqual(['oversize']);
   });
 
+  it('says in plain words how large the file is and that the camera views are fitted to it', () => {
+    const warnings: MvrWarning[] = [];
+    fitOffset({ min: [-30.2, 0, -40.04], max: [30, 1, 40] }, (w) => warnings.push(w));
+    expect(warnings.map((w) => w.message)).toEqual([
+      'The file covers 60 m x 80 m, larger than the stage; the camera views are fitted to all of it.',
+    ]);
+  });
+
   it('puts an empty file at the stage centre', () => {
     expect(fit(emptyBox()).offset).toEqual([0, 0, CENTRE_Z]);
   });
