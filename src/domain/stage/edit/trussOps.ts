@@ -38,7 +38,7 @@ export function addPresetTruss(d: StageDesign, preset: TrussPreset, position: Ve
  * Moves a truss and every fixture linked to it by the same delta. Fixture positions are absolute (plan §3.1), so the
  * parent link holds only because this op moves the children too; other fixtures stay where they are. The truss and
  * its fixtures are stored rounded to 1 mm (`roundToMillimetre`), so a typed or dragged target is stored as sent.
- * A zero delta returns `d` itself, so History adds no undo step.
+ * A zero delta, or one that rounds back to the stored millimetres, returns `d` itself, so History adds no undo step.
  * @throws RangeError when the truss is missing, so a stale selection shows up instead of doing nothing, or when
  * `delta` is not finite.
  */
@@ -53,7 +53,6 @@ export function moveTruss(d: StageDesign, trussId: string, delta: Vec3): StageDe
     trusses: d.trusses.map((t) => (t.id === trussId ? { ...t, transform: { ...t.transform, position } } : t)),
     fixtures: d.fixtures.map((f) => (f.trussId === trussId ? carry(f) : f)),
   };
-  // A sub-millimetre delta rounds back to the same place; returning `d` keeps that out of the undo history.
   return isSameData(next, d) ? d : next;
 }
 

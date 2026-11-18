@@ -1,6 +1,6 @@
 // The builder top view (src/ui/builder/TopView.ts): one canvas that fills the view panel. The canvas draws with the
-// `--top-view-*` colours, read when the canvas size changes (TopViewCanvas), so the palette stays in CSS. `touch-action: none` keeps a finger drag
-// on iPad a drag of the selection instead of a page scroll.
+// `--top-view-*` colours, read when the canvas size changes (TopViewCanvas), so the palette stays in CSS.
+// `touch-action: none` keeps a finger drag on iPad a drag of the selection instead of a page scroll.
 .top-view {
   --top-view-background: var(--bg);
   --top-view-grid: #16161a;
