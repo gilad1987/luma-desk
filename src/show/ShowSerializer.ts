@@ -7,6 +7,7 @@ import type { GroupLibrary } from '../engine/GroupLibrary';
 import type { PresetLibrary } from '../engine/PresetLibrary';
 import type { Programmer } from '../engine/Programmer';
 import type { Selection } from '../engine/Selection';
+import { defaultPoolOf } from '../engine/stage/defaultPool';
 import type { Tempo } from '../engine/Tempo';
 import { savedPresets, withSavedPresets } from './savedPresets';
 import { readShowFile } from './readShowFile';
@@ -16,8 +17,8 @@ import { readStage, writeStage, type StageFieldDeps } from './stageField';
 /** The engine state a show file captures, plus the programmer and selection that a load resets. */
 export interface ShowSerializerDeps {
   /**
-   * Read at each load after the stage is applied, so a getter over `StageService.rig` gives the default groups of the
-   * rig the loaded show brings, not the rig of boot.
+   * The built-in rig whose default groups a load uses when there are no `stage` deps. With them the defaults come from
+   * the stage service (`defaultPoolOf`) after the stage is applied, so a custom stage also gets its truss groups.
    */
   readonly rig: Rig;
   readonly groups: GroupLibrary;
@@ -62,13 +63,16 @@ export class ShowSerializer {
    * `bpm` 0 or missing becomes 120 while `haze` 0 stays 0; shows saved before the newer default groups get them only
    * in empty slots; missing or extra executors are ignored. It stops all executors and clears the programmer and the
    * selection. Bad data may throw part-way, as it always did; callers catch it. `readShowFile` runs first, so JSON
-   * `null` throws before the stage changes; the stage loads next (`readStage`), so the groups below come from its rig.
+   * `null` throws before the stage changes; the stage loads next (`readStage`), so the default groups below are the pool
+   * of the loaded stage, the same pool `StageGroups` compares with at the next rig change.
    */
   load(data: unknown): void {
     const d = readShowFile(data);
-    if (this.#deps.stage) readStage(data, this.#deps.stage);
+    const { stage } = this.#deps;
+    if (stage) readStage(data, stage);
     const { rig, groups, presets, execs, tempo, state, programmer, selection } = this.#deps;
-    groups.replace(d.groups ? addNewDefaultGroups(d.groups, defaultGroups(rig)) : defaultGroups(rig));
+    const defaults = stage ? defaultPoolOf(stage.service) : defaultGroups(rig);
+    groups.replace(d.groups ? addNewDefaultGroups(d.groups, defaults) : defaults);
     presets.replace(withSavedPresets(defaultPresets(), d.presets));
     execs.forEach((e, i) => {
       e.off();

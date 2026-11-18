@@ -10,9 +10,8 @@ import { isRecord } from './isRecord';
  * without a stage service saves and loads exactly the show of today.
  */
 export interface StageFieldDeps {
-  readonly service: Pick<StageService, 'apply' | 'design' | 'isBuiltIn'>;
-  /** The design that a show without a valid `stage` key means. */
-  readonly builtIn: StageDesign;
+  /** The stage service: its `builtIn` is the design a show without a valid `stage` key means. */
+  readonly service: Pick<StageService, 'rig' | 'design' | 'frame' | 'isBuiltIn' | 'apply' | 'builtIn'>;
   /** The toast text for a show whose `stage` key does not parse; injected because `show/` holds no UI language. */
   readonly badStage: string;
   /** Sends the bad-stage toast; main.ts passes the engine bus `message` emit. */
@@ -34,13 +33,13 @@ export function writeStage(deps: StageFieldDeps): { stage?: StageDesign } {
  * bad one on the built-in stage keeps the rig, because each apply rebuilds the scene and resets the caches.
  */
 export function readStage(raw: unknown, deps: StageFieldDeps): void {
-  const { service, builtIn, badStage, toast } = deps;
+  const { service, badStage, toast } = deps;
   const result = stageOf(raw);
   if (result?.ok) {
     if (!isSameData(result.design, service.design)) service.apply(result.design, 'showLoad');
     return;
   }
-  if (!service.isBuiltIn) service.apply(builtIn, 'showLoad');
+  if (!service.isBuiltIn) service.apply(service.builtIn, 'showLoad');
   if (result) toast({ kind: 'toast', text: badStage });
 }
 

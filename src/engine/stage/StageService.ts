@@ -51,6 +51,11 @@ export class StageService implements RigSource {
     return this.#cause;
   }
 
+  /** The design of the factory stage: the boot stage without a saved one, and what a show without `stage` means. */
+  get builtIn(): StageDesign {
+    return this.#options.builtIn;
+  }
+
   /** True for the built-in design object itself (identity), so an equal copy still counts as custom. */
   get isBuiltIn(): boolean {
     return this.#design === this.#options.builtIn;

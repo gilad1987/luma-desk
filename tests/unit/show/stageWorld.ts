@@ -26,7 +26,6 @@ export function stageWorld(initial?: StageDesign) {
   const service = new StageService(bus, { builtIn: BUILT_IN, initial, tooManyFixtures: (n) => `${n}` });
   const stage: StageFieldDeps = {
     service,
-    builtIn: BUILT_IN,
     badStage: BAD_STAGE,
     toast: (m) => bus.emit('message', m),
   };

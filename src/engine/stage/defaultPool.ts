@@ -7,6 +7,6 @@ import type { RigSource } from './RigSource';
  * 37-slot pool that saved shows and the demo show were made with; any other stage also gets one group per truss in
  * the free slots from 38 on.
  */
-export function defaultPoolOf(source: RigSource): GroupPool {
+export function defaultPoolOf(source: Pick<RigSource, 'rig' | 'design' | 'isBuiltIn'>): GroupPool {
   return defaultGroupsOf(source.rig, source.design, { trussGroups: !source.isBuiltIn });
 }

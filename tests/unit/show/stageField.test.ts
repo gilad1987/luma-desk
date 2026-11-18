@@ -3,9 +3,8 @@
  * read before the groups, the built-in design for a missing or bad key. Parsing rules are owned by the domain tests.
  */
 import { describe, expect, it } from 'vitest';
-import { rigFromDesign } from '../../../src/domain/stage/deriveRig';
 import { createTemplate } from '../../../src/domain/stage/templates';
-import { defaultGroups } from '../../../src/engine/defaultGroups';
+import { defaultPoolOf } from '../../../src/engine/stage/defaultPool';
 import { jsonRoundTrip, readGolden } from '../../shared';
 import { readSavedShow } from './showWorld';
 import { BAD_STAGE, stageWorld } from './stageWorld';
@@ -31,7 +30,7 @@ describe('show stage field: load', () => {
     const theatre = createTemplate('theatre');
     const source = stageWorld();
     source.serializer.load({ stage: jsonRoundTrip(theatre) });
-    expect(source.groups.all).toEqual(defaultGroups(rigFromDesign(theatre)));
+    expect(source.groups.all).toStrictEqual(defaultPoolOf(source.service));
     const saved = source.json();
     const world = stageWorld();
     world.serializer.load(JSON.parse(saved));
@@ -47,7 +46,7 @@ describe('show stage field: load', () => {
     expect(world.service.isBuiltIn).toBe(true);
     expect(world.messages).toEqual([{ kind: 'toast', text: BAD_STAGE }]);
     expect([world.tempo.bpm, world.execs[0]?.name]).toEqual([90, 'Kept']);
-    expect(world.groups.all).toEqual(defaultGroups(rigFromDesign(world.service.design)));
+    expect(world.groups.all).toStrictEqual(defaultPoolOf(world.service));
   });
 
   it('an old show without stage, loaded on a custom stage, applies the built-in stage and saves unchanged', () => {

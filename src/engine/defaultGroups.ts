@@ -10,18 +10,19 @@ import type { Group, GroupPool } from './GroupLibrary';
  */
 export const NEW_GROUPS: readonly string[] = ['LED Bars', 'Follow Spots', 'Profiles'];
 
-/** The built-in stage, built on first use and then kept: its design is the same for every call. */
-let builtIn: StageDesign | undefined;
+/** The built-in stage design; every call of `defaultGroups` reads the same one. */
+const BUILT_IN: StageDesign = sultansPool();
 
 /**
- * The factory group pool of the built-in stage; `rig` is the rig built from it (`buildRig()`). Slot numbers are part
- * of the show format (the demo show and saved shows refer to groups by number), so groups are only ever appended,
- * never reordered. The rules are the domain's `STANDARD_GROUPS`, shared with every other stage; truss groups are left
- * out, so the pool stays the 37 slots saved shows were made with. For the current stage use `defaultPoolOf`.
+ * The factory group pool of the built-in stage only; `rig` must be the rig built from it (`buildRig()`). Slot numbers
+ * are part of the show format (the demo show and saved shows refer to groups by number), so groups are only ever
+ * appended, never reordered. The rules are the domain's `STANDARD_GROUPS`, shared with every other stage; truss groups
+ * are left out, so the pool stays the 37 slots saved shows were made with. For the current stage, any stage, use
+ * `defaultPoolOf` with the StageService. The `(rig)` signature stays because main.ts calls it so (the show reset and
+ * the help page) until it wires the StageService; after that wiring this function can go.
  */
 export function defaultGroups(rig: Rig): GroupPool {
-  builtIn ??= sultansPool();
-  return defaultGroupsOf(rig, builtIn, { trussGroups: false });
+  return defaultGroupsOf(rig, BUILT_IN, { trussGroups: false });
 }
 
 /**
