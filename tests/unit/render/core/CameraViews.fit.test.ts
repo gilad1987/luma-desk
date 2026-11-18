@@ -1,24 +1,19 @@
 /**
  * CameraViews.fitTo (G7): the built-in bounds give today's views bit for bit (so the boot call changes no
  * screenshot), null restores the built-in table, and every stage's deck shows whole, and not tiny, in the FOH frame
- * at 4:3 and 16:9. The scale rule itself is in CameraViews.fitScale.test.ts.
+ * at 4:3 and 16:9, also for tight decks that fill their bounds. The scale rule is in CameraViews.fitScale.test.ts.
  */
-import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { boundsOf } from '../../../../src/domain/stage/bounds';
-import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
+import { setDeckSize } from '../../../../src/domain/stage/edit/deckOps';
 import { createTemplate } from '../../../../src/domain/stage/templates/index';
 import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
-import { CameraViews } from '../../../../src/render/camera/CameraViews';
+import type { CameraViews } from '../../../../src/render/camera/CameraViews';
 import { fitViews } from '../../../../src/render/camera/fitViews';
 import { VIEWS, type ViewName } from '../../../../src/render/camera/viewTable';
-import { fakeCanvas } from '../fakeCanvas';
+import { cameraViews, fohDeck } from './fohFrame';
 
 const names = Object.keys(VIEWS) as ViewName[];
-
-function cameraViews(): CameraViews {
-  return new CameraViews(fakeCanvas(), { isMaLayout: () => false, onViewChanged: () => undefined });
-}
 
 /** The camera pose after an instant move to each view, so the test reads what setView really used. */
 function poses(v: CameraViews): number[][] {
@@ -26,20 +21,6 @@ function poses(v: CameraViews): number[][] {
     v.setView(name, true);
     return [...v.camera.position.toArray(), ...v.controls.target.toArray(), v.camera.fov];
   });
-}
-
-/** The FOH view's deck top corners in NDC for an app frame aspect: all inside the frame, and the deck's width share. */
-function fohDeck(design: StageDesign, aspect: number): { isInside: boolean; widthShare: number } {
-  const v = cameraViews();
-  v.camera.aspect = aspect;
-  v.fitTo(boundsOf(design));
-  v.setView('foh', true);
-  v.camera.updateMatrixWorld();
-  const { x0, x1, z0, z1, height } = design.deck;
-  const ndc = [x0, x1].flatMap((x) => [z0, z1].map((z) => new Vector3(x, height, z).project(v.camera)));
-  const xs = ndc.map((n) => n.x);
-  const isInside = ndc.every((n) => Math.abs(n.x) <= 1 && Math.abs(n.y) <= 1);
-  return { isInside, widthShare: (Math.max(...xs) - Math.min(...xs)) / 2 };
 }
 
 /**
@@ -87,6 +68,16 @@ describe('CameraViews.fitTo', () => {
       expect(widthShare).toBeLessThanOrEqual(1);
     },
   );
+
+  it.each([
+    [20, 12],
+    [30, 15],
+    [46, 21.6],
+  ])('shows a tight %s x %s m deck whole from FOH at 4:3, at 30 percent of the 16:9 width or more', (width, depth) => {
+    const tight = setDeckSize(createTemplate('empty'), { width, depth, height: 1.2 });
+    expect(fohDeck(tight, 4 / 3).isInside).toBe(true);
+    expect(fohDeck(tight, 16 / 9).widthShare).toBeGreaterThanOrEqual(0.3);
+  });
 
   it('gives finite, distinct eye and target points for the empty template', () => {
     const fitted = fitViews(boundsOf(createTemplate('empty')));

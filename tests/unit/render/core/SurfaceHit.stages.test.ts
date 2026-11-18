@@ -1,7 +1,7 @@
 /**
  * SurfaceHit on other stage designs (G6): beams land on the theatre and festival decks, risers and LED walls from
- * `surfacesOf`, a hidden LED wall catches nothing, and `setSurfaces` replaces the boxes instead of adding to them. The pool floor
- * reaches under the built-in deck's outline wherever no top box covers it.
+ * `surfacesOf`, a hidden LED wall catches nothing, and `setSurfaces` replaces the boxes instead of adding to them.
+ * The pool floor reaches under the built-in deck's outline wherever no top box covers it.
  */
 import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
@@ -11,6 +11,7 @@ import { createTemplate } from '../../../../src/domain/stage/templates/index';
 import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import { UP } from '../../../../src/domain/venue';
 import { SCREEN_NORMAL, SurfaceHit, type BeamHit } from '../../../../src/render/surface/SurfaceHit';
+import { legacyHitSurface } from './legacyHitSurface';
 
 const down = (x: number, z: number): [Vector3, Vector3] => [new Vector3(x, 10, z), new Vector3(0, -1, 0)];
 const upstage: [Vector3, Vector3] = [new Vector3(0, 10, 0), new Vector3(0, 0, -1)];
@@ -49,6 +50,15 @@ describe('SurfaceHit on other stages', () => {
     const scenery = { ...BUILT_IN_DESIGN.scenery, ledWall: false };
     expect(described(surfacesFor(BUILT_IN_DESIGN).hit(...upstage))?.[1]).toBe('screen');
     expect(described(surfacesFor({ ...BUILT_IN_DESIGN, scenery }).hit(...upstage))).toBeNull();
+  });
+
+  it('puts a ray on the exact deck edge on the floor as legacy, and finds nothing under a riser top', () => {
+    const builtIn = surfacesFor(BUILT_IN_DESIGN);
+    expect(described(builtIn.hit(...down(23, -10)))).toEqual([10, 'up']);
+    expect(builtIn.hit(...down(23, -10))).toStrictEqual(legacyHitSurface(...down(23, -10)));
+    const risers = [{ id: 'r1', at: [30, 12, -10], size: [4, 12, 2] }] as const;
+    expect(described(builtIn.hit(...down(30, -10)))).toEqual([10, 'up']);
+    expect(surfacesFor({ ...BUILT_IN_DESIGN, risers }).hit(...down(30, -10))).toBeNull();
   });
 
   it('replaces the boxes on setSurfaces instead of adding to them', () => {

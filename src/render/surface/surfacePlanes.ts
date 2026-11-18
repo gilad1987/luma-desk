@@ -39,9 +39,9 @@ export function hitTerraces(origin: Vector3, direction: Vector3): BeamHit | null
  * The hit on the pool floor between the stage front and the terraces, for a downward ray. The floor skips the x/z
  * under any `top` box (G6), so a beam beside a smaller deck lands on the floor; the built-in deck box is the
  * `STAGE` outline, so the built-in stage keeps its legacy floor gap bit for bit.
- * The floor and terraces are still Sultan's Pool for every design: tiers only for `sultans-pool` and a flat floor
- * otherwise come in a later batch (stage-builder-v2.md section 4, row at line 412).
  */
+// TODO(W3d): tiers only for sultans-pool, a flat floor otherwise. The floor and terraces are still Sultan's Pool for
+// every design, because the venue choice does not reach the surfaces yet.
 export function hitPoolFloor(origin: Vector3, direction: Vector3, tops: readonly SurfaceBox[]): BeamHit | null {
   const t = -origin.y / direction.y;
   const x = origin.x + direction.x * t;
