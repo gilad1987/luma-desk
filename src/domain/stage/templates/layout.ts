@@ -4,6 +4,7 @@ import type { FixtureTypeId } from '../../FixtureType';
 import type { StageFixture } from '../StageDesign';
 import type { StageTruss } from '../trussTypes';
 import type { FixtureRole, Vec3 } from '../types';
+import { HANG_DROP_M } from '../trussPlaces';
 
 /** The line a row of fixtures sits on, with the role, truss link and mount that every fixture of the row shares. */
 export interface RowLine {
@@ -49,17 +50,18 @@ export function fixtureRow(line: RowLine, block: RowBlock): StageFixture[] {
 }
 
 /**
- * The hanging line of a straight truss or a tower in world metres, moved by `offset` (a drop below the truss or a
- * step off a tower). Template trusses carry no rotation; a rotated or curved truss throws, so a template edit that
- * needs one fails loudly instead of placing fixtures off the truss.
+ * The hanging line of a straight truss in world metres, `HANG_DROP_M` below its centre line: the same drop the
+ * builder uses, so a builder batch added to a template truss sees the template fixtures and moves one lane. A tower
+ * row goes through `placesOnTruss` instead, which stands it beside the column. Template trusses carry no rotation; any
+ * other truss throws, so a template edit that needs one fails loudly instead of placing fixtures off the truss.
  */
-export function trussLine(truss: StageTruss, offset: Vec3): RowLine {
+export function hangLine(truss: StageTruss): RowLine {
   const p = truss.params;
-  if ((p.kind !== 'straight' && p.kind !== 'tower') || truss.transform.rotation) {
-    throw new Error(`Template truss ${truss.id}: a fixture row needs a straight truss or a tower without rotation`);
+  if (p.kind !== 'straight' || truss.transform.rotation) {
+    throw new Error(`Template truss ${truss.id}: a hanging row needs a straight truss without rotation`);
   }
   const at = truss.transform.position;
-  const move = (v: Vec3): Vec3 => [at[0] + v[0] + offset[0], at[1] + v[1] + offset[1], at[2] + v[2] + offset[2]];
+  const move = (v: Vec3): Vec3 => [at[0] + v[0], at[1] + v[1] - HANG_DROP_M, at[2] + v[2]];
   return { a: move(p.a), b: move(p.b), role: truss.role, trussId: truss.id, mount: 'hang' };
 }
 

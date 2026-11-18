@@ -4,8 +4,19 @@
  * list entry and a field that loses `readonly` or becomes required. Parsing and rig derivation are tested elsewhere.
  */
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import { STAGE_DESIGN_VERSION, type StageDesign, type StageFixture } from '../../../../src/domain/stage/StageDesign.ts';
-import { FIXTURE_ROLES, SCENERY_PARTS, type Quat, type Vec3 } from '../../../../src/domain/stage/types.ts';
+import {
+  STAGE_DESIGN_VERSION,
+  type StageDeck,
+  type StageDesign,
+  type StageFixture,
+} from '../../../../src/domain/stage/StageDesign.ts';
+import {
+  FIXTURE_ROLES,
+  SCENERY_PARTS,
+  type Quat,
+  type SceneryPart,
+  type Vec3,
+} from '../../../../src/domain/stage/types.ts';
 
 const sample: StageDesign = {
   v: STAGE_DESIGN_VERSION,
@@ -69,15 +80,12 @@ describe('stage types', () => {
     ]);
   });
 
-  it('accepts a sample design and refuses writes to it', () => {
-    const copy = structuredClone(sample);
-    // @ts-expect-error a design is readonly
-    copy.fixtures = [];
-    // @ts-expect-error a scenery record is readonly
-    copy.scenery.deck = false;
-    // @ts-expect-error a deck is readonly
-    copy.deck.height = 2;
-    expect(sample.fixtures.map((f) => f.rotation)).toStrictEqual([undefined, [0, 0.7071, 0, 0.7071]]);
+  it('accepts a sample design and types it readonly down to the scenery and the deck', () => {
+    expectTypeOf(sample).pick<'fixtures'>().toEqualTypeOf<{ readonly fixtures: readonly StageFixture[] }>();
+    expectTypeOf<Pick<StageDesign, 'scenery'>>().toEqualTypeOf<{
+      readonly scenery: Readonly<Record<SceneryPart, boolean>>;
+    }>();
+    expectTypeOf<Pick<StageDeck, 'height'>>().toEqualTypeOf<{ readonly height: number }>();
   });
 
   it('makes rotation optional and position a Vec3', () => {

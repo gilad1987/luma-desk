@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { NETWORK_ERROR, cacheContents, fetchStatus, openUnderWorker, storedPage } from '../shared';
+import { NETWORK_ERROR, cacheContents, fetchStatus, openUnderWorker, storedPage } from '../shared/e2e';
 
 // What the service worker answers without a network (docs/known-quirks.md, section I). The main config blocks
 // service workers so other tests see fresh files; this spec is about the worker itself.

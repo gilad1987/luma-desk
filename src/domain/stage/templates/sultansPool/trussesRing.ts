@@ -1,18 +1,9 @@
-import { ANG, DECK, RING, TOWERS } from '../../../venue';
+import { ANG, DECK, DELAYS, RING, TOWERS } from '../../../venue';
 import type { StageTruss } from '../../trussTypes';
 import { AT_ORIGIN } from './trussesMain';
 
 /** Both rings hang from six chains, turned by the same phase as the legacy ring truss. */
 const RING_CHAINS = { count: 6, phase: 0.26 } as const;
-
-/**
- * The two audience delay towers as [x, z]. A copy of `DELAYS` in `src/main.ts`, which is not importable from the
- * domain; the renderer reads them from the design once the stage builders replace the legacy scene code.
- */
-const DELAYS = [
-  [-24, 33],
-  [24, 33],
-] as const;
 
 function rings(): StageTruss[] {
   return [

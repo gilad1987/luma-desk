@@ -1,6 +1,6 @@
 /**
  * Owns the truss ops: preset shapes, the parent link on move (children move, nothing else does) and prop edits.
- * Mirroring a truss is tested through `mirrorStageLeft` in itemOps.test.ts.
+ * Mirroring a truss is tested through `mirrorLeftToRight` in mirror.test.ts.
  */
 import { describe, expect, it } from 'vitest';
 import {
@@ -9,7 +9,7 @@ import {
   setTrussProps,
   shiftFixture,
 } from '../../../../../src/domain/stage/edit/trussOps.ts';
-import { LEFT_TOWER, sampleDesign } from './sampleDesign.ts';
+import { LEFT_TOWER, PIPE, sampleDesign } from './sampleDesign.ts';
 
 describe('addPresetTruss', () => {
   it('adds the four presets last, at the given spot, with readable ids', () => {
@@ -46,6 +46,14 @@ describe('setTrussProps', () => {
       { ...LEFT_TOWER, name: 'SL ladder', role: 'profile' },
       before.fixtures,
     ]);
+  });
+
+  it('stores the params the parser read, so keys of the old kind do not stay', () => {
+    const line = { kind: 'straight', a: [-5, 0, 0], b: [5, 0, 0], section: 0.3 } as const;
+    const next = setTrussProps(sampleDesign(), PIPE.id, {
+      params: { ...line, kind: 'circle', radius: 4, section: 0.4 },
+    });
+    expect(next.trusses[0]?.params).toStrictEqual({ kind: 'circle', radius: 4, section: 0.4 });
   });
 });
 

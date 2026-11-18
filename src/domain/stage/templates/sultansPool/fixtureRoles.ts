@@ -43,7 +43,7 @@ const RANGES: readonly RoleRange[] = [
 ];
 
 /** The role and the parent truss of one Sultan's Pool fixture. */
-export interface FixturePlace {
+export interface FixtureLink {
   readonly role: FixtureRole;
   readonly trussId: string | null;
 }
@@ -52,7 +52,7 @@ export interface FixturePlace {
  * The role and truss of a Sultan's Pool fixture, from the id-range table of the plan. It throws on an id outside the
  * table, so a fixture added to the rig without a role fails the template instead of landing in no group.
  */
-export function placeOf(id: number): FixturePlace {
+export function placeOf(id: number): FixtureLink {
   const range = RANGES.find((r) => id >= r.from && id <= r.to);
   if (!range) throw new Error(`Sultan's Pool template: fixture ${id} is not in the role table`);
   const trussId = typeof range.truss === 'function' ? range.truss(id - range.from) : range.truss;

@@ -15,6 +15,6 @@ export function addProfiles(rig: RigBuilder): void {
       for (const y of [7.25, 11.75]) {
         const x = sx * 23.6;
         const aim = aimAt({ pos: new Vector3(x, y, z), mount: 'hang', T: TYPES.profile }, sx * 8, DECK + 1.5, z);
-        rig.add(id++, 'profile', x, y, z, 'hang', aim);
+        rig.add({ id: id++, type: 'profile', at: [x, y, z], mount: 'hang', fixed: aim });
       }
 }

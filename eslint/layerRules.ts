@@ -1,4 +1,5 @@
 import type { Linter } from 'eslint';
+import { SHARED_INTERNALS } from './sharedInternals.ts';
 
 const FEATURES = ['command', 'show', 'autoshow', 'audio'] as const;
 const PRESENTATION = ['render', 'ui', 'io'] as const;
@@ -23,11 +24,6 @@ const FORBIDDEN_LAYERS: Partial<Record<Layer, readonly Layer[]>> = {
   render: ['ui'],
 };
 
-/** Shared folders publish their API through index.ts; reaching past it couples callers to internals. */
-export const SHARED_INTERNALS = {
-  group: ['**/shared/*', '!**/shared/index', '!**/shared/index.ts'],
-  message: 'Import a shared folder through its index.ts.',
-};
 const THREE_ADDONS = {
   group: ['three/addons', 'three/addons/*', 'three/examples/*'],
   message: 'three/addons are render-only: domain and engine may use the three core math types alone.',
@@ -74,11 +70,10 @@ function depthRules(layer: Layer, forbidden: readonly Layer[], depth: number): L
   };
 }
 
+const DEPTHS = Array.from({ length: MAX_DEPTH }, (_, index) => index + 1);
+
 /** The import rules of every layer, one config per layer and file depth. */
-export function layerRules(): Linter.Config[] {
-  const depths = Array.from({ length: MAX_DEPTH }, (_, index) => index + 1);
-  return LAYERS.flatMap((layer) => {
-    const forbidden = FORBIDDEN_LAYERS[layer];
-    return forbidden ? depths.map((depth) => depthRules(layer, forbidden, depth)) : [];
-  });
-}
+export const layerRules: Linter.Config[] = LAYERS.flatMap((layer) => {
+  const forbidden = FORBIDDEN_LAYERS[layer];
+  return forbidden ? DEPTHS.map((depth) => depthRules(layer, forbidden, depth)) : [];
+});

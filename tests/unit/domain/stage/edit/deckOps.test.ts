@@ -7,10 +7,10 @@ import {
   addRiser,
   removeRiser,
   setDeckSize,
-  setLedWall,
   setSceneryPart,
   setVenue,
 } from '../../../../../src/domain/stage/edit/deckOps.ts';
+import { setLedWall } from '../../../../../src/domain/stage/edit/ledWall.ts';
 import { sampleDesign } from './sampleDesign.ts';
 
 describe('setDeckSize', () => {
@@ -36,6 +36,11 @@ describe('setLedWall', () => {
       { id: 'led-wall', fixtureId: 401, x0: -3, x1: 3, y0: 1, y1: 3, z: -4 },
       [0, 2, -4],
     ]);
+  });
+
+  it('shows the LED wall scenery part when it turns the wall on', () => {
+    const hidden = { ...sampleDesign(), scenery: { ...sampleDesign().scenery, ledWall: false } };
+    expect(setLedWall(hidden, { width: 8, height: 4 }).scenery.ledWall).toBe(true);
   });
 
   it('turns the wall off together with its fixture', () => {

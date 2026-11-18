@@ -1,6 +1,7 @@
 /**
- * Owns where `addFixturesOnTruss` and `addFloorRow` put new fixtures: even spacing, circle angle steps with a yaw to
- * the centre, the truss rotation (G2) and the lane shift. Rendering the result is owned by the render tests.
+ * Owns where `addFixturesOnTruss` and `addFloorRow` put new fixtures: even spacing, the hang drop below the truss,
+ * circle angle steps from +z with a yaw to the centre, the truss rotation (G2) and the lane shift. Rendering the
+ * result is owned by the render tests.
  */
 import { Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
@@ -20,36 +21,36 @@ const bare = (...trusses: StageTruss[]): StageDesign => ({ ...sampleDesign(), tr
 const positions = (d: StageDesign): number[][] => d.fixtures.map((f) => rounded(f.position));
 
 describe('addFixturesOnTruss', () => {
-  it('spreads fixtures evenly along a straight truss and gives them the truss role', () => {
+  it('spreads fixtures evenly along a straight truss, 0.45 m below it, and gives them the truss role', () => {
     const d = addFixturesOnTruss(bare(...sampleDesign().trusses), { trussId: 'pipe-1', type: 'spot', count: 4 });
     expect(positions(d)).toEqual([
-      [-3.75, 7, 0],
-      [-1.25, 7, 0],
-      [1.25, 7, 0],
-      [3.75, 7, 0],
+      [-3.75, 6.55, 0],
+      [-1.25, 6.55, 0],
+      [1.25, 6.55, 0],
+      [3.75, 6.55, 0],
     ]);
     expect(d.fixtures.map((f) => [f.id, f.role, f.trussId, f.mount, 'rotation' in f])).toEqual(
       [1, 2, 3, 4].map((id) => [id, 'mid', 'pipe-1', 'hang', false]),
     );
   });
 
-  it('steps a circle by 2π/count and turns each body to the centre', () => {
+  it('steps a circle by 2π/count from +z toward +x and turns each body to the centre', () => {
     const d = addFixturesOnTruss(bare(ring), { trussId: 'ring-1', type: 'beam', count: 4 });
     expect(positions(d)).toEqual([
-      [4, 8, 0],
-      [0, 8, 4],
-      [-4, 8, 0],
-      [0, 8, -4],
+      [0, 7.55, 4],
+      [4, 7.55, 0],
+      [0, 7.55, -4],
+      [-4, 7.55, 0],
     ]);
     const facing = d.fixtures.map((f) => {
       const forward = new Vector3(0, 0, 1).applyQuaternion(new Quaternion(...(f.rotation ?? [0, 0, 0, 1])));
       return rounded(forward.toArray());
     });
     expect(facing).toEqual([
-      [-1, 0, 0],
       [0, 0, -1],
-      [1, 0, 0],
+      [-1, 0, 0],
       [0, 0, 1],
+      [1, 0, 0],
     ]);
   });
 
@@ -59,8 +60,8 @@ describe('addFixturesOnTruss', () => {
     const straight: StageTruss = { ...turned, params: { kind: 'straight', a: [-5, 0, 0], b: [5, 0, 0], section: 0.3 } };
     const d = addFixturesOnTruss(bare(straight), { trussId: 'bar-1', type: 'wash', count: 2 });
     expect(positions(d)).toEqual([
-      [0, 5, 2.5],
-      [0, 5, -2.5],
+      [0, 4.55, 2.5],
+      [0, 4.55, -2.5],
     ]);
     expect(d.fixtures.map((f) => rounded(f.rotation ?? []))).toEqual([rounded(yaw), rounded(yaw)]);
   });
@@ -76,8 +77,8 @@ describe('addFixturesOnTruss', () => {
     const batch = { trussId: 'ring-1', type: 'wash', count: 2 } as const;
     const d = addFixturesOnTruss(addFixturesOnTruss(bare(ring), batch), batch);
     expect(positions(d).slice(2)).toEqual([
-      [4.4, 8, 0],
-      [-4.4, 8, 0],
+      [0, 7.55, 4.4],
+      [0, 7.55, -4.4],
     ]);
   });
 

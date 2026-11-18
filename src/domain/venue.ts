@@ -67,6 +67,16 @@ export const ANG: readonly AngledTruss[] = [-1, 1].flatMap((sx) =>
   [-5.5, -12, -17.5].map((z) => ({ a: new Vector3(sx * 24.4, 23.6, z), b: new Vector3(sx * 11.8, 14.2, z), z, sx })),
 );
 
+/**
+ * The two audience delay towers as [x, z] in metres. The Sultan's Pool template builds its delay towers from this
+ * record. `src/main.ts` still draws them from its own legacy copy; the wiring step removes that copy, so the scene
+ * reads this record too.
+ */
+export const DELAYS: readonly (readonly [x: number, z: number])[] = [
+  [-24, 33],
+  [24, 33],
+];
+
 /** The x and z scale of the band layout, shared by the band position preset and the performer props. */
 export const SXZ = [1.3, 1.28] as const;
 

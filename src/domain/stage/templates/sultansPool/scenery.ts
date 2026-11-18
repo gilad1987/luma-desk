@@ -1,5 +1,6 @@
 import { DECK, ROOF, SCREEN, STAGE } from '../../../venue';
 import type { StageDesign } from '../../StageDesign';
+import { sceneryFor } from '../../venueScenery';
 
 /** The parts of a design that describe the venue around the rig rather than the trusses and fixtures. */
 export type VenueParts = Pick<StageDesign, 'venue' | 'scenery' | 'deck' | 'screens' | 'risers'>;
@@ -11,7 +12,7 @@ export type VenueParts = Pick<StageDesign, 'venue' | 'scenery' | 'deck' | 'scree
 export function sultansPoolScenery(): VenueParts {
   return {
     venue: { kind: 'sultans-pool', gridY: ROOF },
-    scenery: { deck: true, trusses: true, band: true, ledWall: true, crowd: true },
+    scenery: sceneryFor('sultans-pool'),
     deck: { x0: STAGE.x0, x1: STAGE.x1, z0: STAGE.z0, z1: STAGE.z1, height: DECK },
     screens: [
       {

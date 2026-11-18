@@ -1,6 +1,6 @@
 /**
  * Owns `rigFromDesign`: a design copied from `buildRig()` must give back the same fixtures in the same order with
- * exact floats, with `pix` and `rotation` keys only where the design has them.
+ * exact floats, with `pix` and `rotation` keys only where the design has them, and a `rotation` made unit.
  */
 import { Quaternion } from 'three';
 import { describe, expect, it } from 'vitest';
@@ -8,9 +8,10 @@ import type { Fixture } from '../../../../src/domain/Fixture.ts';
 import { buildRig } from '../../../../src/domain/rig/index.ts';
 import { rigFromDesign } from '../../../../src/domain/stage/deriveRig.ts';
 import type { StageFixture } from '../../../../src/domain/stage/StageDesign.ts';
-import { VENUE_DESIGN } from './venueDesign.ts';
+import { createTemplate } from '../../../../src/domain/stage/templates/index.ts';
 
 const built = buildRig();
+const VENUE_DESIGN = { ...createTemplate('sultans-pool'), fixtures: [] };
 
 function toStageFixture(f: Fixture): StageFixture {
   return {
@@ -46,7 +47,10 @@ describe('rigFromDesign', () => {
   });
 
   it('keeps -0 and every other float bit of the positions', () => {
-    rig.fixtures.forEach((f, i) => expect(f.pos.toArray()).toStrictEqual(built.fixtures[i]?.pos.toArray()));
+    const position = [-0, 0.1 + 0.2, 3] as const;
+    const fixture: StageFixture = { id: 1, type: 'par', role: 'floor', trussId: null, position, mount: 'floor' };
+    const [f] = rigFromDesign({ ...VENUE_DESIGN, fixtures: [fixture] }).fixtures;
+    expect([Object.is(f?.pos.x, -0), f?.pos.y]).toEqual([true, 0.30000000000000004]);
   });
 
   it('sets rotation only on the fixture that has one', () => {
@@ -61,6 +65,13 @@ describe('rigFromDesign', () => {
     const [rotated, plain] = rigFromDesign(design).fixtures;
     expect(rotated?.rotation).toEqual(new Quaternion(0, 0, 1, 0));
     expect(plain && 'rotation' in plain).toBe(false);
+  });
+
+  it('makes a non-unit rotation unit, as edit ops and the MVR import skip the parser', () => {
+    const fixture = { id: 1, type: 'beam', role: 'ring', trussId: null, position: [0, 9, 0], mount: 'hang' } as const;
+    const [f] = rigFromDesign({ ...VENUE_DESIGN, fixtures: [{ ...fixture, rotation: [0, 0, 3, 4] }] }).fixtures;
+    expect(f?.rotation?.length()).toBeCloseTo(1, 15);
+    [0, 0, 0.6, 0.8].forEach((v, i) => expect(f?.rotation?.toArray()[i]).toBeCloseTo(v, 15));
   });
 
   it('gives an empty rig for a design without fixtures', () => {

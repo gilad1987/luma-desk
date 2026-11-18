@@ -1,5 +1,5 @@
 import type { Clock } from '../core';
-import { cueAt } from './CueList';
+import { cueAt, stepCueIndex, type Cue } from './CueList';
 import { Executor } from './Executor';
 import type { EngineBus } from './events';
 import { stepFade } from './Fade';
@@ -41,17 +41,12 @@ export class ExecutorPool {
     }
     if (e.resume()) return;
     if (!e.on && e.level === 0) e.level = 1;
-    let n = e.cur + dir;
-    if (n >= e.cues.length) n = 0;
-    if (n < 0) n = e.cues.length - 1;
+    const n = stepCueIndex(e.cues, e.cur, dir);
     e.goto(n);
     const cue = cueAt(e.cues, n);
     // the auto executor is not in `execs` and would print "Exec 0"; no caller passes it
-    this.#bus.emit('message', {
-      kind: 'log',
-      text: `Exec ${this.execs.indexOf(e) + 1}: Cue ${cue.num} ${cue.name}`,
-      level: 'ok',
-    });
+    const text = `Exec ${this.execs.indexOf(e) + 1}: Cue ${cue.num} ${cue.name}`;
+    this.#bus.emit('message', { kind: 'log', text, level: 'ok' });
   }
 
   /**
@@ -85,6 +80,17 @@ export class ExecutorPool {
     e.flash = false;
     if (e.flashOnly && e.level === 0) e.off();
     e.flashOnly = false;
+  }
+
+  /**
+   * Calls `fn` with the 0-based place in `execs` whenever an operator executor starts a cue (GO, fader, flash, `goto`),
+   * so the missing-fixture notice warns once per executor and cue. The auto executor is left out: it builds its cues
+   * from the current rig, so they never name a missing fixture. A later call replaces the observer.
+   */
+  observeCues(fn: (execIndex: number, cue: Cue) => void): void {
+    this.execs.forEach((e, i) => {
+      e.onCue = (cue): void => fn(i, cue);
+    });
   }
 
   /** Advances every running fade to frame time `now` (seconds from the render loop, not the executor clock). */

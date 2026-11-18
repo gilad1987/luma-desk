@@ -1,13 +1,12 @@
 /**
- * Owns the Sultan's Pool template's parity with the legacy rig: its fixtures against `buildRig()`, its truss list
- * against the legacy truss code (order, kinds, float expressions) and the role table's guard against unknown ids.
- * The invariants every template shares live in templates.test.ts.
+ * Owns the Sultan's Pool template's parity with the legacy rig: its fixtures against `buildRig()` and its truss list
+ * against the legacy truss code (order, kinds, float expressions). Roles and truss links live in
+ * sultansPoolRoles.test.ts; the invariants every template shares live in templates.test.ts.
  */
 import { describe, expect, it } from 'vitest';
 import { buildRig } from '../../../../src/domain/rig/index.ts';
 import { ANG, DECK, RING, ROOF, TOWERS, TR } from '../../../../src/domain/venue.ts';
 import { createTemplate } from '../../../../src/domain/stage/templates/index.ts';
-import { placeOf } from '../../../../src/domain/stage/templates/sultansPool/fixtureRoles.ts';
 
 describe("Sultan's Pool template", () => {
   const d = createTemplate('sultans-pool');
@@ -60,9 +59,5 @@ describe("Sultan's Pool template", () => {
     });
     expect(d.trusses.find((t) => t.id === 'roof')?.transform.position).toEqual([0, ROOF + 0.7, -7.9]);
     expect(d.venue).toEqual({ kind: 'sultans-pool', gridY: ROOF });
-  });
-
-  it('throws on a fixture id outside the role table, naming the id', () => {
-    expect(() => placeOf(9999)).toThrow(/9999/);
   });
 });

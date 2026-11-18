@@ -1,4 +1,8 @@
-import { STAGE_DESIGN_VERSION, type StageDesign } from '../../../../../src/domain/stage/StageDesign.ts';
+import {
+  STAGE_DESIGN_VERSION,
+  type StageDesign,
+  type StageFixture,
+} from '../../../../../src/domain/stage/StageDesign.ts';
 import type { StageTruss } from '../../../../../src/domain/stage/trussTypes.ts';
 
 /** A 10 m pipe on the centre line, 7 m up. */
@@ -10,7 +14,7 @@ export const PIPE: StageTruss = {
   params: { kind: 'straight', a: [-5, 0, 0], b: [5, 0, 0], section: 0.3 },
 };
 
-/** A 4 m tower on stage left (x < 0). */
+/** A 4 m tower on house left (left as seen from the audience, x < 0). */
 export const LEFT_TOWER: StageTruss = {
   id: 'left-1',
   name: 'Left tower',
@@ -20,7 +24,7 @@ export const LEFT_TOWER: StageTruss = {
 };
 
 /**
- * A small hand-written design for the edit-op tests: the pipe with two washes, the stage-left tower with one rotated
+ * A small hand-written design for the edit-op tests: the pipe with two washes, the house-left tower with one rotated
  * beam, and one floor par. It is a literal on purpose, so the edit tests do not depend on the templates.
  */
 export function sampleDesign(): StageDesign {
@@ -53,4 +57,9 @@ export function sampleDesign(): StageDesign {
 /** Numbers rounded to 1e-9 with -0 made +0, so float results compare with `toEqual`. */
 export function rounded(values: readonly number[]): number[] {
   return values.map((v) => Math.round(v * 1e9) / 1e9 + 0);
+}
+
+/** `d` with the patch written straight into fixture `id`, past the op's check, as a hand-edited show would hold it. */
+export function patchedFixture(d: StageDesign, id: number, patch: Partial<StageFixture>): StageDesign {
+  return { ...d, fixtures: d.fixtures.map((f) => (f.id === id ? { ...f, ...patch } : f)) };
 }

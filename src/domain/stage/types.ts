@@ -10,14 +10,17 @@ export type Vec3 = readonly [x: number, y: number, z: number];
  */
 export type Quat = readonly [x: number, y: number, z: number, w: number];
 
-/** The venue scenery to draw around the stage; each kind has its own static scene in the renderer. */
-export type VenueKind = 'sultans-pool' | 'black-box' | 'open-field';
+/** Every venue kind; the parser reads stored kinds against this list, so it cannot drift from `VenueKind`. */
+export const VENUE_KINDS = ['sultans-pool', 'black-box', 'open-field'] as const;
 
-/** A scenery group that the user can show or hide; a hidden group skips its per-frame work (G3). */
-export type SceneryPart = 'deck' | 'trusses' | 'band' | 'ledWall' | 'crowd';
+/** The venue scenery to draw around the stage; each kind has its own static scene in the renderer. */
+export type VenueKind = (typeof VENUE_KINDS)[number];
 
 /** Every scenery part in UI order, so toggles and defaults list all parts without a second hand-written list. */
-export const SCENERY_PARTS: readonly SceneryPart[] = ['deck', 'trusses', 'band', 'ledWall', 'crowd'];
+export const SCENERY_PARTS = ['deck', 'trusses', 'band', 'ledWall', 'crowd'] as const;
+
+/** A scenery group that the user can show or hide; a hidden group skips its per-frame work (G3). */
+export type SceneryPart = (typeof SCENERY_PARTS)[number];
 
 /** An axis-aligned box around the whole design; the camera fits its views to it (G7). */
 export interface StageBounds {
@@ -59,15 +62,21 @@ export const FIXTURE_ROLES = [
 /** The job a fixture has in the rig; see `FIXTURE_ROLES`. */
 export type FixtureRole = (typeof FIXTURE_ROLES)[number];
 
+/** Every truss kind; the parser reads stored kinds against this list, so it cannot drift from `TrussKind`. */
+export const TRUSS_KINDS = ['straight', 'circle', 'goalpost', 'tower', 'roof'] as const;
+
 /** The truss shapes the builder can make; each kind has its own params in `TrussParams`. */
-export type TrussKind = 'straight' | 'circle' | 'goalpost' | 'tower' | 'roof';
+export type TrussKind = (typeof TRUSS_KINDS)[number];
+
+/** Every design origin; the parser reads a stored `source.kind` against this list. */
+export const SOURCE_KINDS = ['template', 'builder', 'mvr'] as const;
 
 /**
  * Where a design came from. `fileHash` is the SHA-256 key of the original MVR bytes in IndexedDB, so an imported
  * stage can find its source file again.
  */
 export interface StageSource {
-  readonly kind: 'template' | 'builder' | 'mvr';
+  readonly kind: (typeof SOURCE_KINDS)[number];
   readonly name: string;
   readonly fileHash?: string;
 }

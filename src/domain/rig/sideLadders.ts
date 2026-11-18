@@ -7,5 +7,6 @@ import type { RigBuilder } from './RigBuilder';
 export function addLadderWashes(rig: RigBuilder): void {
   let id = 601;
   for (const sx of [-1, 1])
-    for (const z of [-3, -9, -15]) for (const y of [5, 9.5, 14, 18.5]) rig.add(id++, 'wash', sx * 23.6, y, z, 'hang');
+    for (const z of [-3, -9, -15])
+      for (const y of [5, 9.5, 14, 18.5]) rig.add({ id: id++, type: 'wash', at: [sx * 23.6, y, z], mount: 'hang' });
 }

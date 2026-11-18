@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { EventBus } from '../../../../src/core';
 import { AppState } from '../../../../src/engine/AppState';
 import type { EngineEvents } from '../../../../src/engine/events';
-import { recordEvents } from './recordEvents';
+import { recordEvents } from '../../../shared';
 
 const setup = () => {
   const bus = new EventBus<EngineEvents>();

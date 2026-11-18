@@ -1,9 +1,9 @@
 import type { FixtureTypeId } from '../../FixtureType';
 import type { StageDesign, StageFixture } from '../StageDesign';
+import { type FixturePlace, placesOnLine, placesOnTruss } from '../trussPlaces';
 import type { Vec3 } from '../types';
 import { defaultRole } from './defaultRole';
 import { nextIdBlock } from './ids';
-import { type FixturePlace, placesOnLine, placesOnTruss } from './trussPlaces';
 
 /** Two fixtures closer than this (metres) stand on the same spot. */
 const SAME_SPOT_M = 0.2;

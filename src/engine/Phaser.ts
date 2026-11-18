@@ -13,6 +13,7 @@ export interface TempoReading {
  * `rate` 1 is one cycle per bar of four beats, and `spread` offsets each fixture by its place in the instance's list.
  * The operation order is the original one, because output goldens compare bit for bit.
  */
+// eslint-disable-next-line @typescript-eslint/max-params -- per-frame path: an options object would allocate per call
 export function evalPhaser(ref: FxRef, fixtureId: number, now: number, tempo: TempoReading, out: FxSample): void {
   const I = ref.inst;
   const freq = (tempo.bpm / 60 / 4) * I.rate;

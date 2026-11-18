@@ -1,12 +1,11 @@
-import { STAGE_DESIGN_VERSION, type StageDeck, type StageDesign, type StageRiser } from '../StageDesign';
-import type { SceneryPart, StageSource, VenueKind } from '../types';
+import { STAGE_DESIGN_VERSION, type StageDesign } from '../StageDesign';
+import { SOURCE_KINDS, VENUE_KINDS, type SceneryPart, type StageSource } from '../types';
+import { parseDeck, parseRisers } from './parseDeck';
 import { parseFixtures } from './parseFixture';
 import { parseScreens } from './parseScreens';
 import { parseTrusses } from './parseTruss';
-import { allDefined, describeValue, Reader } from './readers';
-
-const SOURCE_KINDS: readonly StageSource['kind'][] = ['template', 'builder', 'mvr'];
-const VENUE_KINDS: readonly VenueKind[] = ['sultans-pool', 'black-box', 'open-field'];
+import { allDefined, type Raw } from './rawValues';
+import { Reader } from './readers';
 
 /** The result of `parseStageDesign`: the checked design, or every problem found, each naming its path and value. */
 export type StageParseResult =
@@ -16,82 +15,64 @@ export type StageParseResult =
  * Checks a stored stage (the show's `stage` key) before the rig is built from it, so a hand-edited or corrupt show
  * falls back to the built-in stage instead of breaking the rig. It collects every error instead of throwing, keeps
  * only known keys (a later optional field such as MVR `patch` is therefore additive), normalizes rotations and fills
- * a missing scenery part with `true` (G3).
+ * a missing scenery part with `true` (G3). An unknown version stops the read, as its fields may mean something else.
  */
 export function parseStageDesign(raw: unknown): StageParseResult {
   const r = new Reader();
-  const o = r.obj(raw, 'stage');
-  if (!o) return { ok: false, errors: r.errors };
-  if (o.v !== STAGE_DESIGN_VERSION) return { ok: false, errors: [`v: unknown stage version ${describeValue(o.v)}`] };
-  const { trusses, ids } = parseTrusses(r, o.trusses);
-  const fixtures = parseFixtures(r, o.fixtures, ids);
+  // The design is read as the `stage` field of the show, so a design that is not an object is reported as `stage`.
+  const o = r.obj({ stage: raw }, 'stage', '');
+  if (o) r.oneOf(o, 'v', '', { options: [STAGE_DESIGN_VERSION], what: 'stage version' });
+  if (!o || r.errors.length > 0) return { ok: false, errors: r.errors };
+  const { trusses, ids } = parseTrusses(r, o);
+  const parsed = parseFixtures(r, o, ids);
   const design = {
-    source: parseSource(r, o.source),
-    venue: parseVenue(r, o.venue),
-    scenery: parseScenery(r, o.scenery),
-    deck: parseDeck(r, o.deck),
-    screens: parseScreens(r, o.screens, fixtures),
-    risers: r.list(o.risers, 'risers', (v, path) => parseRiser(r, v, path)),
+    source: parseSource(r, o),
+    venue: parseVenue(r, o),
+    scenery: parseScenery(r, o),
+    deck: parseDeck(r, o),
+    screens: parseScreens(r, o, parsed),
+    risers: parseRisers(r, o),
   };
   if (!allDefined(design) || r.errors.length > 0) return { ok: false, errors: r.errors };
-  return { ok: true, design: { v: STAGE_DESIGN_VERSION, ...design, trusses, fixtures } };
+  return { ok: true, design: { v: STAGE_DESIGN_VERSION, ...design, trusses, fixtures: parsed.fixtures } };
 }
 
-function parseSource(r: Reader, raw: unknown): StageSource | undefined {
-  const o = r.obj(raw, 'source');
+function parseSource(r: Reader, stage: Raw): StageSource | undefined {
+  const at = 'source';
+  const o = r.obj(stage, at, '');
   if (!o) return undefined;
   const source = {
-    kind: r.oneOf(o.kind, 'source.kind', SOURCE_KINDS, 'source kind'),
-    name: r.str(o.name, 'source.name'),
+    kind: r.oneOf(o, 'kind', at, { options: SOURCE_KINDS, what: 'source kind' }),
+    name: r.str(o, 'name', at),
   };
-  const fileHash = r.optional(o.fileHash, 'source.fileHash', r.str);
+  const fileHash = r.optional(o, 'fileHash', at, r.str);
   if (!allDefined(source)) return undefined;
   return { ...source, ...(fileHash === undefined ? {} : { fileHash }) };
 }
 
-function parseVenue(r: Reader, raw: unknown): StageDesign['venue'] | undefined {
-  const o = r.obj(raw, 'venue');
+function parseVenue(r: Reader, stage: Raw): StageDesign['venue'] | undefined {
+  const at = 'venue';
+  const o = r.obj(stage, at, '');
   if (!o) return undefined;
-  const kind = r.oneOf(o.kind, 'venue.kind', VENUE_KINDS, 'venue');
-  const gridY = r.optional(o.gridY, 'venue.gridY', r.num);
+  const kind = r.oneOf(o, 'kind', at, { options: VENUE_KINDS, what: 'venue' });
+  const gridY = r.optional(o, 'gridY', at, r.num);
   if (kind === undefined) return undefined;
   return { kind, ...(gridY === undefined ? {} : { gridY }) };
 }
 
-function parseScenery(r: Reader, raw: unknown): StageDesign['scenery'] | undefined {
-  const o = raw === undefined ? {} : r.obj(raw, 'scenery');
-  if (!o) return undefined;
-  const part = (key: SceneryPart): boolean | undefined => r.optional(o[key], `scenery.${key}`, r.bool) ?? true;
-  const scenery = {
+/**
+ * A missing `scenery` or part reads as `true`. A bad part is recorded as an error and read as `true`; the recorded
+ * error still rejects the design.
+ */
+function parseScenery(r: Reader, stage: Raw): StageDesign['scenery'] {
+  const at = 'scenery';
+  const o = r.optional(stage, at, '', r.obj) ?? {};
+  const part = (key: SceneryPart): boolean => r.optional(o, key, at, r.bool) ?? true;
+  return {
     deck: part('deck'),
     trusses: part('trusses'),
     band: part('band'),
     ledWall: part('ledWall'),
     crowd: part('crowd'),
   };
-  return allDefined(scenery) ? scenery : undefined;
-}
-
-function parseDeck(r: Reader, raw: unknown): StageDeck | undefined {
-  const o = r.obj(raw, 'deck');
-  if (!o) return undefined;
-  const deck = {
-    x0: r.num(o.x0, 'deck.x0'),
-    x1: r.num(o.x1, 'deck.x1'),
-    z0: r.num(o.z0, 'deck.z0'),
-    z1: r.num(o.z1, 'deck.z1'),
-    height: r.num(o.height, 'deck.height'),
-  };
-  if (!allDefined(deck)) return undefined;
-  if (deck.x0 >= deck.x1) r.fail('deck.x1', `must be greater than x0 ${deck.x0}, got ${deck.x1}`);
-  if (deck.z0 >= deck.z1) r.fail('deck.z1', `must be greater than z0 ${deck.z0}, got ${deck.z1}`);
-  if (deck.height < 0) r.fail('deck.height', `must be 0 or more, got ${deck.height}`);
-  return deck;
-}
-
-function parseRiser(r: Reader, raw: unknown, path: string): StageRiser | undefined {
-  const o = r.obj(raw, path);
-  if (!o) return undefined;
-  const riser = { id: r.str(o.id, `${path}.id`), at: r.vec3(o.at, `${path}.at`), size: r.vec3(o.size, `${path}.size`) };
-  return allDefined(riser) ? riser : undefined;
 }
