@@ -2,12 +2,11 @@ import type { Scene } from 'three';
 import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { MeshFailure } from '../../render/mvr/MeshLibrary';
 import type { MvrStage, MvrStageInput } from '../../render/mvr/MvrStage';
-import { MvrCameraFit, type FittedViews } from './MvrCameraFit';
+import { MvrSceneryFit, type MvrDeskRender } from './MvrSceneryFit';
 
-/** The render parts the scenery uses: the scene it adds its group to, and the camera views it fits to its bounds. */
-export interface MvrSceneryRender {
+/** The render parts the scenery uses: the scene it adds its group to, and the views and beam surfaces it fits. */
+export interface MvrSceneryRender extends MvrDeskRender {
   readonly scene: Pick<Scene, 'add'>;
-  readonly views: FittedViews;
 }
 
 /**
@@ -17,14 +16,14 @@ export interface MvrSceneryRender {
  */
 export class LazyMvrStage {
   readonly #scene: Pick<Scene, 'add'>;
-  readonly #fit: MvrCameraFit;
+  readonly #fit: MvrSceneryFit;
   #stage: MvrStage | undefined;
   #loading: Promise<MvrStage> | undefined;
   #showing = false;
 
-  constructor({ scene, views }: MvrSceneryRender) {
+  constructor({ scene, ...render }: MvrSceneryRender) {
     this.#scene = scene;
-    this.#fit = new MvrCameraFit(views);
+    this.#fit = new MvrSceneryFit(render);
   }
 
   /**
@@ -38,8 +37,8 @@ export class LazyMvrStage {
 
   /**
    * Builds the scenery of `input` (see `MvrStage.show`), after `load`; a show that rejects leaves no scenery. A drawn
-   * scenery then fits the camera views to it: the stage rebuild fits them to the design only, and an MVR venue often
-   * reaches far past the deck. A dispose while the show builds skips the fit, as the next stage fits the views itself.
+   * scenery then fits the camera views and beam surfaces to it: the stage rebuild sets them from the design only. A
+   * dispose while the show builds skips the fit, as the next stage sets its views and surfaces itself.
    */
   async show(input: MvrStageInput): Promise<readonly MeshFailure[]> {
     this.#showing = true;
@@ -73,7 +72,7 @@ export class LazyMvrStage {
     this.#stage?.dispose();
   }
 
-  /** Fits the views again to the shown scenery and `design`, after a rebuild of the same file fitted the design only. */
+  /** Fits the views and surfaces again to the shown scenery and `design`, after a same-file rebuild set its own. */
   refit(design: StageDesign): void {
     this.#fit.refit(design);
   }

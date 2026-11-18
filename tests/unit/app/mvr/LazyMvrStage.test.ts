@@ -19,10 +19,10 @@ const INPUT: MvrStageInput = {
   meshResources: new Map(),
 };
 
-/** A lazy scenery over a fake scene and fake camera views that stand in the FOH view. */
+/** A lazy scenery over a fake scene, fake beam surfaces and fake camera views that stand in the FOH view. */
 function lazyStage() {
   const views = { fitTo: vi.fn(), setView: vi.fn(), currentView: 'foh' as const };
-  return { lazy: new LazyMvrStage({ scene: { add: vi.fn() }, views }), views };
+  return { lazy: new LazyMvrStage({ scene: { add: vi.fn() }, views, surfaceHit: { setSurfaces: vi.fn() } }), views };
 }
 
 describe('LazyMvrStage', () => {
