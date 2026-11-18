@@ -19,13 +19,12 @@ function setup() {
   };
   const lights = new LightFrame();
   const sync = new FixtureVisualSync({
-    visuals: built.visuals,
     selection: { has: (id) => id === built.fixtures[0]?.id },
-    screen,
     beamTime: built.beam.time,
     goboTextures: built.gobo.textures,
     lights,
   });
+  sync.setVisuals(built.visuals, new Map([...built.screenMeshes.keys()].map((id) => [id, screen])));
   return { ...built, screen, lights, sync };
 }
 

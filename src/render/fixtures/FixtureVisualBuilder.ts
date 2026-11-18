@@ -1,4 +1,4 @@
-import { Object3D } from 'three';
+import type { Object3D } from 'three';
 import type { Fixture } from '../../domain/Fixture';
 import type { FixturePicker } from '../picking/FixturePicker';
 import { createFixtureBody } from './fixtureBody';
@@ -7,11 +7,8 @@ import type { FixtureModelTable } from './FixtureModels';
 import type { FixtureVisual } from './FixtureVisual';
 import type { LensTextureSet } from './LensTextures';
 
-/**
- * The LED screen meshes, each the visual and pick target of its screen fixture: one mesh used by every screen
- * fixture (the boot wiring of the built-in rig, which has one screen), or a mesh per screen fixture id (a rebuild).
- */
-export type ScreenMeshes = Object3D | ReadonlyMap<number, Object3D>;
+/** The LED screen meshes by screen fixture id; each is the visual and pick target of its screen fixture. */
+export type ScreenMeshes = ReadonlyMap<number, Object3D>;
 
 /** What the builder adds to and reads from; `screenMesh` belongs to the stage, `picker` to render core. */
 export interface FixtureVisualDeps extends LightObjectKit {
@@ -33,6 +30,15 @@ export class FixtureVisualBuilder {
     this.#deps = deps;
   }
 
+  /**
+   * Checks that {@link build} can build `f`, without building anything, so a rebuild can refuse a rig before it
+   * frees the old one. @throws Error when a screen fixture has no mesh or a light type has no model or size.
+   */
+  assertBuildable(f: Fixture): void {
+    if (f.T.shape === 'screen') this.#screenMeshOf(f);
+    else this.#modelOf(f);
+  }
+
   build(f: Fixture): FixtureVisual {
     const deps = this.#deps,
       spec = f.T;
@@ -40,9 +46,7 @@ export class FixtureVisualBuilder {
       deps.picker.register(this.#screenMeshOf(f), f);
       return { kind: 'screen', fixture: f };
     }
-    const s = spec.size;
-    const buildModel = spec.model === undefined ? undefined : deps.models[spec.model];
-    if (s === undefined || !buildModel) throw new Error(`Fixture ${f.id}: type ${f.type} has no model or size`);
+    const [s, buildModel] = this.#modelOf(f);
     const body = createFixtureBody(f, s, deps.lensTextures[spec.model ?? ''], deps.scene);
     const b = buildModel(body);
     for (const m of b.pick) deps.picker.register(m, f);
@@ -65,11 +69,17 @@ export class FixtureVisualBuilder {
     };
   }
 
-  /** @throws Error when a per-id map has no mesh for this screen fixture. */
+  /** @throws Error when the fixture type has no model or no size. */
+  #modelOf(f: Fixture): [size: number, model: FixtureModelTable[string]] {
+    const { size, model } = f.T;
+    const buildModel = model === undefined ? undefined : this.#deps.models[model];
+    if (size === undefined || !buildModel) throw new Error(`Fixture ${f.id}: type ${f.type} has no model or size`);
+    return [size, buildModel];
+  }
+
+  /** @throws Error when there is no mesh for this screen fixture. */
   #screenMeshOf(f: Fixture): Object3D {
-    const meshes = this.#deps.screenMesh;
-    if (meshes instanceof Object3D) return meshes;
-    const mesh = meshes.get(f.id);
+    const mesh = this.#deps.screenMesh.get(f.id);
     if (!mesh) throw new Error(`Fixture ${f.id}: no screen mesh for this screen fixture`);
     return mesh;
   }

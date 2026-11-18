@@ -47,7 +47,8 @@ function createTestApi(clock: DeskClock, deps: TestHookDeps): DeskTestApi {
 
 /**
  * Publishes `window.__desk` for the Playwright suite, only when the page runs with `?test` (decision 23, every
- * build). It keeps exactly what the specs read: `setView`, `fixtures`, the stage hooks and `test`. `fixtures` is a
+ * build). It keeps exactly what the specs read: `setView`, `fixtures`, the stage hooks, `renderMemory` (the
+ * renderer's live geometry and texture counts, for the leak check) and `test`. `fixtures` is a
  * getter, so it is always the current rig's. Call it at the end of boot, after the command line has built `#cmdFb`.
  */
 export function installTestHook(deps: TestHookDeps): void {
@@ -59,6 +60,10 @@ export function installTestHook(deps: TestHookDeps): void {
       return deps.stage.rig.fixtures;
     },
     ...createStageHooks(deps.stage),
+    renderMemory: () => {
+      const { geometries, textures } = deps.renderer.info.memory;
+      return { geometries, textures };
+    },
     test: createTestApi(clock, deps),
   };
   Object.assign(window, { __desk: desk });

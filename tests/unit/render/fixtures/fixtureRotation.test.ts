@@ -16,9 +16,18 @@ const ROTATION = new Quaternion().setFromEuler(new Euler(0.4, 1.1, -0.7));
 
 function setup(): { build: (f: Fixture) => LightVisual; fixtures: readonly Fixture[] } {
   stubCanvasDocument();
-  const { scene, prims, beam, gobo, models, lensTextures, screenMesh, fixtures } = buildFixtureScene();
+  const { scene, prims, beam, gobo, models, lensTextures, screenMeshes, fixtures } = buildFixtureScene();
   const picker = { register: () => undefined };
-  const builder = new FixtureVisualBuilder({ scene, prims, beam, gobo, models, lensTextures, screenMesh, picker });
+  const builder = new FixtureVisualBuilder({
+    scene,
+    prims,
+    beam,
+    gobo,
+    models,
+    lensTextures,
+    screenMesh: screenMeshes,
+    picker,
+  });
   const build = (f: Fixture): LightVisual => {
     const v = builder.build(f);
     if (v.kind !== 'light') throw new Error(`fixture ${f.id} is not a light`);

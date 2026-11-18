@@ -74,6 +74,8 @@ declare global {
       stage(): DeskStage;
       /** Applies a template id (`empty`, `theatre`, `festival`, `sultans-pool`) or `built-in` as the builder would. */
       applyTemplate(id: string): void;
+      /** The renderer's live GPU geometry and texture counts; equal counts after a repeated apply mean no leak. */
+      renderMemory(): { geometries: number; textures: number };
     };
   }
 }

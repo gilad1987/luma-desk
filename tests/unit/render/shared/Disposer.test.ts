@@ -11,11 +11,9 @@ describe('Disposer', () => {
     expect(disposer.track(a)).toBe(a);
     disposer.track(b);
     disposer.track(a);
-    expect(disposer.size).toBe(2);
     disposer.dispose();
     expect(a.dispose).toHaveBeenCalledTimes(1);
     expect(b.dispose).toHaveBeenCalledTimes(1);
-    expect(disposer.size).toBe(0);
     disposer.dispose();
     expect(a.dispose).toHaveBeenCalledTimes(1);
   });

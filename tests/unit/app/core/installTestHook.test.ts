@@ -1,3 +1,4 @@
+import type { WebGLRenderer } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { wireEngine } from '../../../../src/app/boot/wireEngine';
 import type { DeskTestApi } from '../../../../src/app/testHook/installTestHook';
@@ -43,6 +44,7 @@ function install(clock?: object) {
     execs: pool.execs,
     serializer,
     deskMode: () => 'desk' as const,
+    renderer: { info: { memory: { geometries: 3, textures: 1 } } } as unknown as Pick<WebGLRenderer, 'info'>,
   };
   installTestHook({ ...deps, autoShow: { modulation: { pump: 1, hitUntil: 0 } } });
   return { engine, dom, page, setView };
@@ -60,7 +62,7 @@ describe('installTestHook', () => {
 
   it('keeps exactly the fields the specs read', () => {
     const { page, engine, setView } = install(fakeClock());
-    expect(Object.keys(page.__desk ?? {})).toEqual(['setView', 'fixtures', 'stage', 'applyTemplate', 'test']);
+    expect(Object.keys(page.__desk ?? {}).join()).toBe('setView,fixtures,stage,applyTemplate,renderMemory,test');
     expect(page.__desk?.fixtures).toBe(engine.stage.rig.fixtures);
     expect(page.__desk?.setView).toBe(setView);
   });

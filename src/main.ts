@@ -42,8 +42,14 @@ const panels = wirePanels({
   layoutMode: () => layout.mode(),
   guideOrTourOpen: () => guide.isOpen() || tour.isActive(),
 });
-// the picking meshes are the boot rig's until the render rebuilds them on a stage change
-new ViewportPicking({ ...engine, ...render, fixtures: stage.rig.fixtures });
+// a getter: box selection reads the current rig at each drag, so it follows every stage change
+new ViewportPicking({
+  ...engine,
+  ...render,
+  get fixtures() {
+    return stage.rig.fixtures;
+  },
+});
 wireMidi(engine);
 render.stageRenderer.observeViewer();
 
@@ -79,6 +85,7 @@ installTestHook({
   ...engine,
   ...files,
   setView: render.setView,
+  renderer: render.renderer,
   execs,
   autoShow: auto.autoShow,
   deskMode: () => layout.mode(),

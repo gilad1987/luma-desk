@@ -11,11 +11,6 @@ export interface DisposableResource {
 export class Disposer {
   readonly #owned = new Set<DisposableResource>();
 
-  /** How many resources wait to be disposed. */
-  get size(): number {
-    return this.#owned.size;
-  }
-
   /** Marks a resource as owned by the current build; returns it so a creation site can track inline. */
   track<T extends DisposableResource>(resource: T): T {
     this.#owned.add(resource);
