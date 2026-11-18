@@ -2,16 +2,18 @@ import { he } from '../../../i18n/he';
 import { byId, requireChild } from '../../dom';
 import { importPickedFile } from './importPickedFile';
 import type { MvrActions } from './MvrActions';
+import { mvrPickMarkup } from './mvrPickMarkup';
 
 /** The prompt body; the file name comes from the show, so `show` writes the message as text, not markup. */
 const PROMPT_MARKUP = `<span class="mvrMissingText" dir="auto"></span>
-<label class="mvrPick" title="${he.mvr.importTip}">Import <input type="file" id="mvrMissingFile" accept=".mvr"></label>
-<button class="mvrMissingClose" id="mvrMissingClose">✕</button>`;
+${mvrPickMarkup('Import', 'mvrMissingFile')}
+<button id="mvrMissingClose">✕</button>`;
 
 /**
  * The page-level line (`#mvrMissingPrompt`, a slot of the app shell) that asks for the `.mvr` file of the saved stage
  * when this browser does not hold it. It is not a toast: it stays until an import succeeds or the user closes it.
- * It lives outside the Show File dialog because that markup exists only while the dialog is open.
+ * It lives outside the Show File dialog because the shared modal shows one dialog at a time: a closed dialog, or
+ * one that another dialog replaced, would hide the prompt until the user opens Show File again.
  */
 export class MvrMissingPrompt {
   readonly #element: HTMLElement;

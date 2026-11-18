@@ -14,11 +14,20 @@ export class MvrLoadQueue {
 
   /** Runs `load` after the latest load ended, with success or failure. */
   run(load: () => Promise<void>): void {
-    this.#latest = this.#latest.then(load).catch(this.#onError);
+    this.#latest = this.#latest.then(load).catch((error: unknown) => this.#report(error));
   }
 
   /** Resolves after the latest load ended, with success or failure; resolved at once before the first load. */
   ready(): Promise<void> {
     return this.#latest;
+  }
+
+  /** A report that throws (a broken toast) must not reject the tail: `ready()` and every later load wait on it. */
+  #report(error: unknown): void {
+    try {
+      this.#onError(error);
+    } catch {
+      // the report failed too, and there is no other channel left to tell the user
+    }
   }
 }

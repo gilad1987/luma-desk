@@ -10,6 +10,9 @@ export interface MvrActions {
   importFile(file: File): void;
   /** Queues the return to the built-in stage, so a load that still runs cannot draw over it. */
   loadDemoRig(): void;
-  /** Exports the active stage as an `.mvr` download. */
+  /**
+   * Queues the `.mvr` download of the active stage after every MVR load that still runs, so a click right after a
+   * pick exports the imported design, not the one before it.
+   */
   exportMvr(): void;
 }

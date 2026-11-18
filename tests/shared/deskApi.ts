@@ -51,7 +51,7 @@ export interface StageFixturePatch {
  * The stage the rig is built from. MVR specs read it instead of the 3D view, because the scene is drawn only on
  * request in test mode and its meshes say nothing about ids or patch.
  */
-export interface StageInfo {
+export interface MvrStageInfo {
   kind: 'template' | 'builder' | 'mvr';
   /** The `.mvr` file name an MVR stage came from; absent for templates and builder stages. */
   fileName?: string;
@@ -74,7 +74,8 @@ export interface DeskTestApi {
   outputAt(sec: number): FixtureOutput[];
   run(line: string): CommandResult;
   applyFx(type: string): void;
-  stage(): StageInfo;
+  /** Named for MVR, as Stage Builder's hook has `__desk.stage()` with another shape. */
+  mvrStage(): MvrStageInfo;
   /**
    * Resolves after the latest MVR load ended, with success or failure: a picked file, or the restore from IndexedDB
    * at boot. Both run off the frame loop, so a spec cannot see the end in frames or the DOM. The app queues the load

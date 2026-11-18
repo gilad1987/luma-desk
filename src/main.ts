@@ -11,9 +11,9 @@ import { wireGuide } from './app/io/wireGuide';
 import { wireMidi } from './app/io/wireMidi';
 import { wireLayout } from './app/layout/wireLayout';
 import { FrameLoop } from './app/loop/FrameLoop';
-import { wireMvr } from './app/mvr/wireMvr';
 import { scheduleUiTicks } from './app/loop/scheduleUiTicks';
 import { UiTickScheduler } from './app/loop/UiTickScheduler';
+import { wireMvr } from './app/mvr/wireMvr';
 import { installTestHook } from './app/testHook/installTestHook';
 import { FpsClock } from './app/ui/FpsClock';
 import { wirePanels } from './app/ui/wirePanels';
@@ -92,6 +92,6 @@ installTestHook({
   execs,
   autoShow: auto.autoShow,
   deskMode: () => layout.mode(),
-  stage,
+  mvrStage: stage,
   mvrReady: mvr.ready,
 });

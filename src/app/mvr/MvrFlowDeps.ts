@@ -8,9 +8,9 @@ import type { MvrBytesStore } from './openMvrStore';
 export interface MvrFlowDeps {
   readonly stage: Pick<StageService, 'apply' | 'updateMeta' | 'design' | 'builtIn'>;
   readonly store: MvrBytesStore;
-  readonly scenery: LazyMvrStage;
+  readonly scenery: Pick<LazyMvrStage, 'load' | 'show' | 'setHiddenLayers' | 'dispose'>;
   readonly prompt: Pick<MvrMissingPrompt, 'show' | 'hide'>;
   readonly toast: (text: string) => void;
   /** The shared modal; the panels build it after `wireMvr`, so the flows read it when they run. */
-  readonly modal: () => Pick<Modal, 'open' | 'close'>;
+  readonly modal: () => Pick<Modal, 'open' | 'close' | 'isOpen'>;
 }

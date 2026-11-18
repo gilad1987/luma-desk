@@ -27,8 +27,11 @@ export interface TestHookDeps {
   readonly runner: Pick<CommandRunner, 'run'>;
   /** The current console layout (`deskMode`), owned by the layout area. */
   readonly deskMode: () => LayoutMode;
-  /** The stage service; `stage()` reads its design and rig live. */
-  readonly stage: Pick<StageService, 'design' | 'rig'>;
+  /**
+   * The stage service `mvrStage()` reads its design and rig from, live. Not named `stage`: Stage Builder's deps use
+   * that key for a wider `StageService` pick.
+   */
+  readonly mvrStage: Pick<StageService, 'design' | 'rig'>;
   /** Resolves after the latest MVR load ended, with success or failure (the MVR load queue). */
   readonly mvrReady: () => Promise<void>;
 }

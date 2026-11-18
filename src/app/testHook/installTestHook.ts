@@ -5,7 +5,7 @@ import type { ShowFileV1 } from '../../show/ShowFile';
 import { CommandCapture, type CapturedOutput } from './CommandCapture';
 import { readDeskClock, type DeskClock } from './deskClock';
 import { readDeskState, type DeskState } from './readDeskState';
-import { readStageInfo, type StageInfo } from './readStageInfo';
+import { readMvrStageInfo, type MvrStageInfo } from './readMvrStageInfo';
 import type { TestHookDeps } from './TestHookDeps';
 
 /** `window.__desk.test`: the only door the Playwright suite uses into the app (see tests/shared/deskApi.ts). */
@@ -18,8 +18,8 @@ export interface DeskTestApi extends DeskClock {
   run(line: string): CapturedOutput & { state: DeskState };
   /** Starts a programmer phaser on the selection, as the phaser buttons do. */
   applyFx(type: string): void;
-  /** The stage the rig is built from, read live. */
-  stage(): StageInfo;
+  /** The stage the rig is built from, read live; named for MVR so it does not meet Stage Builder's `stage()`. */
+  mvrStage(): MvrStageInfo;
   /** Resolves after the latest MVR load ended (a picked file or the boot restore), with success or failure. */
   mvrReady(): Promise<void>;
 }
@@ -45,7 +45,7 @@ function createTestApi(clock: DeskClock, deps: TestHookDeps): DeskTestApi {
       if (!isPhaserType(type)) throw new Error(`unknown phaser type: ${type}`);
       deps.programmer.applyPhaser(type);
     },
-    stage: () => readStageInfo(deps.stage),
+    mvrStage: () => readMvrStageInfo(deps.mvrStage),
     mvrReady: deps.mvrReady,
   };
 }

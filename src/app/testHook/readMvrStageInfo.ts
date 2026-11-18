@@ -7,10 +7,11 @@ export interface StageFixturePatch {
 }
 
 /**
- * The stage the rig is built from, as `__desk.test.stage()` reports it. MVR specs read this instead of the 3D view,
+ * The stage the rig is built from, as `__desk.test.mvrStage()` reports it. The name is not `stage` because Stage
+ * Builder's hook has `__desk.stage()` with another shape. MVR specs read this instead of the 3D view,
  * whose meshes say nothing about ids or patch. The shape is written out in `tests/shared/deskApi.ts` too.
  */
-export interface StageInfo {
+export interface MvrStageInfo {
   readonly kind: 'template' | 'builder' | 'mvr';
   /** The `.mvr` file name of an MVR stage; absent for templates and builder stages. */
   readonly fileName?: string;
@@ -20,7 +21,7 @@ export interface StageInfo {
 }
 
 /** Reads the live design and rig of `stage`, so the answer follows every `apply`. */
-export function readStageInfo(stage: Pick<StageService, 'design' | 'rig'>): StageInfo {
+export function readMvrStageInfo(stage: Pick<StageService, 'design' | 'rig'>): MvrStageInfo {
   const { source, fixtures } = stage.design;
   const patches = fixtures.map(({ id, patch }) => ({
     id,

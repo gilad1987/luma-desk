@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { he } from '../../../src/i18n/he';
+import { NEW_TEXT_AREAS } from '../../shared';
 
 /** The single-file page before the refactor: the source of truth for every Hebrew string. */
 const legacy = execFileSync('git', ['show', '48a3b63:index.html'], { encoding: 'utf8' });
@@ -73,9 +74,9 @@ describe('he key names', () => {
 
   it('leaves no named string out of the table', () => {
     expect(Object.keys(he.autoStyleTaglines)).toHaveLength(9);
-    // the taglines are pinned by style id above; the MVR area (plan mvr-v2) is new text with no legacy context
+    // the taglines are pinned by style id above; the new-text areas have no legacy context
     const named = Object.fromEntries(
-      Object.entries(he).filter(([area]) => !['autoStyleTaglines', 'mvr'].includes(area)),
+      Object.entries(he).filter(([area]) => !['autoStyleTaglines', ...NEW_TEXT_AREAS].includes(area)),
     );
     expect(namedStringPaths(named).sort()).toEqual(Object.keys(CONTEXTS).sort());
   });

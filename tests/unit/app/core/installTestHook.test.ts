@@ -36,18 +36,10 @@ function install(clock?: object) {
   if (clock) page.__deskClock = clock;
   vi.stubGlobal('window', page);
   const setView = vi.fn();
-  const deps = {
-    ...engine,
-    fixtures: rig.fixtures,
-    setView,
-    execs: pool.execs,
-    serializer,
-    deskMode: () => 'desk' as const,
-    stage: { design: BUILT_IN_DESIGN, rig },
-    mvrReady: () => Promise.resolve(),
-  };
-  installTestHook({ ...deps, autoShow: { modulation: { pump: 1, hitUntil: 0 } } });
-  return { engine, dom, page, setView };
+  const deps = { ...engine, fixtures: rig.fixtures, setView, execs: pool.execs, serializer };
+  const mvr = { mvrStage: { design: BUILT_IN_DESIGN, rig }, mvrReady: vi.fn(() => Promise.resolve()) };
+  installTestHook({ ...deps, ...mvr, deskMode: () => 'desk', autoShow: { modulation: { pump: 1, hitUntil: 0 } } });
+  return { engine, dom, page, setView, mvrReady: mvr.mvrReady };
 }
 
 const fakeClock = () => {
@@ -91,6 +83,13 @@ describe('installTestHook', () => {
     expect(result?.toast).toBeNull();
     const keys = Object.keys(result?.state ?? {}).join(' ');
     expect(keys).toBe('sel prog progFx selExec highlight blackout deskMode execs groups presets');
+  });
+
+  it('passes mvrReady through and reads mvrStage() live from the MVR stage', async () => {
+    const { page, engine, mvrReady } = install(fakeClock());
+    expect(page.__desk?.test.mvrStage().fixtureCount).toBe(engine.rig.fixtures.length);
+    await page.__desk?.test.mvrReady();
+    expect(mvrReady).toHaveBeenCalledOnce();
   });
 
   it('rejects an unknown phaser type instead of starting nothing', () => {

@@ -23,5 +23,7 @@ export { meshScene, type TestPlacement } from './mvr/meshScene';
 export { exportRoundTrip, type ExportRoundTrip } from './mvr/exportRoundTrip';
 export { exportedBoxes } from './mvr/exportedBoxes';
 export { FakeIndexedDb } from './fakeIndexedDb';
+export { fakeMvrFlowDeps, type FakeMvrFlow } from './mvr/fakeMvrFlowDeps';
+export { NEW_TEXT_AREAS } from './newTextAreas';
 export { MemoryStore } from './MemoryStore';
 export { engineParts, stillClock } from './engineParts';

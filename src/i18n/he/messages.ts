@@ -11,7 +11,10 @@ export const messages = {
     downloaded: 'קובץ המופע ירד',
   },
   stage: {
-    /** The `StageService` toast for a rig above its soft fixture limit. */
+    /**
+     * The toast of the temporary `StageService` in main.ts for a rig above its soft fixture limit. Stage Builder owns
+     * the same text as `he.builder.tooManyFixtures`; remove this one when its service replaces the stand-in.
+     */
     tooManyFixtures: (count: number): string => `בבמה ${count} גופים. מספר גדול כזה עלול להאט את התצוגה`,
   },
 } as const;

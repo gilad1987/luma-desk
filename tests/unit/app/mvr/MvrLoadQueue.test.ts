@@ -33,4 +33,15 @@ describe('MvrLoadQueue', () => {
     expect(onError.mock.calls.map(([error]) => (error as Error).message)).toEqual(['bad zip', 'bug']);
     expect(next).toHaveBeenCalledOnce();
   });
+
+  it('stays settled when the error report itself throws, so later loads still run', async () => {
+    const queue = new MvrLoadQueue(() => {
+      throw new Error('toast broke');
+    });
+    const next = vi.fn(() => Promise.resolve());
+    queue.run(() => Promise.reject(new Error('bad zip')));
+    queue.run(next);
+    await expect(queue.ready()).resolves.toBeUndefined();
+    expect(next).toHaveBeenCalledOnce();
+  });
 });
