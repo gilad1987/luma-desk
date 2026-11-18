@@ -1,6 +1,6 @@
-import type { MvrDesignInfo } from '../mvr';
 import { STAGE_DESIGN_VERSION, type StageDesign } from '../StageDesign';
 import { SOURCE_KINDS, VENUE_KINDS, type SceneryPart, type StageSource } from '../types';
+import { checkMvrFixtureIds } from './checkMvrFixtureIds';
 import { parseDeck, parseRisers } from './parseDeck';
 import { parseFixtures } from './parseFixture';
 import { parseMvrInfo } from './parseMvrInfo';
@@ -38,25 +38,16 @@ export function parseStageDesign(raw: unknown): StageParseResult {
   };
   const mvr = r.optional(o, 'mvr', '', (c, k, p) => parseMvrInfo(r, c, k, p));
   if (mvr) checkMvrFixtureIds(r, mvr, parsed.ids);
+  // Absent in a design that never lost a fixture; `nextIdBlock` then derives it from the highest id.
+  const nextFixtureId = r.optional(o, 'nextFixtureId', '', r.positiveInt);
   if (!allDefined(design) || r.errors.length > 0) return { ok: false, errors: r.errors };
   const mvrField = mvr === undefined ? {} : { mvr };
+  const idMark = nextFixtureId === undefined ? {} : { nextFixtureId };
   const venue = storedMvrVenue(design);
   return {
     ok: true,
-    design: { v: STAGE_DESIGN_VERSION, ...design, venue, trusses, fixtures: parsed.fixtures, ...mvrField },
+    design: { v: STAGE_DESIGN_VERSION, ...design, venue, trusses, fixtures: parsed.fixtures, ...mvrField, ...idMark },
   };
-}
-
-/**
- * Each `mvr.fixtures` key must be the id of a fixture in the design, as a fixture's `trussId` must name a truss. Ids
- * are given out again after a delete, so an entry without its fixture would hand its MVR uuid and GDTF name to a
- * later fixture. `ids` holds fixtures that failed on another field too, so they get no second error.
- */
-function checkMvrFixtureIds(r: Reader, mvr: MvrDesignInfo, ids: ReadonlySet<number>): void {
-  const at = r.path(r.path('', 'mvr'), 'fixtures');
-  for (const key of Object.keys(mvr.fixtures)) {
-    if (!ids.has(Number(key))) r.fail(r.path(at, key), `no fixture has id ${key}`);
-  }
 }
 
 function parseSource(r: Reader, stage: Raw): StageSource | undefined {

@@ -5,12 +5,21 @@ import type { TrussKind } from '../types';
 const ID_BLOCK = 100;
 
 /**
- * The first id of the next free block: the highest fixture id rounded up to a full hundred, plus 1 (an empty design
- * starts at 1). A new batch then never shares a hundred with an older one, so its ids read as one group.
+ * The first id of the next free block: the highest fixture id ever used rounded up to a full hundred, plus 1 (an empty
+ * design starts at 1). A new batch then never shares a hundred with an older one, so its ids read as one group.
  */
 export function nextIdBlock(d: StageDesign): number {
-  const highest = d.fixtures.reduce((top, f) => Math.max(top, f.id), 0);
+  const highest = nextFixtureId(d) - 1;
   return Math.ceil(highest / ID_BLOCK) * ID_BLOCK + 1;
+}
+
+/**
+ * The lowest fixture id `d` never used: its stored mark or its highest id + 1, whichever is higher. An op that deletes
+ * fixtures stores it in the result, so the ids of the deleted fixtures stay used for the life of the design.
+ */
+export function nextFixtureId(d: StageDesign): number {
+  const highest = d.fixtures.reduce((top, f) => Math.max(top, f.id), 0);
+  return Math.max(highest + 1, d.nextFixtureId ?? 1);
 }
 
 /**

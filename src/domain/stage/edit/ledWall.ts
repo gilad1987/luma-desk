@@ -1,7 +1,7 @@
 import type { StageDesign, StageFixture, StageScreen } from '../StageDesign';
 import type { Vec3 } from '../types';
 import { type DeckSize, setSceneryPart } from './deckOps';
-import { nextIdBlock } from './ids';
+import { nextFixtureId, nextIdBlock } from './ids';
 import { checkSizes } from './inputChecks';
 import { isSameLength } from '../sameData';
 import { withoutFixtures } from './withoutFixtures';
@@ -30,8 +30,10 @@ export function setLedWall(d: StageDesign, size: WallSize | null): StageDesign {
   return setSceneryPart(sized, 'ledWall', true);
 }
 
+/** Keeps `nextFixtureId`, so the screen fixture's id is never given to a later light. */
 function removeWall(d: StageDesign, wall: StageScreen): StageDesign {
-  return { ...withoutFixtures(d, new Set([wall.fixtureId])), screens: d.screens.slice(1) };
+  const rest = withoutFixtures(d, new Set([wall.fixtureId]));
+  return { ...rest, screens: d.screens.slice(1), nextFixtureId: nextFixtureId(d) };
 }
 
 function resizeWall(d: StageDesign, wall: StageScreen, size: WallSize): StageDesign {
