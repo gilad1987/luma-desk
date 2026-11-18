@@ -14,6 +14,8 @@ const TOWER_STEP_M = 0.4;
 export function besideColumn<P extends { readonly position: Vec3 }>(places: readonly P[], laneM: number): P[] {
   const x = places.reduce((sum, p) => sum + p.position[0], 0) / places.length;
   const isNearCentreLine = Math.abs(x) < TOWER_STEP_M;
-  const step: Vec3 = isNearCentreLine ? [0, 0, TOWER_STEP_M + laneM] : [-Math.sign(x) * TOWER_STEP_M, 0, -laneM];
+  // a negative lane would shorten the downstage step and reach into the column
+  const lane = Math.max(0, laneM);
+  const step: Vec3 = isNearCentreLine ? [0, 0, TOWER_STEP_M + lane] : [-Math.sign(x) * TOWER_STEP_M, 0, -lane];
   return places.map((p) => ({ ...p, position: [p.position[0] + step[0], p.position[1], p.position[2] + step[2]] }));
 }

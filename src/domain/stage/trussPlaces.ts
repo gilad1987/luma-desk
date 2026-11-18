@@ -4,7 +4,10 @@ import { besideColumn } from './towerPlaces';
 import type { StageTruss } from './trussTypes';
 import type { Quat, Transform, Vec3 } from './types';
 
-/** A batch that lands on fixtures already there moves one lane (metres) upstage, or one lane out on a circle. */
+/**
+ * A batch that lands on fixtures already there moves one lane (metres) upstage, or one lane out on a circle; on a
+ * centre-line tower the lane goes downstage instead (see `besideColumn`).
+ */
 const LANE_SHIFT_M = 0.4;
 const IDENTITY: Quat = [0, 0, 0, 1];
 
