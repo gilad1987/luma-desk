@@ -20,6 +20,8 @@ export interface ImportSummaryView {
   readonly offset: string;
   readonly geometry: 'Stage built from MVR' | 'No stage geometry in file';
   readonly warnings: readonly string[];
+  /** How the fixtures of each product get their body (`MvrImport.summary.bodyLines`), one line per product. */
+  readonly bodies: readonly string[];
 }
 
 /**
@@ -53,5 +55,6 @@ export function importSummaryView(result: MvrImport, meshFailures: readonly Mesh
       ...result.warnings.map((warning) => warning.message),
       ...meshFailures.map(({ file, reason }) => `Mesh file ${file} could not be drawn: ${reason}`),
     ],
+    bodies: summary.bodyLines.map((line) => line.message),
   };
 }

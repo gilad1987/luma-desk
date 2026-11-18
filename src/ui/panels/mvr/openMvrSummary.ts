@@ -86,6 +86,7 @@ export function openMvrSummary(
   byId('mvrSummaryClose').onclick = () => modal.close();
   if (content.buildShow) wireShowChoice(content.buildShow);
   fillWarnings(byId('mvrWarnings'), content.view.warnings);
+  fillWarnings(byId('mvrBodies'), content.view.bodies);
   const host = byId('mvrLayers');
   if (content.showProxies) proxiesRow(host, content.showProxies);
   const rows = content.layers.map((layer) => ({ layer, box: layerRow(host, layer, content.hiddenLayers) }));

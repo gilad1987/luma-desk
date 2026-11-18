@@ -22,7 +22,7 @@ const badFile = (): File => new File([new Uint8Array([1, 2, 3])], 'bad.mvr');
 /** The page of the Show File dialog: the error line and the summary ids `openMvrSummary` looks up. */
 function page(): FakeDom {
   const dom = new FakeDom();
-  for (const id of ['mvrImportError', 'mvrSummaryClose', 'mvrWarnings', 'mvrLayers']) dom.add(id);
+  for (const id of ['mvrImportError', 'mvrSummaryClose', 'mvrWarnings', 'mvrBodies', 'mvrLayers']) dom.add(id);
   return dom;
 }
 
