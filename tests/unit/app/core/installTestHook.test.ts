@@ -36,7 +36,14 @@ function install(clock?: object) {
   if (clock) page.__deskClock = clock;
   vi.stubGlobal('window', page);
   const setView = vi.fn();
-  const deps = { ...engine, fixtures: rig.fixtures, setView, execs: pool.execs, serializer, deskMode: () => 'desk' };
+  const deps = {
+    ...engine,
+    fixtures: rig.fixtures,
+    setView,
+    execs: pool.execs,
+    serializer,
+    deskMode: () => 'desk' as const,
+  };
   installTestHook({ ...deps, autoShow: { modulation: { pump: 1, hitUntil: 0 } } });
   return { engine, dom, page, setView };
 }

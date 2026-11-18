@@ -12,7 +12,7 @@ import type { StageRenderer } from '../../render/stage/StageRenderer';
 import { animateCrowd } from '../../render/venue/crowdAnimation';
 import { animatePerformers } from '../../render/venue/performersAnimation';
 import type { Venue } from '../../render/venue/Venue';
-import type { FpsClockReadout } from './FpsClockReadout';
+import type { FpsClock } from '../ui/FpsClock';
 import type { UiTickScheduler } from './UiTickScheduler';
 
 /** The longest step a frame simulates, in seconds: a frame after a stalled tab does not jump the fades. */
@@ -33,7 +33,7 @@ export interface FrameLoopDeps {
   readonly keyLights: Pick<KeyLights, 'update'>;
   readonly lightFrame: LightFrame;
   readonly stageRenderer: Pick<StageRenderer, 'renderFrame'>;
-  readonly fps: Pick<FpsClockReadout, 'frame'>;
+  readonly fps: Pick<FpsClock, 'frame'>;
   readonly ui: Pick<UiTickScheduler, 'tick'>;
 }
 

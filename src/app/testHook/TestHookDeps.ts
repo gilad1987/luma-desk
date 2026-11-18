@@ -8,6 +8,7 @@ import type { OutputMerger } from '../../engine/OutputMerger';
 import type { Programmer } from '../../engine/Programmer';
 import type { Selection } from '../../engine/Selection';
 import type { ShowSerializer } from '../../show';
+import type { LayoutMode } from '../../ui/panels/layoutMode';
 
 /** What the Playwright test API reads and drives; names follow the legacy main.ts variables. */
 export interface TestHookDeps {
@@ -24,5 +25,5 @@ export interface TestHookDeps {
   readonly autoShow: Pick<AutoShow, 'modulation'>;
   readonly runner: Pick<CommandRunner, 'run'>;
   /** The current console layout (`deskMode`), owned by the layout area. */
-  readonly deskMode: () => string;
+  readonly deskMode: () => LayoutMode;
 }

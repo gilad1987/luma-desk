@@ -9,7 +9,7 @@ import { FakeDom, FakeElement } from '../../../shared/dom';
 const setup = () => {
   const deps = {
     sideTabs: { current: 'pools' as const, show: vi.fn() },
-    encoders: { render: vi.fn(), delta: vi.fn() },
+    encoders: { render: vi.fn(), delta: vi.fn(), feature: 'dim' as const },
     commandLine: { value: '', pushHistory: vi.fn(), run: vi.fn() },
     storeMode: new StoreModeGuard(new AppState(new EventBus<EngineEvents>())),
     stageRenderer: { resize: vi.fn(), setConsoleHeight: vi.fn() },

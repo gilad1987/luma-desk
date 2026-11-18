@@ -10,17 +10,14 @@ export interface ClientBox {
   readonly y1: number;
 }
 
-/** One scratch point for every box select, as the legacy hoisted `tmpP`: a release allocates nothing per fixture. */
-const point: ScreenPoint = { x: 0, y: 0, ndcX: 0, ndcY: 0, depth: 0 };
-
 /** The box spanned by two client points, in either drag direction. */
 export function boxBetween(ax: number, ay: number, bx: number, by: number): ClientBox {
   return { x0: Math.min(ax, bx), y0: Math.min(ay, by), x1: Math.max(ax, bx), y1: Math.max(ay, by) };
 }
 
 /**
- * The fixtures whose position projects through `camera` inside `box`, sorted by id. `rect` is the canvas's client rect; a fixture with
- * a depth above 1 (behind the camera or past the far plane) never counts.
+ * The fixtures whose position projects through `camera` inside `box`, sorted by id. `rect` is the canvas's client
+ * rect; a fixture with a depth above 1 (behind the camera or past the far plane) never counts.
  */
 export function fixturesInBox(
   fixtures: readonly Pick<Fixture, 'id' | 'pos'>[],
@@ -29,6 +26,8 @@ export function fixturesInBox(
   box: ClientBox,
 ): Pick<Fixture, 'id' | 'pos'>[] {
   const hits: Pick<Fixture, 'id' | 'pos'>[] = [];
+  // one scratch point per box select, reused for every fixture: the release allocates nothing per fixture
+  const point: ScreenPoint = { x: 0, y: 0, ndcX: 0, ndcY: 0, depth: 0 };
   for (const f of fixtures) {
     projectToScreen(camera, f.pos, rect, point);
     if (point.depth > 1) continue;

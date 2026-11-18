@@ -4,9 +4,8 @@ import { PERSIST_DELAY_MS, STORAGE_KEYS } from '../../../../src/show';
 import { engineParts } from './engineParts';
 
 /** Builds the show objects on a real engine; the page storage is stubbed afterwards, as it is read on each call. */
-function build() {
-  const parts = engineParts(),
-    files = createShowFiles({ ...parts, execs: parts.pool.execs }),
+function build(parts = engineParts()) {
+  const files = createShowFiles({ ...parts, execs: parts.pool.execs }),
     stored = new Map<string, string>();
   vi.stubGlobal('localStorage', {
     getItem: (key: string) => stored.get(key) ?? null,
@@ -36,5 +35,14 @@ describe('createShowFiles', () => {
     vi.advanceTimersByTime(PERSIST_DELAY_MS);
     const expected: unknown = JSON.parse(JSON.stringify(files.serializer.serialize()));
     expect(JSON.parse(stored.get(STORAGE_KEYS.show) ?? 'null')).toEqual(expected);
+  });
+
+  it('saves after a show edit reports showChanged', () => {
+    vi.useFakeTimers();
+    const parts = engineParts();
+    const { stored } = build(parts);
+    parts.bus.emit('showChanged', undefined);
+    vi.advanceTimersByTime(PERSIST_DELAY_MS);
+    expect(stored.has(STORAGE_KEYS.show)).toBe(true);
   });
 });

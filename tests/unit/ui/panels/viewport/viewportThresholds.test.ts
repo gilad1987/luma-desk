@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { mount } from '../../ui/panels/viewport/viewportFakes';
+import { mount } from './viewportFakes';
 
 /**
  * The release thresholds next to 5 px, which the panel tests do not reach: over 5 px a box press selects by box,

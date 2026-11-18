@@ -11,13 +11,22 @@ function renderFakes() {
   const stageRenderer = {
     glow: true,
     showsIds: false,
-    setGlow: (on: boolean) => void ((stageRenderer.glow = on), calls.push(`glow ${on}`)),
+    setGlow: (on: boolean) => {
+      stageRenderer.glow = on;
+      calls.push(`glow ${on}`);
+    },
     setShadows: (on: boolean) => void calls.push(`shadows ${on}`),
-    setShowIds: (on: boolean) => void ((stageRenderer.showsIds = on), calls.push(`ids ${on}`)),
+    setShowIds: (on: boolean) => {
+      stageRenderer.showsIds = on;
+      calls.push(`ids ${on}`);
+    },
   };
   const keyLights = {
     enabled: true,
-    setEnabled: (on: boolean) => void ((keyLights.enabled = on), calls.push(`keys ${on}`)),
+    setEnabled: (on: boolean) => {
+      keyLights.enabled = on;
+      calls.push(`keys ${on}`);
+    },
   };
   return { calls, stageRenderer, keyLights };
 }

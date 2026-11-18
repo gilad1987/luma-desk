@@ -42,8 +42,9 @@ const browserStore: KeyValueStore = {
 };
 
 /**
- * Builds the show serializer, its delayed browser save, the demo show and the two small stored flags. None of them
- * touches the DOM, three.js or `Math.random` when built, so the root can build them before the UI that uses them.
+ * Builds the show serializer, its delayed browser save (started by every `showChanged`), the demo show and the two
+ * small stored flags. None of them touches the DOM, three.js or `Math.random` when built, so the root can build them
+ * before the UI that uses them.
  */
 export function createShowFiles(deps: ShowFilesDeps): ShowFiles {
   const { rig, execs, tempo, programmer, selection, bus } = deps;
@@ -57,9 +58,12 @@ export function createShowFiles(deps: ShowFilesDeps): ShowFiles {
     programmer,
     selection,
   });
+  const showStorage = new ShowStorage(browserStore, () => serializer.serialize());
+  // every show edit reports `showChanged`; the delayed browser save is its one listener
+  bus.on('showChanged', () => showStorage.persist());
   return {
     serializer,
-    showStorage: new ShowStorage(browserStore, () => serializer.serialize()),
+    showStorage,
     demo: new DemoShow({ rig, serializer, execs, state: deps.appState, bus }),
     layoutPrefs: new LayoutPrefs(browserStore),
     guideFlag: new GuideFlag(browserStore),

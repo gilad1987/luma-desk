@@ -28,7 +28,7 @@ function renderEquivalent(html: string): string {
     .replace(/ style="([^"]*)"/g, (_, s: string) => ` style="${s.replace(/\s*([:;])\s*/g, '$1')}"`);
 }
 
-const page = renderEquivalent(readFileSync('index.html', 'utf8'));
+const page = readFileSync('index.html', 'utf8');
 const legacySource = execFileSync('git', ['show', '48a3b63:index.html'], { encoding: 'utf8' });
 const legacy = renderEquivalent(legacySource);
 
@@ -42,11 +42,14 @@ describe('shell markup', () => {
     ['MA console', MA_CONSOLE_MARKUP],
     ['guide and tour', guideMarkup()],
   ] as const) {
-    it(`${name} is render-equivalent to the current page and the legacy page`, () => {
-      expect(page).toContain(renderEquivalent(markup));
+    it(`${name} is render-equivalent to the legacy page`, () => {
       expect(legacy).toContain(renderEquivalent(markup));
     });
   }
+
+  it('leaves the page body to the composition root: index.html holds only the module script', () => {
+    expect(page).toMatch(/<body>\s*<script type="module" src="\.\/src\/main\.ts"><\/script>\s*<\/body>/);
+  });
 
   it('wraps the panel slots in the legacy containers, in order', () => {
     const shell = renderEquivalent(appShellMarkup({ viewer: 'V', side: 'S', desk: 'D' }));

@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { consoleInfoSource } from '../../../../src/app/layout/consoleInfoSource';
+import type { FeatureTab } from '../../../../src/ui/panels/encoders/encoderList';
 import type { SideTab } from '../../../../src/ui/panels/side/sideTabsMarkup';
 
 /** Mutable state the source reads through getters, so a test can show it reads at call time. */
-const state = { tab: 'sheet' as SideTab, feature: 'dim', ids: [1, 2, 3] as readonly number[], selExec: 1 };
+const state = {
+  tab: 'sheet' as SideTab,
+  feature: 'dim' as FeatureTab,
+  ids: [1, 2, 3] as readonly number[],
+  selExec: 1,
+};
 
 const read = consoleInfoSource({
   sideTabs: {
@@ -12,7 +18,11 @@ const read = consoleInfoSource({
     },
     show: () => undefined,
   },
-  feature: () => state.feature,
+  encoders: {
+    get feature() {
+      return state.feature;
+    },
+  },
   selection: {
     get ids() {
       return state.ids;

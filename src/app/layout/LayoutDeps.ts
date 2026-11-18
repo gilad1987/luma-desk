@@ -26,9 +26,8 @@ export interface LayoutDeps {
   readonly appState: Pick<AppState, 'selExec'>;
   readonly execs: readonly Pick<Executor, 'name'>[];
   readonly sideTabs: Pick<SideTabs, 'current' | 'show'>;
-  readonly encoders: Pick<EncodersPanel, 'render' | 'delta'>;
-  /** The encoder feature tab (the old `feat`); EncodersPanel keeps it private, so the root passes a reader. */
-  readonly feature: () => string;
+  /** The encoder section; `feature` is the feature tab on screen (the old `feat`) the console labels show. */
+  readonly encoders: Pick<EncodersPanel, 'render' | 'delta' | 'feature'>;
   /** The command line the keypad types into (the old `cmd` with `hist` and `runner`). */
   readonly commandLine: CommandInput;
   /** The STORE mode the keypad's bare "Store" ENTER switches on. */
