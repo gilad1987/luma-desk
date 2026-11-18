@@ -503,6 +503,8 @@ Groups:
 - What it does: older versions saved `MA_SIZE` (0.47) without a grip drag. That value is treated as the adaptive
   default. A user who drags exactly to 0.47 also gets the adaptive default after reload.
 - Why kept: `lumadesk-layout2` compatibility.
+- Pinned by: `tests/e2e/layoutRestore.spec.ts` (`LayoutManager.restore` at boot: a saved 0.47 is dropped by the
+  save at the end of boot, 0.55 stays).
 - Future fix: none needed while old layouts exist.
 
 ### D8. A broken saved show is replaced by the demo with no message
@@ -524,8 +526,9 @@ Groups:
   it shows no option, and the page is drawn in the classic layout. Only an empty value falls back to `ma`.
 - Accepted change: a stored `deskMode` or `deskZoom` that is not a string now gives `ma` or `auto` (section L).
 - Why kept: `lumadesk-layout2` compatibility and DOM parity.
-- Pinned by: `tests/unit/ui/layouts/layoutPrefsParity.test.ts` ("keeps an unknown saved layout name ...", and the
-  non-string case).
+- Pinned by: `tests/unit/ui/layouts/layoutPrefsParity.test.ts`: "keeps an unknown saved layout name ... (quirk)"
+  and "reads saved names that are not text ... (accepted change)". `tests/e2e/layoutRestore.spec.ts` covers
+  `LayoutManager.restore` with a saved known layout at boot.
 - Future fix: accept only the three known names and fall back to `ma`.
 
 ## E. Auto Show and audio
@@ -987,7 +990,7 @@ unreachable from the UI or crashed in the original too.
   `TypeError` in the event handler; the message had no effect. The new code skips the message. A short message
   (fewer than 3 bytes) still reads the missing bytes as `NaN`, as before (`src/io/midiMessage.ts`).
 - Why kept: the original only crashed on this path; a real device always sends data.
-- Pinned by: `tests/unit/io/Midi.test.ts` (the test that names J4; its title ends in "(quirk)").
+- Pinned by: `tests/unit/io/Midi.test.ts` ("ignores a message whose data is null and does not throw (quirk)").
 
 ## K. Test mode (`?test`)
 

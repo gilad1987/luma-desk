@@ -3,7 +3,7 @@
 Adopted from budget-app; the project rules (docs/rules/code.md, "Project rules") win on any conflict. Tags as in
 code.md. The source references (`doc:80-83`, `test:41-51`, ...) point at budget-app's `.cursor/rules/`.
 
-Not linted yet, so checked in review until a later change adds the rule: T8, T11, T15, T20, T22, T23, T25 and I5.
+Not linted yet, so checked in review until a later change adds the rule: T8, T11, T15, T22, T23, T25 and I5.
 I1 (Hebrew literals only in `src/i18n/`) is linted (`eslint/i18nRules.ts`). T14 is linted only by Vitest
 `allowOnly: false` and Playwright `forbidOnly: true`.
 
@@ -117,7 +117,8 @@ order'`. [lint] ESLint `no-restricted-syntax` on
 
 - **T20. No `vi.mock`; inject instead.** Decision #4 (constructor injection) makes it unneeded. A test that seems to
   need a module mock means the class should take the dependency in its constructor. [lint] ESLint
-  `no-restricted-properties` `{object:'vi', property:'mock'}` and `{object:'vi', property:'doMock'}`.
+  `no-restricted-properties` `{object:'vi', property:'mock'}` and `{object:'vi', property:'doMock'}` for
+  `tests/**/*.ts` (`eslint/codeRules.ts`).
   Source: test:164-165, test:521-527.
 - **T21. No production symbol is exported or widened for a test.** Units reach code through its public API;
   specs reach the running app only through the DOM and `window.__desk` behind `?test` (decision #23). [review]
