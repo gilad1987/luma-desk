@@ -16,8 +16,8 @@ function cueIds(cue: Readonly<Cue>): Set<number> {
  *
  * Listens to `rigChanged` (to reset) and emits a `message` log. Gets the `EngineBus` and the `RigSource` (the
  * StageService) from main.ts, and the executors call `check`. It subscribes when it is constructed, so its place in
- * the synchronous delivery order is its construction order in main.ts (plan §3.2): after PresetLibrary, before
- * AutoShow.
+ * the synchronous delivery order is its construction order in main.ts (plan §3.2): after Selection and StageGroups,
+ * before the render StageScene and the UI.
  */
 export class MissingFixtureNotice {
   readonly #bus: EngineBus;
