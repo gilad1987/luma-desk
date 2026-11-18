@@ -64,4 +64,21 @@ describe('FohRig', () => {
     rig.setVisible(true);
     expect([riser.visible, desk.visible, roboSpot.visible]).toEqual([true, true, true]);
   });
+
+  it('shows a rider only while a riser is registered and the layout shows the rig', () => {
+    const rig = new FohRig();
+    const station = new Object3D();
+    rig.addRider(station);
+    expect(station.visible).toBe(false);
+    const riser = new Object3D();
+    rig.add(riser);
+    expect(station.visible).toBe(true);
+    rig.setVisible(false);
+    expect([riser.visible, station.visible]).toEqual([false, false]);
+    rig.remove(riser);
+    rig.setVisible(true);
+    expect(station.visible).toBe(false);
+    rig.add(riser);
+    expect([riser.visible, station.visible]).toEqual([true, true]);
+  });
 });

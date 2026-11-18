@@ -48,7 +48,7 @@ export interface FixtureVisualHandles {
  * from the seeded Math.random). The visuals build through the stage scene, which rebuilds them on a new stage; the
  * frame update and the light frame exist first but create no three.js object. The venue build already put the FOH
  * riser in the camera views' rig, so the RoboSpot station joins it after the riser and takes the riser's
- * visibility, as it did before.
+ * visibility, as it did before; in a venue without a riser it stays hidden.
  */
 export function wireFixtureVisuals(deps: FixtureVisualDeps): FixtureVisualHandles {
   const { stage, fixtures, selection, appState, overlay } = deps;
