@@ -546,27 +546,6 @@ Groups:
   `LayoutManager.restore` with a saved known layout at boot.
 - Future fix: accept only the three known names and fall back to `ma`.
 
-### D10. A failed import no longer drops the user's presets
-
-- Source: `index.html:2301` (`presets = defaultPresets()`), `2304` (the copy loop that throws), caught at `2320`
-  and `2321` (`toast('Invalid JSON')`, `toast('Invalid file')`)
-- Code:
-  ```js
-  groups = d.groups || defaultGroups(); // 2301
-  presets = defaultPresets(); // 2301
-  for (const t in d.presets || {}) for (const s in d.presets[t]) presets[t][s] = d.presets[t][s]; // 2304
-  ```
-- Lives in: `src/show/ShowSerializer.ts:62` (`load`: `presets.replace(withSavedPresets(defaultPresets(), d.presets))`),
-  `src/show/savedPresets.ts` (`withSavedPresets` throws `Unknown preset pool ...`)
-- What it does: a show whose `presets` has a slot in a pool number the desk does not have throws at 2304. The
-  original had already reset the presets to the defaults at 2301, so the import failed and the user's own presets
-  were gone too; the next save stored the loss. The new code builds the presets first and replaces them only when
-  the build succeeds, so a failed import keeps the user's presets. The groups are still replaced before the throw,
-  as at 2301, and the executors stay as they were, as before.
-- Status: fixed in the refactor, on purpose. The old result was data loss on a path that only fails; no golden
-  covers it.
-- Pinned by: no test.
-
 ## E. Auto Show and audio
 
 ### E1. BPM is rounded, but the beat offset uses the unrounded value
@@ -984,8 +963,9 @@ The refactor keeps this logic (see ADR 0003). Only the shell list and the cache 
 
 Strict types (`noUncheckedIndexedAccess`) make every indexed read handle the missing case. Where the original read
 `undefined` and then crashed with a `TypeError` somewhere else, the new code throws a `RangeError` at the read, with
-a message that names the bad value. These are the only behavior changes the refactor accepts: each path is either
-unreachable from the UI or crashed in the original too.
+a message that names the bad value. J4 and J5 change other details of a path that fails: J5 removes a data loss on
+a failed import. These are the only behavior changes the refactor accepts: each path is
+either unreachable from the UI or crashed in the original too.
 
 ### J1. `hsv` throws a `RangeError` for a hue that is not finite
 
@@ -1027,6 +1007,28 @@ unreachable from the UI or crashed in the original too.
   (fewer than 3 bytes) still reads the missing bytes as `NaN`, as before (`src/io/midiMessage.ts`).
 - Why kept: the original only crashed on this path; a real device always sends data.
 - Pinned by: `tests/unit/io/Midi.test.ts` ("ignores a message whose data is null and does not throw (quirk)").
+
+### J5. A failed import no longer drops the user's presets
+
+- Source: `index.html:2301` (`presets = defaultPresets()`), `2304` (the copy loop that throws), caught at `2320`
+  and `2321` (`toast('Invalid JSON')`, `toast('Invalid file')`)
+- Code:
+  <!-- prettier-ignore -->
+  ```js
+  groups = d.groups || defaultGroups(); presets = defaultPresets(); // 2301
+  for (const t in d.presets || {}) for (const s in d.presets[t]) presets[t][s] = d.presets[t][s]; // 2304
+  ```
+- Lives in: `src/show/ShowSerializer.ts:62` (`load`: `presets.replace(withSavedPresets(defaultPresets(), d.presets))`),
+  `src/show/savedPresets.ts` (`withSavedPresets` throws `Unknown preset pool ...`)
+- What it does: a show whose `presets` has a slot in a pool number the desk does not have throws at 2304. The
+  original had already reset the presets to the defaults at 2301, so the import failed and the user's own presets
+  were gone too; the next save stored the loss. The new code builds the presets first and replaces them only when
+  the build succeeds, so a failed import keeps the user's presets. The groups are still replaced before the throw,
+  as at 2301, and the executors stay as they were, as before.
+- Accepted change: the import fails in both versions; only the data loss on that failure is gone. It is fixed on
+  purpose, and no golden covers it.
+- Pinned by: `tests/unit/show/showSerializer.test.ts` ("quirk J5: a preset pool the desk lacks throws, keeps the
+  presets and executors, replaces the groups (accepted change)").
 
 ## K. Test mode (`?test`)
 
