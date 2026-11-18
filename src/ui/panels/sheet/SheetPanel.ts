@@ -1,9 +1,11 @@
+import type { StageDesign } from '../../../domain/stage/StageDesign';
 import type { Programmer } from '../../../engine/Programmer';
 import type { Selection } from '../../../engine/Selection';
 import { byId } from '../../dom';
 import type { SideTab } from '../side/sideTabsMarkup';
 import type { UiPanel } from '../UiPanel';
 import { sheetRowView, sheetTable } from './sheetCells';
+import { NO_DMX, sheetDmxById } from './sheetDmx';
 import type { SheetFixture } from './SheetFixture';
 import { sheetMarkup } from './sheetMarkup';
 import { SheetRow } from './SheetRow';
@@ -15,6 +17,8 @@ export interface SheetDeps {
   readonly selection: Selection;
   /** The visible side pane; the sheet repaints only while it is the sheet. */
   readonly sideTab: () => SideTab;
+  /** The current stage design, read on each repaint so the DMX columns follow an import or a stage edit. */
+  readonly design: () => StageDesign;
 }
 
 /**
@@ -47,11 +51,13 @@ export class SheetPanel implements UiPanel {
     const { fixtures, programmer, selection } = this.#deps;
     if (!this.#rows || this.#rows.length !== fixtures.length) {
       this.#table.innerHTML = sheetTable(fixtures);
-      this.#rows = [...this.#table.querySelectorAll<HTMLTableRowElement>('tr[data-id]')].map((tr) => new SheetRow(tr));
+      const built = this.#table.querySelectorAll<HTMLTableRowElement>('tr[data-id]');
+      this.#rows = Array.from(built, (tr) => new SheetRow(tr));
     }
     const rows = this.#rows;
+    const dmx = sheetDmxById(this.#deps.design());
     fixtures.forEach((f, i) => {
-      rows[i]?.show(sheetRowView(f, selection.has(f.id), programmer.vals[f.id] ?? {}));
+      rows[i]?.show(sheetRowView(f, selection.has(f.id), programmer.vals[f.id] ?? {}, dmx.get(f.id) ?? NO_DMX));
     });
   }
 }

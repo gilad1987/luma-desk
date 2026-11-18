@@ -1,4 +1,5 @@
 import type { CommandRunner } from '../../command/CommandRunner';
+import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { AppState } from '../../engine/AppState';
 import type { EngineBus } from '../../engine/events';
 import type { Executor } from '../../engine/Executor';
@@ -25,6 +26,8 @@ export interface CuePanesDeps extends UiServices {
   readonly runner: Pick<CommandRunner, 'run'>;
   readonly sideTabs: Pick<SideTabs, 'current'>;
   readonly fixtures: readonly SheetFixture[];
+  /** The current stage design; the sheet reads its DMX patch and GDTF modes on each repaint. */
+  readonly stageDesign: () => StageDesign;
 }
 
 /** The two polled panes: each repaints on the slow tick only while its tab shows. */
@@ -55,6 +58,7 @@ export function wireCuePanes(deps: CuePanesDeps): CuePanes {
     programmer: deps.programmer,
     selection: deps.selection,
     sideTab,
+    design: deps.stageDesign,
   });
   return { sequence, sheet };
 }

@@ -1,3 +1,4 @@
+import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { LayoutMode } from '../../ui/panels/layoutMode';
 import type { EngineHandles } from '../boot/wireEngine';
 import type { RenderHandles } from '../boot/wireRender';
@@ -18,6 +19,8 @@ export interface PanelsDeps {
   readonly layoutMode: () => LayoutMode;
   /** The guide or the tour covers the page; the io area builds them after the panels. */
   readonly guideOrTourOpen: () => boolean;
+  /** The current stage design; a getter, because an import or a stage edit replaces the design at runtime. */
+  readonly stageDesign: () => StageDesign;
 }
 
 /** {@link PanelsDeps} with the dialog and store-mode services that every panel after the top bar takes. */

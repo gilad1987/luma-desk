@@ -41,6 +41,7 @@ export function wireSideColumn(deps: PanelsWithServices, topBar: Pick<TopBar, 's
     execs: engine.pool.execs,
     sideTabs,
     fixtures: engine.rig.fixtures,
+    stageDesign: deps.stageDesign,
   });
   return { sideTabs, pools, showLoaded, autoShowPanel, sequence, sheet };
 }
