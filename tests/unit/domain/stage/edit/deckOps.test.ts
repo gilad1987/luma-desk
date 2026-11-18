@@ -19,6 +19,13 @@ describe('setDeckSize', () => {
     expect(d.deck).toEqual({ x0: -5, x1: 5, z0: -2, z1: 4, height: 1.5 });
     expect(() => setDeckSize(sampleDesign(), { width: 0, depth: 6, height: 1 })).toThrow(/0 x 6 x 1/);
   });
+
+  it('moves the risers with a new deck height, so they keep standing on the deck', () => {
+    const withRiser = addRiser(sampleDesign(), [1, 1.5, 0], [2, 0.5, 2]);
+    const raised = setDeckSize(withRiser, { width: 12, depth: 8, height: 1.75 });
+    expect(raised.risers[0]?.at).toEqual([1, 2.25, 0]);
+    expect(setDeckSize(raised, { width: 10, depth: 8, height: 1.75 }).risers).toBe(raised.risers);
+  });
 });
 
 describe('setLedWall', () => {

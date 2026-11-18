@@ -15,8 +15,9 @@ export interface DeckSize {
 
 /**
  * Resizes the deck around its centre line, keeping the downstage edge (z1) where it is, so the deck grows away from
- * the audience. Trusses, fixtures and the LED wall do not move. The size the deck already has (float noise aside)
- * returns `d` itself, so History adds no undo step.
+ * the audience. Risers stand on the deck, so a new height moves them up or down with it in the same step (the riser
+ * row has no height field to fix them later). Trusses, fixtures and the LED wall do not move. The size the deck
+ * already has (float noise aside) returns `d` itself, so History adds no undo step.
  * @throws RangeError when a size is not a finite number > 0: a zero deck has no top for beams to land on.
  */
 export function setDeckSize(d: StageDesign, size: DeckSize): StageDesign {
@@ -25,7 +26,14 @@ export function setDeckSize(d: StageDesign, size: DeckSize): StageDesign {
   const { width, depth, height } = size;
   if (isSameLength(width, x1 - x0) && isSameLength(depth, z1 - z0) && isSameLength(height, d.deck.height)) return d;
   const centreX = (x0 + x1) / 2;
-  return { ...d, deck: { x0: centreX - width / 2, x1: centreX + width / 2, z0: z1 - depth, z1, height } };
+  const deck = { x0: centreX - width / 2, x1: centreX + width / 2, z0: z1 - depth, z1, height };
+  return { ...d, deck, risers: risersOn(d.risers, height - d.deck.height) };
+}
+
+/** The risers moved up by `rise` metres; no rise (float noise aside) keeps the list, so a width edit leaves them be. */
+function risersOn(risers: StageDesign['risers'], rise: number): StageDesign['risers'] {
+  if (isSameLength(rise, 0)) return risers;
+  return risers.map((r) => ({ ...r, at: [r.at[0], r.at[1] + rise, r.at[2]] }));
 }
 
 /**
