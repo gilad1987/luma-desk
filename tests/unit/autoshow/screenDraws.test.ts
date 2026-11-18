@@ -30,7 +30,7 @@ function screenStep(id: AutoStyleId, look: AutoGroups) {
 
 describe('addStrobesAndScreen on a stage without a screen', () => {
   it('has the built-in LED screen as its only screen group', () => {
-    expect(groups.screen).toEqual(rig.screenIds());
+    expect(groups.screen).toEqual([2001]);
     expect(groups.screen).toHaveLength(1);
   });
 

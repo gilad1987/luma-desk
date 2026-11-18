@@ -5,7 +5,7 @@ import { colorByName } from '../../engine/colorByName';
 import { buildCueVals, type CueValueStep } from '../../engine/cueValues';
 import type { GroupPool } from '../../engine/GroupLibrary';
 import type { PresetFn } from '../../engine/positionPresets';
-import { PRESET_FNS, type PresetFnName } from '../../engine/presetFunctions';
+import { PRESET_FNS, type PresetFnName, type PresetFns } from '../../engine/presetFunctions';
 import { PHASER_TYPES, type PhaserInstance, type PhaserType } from '../../engine/shared';
 
 /** The vocabulary the demo cue files are written in, bound to one rig, its default groups and its presets. */
@@ -35,11 +35,7 @@ export interface DemoKit {
  * Builds the kit. `groups` must be the pool the show will hold: phasers share their id lists with the groups. `fns`
  * are the presets aimed at the stage of `rig` (`presetFnsOf`); the default is the built-in stage.
  */
-export function createDemoKit(
-  rig: Rig,
-  groups: GroupPool,
-  fns: Readonly<Record<PresetFnName, PresetFn>> = PRESET_FNS,
-): DemoKit {
+export function createDemoKit(rig: Rig, groups: GroupPool, fns: PresetFns = PRESET_FNS): DemoKit {
   return {
     screen: rig.screenIds(),
     rig,

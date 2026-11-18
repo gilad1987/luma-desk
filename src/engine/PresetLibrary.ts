@@ -11,8 +11,9 @@ import type { RigSource } from './stage/RigSource';
 /**
  * The show's preset pools. It owns the pools object so a loaded show or the demo can swap it whole, and so storing a
  * preset always announces the change to the pool view and to persistence. With a `RigSource` (the StageService) it
- * is the one owner of the stage for presets: it knows which computed presets the current stage cannot aim (G10) and
- * aims the others at it; without one every preset is available and aims at the built-in stage.
+ * knows which computed presets the current stage cannot aim (G10) and aims the others at it through `presetFnsOf`, the
+ * one place that turns a stage frame into presets. Without one every preset is available and aims at the built-in
+ * stage.
  */
 export class PresetLibrary {
   #presets: PresetPools = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {} };
