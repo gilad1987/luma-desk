@@ -2,18 +2,7 @@
  * Reads and drives the builder tool panels on the FakeDom by what the user sees: a control by its label text, a
  * button by its text. The panels build their DOM with `createElement`, so the walk follows `children`.
  */
-import { FakeElement } from '../../../shared/dom';
-
-/**
- * The panels re-render with `replaceChildren`, which the shared fake does not have; every panel test reads the DOM
- * through this file, so the method is added here, with the DOM's meaning: remove every child, then append the new ones.
- */
-Object.defineProperty(FakeElement.prototype, 'replaceChildren', {
-  value(this: FakeElement, ...children: FakeElement[]): void {
-    for (const child of [...this.children]) child.remove();
-    for (const child of children) this.appendChild(child);
-  },
-});
+import type { FakeElement } from '../../../shared/dom';
 
 /** A DOM property the fake does not declare (`role`, `hidden`, `ariaSelected`, …), as the code set it. */
 export function prop(el: FakeElement, name: string): unknown {

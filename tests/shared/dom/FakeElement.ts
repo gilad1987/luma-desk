@@ -1,35 +1,16 @@
 import { vi } from 'vitest';
+import { FakeClassList } from './FakeClassList';
 import type { FakePointerEvent } from './fakePointer';
+import { matcherFor } from './fakeSelector';
+import { FakeStyle } from './FakeStyle';
 
 type Handler<E> = ((ev: E) => void) | null;
 
-/** A class list over a Set, enough for the toggles the components make. */
-export class FakeClassList {
-  readonly tokens = new Set<string>();
-  add = (t: string): void => void this.tokens.add(t);
-  remove = (t: string): void => void this.tokens.delete(t);
-  contains = (t: string): boolean => this.tokens.has(t);
-  toggle = (t: string, force?: boolean): boolean => {
-    const on = force ?? !this.tokens.has(t);
-    if (on) this.tokens.add(t);
-    else this.tokens.delete(t);
-    return on;
-  };
-}
-
-/** The style fields the components write; custom properties land in `custom`. */
-export class FakeStyle {
-  cssText = '';
-  display = '';
-  height = '';
-  width = '';
-  bottom = '';
-  transform = '';
-  readonly custom = new Map<string, string>();
-  setProperty = (name: string, value: string): void => void this.custom.set(name, value);
-}
-
-/** Just enough of an element for the components; `querySelector` hands out one stable child per selector. */
+/**
+ * Just enough of an element for the components. `querySelector` finds `#id` and `[data-name="value"]` among the
+ * children (`matcherFor`); when no child matches, or for any other selector, it hands out one stable part per
+ * selector, which stands in for the markup a component writes with `innerHTML`.
+ */
 export class FakeElement {
   id = '';
   className = '';
@@ -76,8 +57,22 @@ export class FakeElement {
   }
   remove(): void {
     this.parent?.children.splice(this.parent.children.indexOf(this), 1);
+    this.parent = null;
+  }
+  /** As the DOM does: removes every child, then appends `children`. The builder panels re-render this way. */
+  replaceChildren(...children: FakeElement[]): void {
+    for (const child of [...this.children]) child.remove();
+    for (const child of children) this.appendChild(child);
+  }
+  /** True for this element and every element below it, as `Node.contains`. */
+  contains(other: FakeElement | null): boolean {
+    for (let el = other; el !== null; el = el.parent) if (el === this) return true;
+    return false;
   }
   querySelector(selector: string): FakeElement | null {
+    const matches = matcherFor(selector);
+    const child = matches ? this.#descendants().find(matches) : undefined;
+    if (child) return child;
     if (!this.parts.has(selector)) this.parts.set(selector, new FakeElement());
     return this.parts.get(selector) ?? null;
   }
@@ -91,6 +86,9 @@ export class FakeElement {
   hasPointerCapture = (id: number): boolean => this.captured.has(id);
   getBoundingClientRect(): { left: number; top: number; width: number; height: number } {
     return this.rect;
+  }
+  #descendants(): FakeElement[] {
+    return this.children.flatMap((child) => [child, ...child.#descendants()]);
   }
 }
 

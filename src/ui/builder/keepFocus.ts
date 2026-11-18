@@ -6,12 +6,12 @@
  */
 export function renderKeepingFocus(root: HTMLElement, parts: readonly HTMLElement[]): void {
   const active = document.activeElement;
-  const had = active instanceof HTMLElement && isWithin(root, active) ? active : null;
+  const had = active instanceof HTMLElement && root.contains(active) ? active : null;
   const key = had?.dataset['focusKey'];
   root.replaceChildren(...parts);
   if (!had || key === undefined) return;
-  const next = parts.map((part) => withKey(part, key)).find((found) => found !== null);
-  if (!next) return;
+  const next = root.querySelector(`[data-focus-key="${CSS.escape(key)}"]`);
+  if (!(next instanceof HTMLElement)) return;
   next.focus();
   if (had instanceof HTMLInputElement && next instanceof HTMLInputElement) restoreCaret(had, next);
 }
@@ -21,17 +21,4 @@ function restoreCaret(had: HTMLInputElement, next: HTMLInputElement): void {
   const { selectionStart, selectionEnd } = had;
   if (typeof selectionStart !== 'number' || typeof selectionEnd !== 'number') return;
   next.setSelectionRange(selectionStart, selectionEnd);
-}
-
-function isWithin(root: Element, el: Element): boolean {
-  return root === el || Array.from(root.children).some((child) => isWithin(child, el));
-}
-
-function withKey(el: Element, key: string): HTMLElement | null {
-  if (el instanceof HTMLElement && el.dataset['focusKey'] === key) return el;
-  for (const child of Array.from(el.children)) {
-    const found = withKey(child, key);
-    if (found) return found;
-  }
-  return null;
 }
