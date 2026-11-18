@@ -1,6 +1,7 @@
 import { MvrArchive } from './archive/MvrArchive';
 import { toStageDesign, type DesignResult } from './design/toStageDesign';
 import { applyLumaData, type LumaApplied } from './import/applyLumaData';
+import { meshBytes } from './import/meshBytes';
 import { readLumaData } from './import/readLumaData';
 import { resolveFixtures } from './import/resolveFixtures';
 import { summarize } from './import/summarize';
@@ -9,7 +10,7 @@ import type { Aabb } from './math/Aabb';
 import { meshBounds } from './mesh/meshBounds';
 import type { MvrImport } from './MvrImport';
 import { MvrError, type MvrWarning } from './MvrWarning';
-import type { MeshPlacement } from './scene/MvrScene';
+import type { MeshPlacement, MvrScene } from './scene/MvrScene';
 import { walkScene } from './scene/walkScene';
 import { parseXml } from './xml/parseXml';
 
@@ -25,12 +26,13 @@ export interface MvrImportOptions {
 }
 
 /**
- * Whether a mesh warning reaches the user. A luma export names its own `luma_*` meshes before Part B puts them in the
- * archive, and the desk rebuilds those objects from the luma data, so their absence is not a problem there.
+ * The scene without the desk's own `luma_*` meshes when the file holds luma data. The desk rebuilds those stage parts
+ * from that data, so drawing the meshes too would show the stage twice and give beams two copies of every surface.
+ * Other tools have no luma data and draw the meshes, which is why the export writes them.
  */
-function keepMeshWarning(warning: MvrWarning, hasLumaData: boolean): boolean {
-  const lumaMesh = warning.code === 'missing-mesh' && (warning.ref ?? '').startsWith(LUMA_MESH_PREFIX);
-  return !(hasLumaData && lumaMesh);
+function withoutLumaMeshes(scene: MvrScene, luma: LumaStageData | undefined): MvrScene {
+  if (!luma) return scene;
+  return { ...scene, placements: scene.placements.filter((placement) => !placement.file.startsWith(LUMA_MESH_PREFIX)) };
 }
 
 /** Local bounds of every distinct mesh file; a file that cannot be read gets no entry and a warning. */
@@ -65,12 +67,11 @@ function importNow(bytes: Uint8Array, options: MvrImportOptions): MvrImport {
   if (text === undefined) throw new MvrError('no-scene', `The file has no ${SCENE_FILE}, so it is not an MVR file.`);
   const doc = parseXml(text);
   const luma = readLumaData(doc);
-  const scene = walkScene(doc);
+  const walked = walkScene(doc);
+  const scene = withoutLumaMeshes(walked, luma);
   const rig = resolveFixtures(archive, scene.fixtures);
   const meshWarnings: MvrWarning[] = [];
-  const meshBoxes = readMeshBoxes(archive, scene.placements, (warning) => {
-    if (keepMeshWarning(warning, luma !== undefined)) meshWarnings.push(warning);
-  });
+  const meshBoxes = readMeshBoxes(archive, scene.placements, (warning) => meshWarnings.push(warning));
   const fixed = luma ? { fixed: { offset: luma.offset, deck: luma.deck } } : {};
   const result = toStageDesign({ ...options, scene, fixtures: rig.fixtures, meshBoxes, ...fixed });
   const design = withLumaData(result, luma);
@@ -78,7 +79,8 @@ function importNow(bytes: Uint8Array, options: MvrImportOptions): MvrImport {
   return {
     design: design.design,
     geometry: result.geometry,
-    summary: summarize(scene, rig, noGeometry),
+    meshes: meshBytes(archive, scene.placements),
+    summary: summarize(walked, rig, noGeometry),
     warnings: [...scene.warnings, ...rig.gdtfWarnings, ...rig.patchWarnings, ...meshWarnings, ...design.warnings],
   };
 }

@@ -4,7 +4,11 @@
  */
 export { exportMvr, type MvrExport, type MvrExportOptions } from './export/exportMvr';
 export type { MvrExportSummary } from './export/MvrExportSummary';
+export type { MeshShape } from './export/MeshShape';
+export { meshShapes } from './export/meshShapes';
 export { importMvr, type MvrImportOptions } from './importMvr';
 export type { MvrGeometry, MvrImport, MvrSummary } from './MvrImport';
+export { mvrToThreeMatrix, toThree } from './math/axes';
+export { meshFormatOf } from './mesh/meshFormatOf';
 export { MvrError, type MvrWarning, type MvrWarningCode } from './MvrWarning';
 export type { MeshPlacement } from './scene/MvrScene';

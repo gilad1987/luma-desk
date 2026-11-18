@@ -9,7 +9,7 @@ export const LUMA_DATA_VERSION = '1';
 
 /**
  * The start of every mesh file name a luma export writes. The import knows the desk rebuilds those objects from the
- * luma data, so it can drop their missing-mesh warnings.
+ * luma data, so it drops their placements: no double stage, no doubled surfaces and no missing-mesh warnings.
  */
 export const LUMA_MESH_PREFIX = 'luma_';
 

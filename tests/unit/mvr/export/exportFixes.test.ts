@@ -3,9 +3,9 @@
 import { describe, expect, it } from 'vitest';
 import { createTemplate } from '../../../../src/domain/stage/templates/index.ts';
 import { planPatches } from '../../../../src/mvr/export/autoPatch.ts';
+import { meshFileOf } from '../../../../src/mvr/export/MeshShape.ts';
 import { objectSpecs } from '../../../../src/mvr/export/objectSpecs.ts';
 import { stableUuid } from '../../../../src/mvr/export/stableUuid.ts';
-import { geometryFile } from '../../../../src/mvr/export/stageObjects.ts';
 import { writeScene } from '../../../../src/mvr/export/writeScene.ts';
 import { xmlElement } from '../../../../src/mvr/export/xmlWriter.ts';
 import { exportMvr } from '../../../../src/mvr/index.ts';
@@ -13,9 +13,14 @@ import { exportMvr } from '../../../../src/mvr/index.ts';
 const spot = { id: 1, type: 'wash', role: 'front', trussId: null, position: [0, 6, 0], mount: 'hang' } as const;
 
 describe('MVR export object fixes', () => {
-  it('gives ids that sanitise alike their own mesh files', () => {
-    const names = ['a b', 'a_b', 'במה', 'אור'].map((id) => geometryFile('riser', id));
-    expect([new Set(names).size, names[1]]).toEqual([4, 'luma_riser_a_b.glb']);
+  it('names mesh files by body, not by id, so ids that sanitise alike cannot clash', () => {
+    const riser = (id: string, height: number) => ({ id, at: [0, 1, 0], size: [2, height, 1] }) as const;
+    const risers = [riser('a b', 0.4), riser('a_b', 0.6), riser('במה', 0.4), riser('אור', 0.8)];
+    const specs = objectSpecs({ ...createTemplate('festival'), risers });
+    const names = specs.filter((spec) => spec.shape.kind === 'riser').map((spec) => meshFileOf(spec.shape));
+    expect(new Set(names).size).toBe(3);
+    expect(names[0]).toBe(names[2]);
+    expect(names.every((name) => /^luma_riser_[a-z0-9]+\.glb$/.test(name))).toBe(true);
   });
 
   it('writes an empty FixtureID in every Truss and VideoScreen, after the geometry', () => {
@@ -28,7 +33,7 @@ describe('MVR export object fixes', () => {
   it('exports no riser when the deck is hidden', () => {
     const theatre = createTemplate('sultans-pool');
     const hidden = { ...theatre, scenery: { ...theatre.scenery, deck: false } };
-    expect(objectSpecs(hidden).filter((spec) => spec.kind === 'riser' || spec.kind === 'deck')).toEqual([]);
+    expect(objectSpecs(hidden).filter((spec) => spec.shape.kind === 'riser' || spec.shape.kind === 'deck')).toEqual([]);
   });
 });
 

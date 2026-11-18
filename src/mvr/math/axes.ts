@@ -27,6 +27,14 @@ const THREE_TO_MVR = fromEntries([
 ]);
 
 /**
+ * C as a fresh matrix. Render bakes it into a 3DS mesh (mm, Z up) so that the mesh, like a glTF one, is in the three
+ * frame, and `toThree` then places both; a copy, so no caller can change the import's own C.
+ */
+export function mvrToThreeMatrix(): Mat4 {
+  return MVR_TO_THREE.slice();
+}
+
+/**
  * An MVR transform in the three frame: C·M·C⁻¹. The conjugation keeps the meaning "local to world", so a fixture's
  * local rest beam (MVR -Z) becomes three's -Y, which is the hanging rest pose of the desk's aim code.
  */

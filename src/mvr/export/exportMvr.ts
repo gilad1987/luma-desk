@@ -5,7 +5,7 @@ import { writeScene } from './writeScene';
 
 /** Optional extra content of an export. */
 export interface MvrExportOptions {
-  /** Mesh bytes by the file name the scene refers to (`luma_<kind>_<id>.glb`); Part B renders them. */
+  /** Mesh bytes by the file name the scene refers to (`luma_<kind>_<hash>.glb`); render's `exportMeshes` makes them. */
   readonly meshes?: ReadonlyMap<string, Uint8Array>;
 }
 
@@ -24,8 +24,8 @@ const ZIP_TIME = new Date(2000, 0, 1);
  * Exports a design as an MVR 1.6 file: `GeneralSceneDescription.xml` (fixtures, trusses, stage objects and the luma
  * data that brings the stage back to the desk) in a ZIP, with no three.js, so it runs anywhere. No GDTF files are
  * embedded, because the desk's fixtures are procedural; each fixture names the real product's GDTF instead. Mesh
- * files are added only when `options.meshes` holds them; until Part B renders them, the scene names files the
- * archive does not hold, and the summary says so. The same design always gives the same bytes.
+ * files are added only when `options.meshes` holds them (`meshShapes` lists the names); without them the scene names
+ * files the archive does not hold, and the summary says so. The same design always gives the same bytes.
  */
 export function exportMvr(design: StageDesign, options: MvrExportOptions = {}): MvrExport {
   const scene = writeScene(design);

@@ -1,20 +1,7 @@
-/** One 3DS chunk: u16 id, u32 length including the 6-byte header, then the body. */
-function chunk(id: number, ...parts: readonly Uint8Array[]): Uint8Array {
-  const length = 6 + parts.reduce((sum, part) => sum + part.byteLength, 0);
-  const bytes = new Uint8Array(length);
-  const view = new DataView(bytes.buffer);
-  view.setUint16(0, id, true);
-  view.setUint32(2, length, true);
-  let at = 6;
-  for (const part of parts) {
-    bytes.set(part, at);
-    at += part.byteLength;
-  }
-  return bytes;
-}
+import { tdsChunk as chunk } from './tdsChunk';
 
 /** A vertex list chunk body: u16 count, then float32 x, y, z per vertex. */
-function vertexList(vertices: readonly (readonly [number, number, number])[]): Uint8Array {
+export function vertexList(vertices: readonly (readonly [number, number, number])[]): Uint8Array {
   const bytes = new Uint8Array(2 + vertices.length * 12);
   const view = new DataView(bytes.buffer);
   view.setUint16(0, vertices.length, true);
