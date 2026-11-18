@@ -38,6 +38,22 @@ describe('moveSelection', () => {
     ]);
   });
 
+  it('moves a vertical-only drag on z alone: the truss, its fixtures and a loose fixture keep their x', () => {
+    const onFront = theatre.fixtures.find((f) => f.trussId === 'front');
+    const loose = theatre.fixtures.find((f) => f.trussId !== 'front');
+    const front = theatre.trusses.find((t) => t.id === 'front');
+    if (!onFront || !loose || !front) throw new Error('the theatre template has a front truss and other fixtures');
+    const next = moveSelection({ fixtures: [loose.id], trusses: ['front'] }, [0, 0, -1.5])(theatre);
+    const [x, y, z] = front.transform.position;
+    expect([next.trusses.find((t) => t.id === 'front')?.transform.position, positionOf(next, onFront.id)]).toEqual([
+      roundToMillimetre([x, y, z - 1.5]),
+      roundToMillimetre([onFront.position[0], onFront.position[1], onFront.position[2] - 1.5]),
+    ]);
+    expect(positionOf(next, loose.id)).toEqual(
+      roundToMillimetre([loose.position[0], loose.position[1], loose.position[2] - 1.5]),
+    );
+  });
+
   it('moves the pixel line of a loose fixture with it (Sultan’s Pool 1201)', () => {
     const pool = createTemplate('sultans-pool');
     const pixelOf = (d: typeof pool): unknown => d.fixtures.find((f) => f.id === 1201)?.pixel?.p;

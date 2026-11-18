@@ -35,7 +35,10 @@ export class FakeElement {
   /** Children by selector; a null entry makes the selector match nothing. */
   readonly parts = new Map<string, FakeElement | null>();
   readonly captured = new Set<number>();
-  readonly focus = vi.fn();
+  /** Moves `document.activeElement` here, as the DOM does, when a FakeDom document is installed. */
+  readonly focus = vi.fn(
+    (): void => void (typeof document === 'object' && Object.assign(document, { activeElement: this })),
+  );
   readonly select = vi.fn();
   onclick: Handler<{ readonly target: unknown }> = null;
   ondblclick: Handler<undefined> = null;

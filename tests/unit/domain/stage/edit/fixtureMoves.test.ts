@@ -8,7 +8,7 @@ import { setFixtureProps } from '../../../../../src/domain/stage/edit/itemOps.ts
 import { roundToMillimetre } from '../../../../../src/domain/stage/edit/millimetres.ts';
 import type { StageDesign, StageFixture } from '../../../../../src/domain/stage/StageDesign.ts';
 import { createTemplate } from '../../../../../src/domain/stage/templates/index.ts';
-import { sampleDesign } from './sampleDesign.ts';
+import { patchedFixture, sampleDesign } from './sampleDesign.ts';
 
 /** The sample design with fixture 301 counting reads of its role, so a test sees how often the parser reads it. */
 function countedDesign(): { d: StageDesign; reads: () => number } {
@@ -62,6 +62,11 @@ describe('moveFixtures', () => {
   it('returns the same design for a zero delta or ids that name no fixture', () => {
     const d = sampleDesign();
     expect([moveFixtures(d, [101], [0, 0, 0]) === d, moveFixtures(d, [999], [1, 0, 0]) === d]).toEqual([true, true]);
+  });
+
+  it('leaves an off-millimetre fixture as imported on a zero delta, instead of rounding it as a move', () => {
+    const imported = patchedFixture(sampleDesign(), 301, { position: [-3.0004, 1, 3] });
+    expect(moveFixtures(imported, [301], [0, 0, 0])).toBe(imported);
   });
 
   it('refuses a bad delta with the errors of every moved fixture at once, from one parse', () => {

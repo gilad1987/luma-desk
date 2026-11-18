@@ -81,4 +81,12 @@ describe('FixtureTab', () => {
       3,
     ]);
   });
+
+  it('enables Add again after any edit re-renders the tab, with the last valid count', () => {
+    change(control(root, 'Count'), '0');
+    session.edit((d) => addPresetTruss(d, 'tower', [0, 0, 0]));
+    const isDisabled = prop(button(root, 'Add fixtures'), 'disabled') === true;
+    add();
+    expect([isDisabled, session.draft.fixtures.length]).toEqual([false, 6]);
+  });
 });

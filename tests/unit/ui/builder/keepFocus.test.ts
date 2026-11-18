@@ -1,18 +1,21 @@
 /**
  * Owns the focus across a panel re-render: the control the user typed in gets the focus back after the edit
  * rebuilds the panel, the same riser's field when several risers show the same labels, the caret of a text field
- * too, and nothing is focused when the focus was outside the panel.
+ * too, a pressed button (its text is its key), and nothing is focused when the focus was outside the panel or on an
+ * element without a key.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { addRiser } from '../../../../src/domain/stage/edit/deckOps';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { createTemplate } from '../../../../src/domain/stage/templates';
 import { EditorSession } from '../../../../src/ui/builder/EditorSession.ts';
+import { FixtureTab } from '../../../../src/ui/builder/FixtureTab.ts';
 import { PropertyPanel } from '../../../../src/ui/builder/PropertyPanel.ts';
 import { StageTab } from '../../../../src/ui/builder/StageTab.ts';
+import { TrussTab } from '../../../../src/ui/builder/TrussTab.ts';
 import { asReal, FakeDom, FakeElement } from '../../../shared/dom';
 import { fakeStage } from './fakeStage.ts';
-import { change, control, descendants } from './toolsDom.ts';
+import { button, change, click, control, descendants } from './toolsDom.ts';
 
 describe('renderKeepingFocus', () => {
   let session: EditorSession, start: StageDesign;
@@ -63,5 +66,24 @@ describe('renderKeepingFocus', () => {
     focusOn(new FakeElement());
     change(control(root, 'Deck width (m)'), '14');
     expect(focused(root)).toEqual([]);
+  });
+
+  it('focuses nothing when the focused element in the panel has no key', () => {
+    const root = mount(new StageTab(session));
+    const heading = descendants(root).find((el) => el.tagName !== 'div' && el.dataset['focusKey'] === undefined);
+    focusOn(heading ?? root);
+    change(control(root, 'Deck width (m)'), '14');
+    expect([heading?.tagName === undefined, focused(root)]).toEqual([false, []]);
+  });
+
+  it('gives the focus back to a pressed button: a truss preset and Add fixtures', () => {
+    const trusses = mount(new TrussTab(session));
+    focusOn(button(trusses, 'Straight'));
+    click(button(trusses, 'Straight'));
+    const afterPreset = focused(trusses);
+    const fixtures = mount(new FixtureTab(session));
+    focusOn(button(fixtures, 'Add fixtures'));
+    click(button(fixtures, 'Add fixtures'));
+    expect([afterPreset, focused(fixtures)]).toEqual([['Straight'], ['Add fixtures']]);
   });
 });
