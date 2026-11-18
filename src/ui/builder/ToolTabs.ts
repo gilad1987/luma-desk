@@ -16,12 +16,15 @@ export class ToolTabs {
   readonly root: HTMLElement;
   readonly #tabs: HTMLButtonElement[];
   readonly #panels: HTMLElement[];
+  /** The tablist; its computed `direction` flips the arrow keys, so a `dir` on any ancestor counts, not only `<html>`. */
+  readonly #list: HTMLElement;
   #active = 0;
 
   constructor(tabs: readonly ToolTab[]) {
     this.root = document.createElement('div');
     this.root.className = 'tool-tabs';
     const list = document.createElement('div');
+    this.#list = list;
     list.className = 'tool-tablist';
     list.role = 'tablist';
     this.root.appendChild(list);
@@ -70,7 +73,7 @@ export class ToolTabs {
     if (key === 'End') return count - 1;
     const step = ARROW_STEPS[key];
     if (step === undefined) return null;
-    const direction = document.dir === 'rtl' ? -step : step;
+    const direction = getComputedStyle(this.#list).direction === 'rtl' ? -step : step;
     return (this.#active + direction + count) % count;
   }
 }

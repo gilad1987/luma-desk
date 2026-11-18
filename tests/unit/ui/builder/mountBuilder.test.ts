@@ -82,4 +82,13 @@ describe('mountBuilder', () => {
       'unmount',
     ]);
   });
+
+  it('gives the top view the app frame clock and a report sink that toasts through the bus', () => {
+    h.view?.report('refused');
+    expect([h.view?.nextFrame, h.view?.cancelFrame, h.emit.mock.calls]).toEqual([
+      h.deps.frames.nextFrame,
+      h.deps.frames.cancelFrame,
+      [['message', { kind: 'toast', text: 'refused' }]],
+    ]);
+  });
 });

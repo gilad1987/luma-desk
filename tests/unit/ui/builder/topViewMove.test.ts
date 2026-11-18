@@ -3,21 +3,23 @@
  * op that moves the selection. The pointer gesture that calls them is in `topView.test.ts`.
  */
 import { describe, expect, it } from 'vitest';
+import { roundToMillimetre } from '../../../../src/domain/stage/edit/millimetres';
 import { createTemplate } from '../../../../src/domain/stage/templates';
-import { FINE_SNAP_M, moveSelection, SNAP_M, snappedDelta } from '../../../../src/ui/builder/topViewMove';
+import { FINE_SNAP_M, moveSelection, SNAP_M, snappedTarget } from '../../../../src/ui/builder/topViewMove';
 
 const theatre = createTemplate('theatre');
 const positionOf = (d: typeof theatre, id: number): unknown => d.fixtures.find((f) => f.id === id)?.position;
 
-describe('snappedDelta', () => {
+describe('snappedTarget', () => {
   it('lands an off-grid item on the nearest 0.5 m grid point, not on a 0.5 m step from where it was', () => {
-    // 0.25 + 1.2 = 1.45 snaps to 1.5; -1.25 + 0.1 = -1.15 snaps to -1 (a snapped delta would be 1 and 0)
-    expect(snappedDelta([0.25, -1.25], [1.2, 0.1], SNAP_M)).toEqual([1.25, 0, 0.25]);
+    // 0.25 + 1.2 = 1.45 snaps to 1.5; -1.25 + 0.1 = -1.15 snaps to -1 (a snapped delta would land on 1.25 and -1.25)
+    expect(snappedTarget([0.25, -1.25], [1.2, 0.1], SNAP_M)).toEqual([1.5, -1]);
   });
 
-  it('snaps to 0.1 m with Alt, without float noise', () => {
-    const [dx, , dz] = snappedDelta([0, 0], [0.26, 0.34], FINE_SNAP_M);
-    expect([dx, dz]).toEqual([0.3, 0.3]);
+  it('snaps to exact 0.1 m grid values with Alt, without float noise', () => {
+    // 0.1 + 0.17 = 0.27 lands on the literal 0.3, not on 0.1 + 0.2 = 0.30000000000000004
+    const target = snappedTarget([0.1, 2.4], [0.17, 0.33], FINE_SNAP_M);
+    expect([Object.is(target[0], 0.3), Object.is(target[1], 2.7)]).toEqual([true, true]);
   });
 });
 
@@ -32,7 +34,16 @@ describe('moveSelection', () => {
     if (!before) throw new Error('the fixture exists');
     expect([positionOf(next, firstOnFront), positionOf(next, loose.id)]).toEqual([
       [before[0] + 1, before[1], before[2] - 0.5],
-      [loose.position[0] + 1, loose.position[1], loose.position[2] - 0.5],
+      roundToMillimetre([loose.position[0] + 1, loose.position[1], loose.position[2] - 0.5]),
     ]);
+  });
+
+  it('moves the pixel line of a loose fixture with it (Sultan’s Pool 1201)', () => {
+    const pool = createTemplate('sultans-pool');
+    const pixelOf = (d: typeof pool): unknown => d.fixtures.find((f) => f.id === 1201)?.pixel?.p;
+    const before = pool.fixtures.find((f) => f.id === 1201)?.pixel?.p;
+    if (!before) throw new Error('fixture 1201 has a pixel line');
+    const next = moveSelection({ fixtures: [1201], trusses: [] }, [2, 0, 0])(pool);
+    expect(pixelOf(next)).toEqual(roundToMillimetre([before[0] + 2, before[1], before[2]]));
   });
 });

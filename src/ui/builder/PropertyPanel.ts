@@ -3,7 +3,8 @@ import type { StageTruss } from '../../domain/stage/trussTypes';
 import { he } from '../../i18n/he';
 import type { EditorSession } from './EditorSession';
 import { fixtureProps } from './fixtureProps';
-import { clearChildren, makeHeading } from './formControls';
+import { makeHeading } from './formControls';
+import { renderKeepingFocus } from './keepFocus';
 import { trussProps } from './trussProps';
 
 /**
@@ -22,11 +23,10 @@ export class PropertyPanel {
 
   /** Rebuilds the panel from the current draft and selection. */
   render(): void {
-    clearChildren(this.root);
     const { draft, selection } = this.#session;
     const fixture = draft.fixtures.find((f) => f.id === selection.fixtures[0]);
     const truss = draft.trusses.find((t) => t.id === selection.trusses[0]);
-    for (const part of [makeHeading('Properties'), ...this.#fieldsOf(fixture, truss)]) this.root.appendChild(part);
+    renderKeepingFocus(this.root, [makeHeading('Properties'), ...this.#fieldsOf(fixture, truss)]);
   }
 
   #fieldsOf(fixture: StageFixture | undefined, truss: StageTruss | undefined): HTMLElement[] {

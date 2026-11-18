@@ -3,6 +3,7 @@ import { SCENERY_PARTS, type SceneryPart, type Vec3, type VenueKind } from '../t
 import { sceneryFor } from '../venueScenery';
 import { newUniqueId } from './ids';
 import { checkFinite, checkSizes } from './inputChecks';
+import { roundToMillimetre } from './millimetres';
 import { isSameLength } from '../sameData';
 
 /** Deck size in metres: `width` along x, `depth` along z, `height` of the top above the ground. */
@@ -35,6 +36,21 @@ export function addRiser(d: StageDesign, at: Vec3, size: Vec3): StageDesign {
   checkFinite('addRiser', 'at', at);
   checkSizes('addRiser', size);
   return { ...d, risers: [...d.risers, { id: newUniqueId(d.risers, 'riser'), at, size }] };
+}
+
+/**
+ * Moves the riser `riserId` by `delta` metres. Its new top centre is stored rounded to 1 mm (`roundToMillimetre`),
+ * so a typed X or Z is stored as typed. A zero delta returns `d` itself, so History adds no undo step.
+ * @throws RangeError when the riser is missing, so a stale selection shows up instead of doing nothing, or when
+ * `delta` is not finite.
+ */
+export function moveRiser(d: StageDesign, riserId: string, delta: Vec3): StageDesign {
+  const riser = d.risers.find((r) => r.id === riserId);
+  if (!riser) throw new RangeError(`moveRiser: no riser with id ${riserId}`);
+  checkFinite('moveRiser', 'delta', delta);
+  if (delta.every((v) => v === 0)) return d;
+  const at = roundToMillimetre([riser.at[0] + delta[0], riser.at[1] + delta[1], riser.at[2] + delta[2]]);
+  return { ...d, risers: d.risers.map((r) => (r.id === riserId ? { ...r, at } : r)) };
 }
 
 /** Removes the riser `riserId`; an unknown id returns `d` itself, so History adds no undo step. */
