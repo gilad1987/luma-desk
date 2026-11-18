@@ -146,10 +146,14 @@ The rig is not edited directly: it is derived from a stage design ([ADR 0005](ad
   kinds are `sultans-pool`, `black-box` and `open-field`; only a new kind rebuilds the venue. Each build makes one
   `SurfaceHit.setSurfaces(surfacesOf(design))` call; `setVenue` sets the ground (terraces or a flat floor) at boot
   and on a venue switch. A rebuild calls `CameraViews.fitTo(boundsOf(design))`, then `setView(currentView)`.
-- **Builder UI** (`src/ui/builder`). The **Build Stage** button (`#buildBtn`) opens `BuilderMode`, which hides the
-  console and makes `#side`, `#enc` and `#desk` inert. Edits apply as a delayed `preview`; Done applies the draft as
-  `builder`, Cancel applies the start design back. `builderKeys.ts` maps Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Ctrl/Cmd+Y,
-  Ctrl/Cmd+D and Delete/Backspace.
+- **Builder UI** (`src/ui/builder`). The **Build Stage** button (`#buildBtn`) loads the Web Awesome chunk
+  (`src/app/ui/loadBuilderShell.ts`, ADR 0006) and opens `BuilderMode`, which hides the console, makes `#side`,
+  `#enc` and `#desk` inert and moves `section#viewer` into the builder's 3D pane (`src/app/ui/viewerHost.ts`). The
+  shell (`shell/`) is a bar on `wa-button`s, a library column, a `wa-split-panel` with the 3D preview over the 2D
+  plan (`plan/`, the editing surface), and an inspector column that becomes a `wa-drawer` below 1100 px. Only
+  `wa/` imports Web Awesome (linted); icons are the builder's own inline SVGs. Edits apply as a delayed `preview`;
+  Done applies the draft as `builder`, Cancel applies the start design back. `builderKeys.ts` maps Ctrl/Cmd+Z,
+  Ctrl/Cmd+Shift+Z, Ctrl/Cmd+Y, Ctrl/Cmd+D and Delete/Backspace.
 - **Show format** (`src/show/stageField.ts`). A v:1 show has an optional `stage` key, written only for a custom
   design, so the default show stays byte-equal to older ones. The auto-saved show stays under `lumadesk-show-v6`.
 
