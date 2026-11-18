@@ -2,8 +2,7 @@ import { clamp } from '../../core';
 import type { Rig } from '../../domain/rig';
 import type { Cue, FixtureValues } from '../../engine/CueList';
 import { buildCueVals, type CueValueSource } from '../../engine/cueValues';
-import type { PresetFn } from '../../engine/positionPresets';
-import { PRESET_FNS, type PresetFnName } from '../../engine/presetFunctions';
+import { PRESET_FNS, type PresetFns } from '../../engine/presetFunctions';
 import type { PhaserInstance } from '../../engine/shared';
 import type { AutoGroups } from '../autoGroups';
 import type { LookOptions } from '../AutoSettings';
@@ -18,7 +17,7 @@ export interface LookSource {
   readonly groups: AutoGroups;
   readonly random: () => number;
   /** The presets aimed at the stage (`presetFnsOf`); missing means the built-in `PRESET_FNS`. */
-  readonly fns?: Readonly<Record<PresetFnName, PresetFn>>;
+  readonly fns?: PresetFns;
 }
 
 /**
@@ -40,7 +39,7 @@ export class LookDraft {
   readonly c1: NamedColor;
   readonly c2: NamedColor;
   /** The position presets every build step aims with, so a look follows the stage it is built for. */
-  readonly fns: Readonly<Record<PresetFnName, PresetFn>>;
+  readonly fns: PresetFns;
   private readonly source: LookSource;
   private readonly energy: number;
 

@@ -16,8 +16,9 @@ import type { StageServiceOptions } from './StageServiceOptions';
  *
  * Emits `rigChanged`, `showChanged` (for kept edits) and a `message` toast (above the soft limit); listens to nothing.
  * Gets the `EngineBus` and `StageServiceOptions` (built-in stage, saved stage, toast text) from main.ts. The bus is
- * synchronous and calls listeners in subscribe order, which is their construction order in main.ts (plan §3.2):
- * Selection, GroupLibrary, PresetLibrary, MissingFixtureNotice, AutoShow, the render StageScene, then the UI.
+ * synchronous and calls listeners in subscribe order, which is their construction order in main.ts (plan §3.2). The
+ * engine subscribers are Selection, StageGroups, then MissingFixtureNotice; PresetLibrary and LookGenerator read the
+ * stage when called. The render StageScene and the UI subscribe after them.
  */
 export class StageService implements RigSource {
   readonly #announcer: RigAnnouncer;

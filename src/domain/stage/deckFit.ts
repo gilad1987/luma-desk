@@ -50,3 +50,13 @@ export function onDeck(fit: DeckFit, x: number, z: number): readonly [x: number,
   if (isIdentityFit(fit)) return [x, z];
   return [x * fit.scaleX + fit.offsetX, z * fit.scaleZ + fit.offsetZ];
 }
+
+/**
+ * The inverse of `onDeck`: the point of the built-in deck that `fit` moves to (`x`, `z`). A preset that aims relative
+ * to where a fixture hangs reads the fixture's place in built-in deck metres with it, so the fixture is fitted once,
+ * not twice. The identity shortcut only saves work: `(x - 0) / 1` already returns x, the sign of zero included.
+ */
+export function fromDeck(fit: DeckFit, x: number, z: number): readonly [x: number, z: number] {
+  if (isIdentityFit(fit)) return [x, z];
+  return [(x - fit.offsetX) / fit.scaleX, (z - fit.offsetZ) / fit.scaleZ];
+}
