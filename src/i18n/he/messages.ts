@@ -10,4 +10,8 @@ export const messages = {
   show: {
     downloaded: 'קובץ המופע ירד',
   },
+  stage: {
+    /** The `StageService` toast for a rig above its soft fixture limit. */
+    tooManyFixtures: (count: number): string => `בבמה ${count} גופים. מספר גדול כזה עלול להאט את התצוגה`,
+  },
 } as const;

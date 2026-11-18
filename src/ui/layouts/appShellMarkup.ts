@@ -18,7 +18,8 @@ export interface ShellSlots {
 
 /**
  * The page body below the root element: the `#app` grid with the layout containers and both consoles, then the
- * overlays (guide, tour, modal, toast). It must be in the DOM before any panel looks up its ids.
+ * overlays (guide, tour, the hidden MVR missing-file prompt, modal, toast). It must be in the DOM before any panel
+ * looks up its ids.
  */
 export const appShellMarkup = (s: ShellSlots): string => `<div id="app">
 <main id="main">
@@ -30,5 +31,6 @@ ${MA_CONSOLE_MARKUP}
 <footer id="desk">${s.desk}</footer>
 </div>
 ${guideMarkup()}
+<div id="mvrMissingPrompt" class="mvrMissing" role="alert" hidden></div>
 <div id="modal"><div class="mbox" id="mbox"></div></div>
 <div id="toast"></div>`;

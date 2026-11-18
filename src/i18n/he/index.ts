@@ -1,6 +1,7 @@
 import { autoStyleTaglines } from './autoStyleTaglines';
 import { guide } from './guide';
 import { messages } from './messages';
+import { mvr } from './mvr';
 import { panels } from './panels';
 import { topBar } from './topBar';
 import { tour } from './tour';
@@ -17,4 +18,5 @@ export const he = {
   panels,
   topBar,
   messages,
+  mvr,
 } as const;

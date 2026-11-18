@@ -1,13 +1,14 @@
 import { defaultGroups } from '../../../engine/defaultGroups';
 import { he } from '../../../i18n/he';
 import { byId } from '../../dom';
+import { wireMvrButtons } from '../mvr/wireMvrButtons';
 import type { ShowFileDeps } from './ShowFileDeps';
 import { showFileMarkup } from './showFileMarkup';
 import { wireShowImport } from './wireShowImport';
 
 /**
- * The Show File dialog behind `#fileBtn`: download, copy, demo, new and import. Its markup is rebuilt on every open,
- * so the buttons are wired on every open too.
+ * The Show File dialog behind `#fileBtn`: download, copy, demo, new, import and the MVR row. Its markup is rebuilt on
+ * every open, so the buttons are wired on every open too.
  */
 export class ShowFileDialog {
   readonly #deps: ShowFileDeps;
@@ -41,6 +42,7 @@ export class ShowFileDialog {
       toast('New show');
     };
     wireShowImport(this.#deps);
+    wireMvrButtons(this.#deps.mvr);
   }
 
   /** Copies the compact show JSON; where the clipboard is refused, puts it in the import box, selected. */
