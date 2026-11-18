@@ -1,5 +1,6 @@
 import type { Rig } from '../../domain/rig/Rig';
 import { rigFromDesign } from '../../domain/stage/deriveRig';
+import { isSameData } from '../../domain/stage/sameData';
 import type { StageDesign } from '../../domain/stage/StageDesign';
 import { frameOf, type StageFrame } from '../../domain/stage/StageFrame';
 import type { EngineBus } from '../events';
@@ -20,6 +21,7 @@ import type { StageServiceOptions } from './StageServiceOptions';
  */
 export class StageService implements RigSource {
   readonly #announcer: RigAnnouncer;
+  readonly #bus: EngineBus;
   readonly #options: StageServiceOptions;
   #design: StageDesign;
   #rig: Rig;
@@ -29,6 +31,7 @@ export class StageService implements RigSource {
   /** Derives the first rig without an event, so nothing is built twice at boot. */
   constructor(bus: EngineBus, options: StageServiceOptions) {
     this.#announcer = new RigAnnouncer(bus, options.tooManyFixtures);
+    this.#bus = bus;
     this.#options = options;
     this.#design = options.initial ?? options.builtIn;
     this.#rig = rigFromDesign(this.#design);
@@ -76,6 +79,22 @@ export class StageService implements RigSource {
     this.#announcer.announce(design, cause, rig.fixtures.length);
   }
 
-  // G8 slot: MVR adds `updateMeta(patch)` (no rig rebuild). Stage Builder does NOT define it.
-  // An emitting updateMeta must use the same RigAnnouncer guard: `checkIdle` before any state change, as `apply` does.
+  /**
+   * Replaces the design with one that differs only in data that is not the rig, today the MVR `hiddenLayers`, and
+   * emits `showChanged` to save it (G8). No rig rebuild and no `rigChanged`: a layer toggle must not reset groups,
+   * presets and scene.
+   * @throws Error on re-entry during an emit, or when `design` changes rig data (that needs `apply`).
+   */
+  updateMeta(design: StageDesign): void {
+    this.#announcer.checkIdle('builder');
+    const sameRig = isSameData(rigData(design), rigData(this.#design));
+    if (!sameRig) throw new Error('StageService.updateMeta: the design changes rig data; use apply');
+    this.#design = design;
+    this.#bus.emit('showChanged', undefined);
+  }
+}
+
+/** The design with the data `updateMeta` may change taken out, so the rest can be compared. */
+function rigData(design: StageDesign): StageDesign {
+  return design.mvr ? { ...design, mvr: { ...design.mvr, hiddenLayers: [] } } : design;
 }
