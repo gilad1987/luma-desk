@@ -4,7 +4,7 @@ import type { AppState } from '../../../engine/AppState';
 import type { FohRig } from '../../camera/FohRig';
 import type { SharedUniform } from '../BeamMaterial';
 import type { ModelKit } from '../models/ModelContext';
-import { buildHazers, type HazePuff } from './hazers';
+import { buildHazers, type Hazers } from './hazers';
 import { buildRoboSpotStation } from './roboSpotStation';
 
 /** What the props build into and read each frame. */
@@ -23,24 +23,34 @@ export interface PropsDeps {
  * fixtures because they are cut from the same model primitives and aluminium material.
  */
 export class Props {
-  readonly #puffs: readonly HazePuff[];
+  readonly #hazers: Hazers;
   readonly #state: Pick<AppState, 'haze'>;
   readonly #beamHaze: SharedUniform;
+  #hazersShown = true;
 
   /** Builds the hazers, then the RoboSpot station (legacy order, decision 24). */
   constructor(deps: PropsDeps) {
-    this.#puffs = buildHazers(deps.scene, deps.kit);
+    this.#hazers = buildHazers(deps.scene, deps.kit);
     buildRoboSpotStation(deps.scene, deps.kit, deps.fohRig);
     this.#state = deps.state;
     this.#beamHaze = deps.beamHaze;
+  }
+
+  /**
+   * Shows or hides the hazer cases and their puffs. They stand on the built-in deck, so a stage that brings its own
+   * rig (an MVR import) hides them; the Haze master still reaches the beams, as haze is the room's air, not a prop.
+   */
+  setHazersShown(isShown: boolean): void {
+    this.#hazersShown = isShown;
+    for (const hazer of this.#hazers.cases) hazer.visible = isShown;
   }
 
   /** Pushes the Haze master to the beams; each puff rises, grows and fades on a 6.25 s cycle scaled by the haze. */
   update(now: number): void {
     this.#beamHaze.value = this.#state.haze;
     const h = this.#beamHaze.value;
-    for (const p of this.#puffs) {
-      p.sp.visible = h > 0.01;
+    for (const p of this.#hazers.puffs) {
+      p.sp.visible = this.#hazersShown && h > 0.01;
       if (!p.sp.visible) continue;
       const k = (now * 0.16 + p.ph) % 1,
         sc = (0.5 + k * 2.4) * (0.6 + h * 0.6);
