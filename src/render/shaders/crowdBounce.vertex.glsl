@@ -1,0 +1,1 @@
+transformed.y += abs(sin(uBeat + aPh)) * aAmp * uJump;

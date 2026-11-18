@@ -1,0 +1,8 @@
+# Runs lint-staged.config.ts on the staged files. core.hooksPath is shared by every worktree of this repository, so a
+# worktree without node_modules skips with a note instead of failing (or letting npx download a package); CI still
+# runs the full `npm run lint`.
+if [ ! -x node_modules/.bin/lint-staged ]; then
+  echo "pre-commit: lint-staged is not installed in this worktree (run npm ci); staged-file checks skipped"
+  exit 0
+fi
+lint-staged --config lint-staged.config.ts

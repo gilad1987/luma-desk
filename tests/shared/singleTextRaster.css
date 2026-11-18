@@ -1,0 +1,8 @@
+/*
+ * Loaded by toHaveScreenshot (stylePath in playwright.config.ts) only while a screenshot is taken. macOS Chromium
+ * draws text thicker or thinner depending on how it composites a layer, and that choice changed between runs.
+ * Grayscale smoothing on every element gives one rasterization.
+ */
+* {
+  -webkit-font-smoothing: antialiased !important;
+}

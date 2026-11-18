@@ -1,0 +1,18 @@
+// Declaration blocks that more than one panel repeats word for word. Each mixin keeps the declaration order of the
+// original rules, so the compiled CSS is unchanged.
+
+// The small grey capitals of a caption: the cue HUD's first line and the GO button's sub-label.
+@mixin caption-caps {
+  font-size: 10px;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+// A slot that fills the free space of a flex row and lets its content shrink below its natural size.
+@mixin flex-fill {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}

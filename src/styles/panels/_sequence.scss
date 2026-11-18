@@ -1,0 +1,94 @@
+/* sequence */
+#seqHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+#seqHead select {
+  background: var(--p3);
+  color: var(--txt);
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  padding: 4px;
+}
+#seqHead .sp {
+  flex: 1;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+#seqTable th,
+#sheet th {
+  position: sticky;
+  top: -8px;
+  background: var(--p2);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mut);
+  text-align: left;
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--line);
+  z-index: 1;
+}
+#seqTable td {
+  padding: 6px;
+  border-bottom: 1px solid #1d1d21;
+  font-size: 12px;
+  cursor: pointer;
+}
+#seqTable tr:hover td {
+  background: #1a1a1e;
+}
+#seqTable tr.cur td {
+  background: #0f2a18;
+  color: #8ff0b0;
+}
+#seqTable tr.cur td:first-child {
+  box-shadow: inset 3px 0 0 var(--go);
+}
+#seqTable tr.nxt td:first-child {
+  box-shadow: inset 3px 0 0 #8a6d00;
+}
+#seqTable td.num {
+  font-family: var(--mono);
+  width: 48px;
+  color: var(--acc);
+}
+#seqTable td.fade {
+  font-family: var(--mono);
+  width: 60px;
+}
+#seqTable td.info {
+  color: var(--mut);
+  font-size: 10px;
+  width: 90px;
+}
+.seqHelp {
+  color: var(--mut);
+  font-size: 10.5px;
+  margin-top: 10px;
+  line-height: 1.5;
+}
+#sheet td {
+  padding: 3px 6px;
+  border-bottom: 1px solid #1b1b1f;
+  font: 11px var(--mono);
+  white-space: nowrap;
+}
+#sheet tr.sel td {
+  background: #2a2205;
+  color: var(--acc);
+}
+#sheet td.p {
+  color: var(--prog);
+}
+#sheet .cs {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  vertical-align: middle;
+}

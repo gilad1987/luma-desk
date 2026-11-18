@@ -1,0 +1,11 @@
+// Window widths at which the top bar drops its least useful parts so its buttons stay on one row. Media queries cannot
+// read custom properties, so these are compile-time values.
+$top-bar-wide: 2100px;
+$top-bar-narrow: 1700px;
+
+// Rules for windows at most `$width` wide.
+@mixin below($width) {
+  @media (max-width: $width) {
+    @content;
+  }
+}
