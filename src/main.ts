@@ -73,8 +73,9 @@ const layout = wireLayout({
   layoutPrefs: files.layoutPrefs,
   builderOpen: () => builder.isOpen,
 });
-layout.restore();
+// before restore: the restore refits the console, and the refit asks whether the builder is open
 const builder = wireBuilder({ ...engine, ...render, fitLayout: () => layout.fit() });
+layout.restore();
 
 const fps = new FpsClock();
 const ui = new UiTickScheduler();
