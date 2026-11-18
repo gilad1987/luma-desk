@@ -1,3 +1,4 @@
+import { TYPES } from '../../domain/fixtureTypes';
 import type { MvrArchive } from '../archive/MvrArchive';
 import { findGdtfMatch, type GdtfMatch } from '../gdtf/findGdtf';
 import type { GdtfInfo } from '../gdtf/GdtfInfo';
@@ -19,7 +20,7 @@ export interface GdtfTable {
 /** One warning per missing spec, not per fixture, so a show with 30 such fixtures does not flood the summary. */
 function missingWarning(spec: string, count: number): MvrWarning {
   const what = spec === '' ? 'name no GDTF file' : `use the GDTF "${spec}", which is not in the file`;
-  const message = `${count} fixture(s) ${what}; they are shown as ${fallbackType(spec)}.`;
+  const message = `${count} fixture(s) ${what}; they are shown as the desk type "${TYPES[fallbackType(spec)].name}".`;
   return { code: 'missing-gdtf', message, ref: spec };
 }
 

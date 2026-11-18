@@ -26,7 +26,7 @@ describe('import warnings', () => {
       fixture('C', 'Ghost@Wash', ''),
     ]);
     const { design, summary, warnings } = await importMvr(bytes, { name: 'x' });
-    expect(design.fixtures.map((f) => f.type)).toEqual(['beam', 'beam', 'par']);
+    expect(design.fixtures.map((f) => f.type)).toEqual(['beam', 'beam', 'wash']);
     expect(summary.missingGdtfCount).toBe(1);
     expect(warnings.filter((w) => w.code === 'missing-gdtf').map((w) => w.ref)).toEqual(['Ghost@Wash']);
   });
