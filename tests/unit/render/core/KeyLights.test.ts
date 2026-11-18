@@ -66,7 +66,9 @@ describe('KeyLights', () => {
     const keys = new KeyLights(scene);
     const frame = new LightFrame();
     frame.addKeyCandidate(candidate(3));
+    expect(keys.enabled).toBe(true);
     keys.setEnabled(false);
+    expect(keys.enabled).toBe(false);
     keys.update(frame);
     expect(spots(scene).every((light) => light.intensity === 0)).toBe(true);
   });
