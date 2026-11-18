@@ -2,7 +2,7 @@ import { clamp } from '../core';
 
 /** Taps older than this (ms) no longer count, so a pause starts a fresh tempo. */
 const TAP_WINDOW_MS = 2500;
-const MIN_BPM = 40;
+const MIN_BPM = 40; // quirk E8 (orig:2249): slow taps reach this floor
 const MAX_BPM = 220;
 
 /**
@@ -39,7 +39,7 @@ export class Tempo {
    * in the window, the tempo becomes the mean tap interval, rounded and kept within 40..220 BPM.
    */
   tap(nowMs: number): void {
-    this.#taps = this.#taps.filter((x) => nowMs - x < TAP_WINDOW_MS);
+    this.#taps = this.#taps.filter((x) => nowMs - x < TAP_WINDOW_MS); // quirk Q16 (orig:2249)
     this.#taps.push(nowMs);
     this.#beatOrigin = nowMs / 1000;
     const first = this.#taps[0];

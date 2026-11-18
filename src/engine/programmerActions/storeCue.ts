@@ -53,7 +53,7 @@ export function storeCue(
     return;
   }
   const e = pool.execs[exec];
-  if (!e) throw new RangeError(`No executor at index ${exec}`);
+  if (!e) throw new RangeError(`No executor at index ${exec}`); // quirk J2 (orig:1847)
   const n = num ?? nextCueNumber(e.cues);
   const cue = targetCue(e.cues, n, opts);
   for (const [id, v] of Object.entries(p.vals)) cue.vals[id] = Object.assign(cue.vals[id] ?? {}, jsonClone(v));
@@ -62,7 +62,7 @@ export function storeCue(
     cue.fx = compactFx(cue.fx);
     cue.fx.push(jsonClone(inst));
   }
-  // a new cue already has this fade; the repeat sets it on an existing cue (both kept, as in the original)
+  // quirk B6 (orig:1859): a new cue already has this fade; the repeat sets it on an existing cue
   if (opts.fade != null) cue.fade = opts.fade;
   if (!e.name) e.name = `Seq ${exec + 1}`;
   e.invalidate();

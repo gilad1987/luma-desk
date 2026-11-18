@@ -60,7 +60,8 @@ export class CameraViews {
 
   /**
    * Moves to a named view, at once or with a 700 ms tween. Only the animated path reports the change, as in the
-   * legacy code where the instant path returned before the button update. It stops a running tween first.
+   * legacy code where the instant path returned before the button update. It stops a running tween first
+   * (quirk F9, orig:888).
    */
   setView(view: ViewName, isInstant = false): void {
     this.stopTween();

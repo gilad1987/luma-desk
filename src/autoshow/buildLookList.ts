@@ -10,7 +10,8 @@ const LIST_LENGTH = 8;
 
 /**
  * Eight generated looks that walk the style's section cycle from the start, numbered 1-8 and named by section, for
- * "build cue list". They carry no `sec` label (quirk E7). Looks are generated in order, so the random draws are too.
+ * "build cue list". They carry no `sec` label (quirk E7, orig:2721). Looks are generated in order, so the random
+ * draws are too.
  */
 export function buildLookList(looks: LookGenerator, style: AutoStyle, options: LookOptions): Cue[] {
   const cues: Cue[] = [];

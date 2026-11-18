@@ -5,7 +5,7 @@ import { sectionName } from './sections';
 
 /**
  * A copy of the playing auto look as a normal cue numbered `num`, for "save look". It is named by the style's first
- * word and the look's section, and loses the `sec` label so show files never contain it (quirk E7).
+ * word and the look's section, and loses the `sec` label so show files never contain it (quirk E7, orig:2715).
  */
 export function savedLookCue(look: Cue, num: number, style: AutoStyle): Cue {
   const cue = jsonClone(look);

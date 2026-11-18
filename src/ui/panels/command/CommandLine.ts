@@ -33,7 +33,7 @@ export class CommandLine implements CommandInput, UiPanel {
     const feedback = byId('cmdFb');
     deps.bus.on('message', (m: EngineMessage) => {
       if (m.kind !== 'log') return;
-      // names in the text are not escaped (quirk Q11)
+      // names in the text are not escaped (quirk Q11, quirk C6, orig:1888)
       feedback.appendChild(createElement('div', '', `<span class="${m.level}">${m.text}</span>`));
       while (feedback.children.length > FEEDBACK_LINES) feedback.firstChild?.remove();
     });
@@ -58,7 +58,7 @@ export class CommandLine implements CommandInput, UiPanel {
     this.#deps.runCommand(command);
   }
 
-  /** Lights HIGHLT and FAN from the engine flags on the 50 ms tick (their clicks do not, quirk Q10). */
+  /** Lights HIGHLT and FAN from the engine flags on the 50 ms tick (their clicks do not, quirk Q10, orig:2539). */
   fast(): void {
     this.#highlightKey.classList.toggle('on', this.#deps.state.highlight);
     this.#fanKey.classList.toggle('on', this.#deps.state.fanMode);
@@ -69,7 +69,7 @@ export class CommandLine implements CommandInput, UiPanel {
     if (ev.key === 'Enter') {
       const v = input.value;
       if (v.trim()) this.#history.push(v, true);
-      // a bare `store` arms store mode and keeps the Enter default (quirk Q15)
+      // a bare `store` arms store mode and keeps the Enter default (quirk Q15, orig:2260)
       if (this.#deps.store.takeStoreCommand(v)) {
         input.value = '';
         return;

@@ -14,7 +14,7 @@ import { formatEncoderValue } from './formatEncoderValue';
 /**
  * The encoder section: feature tabs, the encoder row and the feature's extras. The row is rebuilt on a tab click and
  * by the layout (`render`, because MA pads the row); the readouts repaint on the 50 ms tick. The extras are not
- * rebuilt on selection changes (quirk Q9).
+ * rebuilt on selection changes (quirk Q9, orig:2105).
  */
 export class EncodersPanel implements UiPanel {
   #feat: FeatureTab = 'dim';
@@ -66,7 +66,7 @@ export class EncodersPanel implements UiPanel {
     this.#actions.delta(attr, d);
   }
 
-  /** FAN changed from the FAN key: the Position extras relabel their Fan button (quirk Q9). */
+  /** FAN changed from the FAN key: the Position extras relabel their Fan button (quirk Q9, orig:2238). */
   fanToggled(): void {
     if (this.#feat === 'pos') this.#extra.render(this.#feat);
   }

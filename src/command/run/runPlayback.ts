@@ -11,7 +11,7 @@ export function runSelectExec({ exec }: StatementOf<'selectExec'>, { pool, state
   log(bus, `Exec ${state.selExec + 1} selected`, 'ok');
 }
 
-/** Go or Go Back on the given executor, or on the selected one; an unknown number fails as quirk C2 describes. */
+/** Go or Go Back on the given executor, or on the selected one; an unknown number fails (quirk C2, orig:1921). */
 export function runGo({ direction, exec }: StatementOf<'go'>, { pool, state }: CommandDeps): void {
   pool.go(executorAt(pool, exec ?? state.selExec, 'reading', 'cues'), direction);
 }
@@ -34,7 +34,7 @@ export function runPause(_: StatementOf<'pause'>, { pool, state }: CommandDeps):
 export function runOff({ exec }: StatementOf<'off'>, { pool, state, bus }: CommandDeps): void {
   const index = exec ?? state.selExec;
   const executor = executorAt(pool, index, 'setting', 'on');
-  executor.on = false;
+  executor.on = false; // quirk C8 (orig:1925)
   executor.off();
   log(bus, `Exec ${index + 1} Off`, 'ok');
 }

@@ -43,7 +43,7 @@ export class CueHud {
         barsDone = ((clock.nowSeconds() - tempo.beatOrigin) * tempo.bpm) / (60 * BEATS_PER_BAR);
       this.#write(autoHudText(autoShow, tempo.bpm, bars));
       this.#bar.style.width = ((((barsDone % bars) + bars) % bars) / bars) * 100 + '%';
-      return;
+      return; // quirk Q23 (orig:2184): PAUSE keeps its last state while Auto runs
     }
     this.#bar.style.width = fadeBarWidth(e, clock);
   }

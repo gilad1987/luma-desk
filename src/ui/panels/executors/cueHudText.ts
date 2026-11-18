@@ -2,7 +2,7 @@ import { SECTION_NAMES } from '../../../autoshow/sections';
 import type { Executor } from '../../../engine/Executor';
 import type { HudAutoShow } from './ExecutorsDeps';
 
-/** The HUD's three lines; `cueHtml` is HTML because names are not escaped (quirk Q11). */
+/** The HUD's three lines; `cueHtml` is HTML because names are not escaped (quirk Q11, orig:2182). */
 export interface CueHudText {
   readonly exec: string;
   readonly cueHtml: string;
@@ -16,7 +16,10 @@ function cueLineHtml(e: Executor): string {
   return e.cues.length ? 'Off — press GO' : 'No cues';
 }
 
-/** The HUD for the selected executor `e` (0-based `i`); the next line has two spaces before the fade (quirk Q31). */
+/**
+ * The HUD for the selected executor `e` (0-based `i`); the next line has two spaces before the fade (quirk Q31,
+ * orig:2183).
+ */
 export function executorHudText(e: Executor, i: number): CueHudText {
   const nx = e.cues.length > 1 ? e.cues[(e.cur + 1) % e.cues.length] : null;
   return {

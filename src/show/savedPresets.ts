@@ -1,6 +1,7 @@
 import type { Preset, PresetPools } from '../engine/presetTypes';
 import type { SavedPreset } from './ShowFile';
 
+// quirk D4 (orig:2297): built-in `fn` presets are left out, built-in `global` presets are saved
 const isSaved = (entry: [string, Preset]): entry is [string, SavedPreset] => entry[1].kind !== 'fn';
 
 /** The preset pools without computed presets, every pool key kept even when it ends up empty (format v1). */

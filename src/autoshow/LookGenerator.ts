@@ -16,9 +16,9 @@ import type { Section } from './sections';
 /**
  * Generates auto-show looks for a rig. The random source is injected so tests can seed it; it defaults to
  * `Math.random` (not a private generator) because the test build seeds `Math.random` itself and the golden looks
- * depend on that (quirk E4). The build steps run in a fixed order, which is also the order of the random draws.
- * Without a `source` it works on the fixed built-in `rig` and presets, exactly as before the stage builder; with one
- * it follows the current stage and never builds the built-in groups (`rig` is then not read).
+ * depend on that (quirk E4, orig:2555). The build steps run in a fixed order, which is also the order of the random
+ * draws. Without a `source` it works on the fixed built-in `rig` and presets, exactly as before the stage builder;
+ * with one it follows the current stage and never builds the built-in groups (`rig` is then not read).
  */
 export class LookGenerator {
   readonly #random: () => number;
@@ -32,7 +32,9 @@ export class LookGenerator {
     this.#current = source ? this.#stageSource(source) : { rig, groups: buildAutoGroups(rig), random };
   }
 
-  /** A new look for one section of a style, as cue 1 of the auto executor (with its `sec` label, quirk E7). */
+  /**
+   * A new look for one section of a style, as cue 1 of the auto executor (with its `sec` label, quirk E7, orig:2614).
+   */
   generate(style: AutoStyle, section: Section, options: LookOptions): Cue {
     const look = new LookDraft(this.#currentLookSource(), style, section, options);
     addWashes(look);

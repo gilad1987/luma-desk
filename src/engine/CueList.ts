@@ -24,7 +24,10 @@ export interface Cue {
   sec?: string;
 }
 
-/** The number a new cue gets when the operator gives none: the next whole number after the last cue, or 1. */
+/**
+ * The number a new cue gets when the operator gives none: the next whole number after the last cue, or 1. One helper
+ * for the two copies of the original (quirk B7, orig:1850, 2714).
+ */
 export function nextCueNumber(cues: readonly Cue[]): number {
   const last = cues.at(-1);
   return last ? Math.floor(last.num) + 1 : 1;
@@ -47,7 +50,7 @@ export function insertCueSorted(cues: Cue[], cue: Cue): void {
  */
 export function cueAt(cues: readonly Cue[], i: number): Cue {
   const cue = cues[i];
-  if (cue === undefined) throw new RangeError(`No cue at index ${i} (list has ${cues.length})`);
+  if (cue === undefined) throw new RangeError(`No cue at index ${i} (list has ${cues.length})`); // quirk J2 (orig:1628)
   return cue;
 }
 

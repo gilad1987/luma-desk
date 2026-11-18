@@ -36,7 +36,7 @@ export function positionExtra(host: HTMLElement, ctx: ExtraContext): void {
     });
   const fan = (): void => {
     state.fanMode = !state.fanMode;
-    byId('kFan').classList.toggle('on', state.fanMode);
+    byId('kFan').classList.toggle('on', state.fanMode); // quirk G3, quirk Q10 (orig:2101)
     rerender();
   };
   const grid = buttonGrid(2, [

@@ -17,7 +17,7 @@ export function wireCueRows(table: HTMLElement, e: Executor, deps: SequenceDeps)
       c = e.cues[i];
     if (!c) return;
     tr.onclick = (ev) => {
-      // a double-click must not goto again (quirk Q12)
+      // a double-click must not goto again (quirk Q12, orig:2201)
       if (ev.detail > 1) return;
       if (deps.store.intercept(() => deps.programmer.storeCue(deps.state.selExec, c.num, { merge: true }))) return;
       if (!e.on && e.level === 0) e.level = 1;
