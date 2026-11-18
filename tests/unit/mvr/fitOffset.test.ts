@@ -26,12 +26,12 @@ describe('fitOffset', () => {
     expect(fit({ min: [0, 0, -15], max: [1, 1, 15] }).codes).toEqual(['oversize']);
   });
 
-  it('says in plain words how large the file is and how the camera views frame it', () => {
+  it('says in plain words how large the stage is and that it keeps its real size', () => {
     const warnings: MvrWarning[] = [];
     fitOffset({ min: [-30.2, 0, -40.04], max: [30, 1, 40] }, (w) => warnings.push(w));
     expect(warnings.map((w) => w.message)).toEqual([
-      'The file covers 60 m x 80 m, larger than the stage; the camera views frame the main stage, ' +
-        'so objects far from it can be out of view.',
+      "The stage in the file is 60 m x 80 m, larger than the desk's stage (46 m x 22 m). " +
+        "It keeps its real size and is centred on the desk's stage.",
     ]);
   });
 
@@ -46,7 +46,9 @@ describe('surfaces', () => {
     file,
     matrix: mvrMatrix('{1,0,0}{0,1,0}{0,0,1}{3000,0,1000}'),
     layer: 'l',
+    layerName: 'Set',
     kind: 'SceneObject',
+    name: 'Deck',
     uuid: file,
   });
 

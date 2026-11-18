@@ -37,6 +37,11 @@ export class OfflineLoadingManager extends LoadingManager {
     this.#textures.decodeLike(parserLoader);
   }
 
+  /** Whether a load of `url` can succeed: its data is embedded in the URI or its file is in the archive. */
+  holds(url: string): boolean {
+    return isEmbeddedUri(url) || this.#resources.has(url);
+  }
+
   /** Revokes every blob URL this manager made and lets go of the archive bytes and the decoded images. */
   dispose(): void {
     for (const blobUrl of this.#blobUrls.values()) URL.revokeObjectURL(blobUrl);

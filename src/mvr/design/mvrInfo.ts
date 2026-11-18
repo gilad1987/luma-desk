@@ -14,8 +14,8 @@ function focusOf(fixture: ResolvedFixture, scene: MvrScene, offset: Vec3): Vec3 
 }
 
 /**
- * The MVR facts of the design, keyed by the assigned desk ids. No layer starts hidden: the file's own visibility is
- * not read, and the user hides layers in the desk.
+ * The MVR facts of the design, keyed by the assigned desk ids. `hiddenLayers` is empty here: the file's own
+ * visibility is not read, and `toStageDesign` fills in the venue-hall layers it hides at the start.
  */
 export function mvrInfo(
   fixtures: readonly ResolvedFixture[],

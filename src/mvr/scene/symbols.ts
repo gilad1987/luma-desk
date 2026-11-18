@@ -61,7 +61,7 @@ export class SymbolExpander {
       const local = localMatrix(child, this.bad);
       for (const mesh of meshes) {
         if (!this.limit.take()) return false;
-        out.push({ file: mesh.file, matrix: multiply(local, mesh.matrix) });
+        out.push({ ...mesh, matrix: multiply(local, mesh.matrix) });
       }
       return true;
     }
@@ -83,7 +83,8 @@ export class SymbolExpander {
     if (known) return known;
     this.open.add(uuid);
     const list = childElement(symdef, 'ChildList');
-    const meshes = list ? this.meshesOf(list, depth) : [];
+    const name = attr(symdef, 'name') ?? '';
+    const meshes = (list ? this.meshesOf(list, depth) : []).map((mesh) => ({ symdef: name, ...mesh }));
     this.open.delete(uuid);
     this.memo.set(key, meshes);
     return meshes;

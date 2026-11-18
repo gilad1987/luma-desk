@@ -32,6 +32,8 @@ const geometry = (surfaces: readonly SurfaceBox[]): MvrGeometry => ({
   offset: [0, 0, 0],
   bounds: { min: [-15, 0, -20], max: [15, 15, 41] },
   surfaces,
+  layers: [],
+  hallLayers: [],
 });
 
 describe('mvrCameraBounds', () => {

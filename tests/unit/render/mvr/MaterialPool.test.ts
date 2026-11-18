@@ -3,7 +3,7 @@
  * MaterialPool: materials that draw alike become one instance, whichever loader call made them, so merging and
  * instancing can group parts of different files; and dispose frees the maps that `Material.dispose` leaves behind.
  */
-import { MeshPhongMaterial, Texture } from 'three';
+import { MeshPhongMaterial, MeshStandardMaterial, Texture } from 'three';
 import { describe, expect, it } from 'vitest';
 import { MaterialPool } from '../../../../src/render/mvr/MaterialPool.ts';
 
@@ -48,6 +48,19 @@ describe('MaterialPool', () => {
     const repeated = new MeshPhongMaterial({ map: tiled });
     pool.adopt(plain);
     expect(pool.adopt(repeated)).toBe(repeated);
+  });
+
+  it('keeps a material as it is given: the scenery style is applied before the pool', () => {
+    const pool = new MaterialPool();
+    const beige = new MeshStandardMaterial({ color: 0xd8cfb8, roughness: 0.3 });
+    expect(pool.adopt(beige)).toBe(beige);
+    expect([beige.color.getHex(), beige.roughness]).toEqual([0xd8cfb8, 0.3]);
+  });
+
+  it('pools a material by its look, so equal materials share one instance', () => {
+    const pool = new MaterialPool();
+    const first = pool.adopt(new MeshPhongMaterial({ color: 0xc0c0c0 }));
+    expect(pool.adopt(new MeshPhongMaterial({ color: 0xc0c0c0 }))).toBe(first);
   });
 
   it('frees every pooled material and its textures on dispose', () => {

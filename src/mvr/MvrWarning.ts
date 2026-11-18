@@ -22,7 +22,9 @@ export type MvrWarningCode =
   | 'bad-matrix'
   | 'ambiguous-gdtf'
   | 'patch-overlap'
-  | 'missing-screen-driver';
+  | 'missing-screen-driver'
+  | 'hidden-layers'
+  | 'empty-symdef';
 
 /**
  * A problem the importer survived. MVR files from real consoles are often partial (stub GDTFs, unpatched fixtures),

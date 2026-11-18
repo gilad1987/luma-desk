@@ -1,11 +1,8 @@
-import { Group, type Matrix4 } from 'three';
-import type { Vec3 } from '../../domain/stage/types';
+import type { Group } from 'three';
 import type { MeshPlacement, MvrGeometry } from '../../mvr/index';
-import { instancedMeshes } from './instancedMeshes';
+import { layerGroup } from './layerGroup';
 import type { MeshLibrary } from './MeshLibrary';
 import type { MeshPart } from './MeshPart';
-import { mergeStatic, type SinglePlacement } from './mergeStatic';
-import { placementMatrix } from './placementMatrix';
 
 /** Called after each mesh file is parsed, so the UI can show how far a large import has come. */
 export type MvrProgress = (done: number, total: number) => void;
@@ -54,25 +51,6 @@ async function loadParts(
   return parts;
 }
 
-/** One layer's group: shared files as instanced meshes, files placed once merged per material. */
-function layerGroup(
-  files: Map<string, MeshPlacement[]>,
-  parts: ReadonlyMap<string, readonly MeshPart[]>,
-  offset: Vec3,
-): Group {
-  const group = new Group();
-  const singles: SinglePlacement[] = [];
-  for (const [file, placements] of files) {
-    const fileParts = parts.get(file) ?? [];
-    const matrices: Matrix4[] = placements.map((placement) => placementMatrix(placement, offset));
-    const [first, ...others] = matrices;
-    if (first && others.length === 0) singles.push({ parts: fileParts, matrix: first });
-    else instancedMeshes(fileParts, matrices).forEach((mesh) => group.add(mesh));
-  }
-  mergeStatic(singles).forEach((mesh) => group.add(mesh));
-  return group;
-}
-
 /**
  * The MVR scenery as one group per layer uuid, so hiding a layer is one `visible` flag. Instancing and merging are
  * per layer: a file shared across two layers is instanced in each, which keeps every layer independent to hide.
@@ -84,6 +62,6 @@ export async function buildLayers(
 ): Promise<Map<string, Group>> {
   const layers = byLayerAndFile(geometry.placements);
   const files = [...new Set(geometry.placements.map((placement) => placement.file))];
-  const parts = await loadParts(files, library, onProgress);
+  const parts = { byFile: await loadParts(files, library, onProgress), screen: library.screenMaterial };
   return new Map([...layers].map(([uuid, layerFiles]) => [uuid, layerGroup(layerFiles, parts, geometry.offset)]));
 }

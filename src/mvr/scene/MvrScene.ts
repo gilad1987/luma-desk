@@ -14,6 +14,12 @@ export interface MeshPlacement {
   readonly layer: string;
   /** The owning element's tag, for example `SceneObject`, `Truss` or `Symbol`, so render can style kinds apart. */
   readonly kind: string;
+  /** The owning object's `name`, empty when it has none; render reads it to tell an LED wall drawn as scenery. */
+  readonly name: string;
+  /** The name of the `<Layer>`, which often is the only place a plot says a plain object is an LED wall. */
+  readonly layerName: string;
+  /** The name of the innermost `<Symdef>` the mesh came from; absent for a mesh the object holds itself. */
+  readonly symdef?: string;
   /** Uuid of the owning object; several placements share it when one object has several meshes. */
   readonly uuid: string;
 }

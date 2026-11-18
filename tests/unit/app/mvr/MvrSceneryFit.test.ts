@@ -14,6 +14,8 @@ const GEOMETRY: MvrGeometry = {
   offset: [0, 0, 0],
   bounds: { min: [-30, 0, -40], max: [30, 12, 40] },
   surfaces: [{ min: [-8, 0, -12], max: [8, 1.5, -4], face: 'top' }],
+  layers: [],
+  hallLayers: [],
 };
 
 /** A fit over fake camera views in the FOH view and fake beam surfaces. */

@@ -68,7 +68,7 @@ describe('MvrStage with odd mesh files', () => {
       vertices: 3,
     });
     expect(urls.filter((url) => !url.startsWith('data:'))).toEqual([]);
-    // The import warns about the missing file; three's own log for the texture it could not load is the only one.
-    expect(errors.mock.calls).toEqual([["THREE.GLTFLoader: Couldn't load texture", 'textures/wood.png']]);
+    // The import warns about the missing file once; the texture is skipped before three tries it, so nothing logs.
+    expect(errors.mock.calls).toEqual([]);
   });
 });

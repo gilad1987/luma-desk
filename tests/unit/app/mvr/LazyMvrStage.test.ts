@@ -14,7 +14,14 @@ afterEach(() => vi.restoreAllMocks());
 /** A made-up scenery of 60 m x 80 m, much larger than any stage template. */
 const INPUT: MvrStageInput = {
   design: createTemplate('theatre'),
-  geometry: { placements: [], offset: [0, 0, 0], bounds: { min: [-30, 0, -40], max: [30, 12, 40] }, surfaces: [] },
+  geometry: {
+    placements: [],
+    offset: [0, 0, 0],
+    bounds: { min: [-30, 0, -40], max: [30, 12, 40] },
+    surfaces: [],
+    layers: [],
+    hallLayers: [],
+  },
   meshes: new Map(),
   meshResources: new Map(),
 };

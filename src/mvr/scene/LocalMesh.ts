@@ -6,4 +6,6 @@ export interface LocalMesh {
   readonly file: string;
   /** Mesh to holder: the `<Geometry3D>` matrix, with any `<Symbol>` and Symdef matrices above it applied. */
   readonly matrix: Mat4;
+  /** The name of the innermost `<Symdef>` the mesh came from; absent for a `<Geometry3D>` outside any Symdef. */
+  readonly symdef?: string;
 }
