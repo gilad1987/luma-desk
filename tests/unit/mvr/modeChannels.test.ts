@@ -34,6 +34,12 @@ describe('modeChannels', () => {
     expect(warnings).toEqual([expect.objectContaining({ code: 'unknown-mode', ref: 'fx-1' })]);
   });
 
+  it('says the file names no mode when the mode is empty or blank, and names the first mode it uses', () => {
+    const messages = ['', '  ', 'M9'].map((name) => modeChannels(TWO_MODES, name, 'fx-1').warnings[0]?.message);
+    const blank = 'The file names no DMX mode for GDTF "f.gdtf"; the first mode "4ch" is used.';
+    expect(messages).toEqual([blank, blank, 'Mode "M9" is not in GDTF "f.gdtf", so the first mode "4ch" is used.']);
+  });
+
   it('warns and gives no channels when the GDTF has no modes', () => {
     const result = modeChannels(info(''), 'Std', 'fx-2');
     expect(result).toMatchObject({ mode: '', channels: [] });
