@@ -1,0 +1,69 @@
+// MVR import: the file picker label of the Show File dialog, the import error line, the import summary (counts,
+// warnings, layer list) and the page-level missing-file prompt.
+.mvrPick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mut);
+}
+.mvrError {
+  color: var(--prog);
+}
+.mvrError:empty {
+  display: none;
+}
+.mvrSummary {
+  .mvrCounts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .mvrCount {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 12.5px;
+  }
+  .mvrCount b {
+    color: var(--acc);
+    font-family: var(--mono);
+  }
+}
+.mvrWarnings {
+  max-height: 140px;
+  overflow: auto;
+}
+.mvrLayers {
+  max-height: 180px;
+  overflow: auto;
+}
+.mvrLayer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--txt);
+}
+// no display rule here: the `hidden` attribute keeps the empty prompt out of the boot screenshots
+#mvrMissingPrompt {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 40;
+  max-width: min(640px, 92vw);
+  padding: 8px 12px;
+  background: var(--p2);
+  border: 1px solid var(--acc);
+  border-radius: 6px;
+  color: var(--txt);
+  font-size: 12.5px;
+}
+#mvrMissingPrompt:not([hidden]) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

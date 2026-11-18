@@ -51,7 +51,8 @@ const sourceForm: GuideMarkup = {
 
 describe('he', () => {
   it('holds only legacy strings, siblings in the legacy order, so two swapped values fail', () => {
-    const groups = siblingGroups(he);
+    // the MVR area (plan mvr-v2) is new text, so the legacy page has none of it
+    const groups = siblingGroups(Object.fromEntries(Object.entries(he).filter(([area]) => area !== 'mvr')));
     expect(groups.flat().length).toBeGreaterThan(100);
     for (const group of groups) {
       const starts = offsetsOf(group[0] ?? '');

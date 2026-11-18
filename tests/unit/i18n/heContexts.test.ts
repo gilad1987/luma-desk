@@ -72,8 +72,11 @@ describe('he key names', () => {
   });
 
   it('leaves no named string out of the table', () => {
-    const { autoStyleTaglines, ...named } = he;
-    expect(Object.keys(autoStyleTaglines)).toHaveLength(9);
+    expect(Object.keys(he.autoStyleTaglines)).toHaveLength(9);
+    // the taglines are pinned by style id above; the MVR area (plan mvr-v2) is new text with no legacy context
+    const named = Object.fromEntries(
+      Object.entries(he).filter(([area]) => !['autoStyleTaglines', 'mvr'].includes(area)),
+    );
     expect(namedStringPaths(named).sort()).toEqual(Object.keys(CONTEXTS).sort());
   });
 });

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { wireEngine } from '../../../../src/app/boot/wireEngine';
-import type { DeskTestApi } from '../../../../src/app/testHook/installTestHook';
-import { installTestHook } from '../../../../src/app/testHook/installTestHook';
+import { installTestHook, type DeskTestApi } from '../../../../src/app/testHook/installTestHook';
+import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import { ShowSerializer } from '../../../../src/show';
 import { FakeDom, FakeElement } from '../../../shared/dom';
 
@@ -43,6 +43,8 @@ function install(clock?: object) {
     execs: pool.execs,
     serializer,
     deskMode: () => 'desk' as const,
+    stage: { design: BUILT_IN_DESIGN, rig },
+    mvrReady: () => Promise.resolve(),
   };
   installTestHook({ ...deps, autoShow: { modulation: { pump: 1, hitUntil: 0 } } });
   return { engine, dom, page, setView };

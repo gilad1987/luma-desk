@@ -5,6 +5,7 @@ import type { ShowFileInput } from '../../../show/ShowFile';
 import type { ShowSerializer } from '../../../show/ShowSerializer';
 import type { ShowStorage } from '../../../show/ShowStorage';
 import type { Modal } from '../../shared';
+import type { MvrActions } from '../mvr/MvrActions';
 
 /** What the Show File dialog saves, copies and loads. */
 export interface ShowFileDeps {
@@ -24,4 +25,6 @@ export interface ShowFileDeps {
   readonly download: (name: string, text: string) => void;
   /** The `yyyymmdd-hhmm` local-time stamp in download names, shared with the video recorder. */
   readonly stamp: () => string;
+  /** The MVR row: import, demo rig and export, which the app wiring runs. */
+  readonly mvr: MvrActions;
 }

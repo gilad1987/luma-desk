@@ -11,6 +11,7 @@ import { wireGuide } from './app/io/wireGuide';
 import { wireMidi } from './app/io/wireMidi';
 import { wireLayout } from './app/layout/wireLayout';
 import { FrameLoop } from './app/loop/FrameLoop';
+import { wireMvr } from './app/mvr/wireMvr';
 import { scheduleUiTicks } from './app/loop/scheduleUiTicks';
 import { UiTickScheduler } from './app/loop/UiTickScheduler';
 import { installTestHook } from './app/testHook/installTestHook';
@@ -18,6 +19,9 @@ import { FpsClock } from './app/ui/FpsClock';
 import { wirePanels } from './app/ui/wirePanels';
 import { createAutoShow } from './app/uix/createAutoShow';
 import { createShowFiles } from './app/uix/createShowFiles';
+import { BUILT_IN_DESIGN } from './domain/stage/templates/sultansPool/builtInDesign';
+import { StageService } from './engine/stage/StageService';
+import { he } from './i18n/he';
 import { restoreShow } from './show';
 import { byId } from './ui/dom';
 import { appShellMarkup } from './ui/layouts/appShellMarkup';
@@ -33,6 +37,9 @@ const { execs } = pool;
 const render = wireRender(engine);
 const files = createShowFiles({ ...engine, execs });
 const auto = createAutoShow(engine);
+// temporary stand-in until Stage Builder's W2c wiring builds the one StageService the engine and render use
+const stage = new StageService(bus, { builtIn: BUILT_IN_DESIGN, tooManyFixtures: he.messages.stage.tooManyFixtures });
+const mvr = wireMvr({ bus, scene: render.scene, stage, modal: () => panels.modal });
 
 const panels = wirePanels({
   engine,
@@ -41,6 +48,7 @@ const panels = wirePanels({
   auto,
   layoutMode: () => layout.mode(),
   guideOrTourOpen: () => guide.isOpen() || tour.isActive(),
+  mvr: mvr.actions,
 });
 new ViewportPicking({ ...engine, ...render, fixtures: rig.fixtures });
 wireMidi(engine);
@@ -72,6 +80,7 @@ bus.on('stateDirty', () => ui.markDirty());
 
 panels.autoShowPanel.renderStyles();
 restoreShow({ ...files, storage: files.showStorage, execs, repaint: panels.showLoaded });
+mvr.restore();
 guide.openOnFirstRun();
 new FrameLoop({ ...engine, ...render, ...auto, fps, ui }).start();
 installTestHook({
@@ -82,4 +91,6 @@ installTestHook({
   execs,
   autoShow: auto.autoShow,
   deskMode: () => layout.mode(),
+  stage,
+  mvrReady: mvr.ready,
 });

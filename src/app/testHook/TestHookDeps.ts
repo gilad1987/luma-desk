@@ -7,6 +7,7 @@ import type { ExecutorPool } from '../../engine/ExecutorPool';
 import type { OutputMerger } from '../../engine/OutputMerger';
 import type { Programmer } from '../../engine/Programmer';
 import type { Selection } from '../../engine/Selection';
+import type { StageService } from '../../engine/stage/StageService';
 import type { ShowSerializer } from '../../show';
 import type { LayoutMode } from '../../ui/panels/layoutMode';
 
@@ -26,4 +27,8 @@ export interface TestHookDeps {
   readonly runner: Pick<CommandRunner, 'run'>;
   /** The current console layout (`deskMode`), owned by the layout area. */
   readonly deskMode: () => LayoutMode;
+  /** The stage service; `stage()` reads its design and rig live. */
+  readonly stage: Pick<StageService, 'design' | 'rig'>;
+  /** Resolves after the latest MVR load ended, with success or failure (the MVR load queue). */
+  readonly mvrReady: () => Promise<void>;
 }

@@ -19,6 +19,8 @@ export interface ShowFileDialogDeps {
    * full UI repaint. The boot restore passes the same hook as its `repaint`.
    */
   readonly showLoaded: () => void;
+  /** The MVR row's actions, from `wireMvr`. */
+  readonly mvr: ShowFileDeps['mvr'];
 }
 
 /**
@@ -45,5 +47,6 @@ export function wireShowFileDialog(deps: ShowFileDialogDeps): ShowFileDialog {
     },
     download: downloadJson,
     stamp,
+    mvr: deps.mvr,
   });
 }
