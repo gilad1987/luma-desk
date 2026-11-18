@@ -1,10 +1,11 @@
 import { MvrArchive } from '../archive/MvrArchive';
 import { MvrError, type MvrWarning } from '../MvrWarning';
-import { attr, childElement } from '../xml/elements';
+import { attr, childElement, descendantElements } from '../xml/elements';
 import { parseXml } from '../xml/parseXml';
 import type { GdtfInfo } from './GdtfInfo';
 import { readBeam, readReferences } from './readGdtfGeometry';
 import { readModes } from './readGdtfModes';
+import { readSizes } from './readGdtfSizes';
 
 /** The one file of a GDTF archive that describes the fixture. */
 const DESCRIPTION = 'description.xml';
@@ -34,6 +35,8 @@ function toInfo(fixtureType: Element, fileName: string, warnings: MvrWarning[]):
     modes: readModes(fixtureType),
     references: geometries ? readReferences(geometries, bad) : [],
     ...(geometries ? readBeam(geometries) : { hasBeam: false }),
+    hasDisplay: geometries !== undefined && descendantElements(geometries, 'Display').length > 0,
+    sizes: readSizes(fixtureType),
   };
 }
 

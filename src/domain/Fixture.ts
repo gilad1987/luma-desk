@@ -57,6 +57,11 @@ export class Fixture {
    * ignore `mount` (G2). `declare` keeps the built-in rig without a `rotation` key, so its output stays at parity.
    */
   declare rotation?: Quaternion;
+  /**
+   * The factor the model is drawn with on top of `T.size`, set only on an MVR import whose GDTF gave the product's
+   * real size (`bodyScale`). `declare` keeps every other fixture without the key, so the built-in rig stays at parity.
+   */
+  declare bodyScale?: number;
 
   constructor({ id, type, pos, mount, fixed }: Pick<Fixture, 'id' | 'type' | 'pos' | 'mount' | 'fixed'>) {
     this.id = id;

@@ -6,10 +6,10 @@ import type { MeshPart } from './MeshPart';
 import { mergeStatic, type SinglePlacement } from './mergeStatic';
 import { placementMatrix } from './placementMatrix';
 
-/** What layers draw with: the parsed parts of each file, and the one LED material that screen placements use. */
+/** What layers draw with: the parsed parts of each file, and the screen look of a part by its scenery material. */
 export interface LayerParts {
   readonly byFile: ReadonlyMap<string, readonly MeshPart[]>;
-  readonly screen: Material;
+  readonly screen: (source: Material) => Material;
 }
 
 /** A layer while it is built: instanced meshes go straight into `group`, single placements wait to be merged. */
@@ -28,8 +28,8 @@ function addPlacements(layer: LayerBuild, parts: readonly MeshPart[], matrices: 
 
 /**
  * One layer's group, from its placements by mesh file: shared files as instanced meshes, files placed once merged per
- * material. Screen placements (`isScreenPlacement`) draw the file's geometry with the LED material, so one file can
- * be scenery in one place and a screen in another.
+ * material. Screen placements (`isScreenPlacement`) draw the file's geometry with the screen look of each part, so
+ * one file can be scenery in one place and a screen in another.
  */
 export function layerGroup(
   files: ReadonlyMap<string, readonly MeshPlacement[]>,
@@ -40,7 +40,7 @@ export function layerGroup(
   const matrixOf = (placement: MeshPlacement): Matrix4 => placementMatrix(placement, offset);
   for (const [file, placements] of files) {
     const fileParts = parts.byFile.get(file) ?? [];
-    const screenParts = fileParts.map(({ geometry }) => ({ geometry, material: parts.screen }));
+    const screenParts = fileParts.map(({ geometry, material }) => ({ geometry, material: parts.screen(material) }));
     addPlacements(layer, fileParts, placements.filter((placement) => !isScreenPlacement(placement)).map(matrixOf));
     addPlacements(layer, screenParts, placements.filter(isScreenPlacement).map(matrixOf));
   }
