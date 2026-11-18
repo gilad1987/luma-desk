@@ -19,7 +19,7 @@ import type { MvrDesignInfo } from '../../../../../src/domain/stage/mvr.ts';
 import type { StageDesign } from '../../../../../src/domain/stage/StageDesign.ts';
 import { sampleDesign } from './sampleDesign.ts';
 
-/** A real `mvr` block with no fixture entries, so the delete ops, which drop the entries of deleted fixtures, keep it. */
+/** A real `mvr` block with no fixture entries: a delete op drops only the entries of the fixtures it deletes. */
 const mvr: MvrDesignInfo = {
   fixtures: {},
   layers: [{ uuid: 'L-1', name: 'Layer 1' }],
