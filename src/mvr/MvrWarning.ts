@@ -6,6 +6,7 @@ export type MvrWarningCode =
   | 'multi-break'
   | 'bad-address'
   | 'missing-gdtf'
+  | 'type-from-name'
   | 'bad-gdtf'
   | 'unknown-mode'
   | 'missing-symdef'

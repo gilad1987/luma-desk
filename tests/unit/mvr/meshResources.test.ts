@@ -35,14 +35,32 @@ describe('importMvr meshResources', () => {
     expect(result.warnings.filter((warning) => warning.code === 'missing-mesh-resource')).toEqual([]);
   });
 
-  it('warns once per mesh file for each URI the archive lacks, and skips embedded data URIs', async () => {
-    const files = { 'a.glb': triangleGlb('gone.png'), 'b.glb': triangleGlb('https://example.com/x.png') };
-    const result = await imported([{ file: 'a.glb' }, { file: 'a.glb' }, { file: 'b.glb' }], files);
+  it('warns once per URI the archive lacks, with the count of mesh files that need it', async () => {
+    const files = {
+      'a.glb': triangleGlb('gone.png'),
+      'b.glb': triangleGlb('https://example.com/x.png'),
+      'c.glb': triangleGlb('gone.png'),
+    };
+    const placements = [{ file: 'a.glb' }, { file: 'a.glb' }, { file: 'b.glb' }, { file: 'c.glb' }];
+    const result = await imported(placements, files);
     const missing = result.warnings.filter((warning) => warning.code === 'missing-mesh-resource');
     expect(result.meshResources.size).toBe(0);
     expect(missing.map(({ ref, message }) => [ref, message])).toEqual([
-      ['a.glb', 'The mesh file a.glb needs gone.png, which is not in the archive.'],
-      ['b.glb', 'The mesh file b.glb needs https://example.com/x.png, which is not in the archive.'],
+      ['gone.png', '2 mesh files need "gone.png", which is not in the MVR file.'],
+      ['https://example.com/x.png', '1 mesh file needs "https://example.com/x.png", which is not in the MVR file.'],
+    ]);
+  });
+
+  it('gives one line for 30 mesh files that need the same missing texture', async () => {
+    const names = Array.from({ length: 30 }, (_, i) => `part-${i}.glb`);
+    const files = Object.fromEntries(names.map((name) => [name, triangleGlb('stone.png')]));
+    const result = await imported(
+      names.map((file) => ({ file })),
+      files,
+    );
+    const missing = result.warnings.filter((warning) => warning.code === 'missing-mesh-resource');
+    expect(missing.map((warning) => warning.message)).toEqual([
+      '30 mesh files need "stone.png", which is not in the MVR file.',
     ]);
   });
 });

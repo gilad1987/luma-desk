@@ -1,9 +1,11 @@
+import { TYPES } from '../../domain/fixtureTypes';
 import type { MvrArchive } from '../archive/MvrArchive';
 import { findGdtfMatch, type GdtfMatch } from '../gdtf/findGdtf';
 import type { GdtfInfo } from '../gdtf/GdtfInfo';
 import { readGdtf } from '../gdtf/readGdtf';
 import { typeFromGdtfSpec } from '../gdtf/typeFromGdtfSpec';
 import type { MvrWarning } from '../MvrWarning';
+import { byCount } from '../byCount';
 import { fallbackType } from './fallbackType';
 
 /** The GDTF files of one scene, read once per distinct `GDTFSpec` because hundreds of fixtures share a few types. */
@@ -18,8 +20,11 @@ export interface GdtfTable {
 
 /** One warning per missing spec, not per fixture, so a show with 30 such fixtures does not flood the summary. */
 function missingWarning(spec: string, count: number): MvrWarning {
-  const what = spec === '' ? 'name no GDTF file' : `use the GDTF "${spec}", which is not in the file`;
-  const message = `${count} fixture(s) ${what}; they are shown as ${fallbackType(spec)}.`;
+  const fixtures = byCount(count, 'fixture', 'fixtures');
+  const uses = spec === '' ? byCount(count, 'names no', 'name no') : byCount(count, 'uses', 'use');
+  const what = spec === '' ? `${uses} GDTF file` : `${uses} the GDTF "${spec}", which is not in the file`;
+  const shown = `${byCount(count, 'it is', 'they are')} shown as the desk type "${TYPES[fallbackType(spec)].name}"`;
+  const message = `${count} ${fixtures} ${what}; ${shown}.`;
   return { code: 'missing-gdtf', message, ref: spec };
 }
 

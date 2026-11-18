@@ -26,7 +26,7 @@ describe('import warnings', () => {
       fixture('C', 'Ghost@Wash', ''),
     ]);
     const { design, summary, warnings } = await importMvr(bytes, { name: 'x' });
-    expect(design.fixtures.map((f) => f.type)).toEqual(['beam', 'beam', 'par']);
+    expect(design.fixtures.map((f) => f.type)).toEqual(['beam', 'beam', 'wash']);
     expect(summary.missingGdtfCount).toBe(1);
     expect(warnings.filter((w) => w.code === 'missing-gdtf').map((w) => w.ref)).toEqual(['Ghost@Wash']);
   });
@@ -43,6 +43,13 @@ describe('import warnings', () => {
     const unknown = warnings.filter((w) => w.code === 'unknown-mode');
     expect(unknown.map((w) => w.ref)).toEqual(['A', 'C']);
     expect(unknown[0]?.message).toContain('"Nope"');
+  });
+
+  it('reads the vendor@name.gdtf file for a spec that names the fixture bare, with no vendor and no .gdtf', async () => {
+    const bytes = mvrOf([fixture('A', 'Spot', 'Std'), fixture('B', 'Acme@Spot.gdtf', 'Std')]);
+    const { summary, warnings } = await importMvr(bytes, { name: 'x' });
+    expect(summary.missingGdtfCount).toBe(0);
+    expect(warnings.filter((w) => w.code === 'missing-gdtf' || w.code === 'ambiguous-gdtf')).toEqual([]);
   });
 
   it('gives one ambiguous-gdtf warning per spec that matches several files', async () => {

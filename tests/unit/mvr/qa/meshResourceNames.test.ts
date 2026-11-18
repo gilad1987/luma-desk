@@ -37,7 +37,7 @@ describe('importMvr meshResources names', () => {
   it('does not resolve a ../ or folder URI to the root file of that name, and warns for each', async () => {
     const files = { 'a.glb': triangleGlb('../x.png'), 'b.glb': triangleGlb('img/x.png'), 'x.png': IMAGE };
     const result = await imported(files);
-    expect([result.meshResources.size, missingRefs(result)]).toEqual([0, ['a.glb', 'b.glb']]);
+    expect([result.meshResources.size, missingRefs(result)]).toEqual([0, ['../x.png', 'img/x.png']]);
   });
 
   it('names no file and warns for none when the GLB embeds its image by data URI or bufferView', async () => {

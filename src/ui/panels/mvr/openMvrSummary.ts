@@ -28,13 +28,32 @@ function layerRow(host: HTMLElement, layer: MvrLayer, hidden: readonly string[])
   return box;
 }
 
-/** Fills the warning list, one text line per warning. */
+/** The warning lines shown before the "Show all" toggle, so a long list does not push the layers out of view. */
+const SHOWN_WARNINGS = 8;
+
+/** The last list line: a button that shows the hidden `lines` and then removes itself. */
+function showAllToggle(host: HTMLElement, lines: readonly HTMLElement[]): void {
+  const row = createElement('li', 'mvrShowAll');
+  const button = createElement('button');
+  button.textContent = `Show all (${lines.length})`;
+  button.onclick = () => {
+    for (const line of lines) line.hidden = false;
+    row.remove();
+  };
+  row.appendChild(button);
+  host.appendChild(row);
+}
+
+/** Fills the warning list, one text line per warning; lines past `SHOWN_WARNINGS` wait behind a toggle. */
 function fillWarnings(host: HTMLElement, warnings: readonly string[]): void {
-  for (const warning of warnings) {
+  const lines = warnings.map((warning, index) => {
     const line = createElement('li');
     line.textContent = warning;
+    if (index >= SHOWN_WARNINGS) line.hidden = true;
     host.appendChild(line);
-  }
+    return line;
+  });
+  if (lines.length > SHOWN_WARNINGS) showAllToggle(host, lines);
 }
 
 /**

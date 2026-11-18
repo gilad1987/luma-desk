@@ -28,7 +28,7 @@ interface KnownIssue {
  * texture and without a console error. Any console error fails its sample.
  */
 const KNOWN_ISSUES: Readonly<Record<string, KnownIssue>> = {
-  'Demostage_MVR.mvr': { warning: /needs vsBlkSatinTexture\.png, which is not in the archive/ },
+  'Demostage_MVR.mvr': { warning: /needs? "vsBlkSatinTexture\.png", which is not in the MVR file/ },
 };
 
 test.beforeEach(() => {

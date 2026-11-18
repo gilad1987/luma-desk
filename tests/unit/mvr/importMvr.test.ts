@@ -60,7 +60,7 @@ describe('importMvr', () => {
       noGeometry: false,
     });
     expect(design.source).toEqual({ kind: 'mvr', name: 'Show.mvr', fileHash: 'abc' });
-    expect(design.fixtures.map((f) => f.type)).toEqual(['spot', 'spot', 'par', 'par']);
+    expect(design.fixtures.map((f) => f.type)).toEqual(['spot', 'spot', 'wash', 'wash']);
     expect(design.fixtures.map((f) => f.patch)).toEqual([
       { universe: 2, address: 1, mode: 'Std' },
       undefined,
