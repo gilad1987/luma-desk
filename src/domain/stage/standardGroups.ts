@@ -1,9 +1,27 @@
 import type { FixtureQuery, GroupRule } from './query';
+import { FIXTURE_ROLES, TRUSS_KINDS, type FixtureRole } from './types';
 
 const FLOOR_BEAMS: FixtureQuery = { role: 'floor', type: 'beam', truss: 'none' };
 const T2_BEAMS: FixtureQuery = { role: 'mid', type: 'beam' };
 const SIDE_WASHES: FixtureQuery = { role: 'side', type: 'wash' };
 const RING_BEAMS: FixtureQuery = { role: 'ring', type: 'beam' };
+
+/** The roles whose beams the legacy "All Beams" queries take on any truss; floor beams only on none or a tower. */
+const LEGACY_BEAM_ROLES: ReadonlySet<FixtureRole> = new Set(['mid', 'back', 'ring', 'angled', 'floor']);
+
+/**
+ * The beams that no legacy "All Beams" query finds: one query per other role, and one per other truss kind for floor
+ * beams. A fixture has one role and one truss kind, so these overlap neither the legacy queries nor each other, and
+ * a builder or MVR stage gets every beam in "All Beams" once, after the legacy ones in their old order.
+ */
+const OTHER_BEAMS: readonly FixtureQuery[] = [
+  ...FIXTURE_ROLES.filter((role) => !LEGACY_BEAM_ROLES.has(role)).map((role): FixtureQuery => ({ role, type: 'beam' })),
+  ...TRUSS_KINDS.filter((kind) => kind !== 'tower').map((truss): FixtureQuery => ({
+    role: 'floor',
+    type: 'beam',
+    truss,
+  })),
+];
 
 /** Builds a rule from its queries; keeps the table below to one line per group. */
 const rule = (name: string, ...any: FixtureQuery[]): GroupRule => ({ name, any });
@@ -33,6 +51,7 @@ export const STANDARD_GROUPS: readonly GroupRule[] = [
     RING_BEAMS,
     { role: 'angled', type: 'beam' },
     { role: 'floor', type: 'beam', truss: 'tower' },
+    ...OTHER_BEAMS,
   ),
   rule('All Spots', { type: 'spot' }),
   rule('All Washes', { type: 'wash' }),
