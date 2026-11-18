@@ -53,6 +53,10 @@ export class BuilderHarness {
         this.calls.push('mount');
         return () => this.calls.push('unmount');
       },
+      attachViewer: (_pane) => {
+        this.calls.push('viewer');
+        return () => this.calls.push('viewer off');
+      },
     };
   }
 

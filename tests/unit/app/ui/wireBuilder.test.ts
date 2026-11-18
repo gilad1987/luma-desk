@@ -1,9 +1,10 @@
 /**
- * The app wiring of the Stage Builder: each browser binding of `BuilderDeps`, and `#buildBtn` as the only thing built
- * at boot. Builder mode itself is owned by tests/unit/ui/builder/BuilderMode.test.ts; opening it for real (the tool
+ * The app wiring of the Stage Builder: each browser binding of `BuilderDeps`, `#buildBtn` as the only thing built at
+ * boot, and its click waiting for the Web Awesome chunk before it enters. Builder mode itself is owned by tests/unit/ui/builder/BuilderMode.test.ts; opening it for real (the tool
  * panels need a real DOM) is owned by tests/e2e/builder-*.spec.ts.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { attachViewer } from '../../../../src/app/ui/viewerHost';
 import { builderDepsOf, wireBuilder } from '../../../../src/app/ui/wireBuilder';
 import { BuilderMode } from '../../../../src/ui/builder/BuilderMode';
 import { mountTools } from '../../../../src/ui/builder/mountTools';
@@ -16,30 +17,38 @@ function setup() {
   const h = new BuilderHarness();
   const setConsoleHeight = vi.fn<(px: number) => void>();
   const fitLayout = vi.fn();
-  const wiring = { stage: h.deps.stage, bus: h.deps.bus, stageRenderer: { setConsoleHeight }, fitLayout };
-  return { dom, h, wiring, setConsoleHeight, fitLayout };
+  // a deferred shell load the test resolves by hand, so it sees the click before and after the chunk arrives
+  let release = (): void => undefined;
+  const shell = new Promise<void>((resolve) => (release = resolve));
+  const loadShell = vi.fn(() => shell);
+  const wiring = { stage: h.deps.stage, bus: h.deps.bus, stageRenderer: { setConsoleHeight }, fitLayout, loadShell };
+  return { dom, h, wiring, setConsoleHeight, fitLayout, loadShell, shell, release: () => release() };
 }
 
 describe('wireBuilder', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('builds nothing but the Build Stage click until it is clicked', () => {
-    const { dom, wiring, fitLayout } = setup();
+  // catches a boot that loads the Web Awesome chunk eagerly, which puts it back on the desk's start-up path
+  it('builds nothing but the Build Stage click and loads no shell until it is clicked', () => {
+    const { dom, wiring, fitLayout, loadShell } = setup();
     const builder = wireBuilder(wiring);
     expect(builder.isOpen).toBe(false);
     expect(dom.body.children).toHaveLength(0);
     expect(dom.get('buildBtn').onclick).toBeTypeOf('function');
     expect(fitLayout).not.toHaveBeenCalled();
+    expect(loadShell).not.toHaveBeenCalled();
   });
 
-  it('binds the stage, bus, document keys, the real tools, the console height and the layout fit', () => {
+  // catches a builder that cannot move the 3D viewer into its pane, because the wiring forgot the binding
+  it('binds the stage, bus, document keys, the real tools, the viewer move, the console height and the layout fit', () => {
     const { h, wiring, setConsoleHeight, fitLayout } = setup();
     const deps = builderDepsOf(wiring);
-    expect([deps.stage, deps.bus, deps.keys, deps.mountTools]).toEqual([
+    expect([deps.stage, deps.bus, deps.keys, deps.mountTools, deps.attachViewer]).toEqual([
       h.deps.stage,
       h.deps.bus,
       document,
       mountTools,
+      attachViewer,
     ]);
     deps.setConsoleHeight(120);
     deps.fitLayout();
@@ -47,12 +56,17 @@ describe('wireBuilder', () => {
     expect(fitLayout).toHaveBeenCalledOnce();
   });
 
-  it('opens Builder mode from a #buildBtn click', () => {
-    const { dom, wiring } = setup();
+  // catches an enter before the chunk loads, which would mount bare, unstyled wa-* tags
+  it('opens Builder mode from a #buildBtn click only after the shell loads', async () => {
+    const { dom, wiring, loadShell, shell, release } = setup();
     // the real enter mounts the tool panels, which need a real DOM (e2e); here it only has to be the click's target
     const enter = vi.spyOn(BuilderMode.prototype, 'enter').mockImplementation(() => undefined);
     const builder = wireBuilder(wiring);
     dom.get('buildBtn').onclick?.({ target: null });
+    const beforeLoad = enter.mock.contexts.length;
+    release();
+    await shell;
+    expect([loadShell.mock.calls.length, beforeLoad]).toEqual([1, 0]);
     expect(enter.mock.contexts).toEqual([builder]);
     enter.mockRestore();
   });

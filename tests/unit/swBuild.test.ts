@@ -50,4 +50,29 @@ describe('the built service worker', () => {
   it('is one classic script, with no import or export statement', () => {
     expect(worker).not.toMatch(/\b(?:import|export)\b/);
   });
+
+  // catches a lazy chunk the worker does not cache, so the builder fails to open offline
+  it('caches the Web Awesome chunk and its CSS', () => {
+    const shell = shellOf(worker);
+    const urls = Array.isArray(shell) ? shell.filter((url) => typeof url === 'string') : [];
+    const hasEntry = (pattern: RegExp): boolean => urls.some((url) => pattern.test(url));
+    expect([hasEntry(/^\.\/assets\/registerWa-[\w-]+\.js$/), hasEntry(/^\.\/assets\/registerWa-[\w-]+\.css$/)]).toEqual(
+      [true, true],
+    );
+  });
+});
+
+describe('the Web Awesome chunk boundary', () => {
+  /** The text of the one built asset whose name matches `pattern`, or '' when there is none. */
+  const assetText = (pattern: RegExp): string => {
+    const name = readdirSync(join(outDir, 'assets')).find((file) => pattern.test(file));
+    return name ? readFileSync(join(outDir, 'assets', name), 'utf8') : '';
+  };
+
+  // catches a static import of the wa folder, which pulls Web Awesome into the desk's start-up chunk
+  it('keeps the wa-button definition out of the main chunk and in the registerWa chunk', () => {
+    const main = assetText(/^index-[\w-]+\.js$/);
+    const wa = assetText(/^registerWa-[\w-]+\.js$/);
+    expect([main.length > 0, main.includes('wa-button'), wa.includes('wa-button')]).toEqual([true, false, true]);
+  });
 });

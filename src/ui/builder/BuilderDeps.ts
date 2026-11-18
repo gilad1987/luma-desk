@@ -42,4 +42,9 @@ export interface BuilderDeps extends EditorSessionDeps {
    * the report sink, which shows a refused drag as a toast through `bus.emit('message', ...)`.
    */
   readonly mountTools: (slots: BuilderSlots, session: EditorSession, view: PlanViewDeps) => () => void;
+  /**
+   * Moves the 3D viewer into the builder's 3D pane on enter; the disposer puts it back on exit, before the host is
+   * removed.
+   */
+  readonly attachViewer: (pane: HTMLElement) => () => void;
 }
