@@ -63,9 +63,12 @@ describe('StageRenderer', () => {
 
   it('forwards the shadow and id toggles', () => {
     const { renderer, parts } = stage();
+    expect([renderer.glow, renderer.showsIds]).toEqual([true, false]);
+    renderer.setGlow(false);
     renderer.setShadows(false);
     renderer.setShowIds(true);
     expect([parts.renderer.shadowMap.enabled, parts.overlay.isVisible]).toEqual([false, true]);
+    expect([renderer.glow, renderer.showsIds]).toEqual([false, true]);
   });
 
   it('observes the viewer and resizes at once', () => {

@@ -35,6 +35,16 @@ export class StageRenderer {
     this.isGlowOn = isOn;
   }
 
+  /** The Glow button reads this flag, so the renderer stays its one owner (starts on). */
+  get glow(): boolean {
+    return this.isGlowOn;
+  }
+
+  /** The Fixture IDs button reads the overlay's flag, so the overlay stays its one owner (starts off). */
+  get showsIds(): boolean {
+    return this.parts.overlay.isVisible;
+  }
+
   /** The "lights" toggle also switches shadow maps; the key lights are switched by `KeyLights.setEnabled`. */
   setShadows(isOn: boolean): void {
     this.parts.renderer.shadowMap.enabled = isOn;
