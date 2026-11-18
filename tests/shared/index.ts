@@ -11,7 +11,7 @@ export { sceneXml } from './mvr/sceneXml';
 export { makeGdtf } from './mvr/makeGdtf';
 export { gdtfMode } from './mvr/gdtfMode';
 export { makeGlb } from './mvr/makeGlb';
-export { TRIANGLE_BYTES, triangleGlb } from './mvr/triangleGlb';
+export { TRIANGLE_BYTES, triangleGlb, triangleGlbWithImage } from './mvr/triangleGlb';
 export { make3ds } from './mvr/make3ds';
 export { make3dsGroups, type TdsTestMaterial } from './mvr/make3dsGroups';
 export { makeFixtureRecord, makeScene } from './mvr/makeFixtureRecord';
