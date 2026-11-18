@@ -52,10 +52,12 @@ export class CameraViews {
   /**
    * Fits the views to a stage's bounds (G7, rule in `fitViews`), or restores the built-in table for null. It only
    * swaps the table: the camera stays where it is until the next `setView`, so a caller that wants the fitted
-   * framing at once calls `setView(currentView)`, and a call at boot moves nothing.
+   * framing at once calls `setView(currentView)`, and a call at boot moves nothing. `own` replaces single fitted
+   * views: an imported MVR stage frames FOH, wide and the plan views itself (`mvrViews`), as one scale about one
+   * anchor cannot fill the frame for a small stage nor stand the FOH eye behind the file's own FOH positions.
    */
-  fitTo(bounds: StageBounds | null): void {
-    this.views = bounds ? fitViews(bounds) : VIEWS;
+  fitTo(bounds: StageBounds | null, own: Partial<ViewTable> = {}): void {
+    this.views = bounds ? { ...fitViews(bounds), ...own } : VIEWS;
   }
 
   /**

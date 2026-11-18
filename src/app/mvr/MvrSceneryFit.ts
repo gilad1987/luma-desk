@@ -3,6 +3,7 @@ import type { MvrGeometry } from '../../mvr/index';
 import type { CameraViews } from '../../render/camera/CameraViews';
 import { mvrCameraBounds } from '../../render/mvr/mvrCameraBounds';
 import { mvrSurfaces } from '../../render/mvr/mvrSurfaces';
+import { mvrViews } from '../../render/mvr/mvrViews';
 import type { SurfaceHit } from '../../render/surface/SurfaceHit';
 
 /** The camera views as the MVR fit uses them: fit the table, then move to the current view. */
@@ -23,6 +24,7 @@ export interface MvrDeskRender {
 export class MvrSceneryFit {
   readonly #render: MvrDeskRender;
   #geometry: MvrGeometry | undefined;
+  #design: StageDesign | undefined;
 
   constructor(render: MvrDeskRender) {
     this.#render = render;
@@ -34,17 +36,38 @@ export class MvrSceneryFit {
     this.refit(design);
   }
 
-  /** Fits the views and surfaces to the remembered scenery and `design`; nothing to do while no scenery is shown. */
+  /**
+   * Fits the views to the stage box and its framing views (`mvrViews`), and the surfaces to the shown meshes, of the
+   * remembered scenery and `design`; nothing to do while no scenery is shown.
+   */
   refit(design: StageDesign): void {
     if (!this.#geometry) return;
+    this.#design = design;
     const { views, surfaceHit } = this.#render;
     surfaceHit.setSurfaces(mvrSurfaces(design, this.#geometry), design.venue.kind);
-    views.fitTo(mvrCameraBounds(design, this.#geometry));
+    const box = mvrCameraBounds(design, this.#geometry);
+    views.fitTo(
+      box,
+      mvrViews(
+        box,
+        design.fixtures.map((fixture) => fixture.position),
+      ),
+    );
     views.setView(views.currentView);
+  }
+
+  /**
+   * Fits again for other hidden layers: a layer toggle in the import summary changes the stage box and the shown
+   * meshes, but only updates the design's meta, so no stage rebuild calls `refit`.
+   */
+  hide(hiddenLayers: readonly string[]): void {
+    const design = this.#design;
+    if (design?.mvr) this.refit({ ...design, mvr: { ...design.mvr, hiddenLayers } });
   }
 
   /** Drops the scenery, so a later refit does nothing; the next stage's rebuild sets its views and surfaces itself. */
   forget(): void {
     this.#geometry = undefined;
+    this.#design = undefined;
   }
 }

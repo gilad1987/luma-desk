@@ -4,7 +4,9 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 import { MvrSceneryFit } from '../../../../src/app/mvr/MvrSceneryFit';
+import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { createTemplate } from '../../../../src/domain/stage/templates';
+import { mvrCameraBounds } from '../../../../src/render/mvr/mvrCameraBounds';
 import type { MvrGeometry } from '../../../../src/mvr/index';
 import { mvrSurfaces } from '../../../../src/render/mvr/mvrSurfaces';
 
@@ -22,7 +24,7 @@ const GEOMETRY: MvrGeometry = {
 function sceneryFit() {
   const views = { fitTo: vi.fn(), setView: vi.fn(), currentView: 'foh' as const };
   const surfaceHit = { setSurfaces: vi.fn() };
-  return { fit: new MvrSceneryFit({ views, surfaceHit }), surfaceHit };
+  return { fit: new MvrSceneryFit({ views, surfaceHit }), surfaceHit, views };
 }
 
 describe('MvrSceneryFit beam surfaces', () => {
@@ -43,6 +45,19 @@ describe('MvrSceneryFit beam surfaces', () => {
     fit.forget();
     fit.refit(edited);
     expect(surfaceHit.setSurfaces).toHaveBeenCalledTimes(2);
+  });
+
+  it('fits the views and surfaces again for a layer toggle, with the new hidden layers', () => {
+    const { fit, surfaceHit, views } = sceneryFit();
+    const design = { ...createTemplate('theatre'), mvr: { hiddenLayers: [] } } as unknown as StageDesign;
+    fit.hide(['hall']);
+    expect(views.fitTo).not.toHaveBeenCalled();
+    fit.fit(design, GEOMETRY);
+    fit.hide(['hall']);
+    const hidden = { ...design, mvr: { ...design.mvr, hiddenLayers: ['hall'] } } as StageDesign;
+    expect(surfaceHit.setSurfaces).toHaveBeenLastCalledWith(mvrSurfaces(hidden, GEOMETRY), hidden.venue.kind);
+    expect(views.fitTo).toHaveBeenLastCalledWith(mvrCameraBounds(hidden, GEOMETRY), expect.anything());
+    expect(views.setView).toHaveBeenCalledTimes(2);
   });
 
   it('sets nothing before a scenery is shown', () => {

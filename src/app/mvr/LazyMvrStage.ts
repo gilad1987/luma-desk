@@ -52,9 +52,13 @@ export class LazyMvrStage {
     }
   }
 
-  /** Shows every layer except these uuids; nothing to do before the first load. */
+  /**
+   * Shows every layer except these uuids, and fits the views and surfaces to the layers left shown; nothing to do
+   * before the first load.
+   */
   setHiddenLayers(uuids: readonly string[]): void {
     this.#stage?.setHiddenLayers(uuids);
+    this.#fit.hide(uuids);
   }
 
   /**

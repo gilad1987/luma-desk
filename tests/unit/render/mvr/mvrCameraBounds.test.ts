@@ -48,12 +48,13 @@ describe('mvrCameraBounds', () => {
     expect(views.foh.position[2]).toBeLessThan(40);
   });
 
-  it('counts a side screen next to the deck whole, and not a FOH tent far out', () => {
-    const screen = box([18, 4, -10], [24, 12, -9]);
-    const tent = box([-4, 0, 38], [4, 3, 44]);
-    const bounds = mvrCameraBounds(WITH_SPOTS, geometry([screen, tent]));
+  it('counts a shown side screen layer whole, and not a hidden FOH tent layer', () => {
+    const layer = (id: string, { min, max }: SurfaceBox) => ({ layer: id, name: id, box: { min, max }, rig: false });
+    const layers = [layer('screen', box([18, 4, -10], [24, 12, -9])), layer('tent', box([-4, 0, 38], [4, 3, 44]))];
+    const hidden: StageDesign = { ...WITH_SPOTS, mvr: { ...WITH_SPOTS.mvr, hiddenLayers: ['tent'] } } as StageDesign;
+    const bounds = mvrCameraBounds(hidden, { ...geometry([]), layers });
     expect(bounds.max[0]).toBe(24);
-    expect(bounds.max[2]).toBe(0);
+    expect(bounds.max[2]).toBe(-2);
   });
 
   it('keeps every fixture of a stage on one truss line, which has no spread', () => {

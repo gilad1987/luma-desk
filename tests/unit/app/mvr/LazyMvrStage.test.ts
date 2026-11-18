@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LazyMvrStage } from '../../../../src/app/mvr/LazyMvrStage';
 import { createTemplate } from '../../../../src/domain/stage/templates';
 import { mvrCameraBounds } from '../../../../src/render/mvr/mvrCameraBounds';
+import { mvrViews } from '../../../../src/render/mvr/mvrViews';
 import { MvrStage, type MvrStageInput } from '../../../../src/render/mvr/MvrStage';
 
 afterEach(() => vi.restoreAllMocks());
@@ -50,7 +51,12 @@ describe('LazyMvrStage', () => {
   it('fits the views to the design and scenery bounds after a show, then moves to the current view', async () => {
     const { lazy, views } = lazyStage();
     await lazy.show(INPUT);
-    expect(views.fitTo).toHaveBeenCalledWith(mvrCameraBounds(INPUT.design, INPUT.geometry));
+    const box = mvrCameraBounds(INPUT.design, INPUT.geometry);
+    const own = mvrViews(
+      box,
+      INPUT.design.fixtures.map((fixture) => fixture.position),
+    );
+    expect(views.fitTo).toHaveBeenCalledWith(box, own);
     expect(views.setView).toHaveBeenCalledWith('foh');
     const [fit] = views.fitTo.mock.invocationCallOrder;
     const [move] = views.setView.mock.invocationCallOrder;
@@ -62,7 +68,7 @@ describe('LazyMvrStage', () => {
     await lazy.show(INPUT);
     const edited = createTemplate('festival');
     lazy.refit(edited);
-    expect(views.fitTo).toHaveBeenLastCalledWith(mvrCameraBounds(edited, INPUT.geometry));
+    expect(views.fitTo).toHaveBeenLastCalledWith(mvrCameraBounds(edited, INPUT.geometry), expect.anything());
     expect(views.setView).toHaveBeenCalledTimes(2);
   });
 
