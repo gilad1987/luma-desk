@@ -1,5 +1,6 @@
 import type { Rig } from '../domain/rig';
 import type { EngineBus } from './events';
+import type { RigSource } from './stage/RigSource';
 
 /** How a new id list combines with the current selection: replace it, add to it, remove from it, or flip each id. */
 export type SelectMode = 'replace' | 'add' | 'sub' | 'toggle';
@@ -8,16 +9,22 @@ export type SelectMode = 'replace' | 'add' | 'sub' | 'toggle';
  * The selected fixtures, in selection order. The order matters: fan values, position presets and phaser offsets
  * spread across the selection by index. Only ids the rig has are kept, because commands and saved groups can name
  * any number.
+ *
+ * With a `RigSource` (the StageService) it checks ids against the current rig and, on `rigChanged`, drops the ids the
+ * new rig lacks (and emits `selectionChanged`). Without one it keeps the rig it was given, as before the Stage Builder.
  */
 export class Selection {
   #ids: number[] = [];
   #members = new Set<number>();
   readonly #rig: Rig;
   readonly #bus: EngineBus;
+  readonly #source: RigSource | undefined;
 
-  constructor(rig: Rig, bus: EngineBus) {
+  constructor(rig: Rig, bus: EngineBus, source?: RigSource) {
     this.#rig = rig;
     this.#bus = bus;
+    this.#source = source;
+    if (source) bus.on('rigChanged', () => this.set([...this.#ids]));
   }
 
   /** The selected ids in selection order. A view: copy it before you keep it, the next change may alter it in place. */
@@ -35,7 +42,8 @@ export class Selection {
    * ids; `sub` removes; `toggle` flips each id in turn, so a repeated id flips twice.
    */
   set(ids: readonly number[], mode: SelectMode = 'replace'): void {
-    const known = ids.filter((id) => this.#rig.get(id) !== undefined);
+    const rig = this.#source?.rig ?? this.#rig;
+    const known = ids.filter((id) => rig.get(id) !== undefined);
     if (mode === 'replace') this.#ids = [...new Set(known)];
     else if (mode === 'add') {
       for (const id of known) if (!this.#ids.includes(id)) this.#ids.push(id);
