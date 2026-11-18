@@ -15,4 +15,6 @@ export { clickInShowFile } from './clickInShowFile';
 export { exportAndImport } from './exportAndImport';
 export { expectPatchesKept } from './expectPatchesKept';
 export { readMvrStage } from './readMvrStage';
+export { UNUSABLE_MVR_FILES, type UnusableMvrFile } from './unusableMvrFiles';
+export { countStoredMvrFiles } from './countStoredMvrFiles';
 export { SAMPLES_DIR, readSample, sampleFiles } from '../mvr/localSamples';
