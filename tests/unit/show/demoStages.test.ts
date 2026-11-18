@@ -8,8 +8,7 @@ import { PRESET_FNS } from '../../../src/engine/presetFunctions';
 import { defaultPoolOf } from '../../../src/engine/stage/defaultPool';
 import { presetFnsOf } from '../../../src/engine/stage/presetFnsOf';
 import { DemoShow } from '../../../src/show';
-import { readGolden, type SavedShow } from '../../shared';
-import { stageWorld } from './stageWorld';
+import { readGolden, stageWorld, type SavedShow } from '../../shared';
 
 /** A stage world whose demo reads the stage service, as main.ts wires it once the stage builder is on. */
 function demoWorld(id?: TemplateId) {

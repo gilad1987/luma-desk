@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defaultGroups, NEW_GROUPS } from '../../../src/engine/defaultGroups';
-import { showWorld } from './showWorld';
+import { showWorld } from '../../shared';
 
 const groupNames = (world: ReturnType<typeof showWorld>): string[] =>
   Object.values(world.groups.all).map((g) => g.name);

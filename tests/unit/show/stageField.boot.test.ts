@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { createTemplate } from '../../../src/domain/stage/templates';
 import { savedStageOf } from '../../../src/show/stageField';
-import { readSavedShow } from './showWorld';
+import { readSavedShow } from '../../shared';
 
 describe('savedStageOf', () => {
   it('returns the parsed design of a stored show with a valid stage', () => {

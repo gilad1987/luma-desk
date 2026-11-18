@@ -1,5 +1,5 @@
-import type { StageDesign } from '../../../src/domain/stage/StageDesign';
-import { createTemplate } from '../../../src/domain/stage/templates';
+import type { StageDesign } from '../../src/domain/stage/StageDesign';
+import { createTemplate } from '../../src/domain/stage/templates';
 
 /** The theatre template as an MVR import leaves it: every fixture patched, the first one with its MVR facts. */
 export function importedDesign(): StageDesign {

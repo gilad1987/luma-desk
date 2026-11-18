@@ -5,8 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { createTemplate } from '../../../src/domain/stage/templates';
 import { savedStageOf } from '../../../src/show/stageField';
-import { importedDesign } from './importedDesign';
-import { BAD_STAGE, stageWorld } from './stageWorld';
+import { BAD_STAGE, importedDesign, stageWorld } from '../../shared';
 
 describe('show stage field: no rebuild', () => {
   it('load(null) throws before the stage changes', () => {

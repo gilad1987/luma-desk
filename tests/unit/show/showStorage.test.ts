@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PERSIST_DELAY_MS, restoreShow, STORAGE_KEYS } from '../../../src/show';
-import { STORAGE_KEYS as TEST_KEYS } from '../../shared';
-import { readSavedShow, showWorld } from './showWorld';
+import { readSavedShow, showWorld, STORAGE_KEYS as TEST_KEYS } from '../../shared';
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());

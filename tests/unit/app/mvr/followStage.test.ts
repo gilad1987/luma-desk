@@ -7,9 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { followStage } from '../../../../src/app/mvr/followStage';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { createTemplate } from '../../../../src/domain/stage/templates';
-import { jsonRoundTrip } from '../../../shared';
-import { importedDesign } from '../../show/importedDesign';
-import { stageWorld } from '../../show/stageWorld';
+import { importedDesign, jsonRoundTrip, stageWorld } from '../../../shared';
 
 const RIG: StageDesign = { ...importedDesign(), source: { kind: 'mvr', name: 'Rig.mvr', fileHash: 'h1' } };
 const OTHER: StageDesign = { ...importedDesign(), source: { kind: 'mvr', name: 'Other.mvr', fileHash: 'h2' } };

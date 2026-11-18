@@ -26,3 +26,6 @@ export { FakeIndexedDb } from './fakeIndexedDb';
 export { fakeMvrFlowDeps, type FakeMvrFlow } from './mvr/fakeMvrFlowDeps';
 export { MemoryStore } from './MemoryStore';
 export { engineParts, stillClock } from './engineParts';
+export { readSavedShow, showWorld } from './showWorld';
+export { BAD_STAGE, stageWorld } from './stageWorld';
+export { importedDesign } from './importedDesign';

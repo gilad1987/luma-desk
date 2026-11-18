@@ -7,8 +7,7 @@ import { createTemplate } from '../../../src/domain/stage/templates';
 import { defaultGroups } from '../../../src/engine/defaultGroups';
 import { defaultPoolOf } from '../../../src/engine/stage/defaultPool';
 import { StageGroups } from '../../../src/engine/stage/StageGroups';
-import { jsonRoundTrip } from '../../shared';
-import { stageWorld } from './stageWorld';
+import { jsonRoundTrip, stageWorld } from '../../shared';
 
 describe('show stage field: default groups of the loaded stage', () => {
   it('a show without groups gets the pool of its stage; a later rig change replaces all of it', () => {

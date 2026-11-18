@@ -5,9 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { createTemplate } from '../../../src/domain/stage/templates';
 import { defaultPoolOf } from '../../../src/engine/stage/defaultPool';
-import { jsonRoundTrip, readGolden } from '../../shared';
-import { readSavedShow } from './showWorld';
-import { BAD_STAGE, stageWorld } from './stageWorld';
+import { BAD_STAGE, jsonRoundTrip, readGolden, readSavedShow, stageWorld } from '../../shared';
 
 describe('show stage field: save', () => {
   it('built-in stage: no stage key, and the demo show is byte-equal to the golden', () => {
