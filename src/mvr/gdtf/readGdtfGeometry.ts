@@ -1,5 +1,6 @@
 import { decodeAbsolute } from '../patch/address';
 import { attr, childElements, descendantElements } from '../xml/elements';
+import type { GdtfBeamData } from './GdtfBody';
 import type { GdtfBreak, GdtfInfo, GdtfReference } from './GdtfInfo';
 
 /** The beam facts of a GDTF, as `GdtfInfo` holds them. */
@@ -8,6 +9,9 @@ export type GdtfBeam = Pick<GdtfInfo, 'hasBeam' | 'beamType' | 'beamAngle'>;
 /** GDTF defaults for a `Beam` that leaves the attribute out. */
 const DEFAULT_BEAM_TYPE = 'Wash';
 const DEFAULT_BEAM_ANGLE = 25;
+const DEFAULT_FIELD_ANGLE = 25;
+const DEFAULT_BEAM_RADIUS = 0.05;
+const DEFAULT_LUMINOUS_FLUX = 10000;
 
 /** A number attribute, or the fallback when it is missing, empty or not a number (`""` must not read as 0). */
 function numberAttr(el: Element, name: string, fallback: number): number {
@@ -47,9 +51,17 @@ export function readReferences(geometries: Element, bad: (offset: string) => voi
 export function readBeam(geometries: Element): GdtfBeam {
   const beam = descendantElements(geometries, 'Beam')[0];
   if (beam === undefined) return { hasBeam: false };
+  const { beamType, beamAngle } = readBeamData(beam);
+  return { hasBeam: true, beamType, beamAngle };
+}
+
+/** The light output a `Beam` geometry describes, with the GDTF default for every attribute it leaves out. */
+export function readBeamData(beam: Element): GdtfBeamData {
   return {
-    hasBeam: true,
     beamType: attr(beam, 'BeamType') ?? DEFAULT_BEAM_TYPE,
     beamAngle: numberAttr(beam, 'BeamAngle', DEFAULT_BEAM_ANGLE),
+    fieldAngle: numberAttr(beam, 'FieldAngle', DEFAULT_FIELD_ANGLE),
+    beamRadius: numberAttr(beam, 'BeamRadius', DEFAULT_BEAM_RADIUS),
+    luminousFlux: numberAttr(beam, 'LuminousFlux', DEFAULT_LUMINOUS_FLUX),
   };
 }

@@ -50,7 +50,8 @@ const MVR = makeMvr(SCENE, {
 describe('importMvr', () => {
   it('turns lights into desk fixtures and counts objects, patches and missing GDTFs', async () => {
     const { summary, design } = await importMvr(MVR, { name: 'Show.mvr', fileHash: 'abc' });
-    expect(summary).toEqual({
+    const { bodyLines, ...counts } = summary;
+    expect(counts).toEqual({
       fixtureCount: 4,
       unpatchedCount: 2,
       missingGdtfCount: 2,
@@ -59,6 +60,7 @@ describe('importMvr', () => {
       layerCount: 1,
       noGeometry: false,
     });
+    expect(bodyLines.reduce((sum, line) => sum + line.count, 0)).toBe(4);
     expect(design.source).toEqual({ kind: 'mvr', name: 'Show.mvr', fileHash: 'abc' });
     expect(design.fixtures.map((f) => f.type)).toEqual(['spot', 'spot', 'wash', 'wash']);
     expect(design.fixtures.map((f) => f.patch)).toEqual([

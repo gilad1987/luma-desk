@@ -3,7 +3,7 @@ import type { AttrName } from '../../../src/domain/attributes.ts';
 import { classifyType } from '../../../src/mvr/gdtf/classifyType.ts';
 import type { GdtfChannel, GdtfInfo } from '../../../src/mvr/gdtf/GdtfInfo.ts';
 
-const SHAPE = { hasBeam: false, hasDisplay: false, sizes: [] };
+const SHAPE = { hasBeam: false, hasDisplay: false, sizes: [], bodies: [] };
 const BASE: GdtfInfo = { fileName: 'f.gdtf', name: 'F', manufacturer: 'M', modes: [], references: [], ...SHAPE };
 
 function beam(beamType: string, beamAngle: number): GdtfInfo {

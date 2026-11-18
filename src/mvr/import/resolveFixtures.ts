@@ -27,6 +27,8 @@ export interface ResolvedRig {
   readonly patchWarnings: readonly MvrWarning[];
   /** By fixture uuid: the overall size in metres its GDTF gives (`gdtfBodySize`); no entry when it gives none. */
   readonly bodySizes: ReadonlyMap<string, number>;
+  /** The read GDTF by `GDTFSpec` (`GdtfTable.infos`), for the body step. */
+  readonly infos: ReadonlyMap<string, GdtfInfo>;
 }
 
 /** What the GDTF step decides for one fixture: a `FixtureClass` plus the resolved mode and its DMX footprint. */
@@ -53,7 +55,7 @@ function typeAndMode(
   for (const warning of result.warnings) if (!modeWarnings.has(key)) modeWarnings.set(key, warning);
   const footprint = breakFootprint(result.channels);
   const kind = classifyFixture(info, result.channels, [record.gdtfSpec, info.name, record.name]);
-  const bodySize = gdtfBodySize(info, result.mode, result.channels, record.gdtfSpec);
+  const bodySize = gdtfBodySize(info, result.mode);
   const sized = bodySize === undefined ? {} : { bodySize };
   return { ...kind, mode: result.mode, ...(footprint === undefined ? {} : { footprint }), ...sized };
 }
@@ -88,5 +90,6 @@ export function resolveFixtures(archive: MvrArchive, records: readonly MvrFixtur
     fixtures.push({ record, type, gdtfName: record.gdtfSpec, ...identity, ...(patch ? { patch } : {}) });
   }
   const gdtfWarnings = [...table.warnings, ...modeWarnings.values(), ...typeGuessWarnings(guesses)];
-  return { fixtures, objectUuids, missingGdtfCount: table.missingCount, gdtfWarnings, patchWarnings, bodySizes };
+  const { infos, missingCount: missingGdtfCount } = table;
+  return { fixtures, objectUuids, missingGdtfCount, gdtfWarnings, patchWarnings, bodySizes, infos };
 }
