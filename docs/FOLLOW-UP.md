@@ -1,5 +1,8 @@
 # Follow-up: 3D console at the control position
 
+> **Historical.** This note predates the TypeScript refactor. Its `index.html:NNN` line numbers refer to
+> `index.html@48a3b63`, the old single-file app; the code now lives in `src/` (see `docs/ARCHITECTURE.md`).
+
 State on 2026-11-17, commit `b2a3507` (`main` = `gh-pages`).
 
 The "Console (MA)" layout is now a CSS-3D hardware console that stands at the

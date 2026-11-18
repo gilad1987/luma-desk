@@ -4,8 +4,9 @@ LUMA DESK is a lighting desk and a 3D stage that run in the browser with no serv
 was one file, `index.html` (3,096 lines at commit `48a3b63`). This document describes the structure in `src/`, why it
 has that shape, and the rules that keep it that way.
 
-> **Status: Phase 6 is done.** `src/main.ts` is the composition root (at most 100 lines) over `src/app/`, fully typed
-> and linted with no exemption. `index.html` is a 90-line shell. `vendor/` is deleted; three.js comes from npm.
+> **Status: the refactor (Phases 0-8) is complete.** `src/main.ts` is the composition root (at most 100 lines) over
+> `src/app/`, fully typed and linted with no exemption. `index.html` is a 90-line shell. `vendor/` is deleted;
+> three.js comes from npm.
 
 ## Layers
 
@@ -172,6 +173,68 @@ The full rules are in `CLAUDE.md` and `docs/rules/`. In short:
   layers, `<layer>/shared/` inside one layer (`ui/shared`, `render/shared`, `engine/shared`), `tests/shared/` for
   tests. Each has an `index.ts` that exports only its public API, and code outside imports that index.
 - **TSDoc** on every exported symbol, saying why.
+
+## Extending
+
+Each recipe lists the files to touch, in order. The existing goldens record the original app, so they must stay
+green unchanged; a change that alters them is re-recorded only with the orchestrator's approval.
+
+### A fixture type
+
+1. `src/domain/FixtureType.ts`: add the key to `FixtureTypeId`.
+2. `src/domain/fixtureTypes/movingTypes.ts` (`MOVING_TYPES`) or `staticTypes.ts` (`STATIC_TYPES`): add its
+   `FixtureType`. `moving` gates position presets and phasers; every type except the screen needs `model` and `size`.
+3. `src/domain/fixtureTypes/index.ts`: add it at the end of `TYPES`, because the key order is the iteration order.
+4. A new `FixtureModel` file in `src/render/fixtures/models/` (see `strike4Model.ts`). Register it under the `model`
+   key in `createFixtureModels` (`src/render/fixtures/FixtureModels.ts`) and its lens in `createLensTextures`
+   (`src/render/fixtures/LensTextures.ts`, faces in `src/render/fixtures/lens/`). The tables are keyed by string, so
+   a missing model throws at boot in `FixtureVisualBuilder`, not at compile time.
+5. A new area file in `src/domain/rig/` with an `add…(rig: RigBuilder)` function (see `profiles.ts`), called at the
+   end of `buildRig` (`src/domain/rig/index.ts`): the call order is the id order of the groups and the output.
+6. Type-specific behavior: search for `f.type ===` (`src/engine/OutputMerger.ts`,
+   `src/render/fixtures/FixtureVisualSync.ts`) and the type groups (`rig.idsOfType`) in `src/engine/defaultGroups.ts`.
+7. The rig table: `RIG_RANGES` in `src/ui/guide/rigTable.ts` and `rigLocations` in `src/i18n/he/rigLocations.ts`
+   (paired by index), and the README rig table.
+
+Tests: update the key list in `tests/unit/domain/rigQueries.test.ts`. `tests/unit/domain/rigBuild.test.ts`
+(`rig-build.json`) and `tests/unit/render/fixtures/fixtureParity.test.ts` (`fixture-scene.json`) prove that the old
+rig is unchanged. New fixtures in the rig change those goldens, `random-calls.json` (`tests/e2e/determinism.spec.ts`),
+the output goldens and the screenshots by design.
+
+### A phaser
+
+1. `src/engine/shared/phaserTypes.ts`: add the key to `PhaserType` and its `PhaserTypeSpec` to `PHASER_TYPES`
+   (label, driven feature, starting size). Show files store the key, so it never changes. The key order is the button
+   order that `src/ui/panels/encoders/extra/fxExtra.ts` builds.
+2. `src/engine/phaserShapes.ts`: add its writer to `SHAPES`. The `Record` type fails the build until it is there. The
+   writer sets only the `FxSample` fields of its feature.
+3. No other engine change: `evalPhaser` (`src/engine/Phaser.ts`) calls `shapePhaser`, and `applyPhaser`
+   (`src/engine/programmerActions/applyPhaser.ts`) picks the fixtures that can run the feature.
+4. Optional users: the Auto Show styles (`src/autoshow/styles/`) and the demo show (`src/show/demo/`). A demo change
+   alters `demo-show.json`.
+5. The guide: the Phasers section in `src/i18n/he/guideChaptersMiddle.ts`.
+
+Tests: add a unit test for the new writer under `tests/unit/engine/`. The oracles that
+`tests/unit/engine/playback/outputParity.test.ts` and `tests/unit/engine/programmer/programmerParity.test.ts` compare
+with know only the original types, but their random inputs (`PHASERS` in `tests/unit/engine/playback/cueData.ts` and
+`tests/unit/engine/programmer/randomInputs.ts`) take every key of `PHASER_TYPES`: keep the new key out of them.
+`compute-output-phasers.json` (`tests/e2e/golden-output.spec.ts`) protects the existing shapes.
+
+### A command
+
+1. `src/command/aliases.ts`: add the keyword to `Keyword` and its spellings to `SPELLINGS`. A spelling that was an
+   unknown word before changes how old lines parse; the `ALIAS_LINES` and `PARTIAL_ERROR_LINES` transcripts catch it.
+2. `src/command/statements.ts`: add a readonly variant to `Statement` (executors as 0-based indexes).
+3. `src/command/parse/parseCommand.ts`: add a `case` to `parseCommand`; selection and level words belong in
+   `Parser.next` (`src/command/parse/Parser.ts`). A syntax error throws `CommandError`.
+4. `src/command/run/`: add a runner that takes `StatementOf<'kind'>` and `CommandDeps` next to its kin (see
+   `runPlayback.ts`). It reaches the engine only through `CommandDeps` and reports with `log`, in English (decision 16).
+5. `src/command/run/runStatement.ts`: add the `case`. The switch is exhaustive, so lint fails until it is there.
+6. The guide: the command-line chapter in `src/i18n/he/guideChaptersEnd.ts`.
+
+Tests: `tests/unit/command/Parser.test.ts` and `tests/unit/command/CommandRunner.test.ts`. The transcripts in
+`tests/e2e/transcripts/` and their `command-*.json` goldens record the original app: `tests/e2e/golden-commands.spec.ts`
+and `tests/unit/command/transcriptReplay.test.ts` replay them and must pass unchanged.
 
 ## Where to read more
 

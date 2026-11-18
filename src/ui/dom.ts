@@ -3,8 +3,9 @@ type ElementKind<T extends HTMLElement> = abstract new (...args: never[]) => T;
 
 /**
  * The element with `id`, checked against `kind` when one is given. It throws instead of returning null: every id the
- * UI asks for is in index.html, so a miss is a markup bug that should fail at boot, not hide behind a `!` until the
- * first click.
+ * UI asks for comes from a TS template (the page shell the composition root inserts before any panel runs, or a
+ * panel's own markup), so a miss means a template and its code disagree. That bug should fail at boot, not hide
+ * behind a `!` until the first click.
  */
 export function byId(id: string): HTMLElement;
 export function byId<T extends HTMLElement>(id: string, kind: ElementKind<T>): T;
