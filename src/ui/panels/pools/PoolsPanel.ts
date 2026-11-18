@@ -25,8 +25,8 @@ export class PoolsPanel {
 
   /**
    * Renders the Pools pane at the end of `host` (`#side`, after the tab bar); repaints on `poolsChanged`. A stage
-   * change can make other presets unavailable (G10): StageGroups emits `poolsChanged` on every stage change but a show
-   * load, which repaints through the app's `showLoaded`, so the panel needs no `rigChanged` listener of its own.
+   * change can make other presets unavailable (plan G10): StageGroups emits `poolsChanged` on every stage change but a
+   * show load, which repaints through the app's `showLoaded`, so the panel needs no `rigChanged` listener of its own.
    */
   constructor(host: HTMLElement, deps: PoolsDeps) {
     this.#deps = deps;

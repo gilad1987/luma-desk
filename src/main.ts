@@ -51,6 +51,7 @@ new ViewportPicking({
   get fixtures() {
     return stage.rig.fixtures;
   },
+  isBuilding: () => builder.isOpen,
 });
 wireMidi(engine);
 render.stageRenderer.observeViewer();

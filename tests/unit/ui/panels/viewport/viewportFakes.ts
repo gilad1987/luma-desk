@@ -39,7 +39,8 @@ export function mount(pick: typeof lamp | null = lamp) {
     controls: { enabled: true },
     clock: { nowMs: () => 1000, nowSeconds: () => 1 },
   };
-  const picker = { pickAt: () => pick };
+  const picker = { pickAt: () => pick },
+    flags = { building: false };
   const deps: ViewportDeps = {
     ...fakes,
     canvas: asReal<HTMLCanvasElement>(canvas),
@@ -47,8 +48,9 @@ export function mount(pick: typeof lamp | null = lamp) {
     camera,
     bus,
     fixtures: [lamp],
+    isBuilding: () => flags.building,
   };
   new ViewportPicking(deps);
   const at = (x: number, y: number, more: object = {}) => ({ clientX: x, clientY: y, target: canvas, ...more });
-  return { dom, win, canvas, logs, at, ...fakes };
+  return { dom, win, canvas, logs, at, flags, ...fakes };
 }
