@@ -1,9 +1,19 @@
 import { defaultPoolOf } from '../../../engine/stage/defaultPool';
 import { he } from '../../../i18n/he';
 import { byId } from '../../dom';
-import type { ShowFileDeps } from './ShowFileDeps';
+import type { NewShow, ShowFileDeps } from './ShowFileDeps';
 import { showFileMarkup } from './showFileMarkup';
 import { wireShowImport } from './wireShowImport';
+
+/**
+ * The empty show New Show loads. A custom stage goes with it, so the load keeps that stage (a show without `stage`
+ * means the built-in one) and the default pool names only fixtures of the rig on screen. The built-in stage gives the
+ * old `{ groups }` show.
+ */
+function newShowOf(stage: ShowFileDeps['stage']): NewShow {
+  const groups = defaultPoolOf(stage);
+  return stage.isBuiltIn ? { groups } : { groups, stage: stage.design };
+}
 
 /**
  * The Show File dialog behind `#fileBtn`: download, copy, demo, new and import. Its markup is rebuilt on every open,
@@ -35,7 +45,7 @@ export class ShowFileDialog {
       toast('Demo show loaded');
     };
     byId('fNew').onclick = () => {
-      loadShow({ groups: defaultPoolOf(stage) });
+      loadShow(newShowOf(stage));
       storage.persist();
       modal.close();
       toast('New show');
