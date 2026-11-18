@@ -4,7 +4,8 @@ Branch `fix/sb-recover`, on main `6114b2a9`. Phase 0 of the Stage Builder drag-a
 
 Fourteen Stage Builder fix commits lived only on the local branches `sb/y1`..`sb/y4` (merge-base `c14c63a6`). Main
 moved on through PRs #4-#6 (MVR). This phase puts 13 of them back by cherry-pick, one commit each, with the original
-messages and tests. The goldens and the screenshot baselines stay byte-exact.
+messages and tests. The goldens and the 9 baselines of `screenshots.spec.ts` stay byte-exact; two MVR baselines
+change on purpose (see "Review and QA follow-ups"). The SHAs below are the originals on `sb/y1`..`sb/y4`.
 
 ## Commits (in order)
 
@@ -54,7 +55,7 @@ and the old uuid and GDTF name are still absent from the export.
 
 ## Review and QA follow-ups
 
-- `2a90db85` removes the stale LED wall spill light from a stage without a screen. The synthetic MVR stage of
+- `2a90db85` (here `e14869a6`) removes the stale LED wall spill light from a stage without a screen. The synthetic MVR stage of
   `mvr-render-screenshots.spec.ts` has no wall, so its blue deck glow goes away: the `mvr-stage-foh.png` and
   `mvr-stage-wide.png` baselines are recorded again in their own commit. The 9 baselines of `screenshots.spec.ts` and
   the goldens do not change.
