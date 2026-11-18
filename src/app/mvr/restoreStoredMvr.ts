@@ -1,3 +1,4 @@
+import type { StageDesign } from '../../domain/stage/StageDesign';
 import { he } from '../../i18n/he';
 import { storedMvrOf } from '../../ui/panels/mvr/storedMvrOf';
 import type { MvrFlowDeps } from './MvrFlowDeps';
@@ -7,11 +8,12 @@ import type { MvrFlowDeps } from './MvrFlowDeps';
  * the file, so the stored bytes are imported again. The scenery is drawn from the saved design, which holds the
  * user's hidden layers. Without the stored bytes the rig still loads from the design, a toast says so and the prompt
  * asks for the file. No summary opens at boot; mesh files three.js cannot draw are named in one toast. The scenery
- * chunk loads before the file is read, like the parser chunk in an import. A stage change during an await makes the
- * restore stop before it shows the prompt or the scenery of a design that is no longer the stage.
+ * chunk loads before the file is read, like the parser chunk in an import. `design` is the stage when the restore was
+ * queued: a stage change before the restore runs or during an await makes it stop before it shows the prompt or the
+ * scenery of a design that is no longer the stage, so two queued restores do not both draw the latest stage.
  */
-export async function restoreStoredMvr({ stage, store, scenery, prompt, toast }: MvrFlowDeps): Promise<void> {
-  const { design } = stage;
+export async function restoreStoredMvr(deps: MvrFlowDeps, design: StageDesign): Promise<void> {
+  const { stage, store, scenery, prompt, toast } = deps;
   const stored = await storedMvrOf(design, store);
   if (stage.design !== design) return;
   if (stored.kind === 'missing') {

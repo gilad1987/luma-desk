@@ -17,13 +17,13 @@ const BYTES = new Uint8Array(makeMvr(sceneXml('<Layer uuid="L1" name="Rig"><Chil
 describe('restoreStoredMvr', () => {
   it('does nothing for a design that is not a stored MVR import', async () => {
     const flow = fakeMvrFlowDeps();
-    await restoreStoredMvr(flow.deps);
+    await restoreStoredMvr(flow.deps, flow.stage.design);
     expect(flow.calls).toEqual([]);
   });
 
   it('shows the prompt and a toast when this browser does not hold the file', async () => {
     const flow = fakeMvrFlowDeps(savedMvr);
-    await restoreStoredMvr(flow.deps);
+    await restoreStoredMvr(flow.deps, flow.stage.design);
     expect(flow.prompt.show).toHaveBeenCalledWith('Rig.mvr');
     expect(flow.toasts).toEqual([he.mvr.missingToast('Rig.mvr')]);
     expect(flow.scenery.load).not.toHaveBeenCalled();
@@ -32,7 +32,7 @@ describe('restoreStoredMvr', () => {
   it('loads the scenery chunk, then draws the saved design from the stored file', async () => {
     const flow = fakeMvrFlowDeps(savedMvr);
     flow.store.get.mockResolvedValue(BYTES);
-    await restoreStoredMvr(flow.deps);
+    await restoreStoredMvr(flow.deps, flow.stage.design);
     expect(flow.calls).toEqual(['load', 'show']);
     expect(flow.scenery.show.mock.calls[0]?.[0].design).toBe(savedMvr);
   });
@@ -44,8 +44,14 @@ describe('restoreStoredMvr', () => {
       { file: 'a.3ds', reason: 'bad' },
       { file: 'b.glb', reason: 'bad' },
     ]);
-    await restoreStoredMvr(flow.deps);
+    await restoreStoredMvr(flow.deps, flow.stage.design);
     expect(flow.toasts).toEqual([he.mvr.meshFailed('a.3ds, b.glb')]);
+  });
+
+  it('does nothing for a queued design that is no longer the stage when the restore runs', async () => {
+    const flow = fakeMvrFlowDeps(savedMvr);
+    await restoreStoredMvr(flow.deps, { ...savedMvr });
+    expect(flow.calls).toEqual([]);
   });
 
   it('shows no prompt when the stage changed while the store was read', async () => {
@@ -54,7 +60,7 @@ describe('restoreStoredMvr', () => {
       flow.stage.design = flow.deps.stage.builtIn;
       return Promise.resolve(null);
     });
-    await restoreStoredMvr(flow.deps);
+    await restoreStoredMvr(flow.deps, flow.stage.design);
     expect(flow.calls).toEqual([]);
   });
 
@@ -65,7 +71,7 @@ describe('restoreStoredMvr', () => {
       flow.stage.design = flow.deps.stage.builtIn;
       return Promise.resolve();
     });
-    await restoreStoredMvr(flow.deps);
+    await restoreStoredMvr(flow.deps, flow.stage.design);
     expect(flow.scenery.show).not.toHaveBeenCalled();
   });
 });

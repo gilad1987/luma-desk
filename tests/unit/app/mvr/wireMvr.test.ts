@@ -1,11 +1,15 @@
 // @vitest-environment jsdom
 /**
  * Owns the MVR wiring's queue: Export MVR waits for an import that still runs, so it exports the design that import
- * left, and the test hook's `ready()` waits for the export too. The picked file holds its bytes back until the test
- * lets it go; the download is a recorder.
+ * left, and the test hook's `ready()` waits for the export too; a restore draws the design it was queued for. The
+ * picked file holds its bytes back until the test lets it go; the download is a recorder; jsdom has no IndexedDB, so
+ * the store holds no file.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { wireMvr } from '../../../../src/app/mvr/wireMvr';
+import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
+import { createTemplate } from '../../../../src/domain/stage/templates';
+import { he } from '../../../../src/i18n/he';
 import { fakeMvrFlowDeps } from '../../../shared';
 import { FakeDom } from '../../../shared/dom';
 
@@ -18,13 +22,27 @@ function heldFile(): { file: File; release: () => void } {
   return { file: Object.assign(new File([], 'bad.mvr'), { arrayBuffer: () => bytes }), release };
 }
 
+/** A saved MVR stage of the file `name`. */
+const savedMvr = (name: string): StageDesign => ({
+  ...createTemplate('theatre'),
+  source: { kind: 'mvr', name, fileHash: name },
+});
+
+/** The MVR wiring over a fake stage on `design`; `emit` records the toasts. */
+function wired(design?: StageDesign) {
+  const dom = new FakeDom();
+  for (const id of ['mvrMissingPrompt', 'mvrMissingFile', 'mvrMissingClose']) dom.add(id);
+  const flow = fakeMvrFlowDeps(design);
+  const emit = vi.fn();
+  const download = vi.fn();
+  const scene = { add: vi.fn() };
+  const mvr = wireMvr({ bus: { emit, on: vi.fn() }, scene, stage: flow.stage, modal: flow.deps.modal, download });
+  return { mvr, flow, emit, download };
+}
+
 describe('wireMvr', () => {
   it('runs Export MVR only after the import that still runs', async () => {
-    new FakeDom().add('mvrMissingPrompt');
-    const { stage, modal } = fakeMvrFlowDeps().deps;
-    const emit = vi.fn();
-    const download = vi.fn();
-    const mvr = wireMvr({ bus: { emit, on: vi.fn() }, scene: { add: vi.fn() }, stage, modal, download });
+    const { mvr, download } = wired();
     const { file, release } = heldFile();
     mvr.actions.importFile(file);
     mvr.actions.exportMvr();
@@ -34,5 +52,14 @@ describe('wireMvr', () => {
     release();
     await mvr.ready();
     expect(download).toHaveBeenCalledOnce();
+  });
+
+  it('drops a queued restore whose stage changed before it ran, so only the latest stage is restored', async () => {
+    const { mvr, flow, emit } = wired(savedMvr('A.mvr'));
+    mvr.restore();
+    flow.stage.design = savedMvr('B.mvr');
+    mvr.restore();
+    await mvr.ready();
+    expect(emit.mock.calls).toEqual([['message', { kind: 'toast', text: he.mvr.missingToast('B.mvr') }]]);
   });
 });

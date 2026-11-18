@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 /**
- * Owns the picked-file flow: the scenery chunk loads before anything changes, a rejected file keeps the stage and
- * the prompt, an import hides the prompt and opens the summary only over a closed modal or the Show File dialog.
- * jsdom gives the parser its DOMParser; the page itself is the FakeDom.
+ * Owns the picked-file flow: the chunk loads first, a rejected file keeps the stage, an import opens the summary only
+ * over a closed modal or the Show File dialog and only while it is the stage. jsdom gives the parser its DOMParser.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { importPickedMvr } from '../../../../src/app/mvr/importPickedMvr';
@@ -80,13 +79,22 @@ describe('importPickedMvr', () => {
     expect(flow.toasts).toEqual([he.mvr.imported('Rig.mvr', 1, 2)]);
   });
 
-  it('draws no scenery and opens no summary when the stage changed after the apply', async () => {
+  it('draws no scenery and opens no summary when a template replaced the stage after the apply', async () => {
     page();
     const flow = fakeMvrFlowDeps();
-    // the stage ends on another design, as when a template is applied while the import still runs
     flow.stage.apply.mockImplementationOnce(() => (flow.stage.design = flow.deps.stage.builtIn));
     await importPickedMvr(goodFile(), flow.deps);
-    expect(flow.scenery.show).not.toHaveBeenCalled();
     expect(flow.calls).toEqual(['load']);
+  });
+
+  it('opens no summary when the stage changed while the scenery was drawn', async () => {
+    page();
+    const flow = fakeMvrFlowDeps();
+    flow.scenery.show.mockImplementationOnce(() => {
+      flow.stage.design = flow.deps.stage.builtIn;
+      return Promise.resolve([]);
+    });
+    await importPickedMvr(goodFile(), flow.deps);
+    expect(flow.calls).toEqual(['load', 'apply', 'prompt.hide']);
   });
 });

@@ -11,7 +11,14 @@ export interface FakeMvrFlow {
   readonly deps: MvrFlowDeps;
   readonly calls: string[];
   readonly toasts: string[];
-  readonly stage: { design: StageDesign; readonly apply: Mock; readonly updateMeta: Mock };
+  /** The fake stage; it also reads as the wiring's stage, which adds the cause of the last apply. */
+  readonly stage: {
+    design: StageDesign;
+    cause: RigChangeCause;
+    readonly builtIn: StageDesign;
+    readonly apply: Mock;
+    readonly updateMeta: Mock;
+  };
   readonly scenery: { load: Mock<() => Promise<void>>; show: Mock<(input: MvrStageInput) => Promise<MeshFailure[]>> };
   readonly sceneryHide: Mock<(uuids: readonly string[]) => void>;
   readonly prompt: { readonly show: Mock<(name: string) => void>; readonly hide: Mock };
