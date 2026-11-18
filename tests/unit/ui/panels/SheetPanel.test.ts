@@ -9,8 +9,11 @@ import { countTextWrites, dmxDesign } from './sheetFakes';
 
 const fixture = (id: number): SheetFixture => ({ id, T: TYPES.spot, base: {}, out: {}, has: () => false });
 
-/** A sheet of fixtures 7 and 8 whose two fake rows have the ten cells of a built row. */
-function mount(stageDesign: () => StageDesign) {
+/**
+ * A sheet of the fixtures in `ids` (7 and 8 by default), read at each access as the stage's rig is, whose two fake
+ * rows have the ten cells of a built row.
+ */
+function mount(stageDesign: () => StageDesign, ids: readonly number[] = [7, 8]) {
   const dom = new FakeDom();
   const table = dom.add('sheet', new FakeHost());
   const rows = [7, 8].map(() => {
@@ -21,7 +24,9 @@ function mount(stageDesign: () => StageDesign) {
   const { programmer, selection } = engineParts();
   const sideTab = () => 'sheet' as const;
   const panel = new SheetPanel(asReal(new FakeHost()), {
-    fixtures: [fixture(7), fixture(8)],
+    get fixtures() {
+      return ids.map(fixture);
+    },
     programmer,
     selection,
     sideTab,
@@ -64,6 +69,19 @@ describe('SheetPanel DMX columns', () => {
       ['—', 'Extended'],
     ]);
     expect(table.innerHTML).toBe('built once');
+  });
+
+  it('rebuild() lists the new rig and fills its DMX cells from the design current at that moment', () => {
+    const ids = [7, 8];
+    let design = dmxDesign([{ id: 7 }, { id: 8 }]);
+    const { panel, table, dmxCells } = mount(() => design, ids);
+    panel.render();
+    ids.splice(0, 2, 101, 102);
+    const patch = { universe: 3, address: 10, mode: 'Basic' };
+    design = dmxDesign([{ id: 101, patch, gdtfMode: 'Basic' }, { id: 102 }]);
+    panel.rebuild();
+    expect(table.innerHTML).toContain('<tr data-id="101">');
+    expect(dmxCells()[0]).toEqual(['3.10', 'Basic']);
   });
 
   it('writes a DMX cell only when its text changes', () => {
