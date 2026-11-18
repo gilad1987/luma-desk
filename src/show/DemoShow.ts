@@ -2,12 +2,16 @@ import type { Rig } from '../domain/rig';
 import type { AppState } from '../engine/AppState';
 import type { EngineBus } from '../engine/events';
 import type { Executor } from '../engine/Executor';
+import type { RigSource } from '../engine/stage/RigSource';
 import { buildDemoShowFile } from './demo/demoShowFile';
 import type { ShowSerializer } from './ShowSerializer';
 
 /** What loading the demo needs: the loader, playback and the bus that triggers the save. */
 export interface DemoShowDeps {
+  /** The built-in rig; used only without a `source`. */
   readonly rig: Rig;
+  /** The current stage, read at each load, so the demo follows a custom stage and keeps it; missing: the built-in. */
+  readonly source?: RigSource;
   readonly serializer: ShowSerializer;
   readonly execs: readonly Executor[];
   readonly state: AppState;
@@ -28,8 +32,8 @@ export class DemoShow {
 
   /** Replaces the show with the demo. The caller repaints afterwards, as after any load. */
   load(): void {
-    const { rig, serializer, execs, state, bus } = this.#deps;
-    serializer.load(buildDemoShowFile(rig));
+    const { rig, source, serializer, execs, state, bus } = this.#deps;
+    serializer.load(source ? buildDemoShowFile(source.rig, source) : buildDemoShowFile(rig));
     execs[0]?.goto(0, 0);
     state.selectExec(0);
     bus.emit('showChanged', undefined);

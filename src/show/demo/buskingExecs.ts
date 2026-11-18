@@ -42,7 +42,7 @@ function effectExecs({ vals, group, color, aimed, phaser }: DemoKit): Partial<Sa
 }
 
 /** Executors 6-7: the red alert wash and the singer's key light. */
-function colourExecs({ vals, group, color, aimed, rig }: DemoKit): Partial<SavedExec>[] {
+function colourExecs({ vals, group, color, aimed }: DemoKit): Partial<SavedExec>[] {
   return [
     {
       name: 'Red Alert',
@@ -64,11 +64,17 @@ function colourExecs({ vals, group, color, aimed, rig }: DemoKit): Partial<Saved
           name: 'Singer',
           fade: 2,
           vals: vals([
-            [rig.range(108, 113), aimed('singer', { dim: 100, ...color('White'), gobo: 0, zoom: 8, grot: 0 })],
+            [centre(group(1), 6), aimed('singer', { dim: 100, ...color('White'), gobo: 0, zoom: 8, grot: 0 })],
           ]),
           fx: [],
         },
       ],
     },
   ];
+}
+
+/** The middle `count` ids of a group: the singer's key light is the centre of the FOH spots (108-113 of 101-120). */
+function centre(ids: readonly number[], count: number): number[] {
+  const first = Math.max(0, Math.floor((ids.length - count) / 2));
+  return ids.slice(first, first + count);
 }
