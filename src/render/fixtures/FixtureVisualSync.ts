@@ -37,6 +37,7 @@ export class FixtureVisualSync {
   readonly #light: LightSync;
   #visuals: readonly FixtureVisual[] = [];
   #screens: ReadonlyMap<number, ScreenTargets> = new Map();
+  #hasScreen = false;
 
   constructor(deps: FixtureVisualSyncDeps) {
     const { selection, goboTextures, lights, surface } = deps;
@@ -53,6 +54,7 @@ export class FixtureVisualSync {
     for (const v of visuals) if (v.kind === 'screen') targetsOf(screens, v);
     this.#visuals = visuals;
     this.#screens = screens;
+    this.#hasScreen = visuals.some((v) => v.kind === 'screen');
   }
 
   /** `now` and `dt` in seconds; `cameraPosition` places the lens glow flares. */
@@ -64,9 +66,11 @@ export class FixtureVisualSync {
         intensity = gatedIntensity(o, now);
       if (v.kind === 'screen') {
         syncScreen(targetsOf(this.#screens, v), o, intensity, now);
-        // the beam haze-noise time moves only with a screen, as in the legacy code: no screen, still haze
+        // the legacy code moved the beam haze-noise time in the screen branch; the built-in rig keeps that order
         this.#beamTime.value = now;
       } else this.#light.sync(v, o, intensity, dt);
     }
+    // a rig without a screen (theatre, empty) would otherwise freeze the haze
+    if (!this.#hasScreen) this.#beamTime.value = now;
   }
 }

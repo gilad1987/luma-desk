@@ -12,8 +12,8 @@ import { syncPool } from './syncPool';
 import { syncPose } from './syncPose';
 
 /**
- * Where beams land. Structural, so the stage's surface hitter (rebuilt with the rig) and the venue's free
- * `hitSurface` both fit without this module naming either.
+ * Where beams land: the stage's `SurfaceHit`, which follows the current design and venue. Structural, so a test can
+ * pass its own hitter without this module naming the render surface code.
  */
 export interface BeamSurface {
   hit(origin: Vector3, direction: Vector3): BeamFrame['hit'];
