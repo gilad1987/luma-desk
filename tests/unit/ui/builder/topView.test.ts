@@ -41,6 +41,12 @@ describe('TopView', () => {
     expect([cancelled, slot.children.length]).toEqual([[1], 0]);
   });
 
+  it('stops observing the canvas size on dispose', () => {
+    const { view } = setup();
+    view.dispose();
+    expect(FakeResizeObserver.made.flatMap((observer) => observer.targets)).toEqual([]);
+  });
+
   it('asks for no frame after dispose, however the session changes', () => {
     const { session, view, frames, runFrames } = setup();
     runFrames();

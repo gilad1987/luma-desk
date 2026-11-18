@@ -16,7 +16,7 @@ function mountCanvas() {
   const reads = vi.fn(() => 448);
   Object.defineProperty(element, 'offsetWidth', { get: reads });
   Object.assign(element, { offsetHeight: 448 });
-  const canvas = new TopViewCanvas(asReal<HTMLCanvasElement>(element));
+  const canvas = new TopViewCanvas(asReal<HTMLCanvasElement>(element), () => undefined);
   return { element, canvas, reads };
 }
 

@@ -1,7 +1,8 @@
 /**
  * A `ResizeObserver` the test fires by hand, which `FakeDom` installs: Node has none, and the builder top view caches
  * its canvas box from one. `resize()` runs the callback as the browser does after a layout that changed an observed
- * box; `made` lists every observer since the last `FakeDom`.
+ * box; `made` lists every observer since the last `FakeDom`. A real observer also fires once on `observe()`; the
+ * fake does not, so a test fires it itself.
  */
 export class FakeResizeObserver {
   static readonly made: FakeResizeObserver[] = [];

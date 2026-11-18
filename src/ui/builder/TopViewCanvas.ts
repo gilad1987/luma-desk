@@ -15,9 +15,12 @@ export class TopViewCanvas {
   #height = 0;
   #palette: TopViewPalette | null = null;
 
-  constructor(element: HTMLCanvasElement) {
+  /** `onResize` asks the view for a frame: a resize alone changes no draft, so nothing else would repaint. */
+  constructor(element: HTMLCanvasElement, onResize: () => void) {
     this.#element = element;
-    this.#observer = new ResizeObserver(() => this.#measure());
+    this.#observer = new ResizeObserver(() => {
+      if (this.#measure()) onResize();
+    });
     this.#observer.observe(element);
   }
 
@@ -39,13 +42,17 @@ export class TopViewCanvas {
     this.#observer.disconnect();
   }
 
-  /** Reads the box; a changed box drops the palette, so the next frame refits the canvas. */
-  #measure(): void {
+  /**
+   * Reads the box; a changed box drops the palette, so the next frame refits the canvas. True when the box changed.
+   * The first frame measures without `onResize`, because that frame is already painting.
+   */
+  #measure(): boolean {
     this.#measured = true;
     const { offsetWidth: width, offsetHeight: height } = this.#element;
-    if (width === this.#width && height === this.#height) return;
+    if (width === this.#width && height === this.#height) return false;
     this.#width = width;
     this.#height = height;
     this.#palette = null;
+    return true;
   }
 }

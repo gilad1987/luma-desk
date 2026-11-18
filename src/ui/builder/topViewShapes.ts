@@ -14,8 +14,23 @@ export type TrussFootprint =
 /** Points closer than this (metres) are one point, so a tower or a goalpost does not draw zero-length edges. */
 const SAME_POINT_M = 1e-6;
 
-/** The top-view footprint of `t`; see `TrussFootprint`. */
+/**
+ * The footprints per truss object. The view draws every truss on every drag frame and the hull allocates; a truss is
+ * never changed in place (a move makes a new truss object), so a kept footprint never goes stale.
+ */
+const footprints = new WeakMap<StageTruss, TrussFootprint>();
+
+/** The top-view footprint of `t`; see `TrussFootprint`. Made once per truss object. */
 export function trussFootprint(t: StageTruss): TrussFootprint {
+  let fp = footprints.get(t);
+  if (!fp) {
+    fp = footprintOf(t);
+    footprints.set(t, fp);
+  }
+  return fp;
+}
+
+function footprintOf(t: StageTruss): TrussFootprint {
   if (t.params.kind === 'circle') {
     const [x, , z] = t.transform.position;
     return { kind: 'ring', centre: [x, z], radius: t.params.radius };
