@@ -24,3 +24,4 @@ export { exportRoundTrip, type ExportRoundTrip } from './mvr/exportRoundTrip';
 export { exportedBoxes } from './mvr/exportedBoxes';
 export { FakeIndexedDb } from './fakeIndexedDb';
 export { MemoryStore } from './MemoryStore';
+export { engineParts, stillClock } from './engineParts';

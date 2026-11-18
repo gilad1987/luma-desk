@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { TYPES } from '../../../../src/domain/fixtureTypes';
 import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import { NO_DMX, sheetDmxById } from '../../../../src/ui/panels/sheet/sheetDmx';
 import { dmxDesign } from './sheetFakes';
@@ -24,22 +25,30 @@ describe('sheetDmxById (the Universe.Address and Mode columns)', () => {
     expect(sheetDmxById(design).get(4)).toEqual({ address: '—', mode: 'Mode 2' });
   });
 
-  it('shows a dash for the mode when the MVR facts have no entry or an empty mode', () => {
+  it('shows the patch mode without MVR facts and a dash for an empty imported mode, as the export writes them', () => {
     const design = dmxDesign([
       { id: 5, patch: { universe: 3, address: 20, mode: 'Basic' } },
       { id: 6, gdtfMode: '' },
     ]);
     const byId = sheetDmxById(design);
     expect([byId.get(5), byId.get(6)]).toEqual([
-      { address: '3.20', mode: '—' },
+      { address: '3.20', mode: 'Basic' },
       { address: '—', mode: '—' },
     ]);
   });
 
-  it('gives every fixture of a design that was never imported the dashes', () => {
+  it('shows the new desk type mode once the type changed after the import, not the imported or patch mode', () => {
+    const patch = { universe: 1, address: 9, mode: 'Basic' };
+    const design = dmxDesign([{ id: 9, patch, gdtfMode: 'Extended', type: 'beam' }]);
+    expect(sheetDmxById(design).get(9)).toEqual({ address: '1.9', mode: TYPES.beam.gdtfMode });
+  });
+
+  it('gives every fixture of a design that was never imported its desk type mode', () => {
     const byId = sheetDmxById(BUILT_IN_DESIGN);
     expect(byId.size).toBe(BUILT_IN_DESIGN.fixtures.length);
-    expect(new Set([...byId.values()].map((d) => `${d.address}|${d.mode}`))).toEqual(new Set(['—|—']));
+    for (const f of BUILT_IN_DESIGN.fixtures) {
+      expect(byId.get(f.id)).toEqual({ address: '—', mode: TYPES[f.type].gdtfMode });
+    }
     expect(NO_DMX).toEqual({ address: '—', mode: '—' });
   });
 });

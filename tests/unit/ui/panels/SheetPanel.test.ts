@@ -3,14 +3,14 @@ import { TYPES } from '../../../../src/domain/fixtureTypes';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { SheetPanel } from '../../../../src/ui/panels/sheet/SheetPanel';
 import type { SheetFixture } from '../../../../src/ui/panels/sheet/SheetFixture';
+import { engineParts } from '../../../shared';
 import { asReal, FakeDom, FakeElement, FakeHost } from '../../../shared/dom';
-import { engineParts } from '../../app/uix/engineParts';
-import { dmxDesign } from './sheetFakes';
+import { countTextWrites, dmxDesign } from './sheetFakes';
 
 const fixture = (id: number): SheetFixture => ({ id, T: TYPES.spot, base: {}, out: {}, has: () => false });
 
 /** A sheet of fixtures 7 and 8 whose two fake rows have the ten cells of a built row. */
-function mount(design: () => StageDesign) {
+function mount(stageDesign: () => StageDesign) {
   const dom = new FakeDom();
   const table = dom.add('sheet', new FakeHost());
   const rows = [7, 8].map(() => {
@@ -19,10 +19,16 @@ function mount(design: () => StageDesign) {
   });
   table.found.set('tr[data-id]', rows);
   const { programmer, selection } = engineParts();
-  const deps = { fixtures: [fixture(7), fixture(8)], programmer, selection, sideTab: () => 'sheet' as const, design };
-  const panel = new SheetPanel(asReal(new FakeHost()), deps);
+  const sideTab = () => 'sheet' as const;
+  const panel = new SheetPanel(asReal(new FakeHost()), {
+    fixtures: [fixture(7), fixture(8)],
+    programmer,
+    selection,
+    sideTab,
+    stageDesign,
+  });
   const dmxCells = (): string[][] => rows.map((r) => [r.cells[8]?.textContent ?? '', r.cells[9]?.textContent ?? '']);
-  return { panel, table, dmxCells };
+  return { panel, table, rows, dmxCells };
 }
 
 describe('SheetPanel DMX columns', () => {
@@ -34,11 +40,11 @@ describe('SheetPanel DMX columns', () => {
     expect(table.innerHTML).toContain('<th>Zoom</th><th>Universe.Address</th><th>Mode</th></tr>');
   });
 
-  it('shows dashes for fixtures the design does not patch or does not know', () => {
+  it('shows the desk type mode for an unpatched fixture and dashes for one the design does not know', () => {
     const { panel, dmxCells } = mount(() => dmxDesign([{ id: 7 }]));
     panel.render();
     expect(dmxCells()).toEqual([
-      ['—', '—'],
+      ['—', TYPES.spot.gdtfMode],
       ['—', '—'],
     ]);
   });
@@ -58,5 +64,17 @@ describe('SheetPanel DMX columns', () => {
       ['—', 'Extended'],
     ]);
     expect(table.innerHTML).toBe('built once');
+  });
+
+  it('writes a DMX cell only when its text changes', () => {
+    let design = dmxDesign([{ id: 7, gdtfMode: 'Basic' }, { id: 8 }]);
+    const { panel, rows } = mount(() => design);
+    const writes = rows.flatMap((r) => [8, 9].map((n) => countTextWrites(r.cells[n] ?? new FakeElement('td'))));
+    panel.render();
+    panel.render();
+    expect(writes.map((w) => w.count)).toEqual([1, 1, 1, 1]);
+    design = dmxDesign([{ id: 7, patch: { universe: 1, address: 5, mode: 'Basic' }, gdtfMode: 'Basic' }, { id: 8 }]);
+    panel.render();
+    expect(writes.map((w) => w.count)).toEqual([2, 1, 1, 1]);
   });
 });

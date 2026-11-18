@@ -18,7 +18,7 @@ export interface SheetDeps {
   /** The visible side pane; the sheet repaints only while it is the sheet. */
   readonly sideTab: () => SideTab;
   /** The current stage design, read on each repaint so the DMX columns follow an import or a stage edit. */
-  readonly design: () => StageDesign;
+  readonly stageDesign: () => StageDesign;
 }
 
 /**
@@ -55,7 +55,7 @@ export class SheetPanel implements UiPanel {
       this.#rows = Array.from(built, (tr) => new SheetRow(tr));
     }
     const rows = this.#rows;
-    const dmx = sheetDmxById(this.#deps.design());
+    const dmx = sheetDmxById(this.#deps.stageDesign());
     fixtures.forEach((f, i) => {
       rows[i]?.show(sheetRowView(f, selection.has(f.id), programmer.vals[f.id] ?? {}, dmx.get(f.id) ?? NO_DMX));
     });

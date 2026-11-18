@@ -58,7 +58,7 @@ export function wireCuePanes(deps: CuePanesDeps): CuePanes {
     programmer: deps.programmer,
     selection: deps.selection,
     sideTab,
-    design: deps.stageDesign,
+    stageDesign: deps.stageDesign,
   });
   return { sequence, sheet };
 }
