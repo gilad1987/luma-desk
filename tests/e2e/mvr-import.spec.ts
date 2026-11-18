@@ -23,6 +23,9 @@ test('a synthetic MVR builds its stage and shows the import summary', async ({ p
     { id: 101, patch: { universe: 2, address: 1, mode: 'Std' } },
     { id: 102, patch: null },
   ]);
+  // the desk drives the imported rig: the engine stage rebuilt it on `rigChanged`
+  expect(await page.evaluate(() => window.__desk.fixtures.map((f) => f.id))).toEqual([101, 102]);
+  expect(await page.evaluate(() => window.__desk.stage())).toMatchObject({ count: 2, source: 'mvr' });
   expect(errors).toEqual([]);
 });
 

@@ -11,5 +11,6 @@ test('Load demo rig replaces an imported MVR stage with the boot stage', async (
 
   await clickInShowFile(page, 'fDemoRig');
   await expect.poll(() => readMvrStage(desk)).toEqual(demo);
+  expect(await page.evaluate(() => window.__desk.fixtures.length)).toBe(demo.fixtureCount);
   expect(errors).toEqual([]);
 });
