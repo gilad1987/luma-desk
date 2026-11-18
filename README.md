@@ -178,7 +178,8 @@ Then check the result:
 
 ```bash
 gh api repos/gilad1987/luma-desk/pages --jq .build_type   # prints: workflow
-run=$(gh run list --workflow deploy.yml --branch main --limit 1 --json databaseId --jq '.[0].databaseId')
+# the new run takes a few seconds to appear; wait before this line, or it picks the previous run
+run=$(gh run list --workflow deploy.yml --branch main --event workflow_dispatch --limit 1 --json databaseId --jq '.[0].databaseId')
 gh run watch "$run"                                       # waits until the run ends
 gh run view "$run" --json conclusion --jq .conclusion     # prints: success
 ```

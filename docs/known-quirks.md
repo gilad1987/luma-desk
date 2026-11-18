@@ -954,7 +954,7 @@ The refactor keeps this logic (see ADR 0003). Only the shell list and the cache 
 Strict types (`noUncheckedIndexedAccess`) make every indexed read handle the missing case. Where the original read
 `undefined` and then crashed with a `TypeError` somewhere else, the new code throws a `RangeError` at the read, with
 a message that names the bad value. J4 to J6 change other details of a path that fails: J5 removes a data loss on
-a failed import, J6 changes an error text. These are the only behavior changes the refactor accepts: each path is
+a failed import, J6 changes an error text. These are the only behavior changes the refactor accepts (see also section L): each path is
 either unreachable from the UI or crashed in the original too.
 
 ### J1. `hsv` throws a `RangeError` for a hue that is not finite
@@ -1030,7 +1030,7 @@ either unreachable from the UI or crashed in the original too.
   logs `Cannot read properties of undefined (reading 'pause')`, the call it makes on the missing executor.
 - Accepted change: the error text differs. Both versions fail the command, change no state and show a red line in
   the command feedback. The change is accepted because this path only crashes, on an executor index that is not
-  valid. C7 keeps the original text for `Go`, `Off` and `Label Exec`; this `Pause` text is the one case that C7
+  valid. C7 keeps the original text for every other command that reaches `executorAt`; this `Pause` text is the one case that C7
   does not cover.
 - Pinned by: `tests/unit/command/CommandRunner.test.ts` ("quirk J6: Pause on a fractional executor logs (reading
   'pause') (accepted change)").
