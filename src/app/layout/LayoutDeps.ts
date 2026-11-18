@@ -6,6 +6,7 @@ import type { Programmer } from '../../engine/Programmer';
 import type { Selection } from '../../engine/Selection';
 import type { CameraViews } from '../../render/camera/CameraViews';
 import type { StageRenderer } from '../../render/stage/StageRenderer';
+import type { LayoutPrefs } from '../../show';
 import type { AimHeight } from '../../ui/components/AimHeight';
 import type { CommandInput } from '../../ui/components/pressKey';
 import type { EncodersPanel } from '../../ui/panels/encoders/EncodersPanel';
@@ -34,6 +35,8 @@ export interface LayoutDeps {
   readonly storeMode: StoreModeGuard;
   readonly stageRenderer: Pick<StageRenderer, 'resize' | 'setConsoleHeight'>;
   readonly views: Pick<CameraViews, 'currentView'>;
+  /** The saved layout store the show files wiring builds (the old `layoutPrefs`). */
+  readonly layoutPrefs: Pick<LayoutPrefs, 'load' | 'save'>;
   /** The old `setView`: it ignores names that are not views. */
   readonly setView: (view: string, instant: boolean) => void;
 }

@@ -15,6 +15,7 @@ const setup = () => {
     stageRenderer: { resize: vi.fn(), setConsoleHeight: vi.fn() },
     views: { currentView: 'foh' as const },
     setView: vi.fn(),
+    layoutPrefs: { load: () => null, save: vi.fn() },
   };
   return { deps, host: layoutHost(deps) };
 };
@@ -57,5 +58,6 @@ describe('layoutHost', () => {
     expect(deps.setView).toHaveBeenCalledWith('foh', true);
     expect(host.currentView()).toBe('foh');
     expect(host.sideTabs).toBe(deps.sideTabs);
+    expect(host.prefs).toBe(deps.layoutPrefs);
   });
 });

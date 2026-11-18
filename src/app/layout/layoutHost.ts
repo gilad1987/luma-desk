@@ -5,7 +5,7 @@ import type { LayoutDeps } from './LayoutDeps';
 /** The part of {@link LayoutDeps} a layout change touches. */
 export type LayoutHostDeps = Pick<
   LayoutDeps,
-  'sideTabs' | 'encoders' | 'commandLine' | 'storeMode' | 'stageRenderer' | 'views' | 'setView'
+  'sideTabs' | 'encoders' | 'commandLine' | 'storeMode' | 'stageRenderer' | 'views' | 'setView' | 'layoutPrefs'
 >;
 
 /**
@@ -17,6 +17,7 @@ export function layoutHost(deps: LayoutHostDeps): LayoutHost {
   let keypad: Keypad | null = null;
   return {
     sideTabs: deps.sideTabs,
+    prefs: deps.layoutPrefs,
     keypad: () => {
       keypad ??= new Keypad(deps.commandLine, deps.storeMode);
       return keypad.element;
