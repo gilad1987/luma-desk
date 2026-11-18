@@ -39,7 +39,9 @@ const cited = new Set([...code.matchAll(/[Qq]uirk ([A-Z]\d+)\b/g)].map((m) => m[
 const CITATION = /[Qq]uirk [A-Z]\d+(?:,[\s*]+[Qq]uirk [A-Z]\d+)*(?:,|[\s*]+\()?[\s*]*orig:(?:sw\.js:)?\d+/g;
 const withoutLine = [...code.replace(CITATION, '').matchAll(/[Qq]uirk [A-Z]\d+\b.{0,40}/g)].map((m) => m[0]);
 
-const originalLines = readFileSync(join(root, 'tests/shared/legacy/original-index.html'), 'utf8').split('\n').length;
+const originalLines = readFileSync(join(root, 'tests/shared/legacy/original-index.html'), 'utf8')
+  .trimEnd()
+  .split('\n').length;
 /** Lines of `sw.js` at commit 48a3b63, the worker the `orig:sw.js:<n>` citations point into. */
 const SW_JS_LINES = 26;
 const outOfRange = [...code.matchAll(/orig:(sw\.js:)?(\d+(?:-\d+)?(?:, \d+)*)/g)].filter((m) =>
