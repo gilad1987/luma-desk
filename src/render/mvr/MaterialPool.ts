@@ -1,24 +1,26 @@
-import { Color, Texture, type Material } from 'three';
+import { Color, Source, Texture, type Material } from 'three';
 
-/** Fields that name or track a material but do not change how it draws. */
+/** Fields that name or track a material or texture but do not change how it draws. */
 const IGNORED_FIELDS = new Set(['uuid', 'name', 'userData', 'version', '_listeners']);
 
 /**
- * A field value as signature data: a colour by its hex code, a texture by its instance. Not by its image source:
- * GLTFLoader clones a texture per sampler, transform or UV channel, so two clones share a source but draw differently.
+ * A field value as signature data: a colour by its hex code, an image by its instance, a texture by its own
+ * signature. Not a texture by its image alone: GLTFLoader clones a texture per sampler, transform or UV channel, so
+ * two clones share an image but draw differently. Equal clones of one image (`SharedTextureLoader`) draw alike.
  */
 function signatureValue(value: unknown): unknown {
-  if (value instanceof Texture) return value.uuid;
+  if (value instanceof Texture) return signatureOf(value);
+  if (value instanceof Source) return value.uuid;
   if (value instanceof Color) return value.getHexString();
   return value;
 }
 
 /**
- * Every field that changes how `material` draws (its type, colours, opacity, side, maps and the rest), as text. Two
- * materials with one signature draw alike, whichever file or loader made them.
+ * Every field that changes how `object`, a material or texture, draws (its type, colours, opacity, side, maps, image,
+ * sampler and the rest), as text. Two materials with one signature draw alike, whichever file or loader made them.
  */
-function signatureOf(material: Material): string {
-  const fields = Object.entries(material).filter(([key]) => !IGNORED_FIELDS.has(key));
+function signatureOf(object: Material | Texture): string {
+  const fields = Object.entries(object).filter(([key]) => !IGNORED_FIELDS.has(key));
   return JSON.stringify(fields.map(([key, value]) => [key, signatureValue(value)]));
 }
 

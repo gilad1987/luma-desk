@@ -28,6 +28,13 @@ describe('importMvr meshResources', () => {
     expect(result.warnings.filter((warning) => warning.code === 'missing-mesh-resource')).toEqual([]);
   });
 
+  it('finds a URI written with a leading ./ at the archive root, keyed as written', async () => {
+    const files = { 'a.glb': triangleGlb('./wood.png'), 'wood.png': IMAGE };
+    const result = await imported([{ file: 'a.glb' }], files);
+    expect([...result.meshResources]).toEqual([['./wood.png', IMAGE]]);
+    expect(result.warnings.filter((warning) => warning.code === 'missing-mesh-resource')).toEqual([]);
+  });
+
   it('warns once per mesh file for each URI the archive lacks, and skips embedded data URIs', async () => {
     const files = { 'a.glb': triangleGlb('gone.png'), 'b.glb': triangleGlb('https://example.com/x.png') };
     const result = await imported([{ file: 'a.glb' }, { file: 'a.glb' }, { file: 'b.glb' }], files);

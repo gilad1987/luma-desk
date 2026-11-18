@@ -12,13 +12,18 @@ function externalUris(bytes: Uint8Array): readonly string[] {
   }
 }
 
-/** The archive file a URI names: glTF URIs are percent-encoded, and a malformed escape is read as written. */
+/**
+ * The archive file a URI names: glTF URIs are percent-encoded, and a malformed escape is read as written. A leading
+ * `./` names the folder of the mesh, which the archive keeps at its root with the meshes.
+ */
 function archiveName(uri: string): string {
+  let name = uri;
   try {
-    return decodeURIComponent(uri);
+    name = decodeURIComponent(uri);
   } catch {
-    return uri;
+    // A malformed escape: keep the URI as written.
   }
+  return name.replace(/^\.\//, '');
 }
 
 /**

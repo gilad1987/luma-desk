@@ -81,13 +81,13 @@ describe('MvrStage.show of GLB resource URLs', () => {
     expect([failures.map((failure) => failure.file), blobLedger(spies)]).toEqual([['a.glb'], [1, true]]);
   });
 
-  it('revokes every blob URL when two meshes share a texture across two shows and a dispose', async () => {
+  it('makes one blob URL per show for a texture two meshes share, and revokes them all', async () => {
     const files = { 'a.glb': triangleGlb('wood.png'), 'b.glb': triangleGlb('wood.png'), 'wood.png': IMAGE };
     const { spies, result } = await arrange(files);
     const stage = new MvrStage();
     await stage.show(result);
     const failures = await stage.show(result);
     stage.dispose();
-    expect([failures, blobLedger(spies)]).toEqual([[], [4, true]]);
+    expect([failures, blobLedger(spies)]).toEqual([[], [2, true]]);
   });
 });

@@ -16,7 +16,11 @@ afterEach(() => {
 
 describe('MeshLibrary with mesh resources', () => {
   it('loads an archive texture and buffer through blob URLs, revokes them, and logs no error', async () => {
-    vi.stubGlobal('createImageBitmap', () => Promise.resolve({ width: 1, height: 1, close: () => undefined }));
+    const decoded: unknown[] = [];
+    vi.stubGlobal('createImageBitmap', (image: unknown) => {
+      decoded.push(image);
+      return Promise.resolve({ width: 1, height: 1, close: () => undefined });
+    });
     const errors = vi.spyOn(console, 'error');
     const created = vi.spyOn(URL, 'createObjectURL');
     const revoked = vi.spyOn(URL, 'revokeObjectURL');
@@ -30,6 +34,7 @@ describe('MeshLibrary with mesh resources', () => {
     expect([library.failures(), part?.geometry.getAttribute('position').count]).toEqual([[], 3]);
     expect(map).toBeInstanceOf(Texture);
     expect(errors).not.toHaveBeenCalled();
+    expect(decoded.map((image) => (image instanceof Blob ? image.size : image))).toEqual([4]);
     const urls = created.mock.results.map((result) => String(result.value));
     expect([urls.length, urls.every((url) => url.startsWith('blob:'))]).toEqual([2, true]);
     expect(revoked.mock.calls.map(([url]) => url).sort()).toEqual(urls.sort());

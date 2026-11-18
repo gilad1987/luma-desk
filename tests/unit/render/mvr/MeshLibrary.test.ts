@@ -16,7 +16,8 @@ const BLUE = { name: 'blue', rgb: [0, 0, 255] } as const;
 /** A GLB header that promises 100 bytes and ends after 12. */
 const TRUNCATED_GLB = new Uint8Array([0x67, 0x6c, 0x54, 0x46, 2, 0, 0, 0, 100, 0, 0, 0]);
 
-const libraryOf = (file: string, bytes: Uint8Array): MeshLibrary => new MeshLibrary(new Map([[file, bytes]]));
+const libraryOf = (file: string, bytes: Uint8Array): MeshLibrary =>
+  new MeshLibrary(new Map([[file, bytes]]), new Map());
 
 afterEach(() => {
   vi.restoreAllMocks();

@@ -29,7 +29,7 @@ describe('buildLayers', () => {
     const { geometry, meshes } = await importMvr(mvr, { name: 'many' });
     const timeouts = vi.spyOn(globalThis, 'setTimeout');
     const progress: number[] = [];
-    await buildLayers(geometry, new MeshLibrary(meshes), (done, total) => progress.push(done / total));
+    await buildLayers(geometry, new MeshLibrary(meshes, new Map()), (done, total) => progress.push(done / total));
     expect(timeouts.mock.calls.filter(([, delay]) => delay === 0).length).toBeGreaterThanOrEqual(2);
     expect(progress).toEqual(Array.from({ length: FILE_COUNT }, (_, i) => (i + 1) / FILE_COUNT));
   });

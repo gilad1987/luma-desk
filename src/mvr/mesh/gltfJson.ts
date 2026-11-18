@@ -1,4 +1,5 @@
 import { emptyBox, union, type Aabb, type Point3 } from '../math/Aabb';
+import { isEmbeddedUri } from './isEmbeddedUri';
 import type { GltfNodeTransform } from './nodeMatrix';
 
 /** A glTF node reduced to what bounds need, every field already checked. */
@@ -64,10 +65,10 @@ function readNode(value: unknown): GltfNode {
   };
 }
 
-/** The image and buffer URIs that name another file; a `data:` URI holds its bytes inline. */
+/** The image and buffer URIs that name another file, so not an embedded one (`isEmbeddedUri`). */
 function externalUris(gltf: Json): string[] {
   const uris = [...list(gltf['images']), ...list(gltf['buffers'])].map((item) => record(item)['uri']);
-  return [...new Set(uris.filter((uri): uri is string => typeof uri === 'string' && !/^data:/i.test(uri)))];
+  return [...new Set(uris.filter((uri): uri is string => typeof uri === 'string' && !isEmbeddedUri(uri)))];
 }
 
 /** The default scene's nodes, or every node that no other node lists as a child. */

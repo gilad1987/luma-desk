@@ -2,6 +2,7 @@ import type { BufferGeometry } from 'three';
 import { loadMeshParts } from './loadMeshParts';
 import { MaterialPool } from './MaterialPool';
 import type { MeshPart } from './MeshPart';
+import { OfflineLoadingManager } from './OfflineLoadingManager';
 
 /** A mesh file the archive holds but three.js could not parse, with the loader's reason, for the import summary. */
 export interface MeshFailure {
@@ -16,21 +17,22 @@ export interface MeshFailure {
  */
 export class MeshLibrary {
   readonly #bytes: Map<string, Uint8Array>;
-  readonly #resources: ReadonlyMap<string, Uint8Array>;
+  readonly #manager: OfflineLoadingManager;
   readonly #loads = new Map<string, Promise<readonly MeshPart[]>>();
   readonly #geometries: BufferGeometry[] = [];
   readonly #materials = new MaterialPool();
   readonly #failures: MeshFailure[] = [];
+  #parsing = 0;
   #isDisposed = false;
 
   /**
-   * `bytes` is `MvrImport.meshes`: mesh bytes by archive file name. The library lets go of each file once read.
-   * `resources` is `MvrImport.meshResources`: the files the meshes name, kept as long as the library, since meshes
-   * share them.
+   * `bytes` is `MvrImport.meshes`: mesh bytes by archive file name. `resources` is `MvrImport.meshResources`: the
+   * files the meshes name, shared by all parses through one loading manager, so an image is decoded once. The library
+   * lets go of each mesh file once read, and of the resources once every mesh file is parsed.
    */
-  constructor(bytes: ReadonlyMap<string, Uint8Array>, resources: ReadonlyMap<string, Uint8Array> = new Map()) {
+  constructor(bytes: ReadonlyMap<string, Uint8Array>, resources: ReadonlyMap<string, Uint8Array>) {
     this.#bytes = new Map(bytes);
-    this.#resources = resources;
+    this.#manager = new OfflineLoadingManager(resources);
   }
 
   /** The parts of `file`; none when the archive lacks it (the import warned) or it cannot be parsed (see `failures`). */
@@ -51,6 +53,8 @@ export class MeshLibrary {
   /** Frees every geometry, material and texture parsed so far, and those of loads still running when they finish. */
   dispose(): void {
     this.#isDisposed = true;
+    this.#bytes.clear();
+    this.#releaseIfIdle();
     for (const geometry of this.#geometries.splice(0)) geometry.dispose();
     this.#materials.dispose();
   }
@@ -67,11 +71,20 @@ export class MeshLibrary {
   }
 
   async #parse(file: string, bytes: Uint8Array): Promise<MeshPart[]> {
+    this.#parsing += 1;
     try {
-      return await loadMeshParts(file, bytes, this.#resources);
+      return await loadMeshParts(file, bytes, this.#manager);
     } catch (error) {
       this.#failures.push({ file, reason: error instanceof Error ? error.message : String(error) });
       return [];
+    } finally {
+      this.#parsing -= 1;
+      this.#releaseIfIdle();
     }
+  }
+
+  /** Releases the resources and their blob URLs once no parse runs and no mesh file is left to parse. */
+  #releaseIfIdle(): void {
+    if (this.#parsing === 0 && this.#bytes.size === 0) this.#manager.dispose();
   }
 }
