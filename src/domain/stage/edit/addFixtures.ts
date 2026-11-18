@@ -1,6 +1,7 @@
 import type { FixtureTypeId } from '../../FixtureType';
 import type { StageDesign, StageFixture } from '../StageDesign';
 import { type FixturePlace, placesOnLine, placesOnTruss } from '../trussPlaces';
+import type { StageTruss } from '../trussTypes';
 import type { Vec3 } from '../types';
 import { defaultRole } from './defaultRole';
 import { nextIdBlock } from './ids';
@@ -11,6 +12,7 @@ const SAME_SPOT_M = 0.2;
 const MAX_LANES = 10;
 
 type FixtureBase = Pick<StageFixture, 'type' | 'role' | 'trussId' | 'mount'>;
+type IsTaken = (p: FixturePlace) => boolean;
 
 /** `count` fixtures of `type` to spread evenly along the truss `trussId`. */
 export interface TrussBatch {
@@ -37,7 +39,7 @@ export function addFixturesOnTruss(d: StageDesign, batch: TrussBatch): StageDesi
   checkCount(batch.count);
   const truss = d.trusses.find((t) => t.id === batch.trussId);
   if (!truss) throw new RangeError(`addFixturesOnTruss: no truss with id ${batch.trussId}`);
-  const places = firstFreeLane(d, (lane) => placesOnTruss(truss, batch.count, lane));
+  const places = firstFreeLane((lane) => placesOnTruss(truss, batch.count, lane), takenOnTruss(d, truss));
   const role = defaultRole(batch.type, truss);
   return appendFixtures(d, places, { type: batch.type, role, trussId: truss.id, mount: 'hang' });
 }
@@ -48,7 +50,7 @@ export function addFixturesOnTruss(d: StageDesign, batch: TrussBatch): StageDesi
  */
 export function addFloorRow(d: StageDesign, row: FloorRow): StageDesign {
   checkCount(row.count);
-  const places = firstFreeLane(d, (lane) => placesOnLine(row.from, row.to, row.count, lane));
+  const places = firstFreeLane((lane) => placesOnLine(row.from, row.to, row.count, lane), takenSpot(d));
   const role = defaultRole(row.type, null);
   return appendFixtures(d, places, { type: row.type, role, trussId: null, mount: 'floor' });
 }
@@ -62,8 +64,25 @@ function checkCount(count: number): void {
   if (!Number.isInteger(count) || count < 1) throw new RangeError(`addFixtures: count must be >= 1, got ${count}`);
 }
 
-function firstFreeLane(d: StageDesign, placesAt: (lane: number) => FixturePlace[]): FixturePlace[] {
-  const isTaken = (p: FixturePlace): boolean => d.fixtures.some((f) => isSameSpot(f.position, p.position));
+/** A place is taken when a fixture stands on the same spot (`isSameSpot`). */
+function takenSpot(d: StageDesign): IsTaken {
+  return (p) => d.fixtures.some((f) => isSameSpot(f.position, p.position));
+}
+
+/**
+ * On a hung truss a place is also taken by a fixture of that truss within 0.2 m in plan (x/z), at any height: the
+ * built-in rows hang lower than `HANG_DROP_M`, so a 3-D check misses them and a new batch would hang inside them. A
+ * tower stacks its fixtures in height, so it keeps the 3-D check only.
+ */
+function takenOnTruss(d: StageDesign, truss: StageTruss): IsTaken {
+  const isTakenSpot = takenSpot(d);
+  if (truss.params.kind === 'tower') return isTakenSpot;
+  const hung = d.fixtures.filter((f) => f.trussId === truss.id);
+  const inPlan = (a: Vec3, b: Vec3): boolean => Math.hypot(a[0] - b[0], a[2] - b[2]) < SAME_SPOT_M;
+  return (p) => isTakenSpot(p) || hung.some((f) => inPlan(f.position, p.position));
+}
+
+function firstFreeLane(placesAt: (lane: number) => FixturePlace[], isTaken: IsTaken): FixturePlace[] {
   let places = placesAt(0);
   for (let lane = 1; lane < MAX_LANES && places.some(isTaken); lane += 1) places = placesAt(lane);
   return places;
