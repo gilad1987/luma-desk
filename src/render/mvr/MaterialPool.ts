@@ -3,9 +3,12 @@ import { Color, Texture, type Material } from 'three';
 /** Fields that name or track a material but do not change how it draws. */
 const IGNORED_FIELDS = new Set(['uuid', 'name', 'userData', 'version', '_listeners']);
 
-/** A field value as signature data: a texture by its image source, a colour by its hex code. */
+/**
+ * A field value as signature data: a colour by its hex code, a texture by its instance. Not by its image source:
+ * GLTFLoader clones a texture per sampler, transform or UV channel, so two clones share a source but draw differently.
+ */
 function signatureValue(value: unknown): unknown {
-  if (value instanceof Texture) return value.source.uuid;
+  if (value instanceof Texture) return value.uuid;
   if (value instanceof Color) return value.getHexString();
   return value;
 }

@@ -30,7 +30,7 @@ function imported(withGeometry: boolean): Promise<MvrImport> {
 describe('importSummaryView', () => {
   it('lists the four counts under their e2e keys, the offset, the geometry line and the warnings', async () => {
     const result = await imported(true);
-    const view = importSummaryView(result);
+    const view = importSummaryView(result, []);
     expect(view.counts.map(({ key, value }) => [key, value])).toEqual([
       ['fixtures', 1],
       ['unpatched', 1],
@@ -45,7 +45,15 @@ describe('importSummaryView', () => {
   });
 
   it('says so when the file has no stage geometry', async () => {
-    expect(importSummaryView(await imported(false)).geometry).toBe('No stage geometry in file');
+    expect(importSummaryView(await imported(false), []).geometry).toBe('No stage geometry in file');
+  });
+
+  it('adds each mesh file three.js could not draw to the warnings, after the import warnings', async () => {
+    const result = await imported(true);
+    const view = importSummaryView(result, [{ file: 'truss.glb', reason: 'Unexpected end' }]);
+    expect(view.warnings.slice(result.warnings.length)).toEqual([
+      'Mesh file truss.glb could not be drawn: Unexpected end',
+    ]);
   });
 });
 

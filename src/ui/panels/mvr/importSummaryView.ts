@@ -22,10 +22,22 @@ export interface ImportSummaryView {
   readonly warnings: readonly string[];
 }
 
+/**
+ * A mesh file the import accepted but three.js could not draw. The type is structural, as render's `MeshFailure`
+ * has this shape and ui does not import render.
+ */
+export interface MeshFileFailure {
+  readonly file: string;
+  readonly reason: string;
+}
+
 const metres = (value: number): string => value.toFixed(2);
 
-/** The summary of one import (plan §6, `ImportSummary`): what came in, what is missing and what the import changed. */
-export function importSummaryView(result: MvrImport): ImportSummaryView {
+/**
+ * The summary of one import (plan §6, `ImportSummary`): what came in, what is missing and what the import changed.
+ * `meshFailures` is what `MvrStage.show` resolved with; each failure is a warning, after those of the import.
+ */
+export function importSummaryView(result: MvrImport, meshFailures: readonly MeshFileFailure[]): ImportSummaryView {
   const { summary } = result;
   const [x, y, z] = result.geometry.offset;
   return {
@@ -37,6 +49,9 @@ export function importSummaryView(result: MvrImport): ImportSummaryView {
     ],
     offset: `Offset x ${metres(x)} m, y ${metres(y)} m, z ${metres(z)} m`,
     geometry: summary.noGeometry ? 'No stage geometry in file' : 'Stage built from MVR',
-    warnings: result.warnings.map((warning) => warning.message),
+    warnings: [
+      ...result.warnings.map((warning) => warning.message),
+      ...meshFailures.map(({ file, reason }) => `Mesh file ${file} could not be drawn: ${reason}`),
+    ],
   };
 }

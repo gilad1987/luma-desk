@@ -30,6 +30,17 @@ describe('MaterialPool', () => {
     for (const material of others) expect(pool.adopt(material)).toBe(material);
   });
 
+  it('keeps materials apart whose textures share an image but differ in repeat', () => {
+    const pool = new MaterialPool();
+    const map = new Texture();
+    const tiled = map.clone();
+    tiled.repeat.set(4, 4);
+    const plain = new MeshPhongMaterial({ map });
+    const repeated = new MeshPhongMaterial({ map: tiled });
+    pool.adopt(plain);
+    expect(pool.adopt(repeated)).toBe(repeated);
+  });
+
   it('frees every pooled material and its textures on dispose', () => {
     const pool = new MaterialPool();
     const map = new Texture();

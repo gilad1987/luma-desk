@@ -29,6 +29,7 @@ export class MvrStage {
    * Replaces the scenery with that of `input`. The design's hidden layers start hidden. A later `show` or `dispose`
    * while this one still parses wins: the late result is freed and never shown. Resolves with the mesh files three.js
    * could not parse, which the import's bounds reader may have accepted, so the UI can name them in the summary.
+   * The mesh bytes are freed only when the caller also drops `input.meshes` (the import's `result.meshes`).
    */
   async show(input: MvrStageInput, onProgress?: MvrProgress): Promise<readonly MeshFailure[]> {
     this.dispose();
