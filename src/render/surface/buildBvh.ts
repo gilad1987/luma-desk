@@ -81,7 +81,8 @@ function split(build: Build, node: number, first: number, end: number): void {
 
 /**
  * Builds the hierarchy over `boxes` (six floats each: minimum, then maximum). One pass per level and no sort, which
- * keeps the build of a large stage well under a second. No boxes give one empty node that no ray enters.
+ * keeps the build of a large stage well under a second. No boxes give one empty node with NaN bounds, which no ray
+ * enters: the inverted bounds of an empty fit let every ray in. `walk` also returns at once on an empty tree.
  */
 export function buildBvh(boxes: Float32Array): Bvh {
   const count = boxes.length / 6;
@@ -93,5 +94,6 @@ export function buildBvh(boxes: Float32Array): Bvh {
   };
   for (let i = 0; i < count; i++) bvh.order[i] = i;
   split({ boxes, bvh, range: new Float64Array(12), next: 1, depth: 0 }, 0, 0, count);
+  if (count === 0) bvh.bounds.fill(NaN);
   return bvh;
 }

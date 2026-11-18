@@ -11,7 +11,7 @@ export interface InstanceList {
   readonly meshes: readonly TriangleMesh[];
   /** Twelve numbers per instance: the world-to-mesh matrix, three rows of four. */
   readonly inverse: Float64Array;
-  /** The layer index of each instance. */
+  /** The layer index of each instance: its holder in `collectScenery`, whose visibility gates it. */
   readonly layer: Uint16Array;
   /** The world box of each instance, six floats. */
   readonly boxes: Float32Array;
@@ -23,7 +23,7 @@ export interface InstanceList {
  * a unit vector again, so a distance in the mesh frame is the same number as in the world and needs no change.
  */
 export class MeshInstances implements Leaf {
-  /** One flag per layer: 0 lets rays pass through all its instances. The owner sets them. */
+  /** One flag per layer index: 0 lets rays pass through all its instances. The owner sets them. */
   readonly shown: Uint8Array;
   readonly #list: InstanceList;
   readonly #bvh: Bvh;

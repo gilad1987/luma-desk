@@ -19,7 +19,6 @@ test('the synthetic MVR stage at full: draw calls, triangles and frame time', as
     body: JSON.stringify(measure, null, 2),
     contentType: 'application/json',
   });
-  console.log(`render stats: ${JSON.stringify(measure)}`);
   expect(measure.frames).toBe(FRAMES);
   expect(measure.calls).toBeGreaterThan(0);
   expect(measure.triangles).toBeGreaterThan(0);

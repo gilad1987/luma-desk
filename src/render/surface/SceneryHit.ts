@@ -1,7 +1,7 @@
 import { Vector3, type Object3D } from 'three';
 import { UP } from '../../domain/venue';
 import { Ray } from './Ray';
-import { collectScenery, type Scenery } from './collectScenery';
+import { collectScenery, isShownUnder, type Scenery } from './collectScenery';
 import { HitCache } from './HitCache';
 import type { BeamHit } from './SurfaceHit';
 
@@ -16,9 +16,9 @@ const FLAT = 0.999;
 
 /**
  * Where beam rays meet the real meshes of an imported stage, in any direction. It reads the meshes under `root`
- * once (see `collectScenery`), so a new stage needs a new instance and a dropped instance frees everything. A layer
- * that is hidden, or cleared from the root, lets rays pass; the flags are read on every ray, so the hit set follows
- * a layer toggle with no call. The hit of each ray is cached with the other surfaces' hit folded in, so the caller
+ * once (see `collectScenery`), so a new stage needs a new instance and a dropped instance frees everything. A mesh
+ * under a hidden layer or group (the proxies toggle), or cleared from the root, lets rays pass; the flags of each
+ * holder's chain are read on every ray, so the hit set follows a toggle with no call. The hit of each ray is cached with the other surfaces' hit folded in, so the caller
  * computes those only on a miss. The returned hit is one object, refilled per ray: use it before the next ray.
  */
 export class SceneryHit {
@@ -45,10 +45,9 @@ export class SceneryHit {
 
   /** The cached hit of this ray (null: it lands nowhere), or undefined when the ray is new: then call `resolve`. */
   recall(origin: Vector3, direction: Vector3): BeamHit | null | undefined {
-    const { layers, instances } = this.#scenery;
-    for (let i = 0; i < layers.length; i++) {
-      const layer = layers[i];
-      const shown = layer?.visible && layer.parent === this.#root ? 1 : 0;
+    const { holders, instances } = this.#scenery;
+    for (let i = 0; i < holders.length; i++) {
+      const shown = isShownUnder(holders[i], this.#root) ? 1 : 0;
       if (instances.shown[i] === shown) continue;
       instances.shown[i] = shown;
       this.#epoch += 1;

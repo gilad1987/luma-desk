@@ -26,15 +26,19 @@ function entry(bounds: Float32Array, at: number, ray: Ray): number {
  */
 export function walk(bvh: Bvh, ray: Ray, leaf: Leaf, stack: Uint32Array): void {
   const { bounds, links, order } = bvh;
-  if (entry(bounds, 0, ray) === Infinity) return;
+  // No boxes: the root holds nothing, and as a node with count 0 it would read as an inner node that is its own child.
+  if (order.length === 0 || entry(bounds, 0, ray) === Infinity) return;
   let top = 0;
   let node = 0;
-  for (;;) {
+  // A sound tree visits each node once at most, so a walk that runs past the node count is in a broken node array
+  // (a link back, or an overflowed stack that pops node 0). Ending it then costs one hit, a loop freezes the tab.
+  for (let budget = links.length >> 1; budget > 0; budget--) {
     const first = links[node * 2] ?? 0;
     const count = links[node * 2 + 1] ?? 0;
     if (count > 0) {
       for (let i = first; i < first + count; i++) leaf.test(order[i] ?? 0, ray);
-    } else {
+    } else if (first > node) {
+      // The build puts children after their parent; a node that links to itself or back is a dead end.
       const left = entry(bounds, first * 6, ray);
       const right = entry(bounds, first * 6 + 6, ray);
       const isLeftNear = left < right;

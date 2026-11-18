@@ -63,7 +63,9 @@ export class SurfaceHit {
    * The triangles are read now, so call it when the stage's meshes are built, and again with null when they go.
    */
   setScenery(root: Object3D | null): void {
-    this.scenery = root ? new SceneryHit(root) : null;
+    const scenery = root ? new SceneryHit(root) : null;
+    // No triangles (fixtures only, or every mesh failed to parse): nothing there can stop a beam, so keep the box path.
+    this.scenery = scenery && scenery.triangleCount > 0 ? scenery : null;
   }
 
   /** Where a beam ray from `origin` along the unit `direction` lands first, or null when it lands nowhere. */
