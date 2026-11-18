@@ -1,15 +1,10 @@
 // @ts-nocheck
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { clamp, cssRgb, D2R, EventBus, hsv, jsonClone, lerp, performanceClock, rng } from './core';
-import { aimAt, dirFrom } from './domain/aim';
+import { clamp, cssRgb, EventBus, hsv, jsonClone, lerp, performanceClock } from './core';
+import { aimAt } from './domain/aim';
 import { ATTR, FEAT_ATTRS, FEATS, GOBO_NAMES, SCREEN_MODES } from './domain/attributes';
 import { buildRig } from './domain/rig';
-import { ANG, BAND_PTS, DECK, RING, ROOF, SCREEN, STAGE, SXZ, TOWERS, TOWX, TOWZ, TR } from './domain/venue';
+import { BAND_PTS, DECK, RING, SCREEN, STAGE } from './domain/venue';
 import { AppState } from './engine/AppState';
 import { defaultGroups } from './engine/defaultGroups';
 import type { EngineEvents } from './engine/events';
@@ -34,13 +29,39 @@ import { sectionName } from './autoshow/sections';
 import { STYLES } from './autoshow/styles';
 import { SongPlayer } from './audio/SongPlayer';
 import { he } from './i18n/he';
+import { CameraViews } from './render/camera/CameraViews';
+import { VIEWS, type ViewName } from './render/camera/viewTable';
+import {
+  createBeamShared,
+  createFixtureModels,
+  createGoboAtlas,
+  createLensTextures,
+  createModelMaterials,
+  createTrimMaterial,
+  FixtureVisualBuilder,
+  FixtureVisualSync,
+  ModelPrimitives,
+  Props,
+} from './render/fixtures';
+import { addEnvironmentLights } from './render/lights/addEnvironmentLights';
+import { KeyLights } from './render/lights/KeyLights';
+import { LightFrame } from './render/lights/LightFrame';
+import { SceneLights } from './render/lights/SceneLights';
+import { FixturePicker } from './render/picking/FixturePicker';
+import { projectToScreen } from './render/shared';
+import { createStageGraphics } from './render/stage/createStageGraphics';
+import { FixtureIdOverlay } from './render/stage/FixtureIdOverlay';
+import { PostFx } from './render/stage/PostFx';
+import { StageRenderer } from './render/stage/StageRenderer';
+import { animateCrowd } from './render/venue/crowdAnimation';
+import { animatePerformers } from './render/venue/performersAnimation';
+import { buildVenue } from './render/venue/Venue';
 
 /* ====================================================================
    HELPERS
 ==================================================================== */
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
-const V3 = THREE.Vector3;
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -62,2312 +83,6 @@ function toast(m) {
 const rig = buildRig();
 const fixtures = rig.fixtures;
 const FX = Object.fromEntries(fixtures.map((f) => [f.id, f]));
-// legacy render state, until Phase 4 moves it into the renderer: the beam starts at the rigged pan/tilt
-fixtures.forEach((f) => {
-  f.vis = { pan: f.fixed?.pan ?? 0, tilt: f.fixed?.tilt ?? 0, gang: 0 };
-});
-/* render-only venue geometry: the audience terrain and the delay towers */
-const VEN = { X: 42, Z1: 58, STEPS: 30, RISE: 0.55, RUN: 1.15, WH: 7 },
-  UP3 = new V3(0, 1, 0),
-  WALL_LIGHT = { l: null };
-const TIER_N = new V3(0, 1, -VEN.RISE / VEN.RUN).normalize();
-function terrH(x, z) {
-  const zt = VEN.Z1 + VEN.STEPS * VEN.RUN,
-    base = clamp(((z - VEN.Z1) / VEN.RUN) * VEN.RISE, 0, VEN.STEPS * VEN.RISE) + 4;
-  const dx = Math.max(Math.abs(x) - VEN.X - 2, 0),
-    dz = Math.max(z - zt, 0) + Math.max(-40 - z, 0) * 0.8,
-    d = Math.hypot(dx, dz);
-  if (d <= 0) return base;
-  const nz =
-    (Math.sin(x * 0.061) + Math.sin(z * 0.083 + 1.3) + Math.sin((x + z) * 0.047 + 2)) * 1.6 * Math.min(d / 12, 1);
-  return base + Math.min(d * 0.55, 24) + (x < 0 ? Math.min(dx * 0.22, 12) : Math.min(dx * 0.16, 8)) + nz;
-}
-const DELAYS = [
-  [-24, 33],
-  [24, 33],
-];
-
-/* ====================================================================
-   THREE.JS SCENE
-==================================================================== */
-const performers = [];
-const crowdU = { uBeat: { value: 0 }, uJump: { value: 1 } };
-const canvas = $('#c'),
-  ov = $('#ov'),
-  ovx = ov.getContext('2d');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x01020a);
-scene.fog = new THREE.FogExp2(0x05060c, 0.0022);
-const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 1600);
-const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true;
-controls.dampingFactor = 0.08;
-controls.maxPolarAngle = Math.PI * 0.495;
-const VIEWS = {
-  foh: { p: [0, 16, 74], t: [0, 9, -8] },
-  fohMa: { p: [0, 3.2, 49.5], t: [0, 9.5, -8], fov: 60 },
-  front: { p: [0, 6, 28], t: [0, 10, -10] },
-  stage: { p: [4, DECK + 1.8, -5], t: [-2, 6, 30] },
-  top: { p: [0, 86, -9], t: [0, 0, -9.1] },
-  side: { p: [62, 13, -8], t: [0, 9, -8] },
-  crowd: { p: [-5, 2.3, 16], t: [0, 13, -10] },
-  band: { p: [2.5, 5, 10], t: [0, 3, -9] },
-  ring: { p: [0, DECK + 1.7, 3], t: [0, 17, -9.5] },
-  walls: { p: [0, 30, 96], t: [0, 14, -20] },
-  wide: { p: [-30, 40, 120], t: [0, 6, -5] },
-  aud: { p: [0, 15, 1], t: [0, 2, 46] },
-  drums: { p: [2.2, DECK + 3.2, -5.5], t: [0, DECK + 1, -12.4] },
-  valley: { p: [55, 34, 98], t: [-30, 8, -10] },
-  orch: { p: [0, 9, 2], t: [-15.5, 2.4, -12] },
-};
-// MA layout: FOH is the operator's standing eye at the control position in the audience, behind the console overlay;
-// the scene's raised FOH riser and its desk are hidden there (they would show as a second, empty desk)
-let curView = 'foh',
-  fohRig = [];
-function setView(v, instant) {
-  const ma = v === 'foh' && document.body.classList.contains('ma'),
-    V = VIEWS[ma ? 'fohMa' : v];
-  if (!V) return;
-  curView = v;
-  for (const m of fohRig) m.visible = !ma;
-  // the wider lens of the MA control position keeps the whole roof above the console
-  camera.fov = V.fov || 46;
-  camera.updateProjectionMatrix();
-  const from = { p: camera.position.clone(), t: controls.target.clone() },
-    to = { p: new V3(...V.p), t: new V3(...V.t) };
-  if (instant) {
-    camera.position.copy(to.p);
-    controls.target.copy(to.t);
-    controls.update();
-    return;
-  }
-  const t0 = performance.now();
-  (function step() {
-    const k = clamp((performance.now() - t0) / 700, 0, 1),
-      e = k * k * (3 - 2 * k);
-    camera.position.lerpVectors(from.p, to.p, e);
-    controls.target.lerpVectors(from.t, to.t, e);
-    if (k < 1) requestAnimationFrame(step);
-  })();
-  $$('[data-view]').forEach((b) => b.classList.toggle('on', b.dataset.view === v));
-}
-setView('foh', true);
-
-const composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(512, 512), 0.5, 0.45, 0.85);
-composer.addPass(bloom);
-composer.addPass(new OutputPass());
-let glowOn = true,
-  lightsOn = true;
-
-/* --- environment --- */
-scene.add(new THREE.HemisphereLight(0x3a4466, 0x0a0806, 0.35));
-const moon = new THREE.DirectionalLight(0x8ea0d0, 0.25);
-moon.position.set(-30, 50, 40);
-scene.add(moon);
-{
-  // sky
-  const g = new THREE.SphereGeometry(500, 32, 16);
-  const m = new THREE.ShaderMaterial({
-    side: THREE.BackSide,
-    depthWrite: false,
-    fog: false,
-    vertexShader: `varying vec3 vP;void main(){vP=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-    fragmentShader: `varying vec3 vP;void main(){float h=clamp(vP.y,0.,1.);vec3 c=mix(vec3(.035,.045,.09),vec3(.004,.006,.02),pow(h,.45))+vec3(.09,.05,.02)*pow(1.-h,10.);gl_FragColor=vec4(c,1.);}`,
-  });
-  scene.add(new THREE.Mesh(g, m));
-  const N = 2200,
-    pos = new Float32Array(N * 3);
-  for (let i = 0; i < N; i++) {
-    const u = Math.random() * Math.PI * 2,
-      v = Math.acos(Math.random() * 0.92);
-    const r = 480;
-    pos.set([r * Math.sin(v) * Math.cos(u), r * Math.cos(v) + 10, r * Math.sin(v) * Math.sin(u)], i * 3);
-  }
-  const sg = new THREE.BufferGeometry();
-  sg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  scene.add(
-    new THREE.Points(
-      sg,
-      new THREE.PointsMaterial({
-        color: 0xc8d2ff,
-        size: 1.3,
-        sizeAttenuation: false,
-        fog: false,
-        transparent: true,
-        opacity: 0.8,
-      }),
-    ),
-  );
-}
-const matDark = new THREE.MeshStandardMaterial({ color: 0x0c0c0e, roughness: 0.9, metalness: 0.05 });
-const deckTex = (() => {
-  const c = document.createElement('canvas');
-  c.width = c.height = 512;
-  const x = c.getContext('2d');
-  x.fillStyle = '#16161a';
-  x.fillRect(0, 0, 512, 512);
-  for (let i = 0; i < 4000; i++) {
-    x.fillStyle = `rgba(255,255,255,${Math.random() * 0.025})`;
-    x.fillRect(Math.random() * 512, Math.random() * 512, 2, 2);
-  }
-  x.strokeStyle = '#08080a';
-  x.lineWidth = 3;
-  for (let i = 0; i <= 4; i++) {
-    x.beginPath();
-    x.moveTo(i * 128, 0);
-    x.lineTo(i * 128, 512);
-    x.stroke();
-    x.beginPath();
-    x.moveTo(0, i * 256);
-    x.lineTo(512, i * 256);
-    x.stroke();
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(12, 6);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 8;
-  return t;
-})();
-const matDeck = new THREE.MeshStandardMaterial({ color: 0x5a5a60, map: deckTex, roughness: 0.55, metalness: 0.1 });
-const matTruss = new THREE.MeshStandardMaterial({ color: 0x7a7e86, roughness: 0.35, metalness: 0.85 });
-const matBlack = new THREE.MeshStandardMaterial({ color: 0x050506, roughness: 1 });
-const matStone = new THREE.MeshStandardMaterial({ color: 0x3b352c, roughness: 1, flatShading: true });
-const matPerson = new THREE.MeshStandardMaterial({ color: 0x1b1b20, roughness: 0.85 });
-const box = (w, h, d, mat, x, y, z) => {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-  m.position.set(x, y, z);
-  scene.add(m);
-  return m;
-};
-{
-  // ground + deck
-  box(STAGE.x1 - STAGE.x0, DECK, STAGE.z1 - STAGE.z0, matDeck, 0, DECK / 2, (STAGE.z0 + STAGE.z1) / 2).receiveShadow =
-    true;
-  box(STAGE.x1 - STAGE.x0, DECK - 0.1, 0.05, matBlack, 0, (DECK - 0.1) / 2, STAGE.z1 + 0.03); // skirt
-  box(
-    STAGE.x1 - STAGE.x0 + 0.2,
-    0.08,
-    0.2,
-    new THREE.MeshStandardMaterial({ color: 0x222226 }),
-    0,
-    DECK + 0.04,
-    STAGE.z1,
-  ); // nosing
-  box(60, 30, 0.5, matBlack, 0, 15, -21.6); // back wall
-  // ===== Sultan's Pool, Jerusalem: flat pool floor, terraced slope, stone walls, Old City walls on the ridge =====
-  const floorTex = (() => {
-    const c = document.createElement('canvas');
-    c.width = c.height = 512;
-    const x = c.getContext('2d');
-    x.fillStyle = '#5a5246';
-    x.fillRect(0, 0, 512, 512);
-    for (let i = 0; i < 9000; i++) {
-      const v = 60 + Math.random() * 60;
-      x.fillStyle = `rgba(${v},${v * 0.92},${v * 0.8},.25)`;
-      x.fillRect(Math.random() * 512, Math.random() * 512, 2 + Math.random() * 3, 2 + Math.random() * 3);
-    }
-    const t = new THREE.CanvasTexture(c);
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.repeat.set(14, 14);
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  })();
-  const poolFloor = new THREE.Mesh(
-    new THREE.PlaneGeometry(VEN.X * 2, VEN.Z1 - STAGE.z0 + 10),
-    new THREE.MeshStandardMaterial({ color: 0x8a8070, map: floorTex, roughness: 0.95 }),
-  );
-  poolFloor.rotation.x = -Math.PI / 2;
-  poolFloor.position.set(0, 0.01, (VEN.Z1 + STAGE.z0 - 10) / 2);
-  poolFloor.receiveShadow = true;
-  scene.add(poolFloor);
-  // Jerusalem-stone texture, floodlit from below (night look, independent of stage lights)
-  const stoneTex = (lit) => {
-    const c = document.createElement('canvas');
-    c.width = 256;
-    c.height = 256;
-    const x = c.getContext('2d');
-    const g = x.createLinearGradient(0, 256, 0, 0);
-    g.addColorStop(0, lit ? '#e8c48c' : '#6e5d48');
-    g.addColorStop(1, lit ? '#7a5a36' : '#3a3026');
-    x.fillStyle = g;
-    x.fillRect(0, 0, 256, 256);
-    for (let r = 0; r < 16; r++)
-      for (let k = 0; k < 6; k++) {
-        const ox = (r % 2) * 21,
-          v = Math.random() * 0.18;
-        x.fillStyle = `rgba(0,0,0,${v})`;
-        x.fillRect(k * 43 + ox, r * 16, 41, 14);
-      }
-    x.strokeStyle = 'rgba(30,20,10,.55)';
-    x.lineWidth = 2;
-    for (let r = 0; r <= 16; r++) {
-      x.beginPath();
-      x.moveTo(0, r * 16);
-      x.lineTo(256, r * 16);
-      x.stroke();
-    }
-    for (let r = 0; r < 16; r++)
-      for (let k = 0; k <= 6; k++) {
-        const xx = k * 43 + (r % 2) * 21;
-        x.beginPath();
-        x.moveTo(xx, r * 16);
-        x.lineTo(xx, r * 16 + 16);
-        x.stroke();
-      }
-    const t = new THREE.CanvasTexture(c);
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  };
-  const stoneLit = stoneTex(true),
-    stoneDim = stoneTex(false);
-  const stoneMat = (tex, w, h, basic) => {
-    const t = tex.clone();
-    t.needsUpdate = true;
-    t.repeat.set(w / 8, h / 8);
-    return basic
-      ? new THREE.MeshBasicMaterial({ map: t, color: 0xb0a090, fog: true })
-      : new THREE.MeshStandardMaterial({ map: t, roughness: 0.95, color: 0xcfc3b0 });
-  };
-  // pool retaining walls (left / right) — lit by the show
-  for (const sx of [-1, 1]) {
-    const L = VEN.Z1 - STAGE.z0 + 8,
-      m = new THREE.Mesh(new THREE.BoxGeometry(2, VEN.WH, L), stoneMat(stoneDim, L, VEN.WH));
-    m.position.set(sx * (VEN.X + 1), VEN.WH / 2, (VEN.Z1 + STAGE.z0) / 2);
-    scene.add(m);
-  }
-  // terraced seating slope
-  const stepMat = stoneMat(stoneDim, VEN.X * 2, 1.4);
-  for (let k = 0; k < VEN.STEPS; k++) {
-    const y = (k + 1) * VEN.RISE,
-      z = VEN.Z1 + k * VEN.RUN;
-    const m = new THREE.Mesh(new THREE.BoxGeometry(VEN.X * 2 + 4, y, VEN.RUN), stepMat);
-    m.position.set(0, y / 2, z + VEN.RUN / 2);
-    m.receiveShadow = true;
-    scene.add(m);
-  }
-  // terrain: the Hinnom valley hills around the pool
-  {
-    const G = new THREE.PlaneGeometry(460, 460, 150, 150);
-    G.rotateX(-Math.PI / 2);
-    G.translate(0, 0, 20);
-    const P = G.attributes.position,
-      col = new Float32Array(P.count * 3);
-    for (let i = 0; i < P.count; i++) {
-      const x = P.getX(i),
-        z = P.getZ(i),
-        h = terrH(x, z),
-        inside = Math.abs(x) < VEN.X + 2 && z > STAGE.z0 - 12 && z < VEN.Z1 + VEN.STEPS * VEN.RUN;
-      P.setY(i, inside ? -0.5 : h);
-      const r = Math.random() * 0.03,
-        ol = Math.random() < 0.25;
-      col.set(ol ? [0.07 + r, 0.085 + r, 0.05 + r] : [0.11 + r, 0.095 + r, 0.075 + r], i * 3);
-    }
-    G.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    G.computeVertexNormals();
-    scene.add(
-      new THREE.Mesh(G, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, flatShading: true })),
-    );
-  }
-  // Old City walls along the ridge, with towers, crenellations and the Tower of David citadel — floodlit warm
-  {
-    const crenG = new THREE.BoxGeometry(0.9, 1.3, 2.3),
-      crenM = new THREE.MeshBasicMaterial({ color: 0xc9a46c }),
-      crenXf = [];
-    const WALLS = [
-      [
-        [-58, -95],
-        [-74, -50],
-        [-82, -5],
-        [-84, 40],
-        [-74, 85],
-        [-48, 118],
-      ],
-      [
-        [56, -95],
-        [72, -52],
-        [82, -8],
-        [85, 38],
-        [76, 84],
-        [52, 118],
-      ],
-    ];
-    for (const raw of WALLS) {
-      const pts = raw.map(([x, z]) => new V3(x, terrH(x, z), z));
-      for (let i = 0; i < pts.length - 1; i++) {
-        const A = pts[i],
-          B = pts[i + 1],
-          L = Math.hypot(B.x - A.x, B.z - A.z),
-          ang = Math.atan2(B.x - A.x, B.z - A.z);
-        const n = Math.ceil(L / 6);
-        for (let k = 0; k < n; k++) {
-          const t0 = k / n,
-            t1 = (k + 1) / n,
-            x = lerp(A.x, B.x, (t0 + t1) / 2),
-            z = lerp(A.z, B.z, (t0 + t1) / 2),
-            base =
-              Math.min(terrH(lerp(A.x, B.x, t0), lerp(A.z, B.z, t0)), terrH(lerp(A.x, B.x, t1), lerp(A.z, B.z, t1))) -
-              3,
-            H = 14;
-          const m = new THREE.Mesh(new THREE.BoxGeometry(2.4, H, L / n + 0.05), stoneMat(stoneLit, L / n, H, true));
-          m.position.set(x, base + H / 2, z);
-          m.rotation.y = ang;
-          scene.add(m);
-          for (let c = 0; c < 3; c++) {
-            const tt = lerp(t0, t1, (c + 0.5) / 3);
-            crenXf.push([lerp(A.x, B.x, tt), base + H + 0.65, lerp(A.z, B.z, tt), ang]);
-          }
-        }
-        if (i > 0) {
-          const H = 20,
-            base = A.y - 3,
-            m = new THREE.Mesh(new THREE.BoxGeometry(8, H, 8), stoneMat(stoneLit, 8, H, true));
-          m.position.set(A.x, base + H / 2, A.z);
-          m.rotation.y = ang;
-          scene.add(m);
-          for (const [dx, dz] of [
-            [-3.4, -3.4],
-            [3.4, -3.4],
-            [-3.4, 3.4],
-            [3.4, 3.4],
-            [0, -3.4],
-            [0, 3.4],
-            [-3.4, 0],
-            [3.4, 0],
-          ])
-            crenXf.push([A.x + dx, base + H + 0.65, A.z + dz, ang]);
-        }
-      }
-    } // walls
-    // right side: gatehouse with an arched gate facing the venue (Jaffa Gate style)
-    {
-      const gx = 83.5,
-        gz = 15,
-        gb = terrH(gx, gz) - 3,
-        H = 22,
-        gm = new THREE.Mesh(new THREE.BoxGeometry(11, H, 13), stoneMat(stoneLit, 11, H, true));
-      gm.position.set(gx, gb + H / 2, gz);
-      scene.add(gm);
-      const arch = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 7), new THREE.MeshBasicMaterial({ color: 0x0b0806 }));
-      arch.position.set(gx - 5.52, gb + 3 + 3.5, gz);
-      arch.rotation.y = -Math.PI / 2;
-      scene.add(arch);
-      const top = new THREE.Mesh(new THREE.CircleGeometry(2.1, 20, 0, Math.PI), arch.material);
-      top.position.set(gx - 5.52, gb + 10, gz);
-      top.rotation.y = -Math.PI / 2;
-      scene.add(top);
-      for (const [dx, dz] of [
-        [-5, -6],
-        [-5, -2],
-        [-5, 2],
-        [-5, 6],
-        [5, -6],
-        [5, 6],
-        [0, -6],
-        [0, 6],
-      ])
-        crenXf.push([gx + dx, gb + H + 0.65, gz + dz, Math.PI / 2]);
-    }
-    // right ridge, behind the wall: round tower with a conical roof + a dark dome (Mount Zion silhouette)
-    {
-      const tx = 104,
-        tz = -28,
-        tb = terrH(tx, tz) - 2,
-        rt = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.6, 26, 20), stoneMat(stoneLit, 8, 26, true));
-      rt.position.set(tx, tb + 13, tz);
-      scene.add(rt);
-      for (let k = 0; k < 4; k++) {
-        const tur = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 8, 10), rt.material);
-        tur.position.set(tx + Math.cos(k * 1.57) * 4.4, tb + 22, tz + Math.sin(k * 1.57) * 4.4);
-        scene.add(tur);
-        const cap = new THREE.Mesh(
-          new THREE.ConeGeometry(1.25, 2.6, 10),
-          new THREE.MeshBasicMaterial({ color: 0x2b3238 }),
-        );
-        cap.position.set(tur.position.x, tb + 27.3, tur.position.z);
-        scene.add(cap);
-      }
-      const cone = new THREE.Mesh(new THREE.ConeGeometry(4.9, 9, 20), new THREE.MeshBasicMaterial({ color: 0x323b42 }));
-      cone.position.set(tx, tb + 30.5, tz);
-      scene.add(cone);
-      const crossM = new THREE.MeshBasicMaterial({ color: 0xc9a46c });
-      const c1 = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.2, 0.25), crossM);
-      c1.position.set(tx, tb + 36, tz);
-      scene.add(c1);
-      const nave = new THREE.Mesh(new THREE.BoxGeometry(22, 12, 14), stoneMat(stoneLit, 22, 12, true));
-      nave.position.set(tx + 12, tb + 6, tz + 9);
-      scene.add(nave);
-      const dome = new THREE.Mesh(
-        new THREE.SphereGeometry(5.5, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2),
-        new THREE.MeshBasicMaterial({ color: 0x2a3036 }),
-      );
-      dome.position.set(tx + 14, tb + 12, tz + 9);
-      scene.add(dome);
-    }
-    const im = new THREE.InstancedMesh(crenG, crenM, crenXf.length),
-      m4 = new THREE.Matrix4(),
-      q = new THREE.Quaternion();
-    crenXf.forEach(([x, y, z, a], i) => {
-      q.setFromAxisAngle(UP3, a);
-      m4.compose(new V3(x, y, z), q, new V3(1, 1, 1));
-      im.setMatrixAt(i, m4);
-    });
-    scene.add(im);
-    // Tower of David (citadel + minaret)
-    const cx = -70,
-      cz = -62,
-      cb = terrH(cx, cz) - 3;
-    const keep = new THREE.Mesh(new THREE.BoxGeometry(16, 22, 16), stoneMat(stoneLit, 16, 22, true));
-    keep.position.set(cx, cb + 11, cz);
-    scene.add(keep);
-    const minM = stoneMat(stoneLit, 4, 20, true),
-      mx_ = cx + 4,
-      mz_ = cz + 5;
-    const mn = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 2.1, 20, 16), minM);
-    mn.position.set(mx_, cb + 32, mz_);
-    scene.add(mn);
-    const gal = new THREE.Mesh(new THREE.CylinderGeometry(2.7, 2.7, 0.7, 16), crenM);
-    gal.position.set(mx_, cb + 39, mz_);
-    scene.add(gal);
-    const up = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, 5, 16), minM);
-    up.position.set(mx_, cb + 44.5, mz_);
-    scene.add(up);
-    const dome = new THREE.Mesh(new THREE.SphereGeometry(1.7, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), crenM);
-    dome.position.set(mx_, cb + 47, mz_);
-    scene.add(dome);
-    const spire = new THREE.Mesh(new THREE.ConeGeometry(0.25, 2.5, 8), crenM);
-    spire.position.set(mx_, cb + 49.2, mz_);
-    scene.add(spire);
-    // floodlight glow at the foot of the walls
-    const wl = new THREE.PointLight(0xffb060, 0, 140, 1.4);
-    wl.position.set(-66, 30, -10);
-    scene.add(wl);
-    WALL_LIGHT.l = wl;
-  }
-  // city lights on the surrounding hills
-  {
-    const N = 2600,
-      pos = new Float32Array(N * 3),
-      col = new Float32Array(N * 3);
-    let n = 0;
-    for (let i = 0; i < N * 6 && n < N; i++) {
-      const x = (Math.random() - 0.5) * 440,
-        z = 20 + (Math.random() - 0.5) * 440;
-      if (Math.abs(x) < VEN.X + 18 && z > -40 && z < VEN.Z1 + VEN.STEPS * VEN.RUN + 14) continue;
-      if (Math.abs(x) > 55 && Math.abs(x) < 95 && z > -100 && z < 125) continue;
-      if (x > 95 && x < 135 && z > -45 && z < 0) continue;
-      const h = terrH(x, z);
-      pos.set([x, h + 1 + Math.random() * 6, z], n * 3);
-      const w = Math.random();
-      col.set(w < 0.7 ? [1, 0.72, 0.4] : [0.85, 0.9, 1], n * 3);
-      n++;
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(pos.slice(0, n * 3), 3));
-    g.setAttribute('color', new THREE.BufferAttribute(col.slice(0, n * 3), 3));
-    scene.add(
-      new THREE.Points(
-        g,
-        new THREE.PointsMaterial({
-          size: 2.2,
-          sizeAttenuation: false,
-          vertexColors: true,
-          transparent: true,
-          opacity: 0.85,
-          fog: false,
-        }),
-      ),
-    );
-  }
-  // FOH riser
-  fohRig = [
-    box(8, 1.4, 4.5, matDark, 0, 4.3, 47),
-    box(6.5, 0.9, 0.9, new THREE.MeshStandardMaterial({ color: 0x15151a }), 0, 5.45, 46),
-  ];
-  {
-    const cm = new THREE.MeshStandardMaterial({ color: 0x5c5f66, metalness: 0.8, roughness: 0.4 }); // crowd barricade
-    for (let x = -36; x <= 36; x += 2.05) box(2, 1.25, 0.5, cm, x, 0.62, 6.2);
-  }
-}
-{
-  // trusses
-  const tubeG = new THREE.CylinderGeometry(0.03, 0.03, 1, 6),
-    chainM = new THREE.MeshBasicMaterial({ color: 0x2a2a2a });
-  function truss(a, b, s = 0.42) {
-    const A = new V3(...a),
-      B = new V3(...b),
-      d = B.clone().sub(A),
-      L = d.length(),
-      mid = A.clone().add(B).multiplyScalar(0.5);
-    const g = new THREE.Group();
-    g.position.copy(mid);
-    g.quaternion.setFromUnitVectors(new V3(0, 1, 0), d.normalize());
-    for (const [x, z] of [
-      [-1, -1],
-      [1, -1],
-      [-1, 1],
-      [1, 1],
-    ]) {
-      const c = new THREE.Mesh(tubeG, matTruss);
-      c.scale.set(1.4, L, 1.4);
-      c.position.set((x * s) / 2, 0, (z * s) / 2);
-      g.add(c);
-    }
-    const n = Math.max(1, Math.round(L / s));
-    for (let i = 0; i < n; i++) {
-      const yy = -L / 2 + ((i + 0.5) * L) / n;
-      for (const [x, z, rx, rz] of [
-        [0, -1, 0, 1],
-        [0, 1, 0, 1],
-        [-1, 0, 1, 0],
-        [1, 0, 1, 0],
-      ]) {
-        const c = new THREE.Mesh(tubeG, matTruss);
-        c.scale.set(0.8, s * 1.41, 0.8);
-        c.position.set((x * s) / 2, yy, (z * s) / 2);
-        if (rz) c.rotation.z = ((i % 2 ? 1 : -1) * Math.PI) / 4;
-        if (rx) c.rotation.x = ((i % 2 ? 1 : -1) * Math.PI) / 4;
-        g.add(c);
-      }
-    }
-    scene.add(g);
-    return g;
-  }
-  for (const k in TR) truss([-TOWX, TR[k].y, TR[k].z], [TOWX, TR[k].y, TR[k].z], 0.52);
-  for (const x of [-TOWX, TOWX]) for (const z of TOWZ) truss([x, 0, z], [x, ROOF, z], 0.78);
-  for (const x of [-TOWX, TOWX]) truss([x, 0, -8], [x, ROOF, -8], 0.78);
-  for (const x of [-TOWX, TOWX]) truss([x, ROOF, TOWZ[0]], [x, ROOF, TOWZ[1]], 0.78);
-  truss([-TOWX, ROOF, TOWZ[0]], [TOWX, ROOF, TOWZ[0]], 0.78);
-  truss([-TOWX, ROOF, TOWZ[1]], [TOWX, ROOF, TOWZ[1]], 0.78);
-  truss([-TOWX, ROOF, -8], [TOWX, ROOF, -8], 0.78);
-  for (const sx of [-1, 1])
-    for (const z of [-3, -9, -15]) truss([sx * 23.6 + sx * 0.4, DECK, z], [sx * 23.6 + sx * 0.4, 19.5, z], 0.4);
-  box(54, 0.3, 27, new THREE.MeshStandardMaterial({ color: 0x0a0a0c, roughness: 0.9 }), 0, ROOF + 0.7, -7.9); // roof
-  function ringTruss(R, y, s) {
-    // box truss bent into a circle: 4 toroidal chords + instanced lacing
-    for (const [dr, dy] of [
-      [-1, -1],
-      [1, -1],
-      [-1, 1],
-      [1, 1],
-    ]) {
-      const t = new THREE.Mesh(new THREE.TorusGeometry(R + (dr * s) / 2, 0.045, 6, 160), matTruss);
-      t.rotation.x = Math.PI / 2;
-      t.position.set(RING.x, y + (dy * s) / 2, RING.z);
-      scene.add(t);
-    }
-    const n = Math.round((Math.PI * 2 * R) / s),
-      im = new THREE.InstancedMesh(tubeG, matTruss, n * 4),
-      m4 = new THREE.Matrix4(),
-      q = new THREE.Quaternion(),
-      e = new THREE.Euler(),
-      sc = new V3(0.9, s * 1.41, 0.9),
-      ps = new V3();
-    let k = 0;
-    for (let i = 0; i < n; i++) {
-      const a = ((i + 0.5) / n) * Math.PI * 2,
-        zig = ((i % 2 ? 1 : -1) * Math.PI) / 4;
-      for (const [dr, dy, face] of [
-        [-1, 0, 'v'],
-        [1, 0, 'v'],
-        [0, -1, 'h'],
-        [0, 1, 'h'],
-      ]) {
-        const rr = R + (dr * s) / 2;
-        ps.set(RING.x + Math.sin(a) * rr, y + (dy * s) / 2, RING.z + Math.cos(a) * rr);
-        if (face === 'v') e.set(0, a, zig, 'YXZ');
-        else e.set(Math.PI / 2, a, zig, 'YXZ');
-        q.setFromEuler(e);
-        m4.compose(ps, q, sc);
-        im.setMatrixAt(k++, m4);
-      }
-    }
-    scene.add(im);
-    for (let i = 0; i < 6; i++) {
-      const a = (i / 6) * Math.PI * 2 + 0.26,
-        c = new THREE.Mesh(tubeG, chainM);
-      c.scale.set(0.7, ROOF - y, 0.7);
-      c.position.set(RING.x + Math.sin(a) * R, (ROOF + y) / 2, RING.z + Math.cos(a) * R);
-      scene.add(c);
-    }
-  }
-  ringTruss(RING.R, RING.y, 0.5);
-  ringTruss(RING.r2, RING.y2, 0.4);
-  for (const [x, z] of DELAYS) {
-    truss([x, 0, z], [x, 11, z], 0.6);
-    box(1.8, 0.1, 1.8, matTruss, x, 0.05, z);
-    box(1.6, 1.4, 1.2, matDark, x, 11.2, z);
-  }
-  for (const [x, z, H] of TOWERS) {
-    truss([x, DECK, z], [x, DECK + H, z], 0.46);
-    box(1.3, 0.08, 1.3, matTruss, x, DECK + 0.04, z);
-    box(0.7, 0.06, 0.7, matTruss, x, DECK + H + 0.03, z);
-    box(0.5, 0.05, 0.5, matTruss, x, DECK + H * 0.55 - 0.45, z + 0.45);
-  }
-  for (const t of ANG) {
-    truss(t.a.toArray(), t.b.toArray(), 0.44);
-    for (const p of [t.a, t.b]) {
-      const c = new THREE.Mesh(tubeG, chainM);
-      c.scale.set(0.7, ROOF - p.y, 0.7);
-      c.position.set(p.x, (ROOF + p.y) / 2, p.z);
-      scene.add(c);
-    }
-  }
-  for (const k in TR)
-    for (const x of [-16, -5.5, 5.5, 16]) {
-      const c = new THREE.Mesh(tubeG, chainM);
-      c.scale.set(0.7, ROOF - TR[k].y, 0.7);
-      c.position.set(x, (ROOF + TR[k].y) / 2, TR[k].z);
-      scene.add(c);
-    }
-  // PA hangs + subs
-  for (const sx of [-1, 1]) {
-    for (const off of [0, 3.2]) {
-      const g = new THREE.Group();
-      for (let i = 0; i < 16; i++) {
-        const m = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.44, 1.2), matDark);
-        m.position.y = -i * 0.46;
-        m.rotation.x = i * 0.02;
-        g.add(m);
-        const grill = new THREE.Mesh(
-          new THREE.PlaneGeometry(1.3, 0.36),
-          new THREE.MeshStandardMaterial({ color: 0x1a1a1c, roughness: 0.95 }),
-        );
-        grill.position.set(0, -i * 0.46, 0.61);
-        grill.rotation.x = i * 0.02;
-        g.add(grill);
-      }
-      g.position.set(sx * (29 + off), 21.5, 3 - off * 0.5);
-      g.rotation.y = -sx * (0.12 + off * 0.05);
-      scene.add(g);
-    }
-    for (let i = 0; i < 4; i++) box(1.5, 1.2, 1.4, matDark, sx * (28 - i * 1.6), 0.6, 3.4);
-  }
-}
-{
-  // backline, band & 20-piece orchestra
-  const __n0 = scene.children.length;
-  const kit = new THREE.MeshStandardMaterial({ color: 0x2a2a30, metalness: 0.6, roughness: 0.3 });
-  const wood = new THREE.MeshStandardMaterial({ color: 0x6b3416, roughness: 0.4, metalness: 0.1 });
-  const woodD = new THREE.MeshStandardMaterial({ color: 0x3a1a0a, roughness: 0.4 });
-  const gold = new THREE.MeshStandardMaterial({ color: 0xc9a040, metalness: 0.9, roughness: 0.25 });
-  const silver = new THREE.MeshStandardMaterial({ color: 0xb8bcc4, metalness: 0.9, roughness: 0.2 });
-  const black = new THREE.MeshStandardMaterial({ color: 0x0a0a0b, roughness: 0.5 });
-  const copper = new THREE.MeshStandardMaterial({ color: 0x9a5530, metalness: 0.8, roughness: 0.3 });
-  const skin = new THREE.MeshStandardMaterial({ color: 0x7d5e4b, roughness: 0.75 });
-  const cloth = [0x3a3a44, 0x4a4650, 0x2f2f37, 0x5a3e4a, 0x34404e].map(
-    (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85 }),
-  );
-  const lampM = new THREE.MeshBasicMaterial({ color: 0xffd9a0 });
-  const add = (geo, m, x, y, z, par, rx = 0, ry = 0, rz = 0) => {
-    const o = new THREE.Mesh(geo, m);
-    o.position.set(x, y, z);
-    o.rotation.set(rx, ry, rz);
-    (par || scene).add(o);
-    return o;
-  };
-  const BX = (w, h, d) => new THREE.BoxGeometry(w, h, d),
-    CY = (r1, r2, h, s = 12) => new THREE.CylinderGeometry(r1, r2, h, s);
-  // risers
-  box(5, 0.5, 3.2, matDark, 0, DECK + 0.25, -9.5).userData.riser = 1;
-  box(3.4, 0.5, 2.4, matDark, 6.5, DECK + 0.25, -8.5).userData.riser = 1;
-  const ROWS = [
-    { z: -6.8, h: 0.25 },
-    { z: -9.1, h: 0.5 },
-    { z: -11.4, h: 0.75 },
-  ];
-  for (const sx of [-1, 1])
-    for (const r of ROWS) box(8.4, r.h, 2.2, matDark, sx * 13.4, DECK + r.h / 2, r.z).userData.riser = 1;
-  // drum kit — full-size, on the drum riser, facing the audience
-  {
-    const K = new THREE.Group(),
-      shell = new THREE.MeshStandardMaterial({ color: 0x9a0f22, metalness: 0.7, roughness: 0.25 }),
-      headM = new THREE.MeshStandardMaterial({ color: 0xece6da, roughness: 0.6 });
-    const chrome = new THREE.MeshStandardMaterial({ color: 0xd8dce2, metalness: 1, roughness: 0.15 }),
-      cym = new THREE.MeshStandardMaterial({
-        color: 0xd4a640,
-        metalness: 0.95,
-        roughness: 0.22,
-        side: THREE.DoubleSide,
-      });
-    const logo = (() => {
-      const c = document.createElement('canvas');
-      c.width = c.height = 256;
-      const x = c.getContext('2d');
-      x.fillStyle = '#ece6da';
-      x.fillRect(0, 0, 256, 256);
-      x.strokeStyle = '#9a0f22';
-      x.lineWidth = 10;
-      x.beginPath();
-      x.arc(128, 128, 100, 0, 7);
-      x.stroke();
-      x.fillStyle = '#111';
-      x.font = 'bold 54px Inter, sans-serif';
-      x.textAlign = 'center';
-      x.fillText('LUMA', 128, 146);
-      const t = new THREE.CanvasTexture(c);
-      t.colorSpace = THREE.SRGBColorSpace;
-      return t;
-    })();
-    const drum = (r, d, x, y, z, rx = 0, rz = 0, front) => {
-      const g = new THREE.Group();
-      g.position.set(x, y, z);
-      g.rotation.set(rx, 0, rz);
-      add(CY(r, r, d, 28), shell, 0, 0, 0, g);
-      add(CY(r * 1.01, r * 1.01, 0.012, 28), headM, 0, d / 2, 0, g);
-      add(CY(r * 1.03, r * 1.03, 0.02, 28), chrome, 0, -d / 2, 0, g);
-      if (front) {
-        const fh = new THREE.Mesh(
-          new THREE.CircleGeometry(r * 0.99, 28),
-          new THREE.MeshStandardMaterial({ map: logo, roughness: 0.5 }),
-        );
-        fh.position.y = -d / 2 - 0.012;
-        fh.rotation.x = Math.PI / 2;
-        g.add(fh);
-      }
-      K.add(g);
-      return g;
-    };
-    const stand = (x, z, h) => {
-      add(CY(0.012, 0.012, h, 6), chrome, x, h / 2, z, K);
-      for (let i = 0; i < 3; i++) {
-        const a2 = i * 2.1;
-        add(
-          CY(0.008, 0.008, 0.4, 4),
-          chrome,
-          x + Math.sin(a2) * 0.15,
-          0.1,
-          z + Math.cos(a2) * 0.15,
-          K,
-          Math.cos(a2) * 0.9,
-          0,
-          -Math.sin(a2) * 0.9,
-        );
-      }
-    };
-    const cymbal = (x, y, z, r, tilt = 0.15, tz = 0) => {
-      stand(x, z, y);
-      const c = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.12, r, 0.03, 32, 1, true), cym);
-      c.position.set(x, y, z);
-      c.rotation.set(tilt, 0, tz);
-      K.add(c);
-    };
-    drum(0.29, 0.48, 0, 0.3, 0.05, Math.PI / 2, 0, true); // kick, logo head toward the audience
-    drum(0.18, 0.14, -0.4, 0.66, -0.42, -0.18, -0.12); // snare
-    drum(0.15, 0.2, -0.16, 0.98, -0.12, -0.5, 0.12);
-    drum(0.17, 0.22, 0.2, 0.98, -0.12, -0.5, -0.12); // rack toms
-    drum(0.21, 0.4, 0.55, 0.45, -0.5);
-    drum(0.23, 0.42, 0.7, 0.46, -0.06); // floor toms
-    for (const [x, z] of [
-      [0.48, -0.62],
-      [0.62, -0.62],
-      [0.84, -0.2],
-      [0.84, 0.1],
-    ])
-      add(CY(0.012, 0.012, 0.3, 4), chrome, x, 0.15, z, K);
-    stand(-0.72, -0.5, 0.95);
-    for (const dy of [0, 0.025]) {
-      const h = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.18, 0.02, 28), cym);
-      h.position.set(-0.72, 0.95 + dy, -0.5);
-      K.add(h);
-    } // hi-hat
-    cymbal(-0.62, 1.42, 0.02, 0.23, 0.3, 0.25);
-    cymbal(0.42, 1.5, 0.08, 0.25, 0.3, -0.2);
-    cymbal(0.92, 1.15, -0.32, 0.3, 0.15, -0.25);
-    cymbal(-1.0, 1.28, -0.2, 0.22, 0.25, 0.45); // crashes, ride, china
-    add(
-      CY(0.18, 0.16, 0.08, 16),
-      new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.7 }),
-      0,
-      0.5,
-      -0.82,
-      K,
-    );
-    add(CY(0.03, 0.03, 0.45, 6), chrome, 0, 0.23, -0.82, K); // throne
-    const shield = new THREE.MeshStandardMaterial({
-      color: 0xbfd6ff,
-      transparent: true,
-      opacity: 0.1,
-      roughness: 0.05,
-      metalness: 0.2,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-    });
-    for (let i = -2; i <= 2; i++) {
-      const a2 = i * 0.32,
-        pnl = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 1.55), shield);
-      pnl.position.set(Math.sin(a2) * 1.25, 0.78, 0.55 + Math.cos(a2) * 0.25 - 0.25 * Math.abs(i) * 0.5);
-      pnl.rotation.y = a2;
-      K.add(pnl);
-    }
-    K.scale.setScalar(1.15);
-    K.position.set(0, DECK + 0.5, -9.55);
-    scene.add(K);
-  }
-  // drum riser front with LED edge
-  {
-    const led = new THREE.Mesh(
-      new THREE.BoxGeometry(5, 0.05, 0.05),
-      new THREE.MeshBasicMaterial({ color: 0x8a1428, toneMapped: false }),
-    );
-    led.position.set(0, DECK + 0.48, -7.88);
-    scene.add(led);
-    led.userData.riser = 1;
-  }
-  // amps
-  for (const x of [-6.5, -3.5, 3.5]) box(1.2, 1.4, 0.6, matDark, x, DECK + 0.7, -12.2);
-  for (const x of [-6, -2, 2, 6]) {
-    const w = box(1, 0.5, 0.7, matDark, x, DECK + 0.25, -0.4);
-    w.rotation.x = -0.5;
-  }
-
-  function person(x, y, z, ry, o = {}) {
-    const g = new THREE.Group(),
-      m = cloth[o.c ?? Math.floor(Math.random() * cloth.length)];
-    const seated = !!o.seated,
-      hip = seated ? 0.5 : 0.9;
-    if (seated) {
-      for (const sx of [-0.11, 0.11]) {
-        add(BX(0.13, 0.13, 0.45), m, sx, hip, 0.2, g);
-        add(BX(0.12, 0.48, 0.12), m, sx, 0.24, 0.42, g);
-      }
-      add(BX(0.46, 0.05, 0.44), black, 0, hip - 0.1, 0.02, g);
-      add(BX(0.46, 0.5, 0.04), black, 0, hip + 0.14, -0.2, g);
-      for (const [lx, lz] of [
-        [-0.2, -0.18],
-        [0.2, -0.18],
-        [-0.2, 0.2],
-        [0.2, 0.2],
-      ])
-        add(CY(0.012, 0.012, hip - 0.12, 5), black, lx, (hip - 0.12) / 2, lz, g);
-    } else for (const sx of [-0.11, 0.11]) add(CY(0.065, 0.055, hip, 8), m, sx, hip / 2, 0, g);
-    const torso = add(new THREE.CapsuleGeometry(0.17, 0.42, 4, 10), m, 0, hip + 0.36, 0, g);
-    const head = add(new THREE.SphereGeometry(0.115, 14, 10), skin, 0, hip + 0.83, 0.02, g);
-    const sh = hip + 0.55;
-    const arm = (sx, rx, rz) => {
-      const a = new THREE.Group();
-      a.position.set(sx, sh, 0);
-      a.rotation.set(rx, 0, rz);
-      add(CY(0.045, 0.04, 0.55, 6), m, 0, -0.27, 0, a);
-      g.add(a);
-      return a;
-    };
-    const pose = o.pose || 'down';
-    const P = {
-      down: [
-        [0, 0.08],
-        [0, -0.08],
-      ],
-      guitar: [
-        [-0.9, 0.5],
-        [-1.1, -0.2],
-      ],
-      forward: [
-        [-1.2, 0.15],
-        [-1.2, -0.15],
-      ],
-      up: [
-        [-1.6, 0.35],
-        [-1.5, -0.3],
-      ],
-      violin: [
-        [-1.4, -0.6],
-        [-1, 0.7],
-      ],
-      cello: [
-        [-0.7, 0.3],
-        [-0.8, -0.45],
-      ],
-      mic: [
-        [-1.3, 0.1],
-        [0, -0.08],
-      ],
-    }[pose];
-    arm(-0.22, P[0][0], P[0][1]);
-    arm(0.22, P[1][0], P[1][1]);
-    const I = o.instr;
-    if (I === 'guitar' || I === 'bass') {
-      const L = I === 'bass' ? 1.25 : 1;
-      const gb = new THREE.Group();
-      gb.position.set(0, hip + 0.22, 0.2);
-      gb.rotation.z = -0.95;
-      add(BX(0.36 * L, 0.42 * L, 0.08), I === 'bass' ? black : wood, 0, 0, 0, gb);
-      add(BX(0.05, 0.6 * L, 0.03), woodD, 0, 0.5 * L, 0, gb);
-      g.add(gb);
-    }
-    if (I === 'mic' || I === 'vox') {
-      add(CY(0.012, 0.012, 1.45, 6), kit, 0, 0.72, 0.42, g);
-      add(CY(0.3, 0.3, 0.02, 12), kit, 0, 0.01, 0.42, g);
-      add(CY(0.025, 0.018, 0.14, 8), black, 0, 1.47, 0.36, g, 0.5);
-    }
-    if (I === 'violin' || I === 'viola') {
-      const k = I === 'viola' ? 1.12 : 1;
-      add(BX(0.17 * k, 0.38 * k, 0.06), wood, -0.12, hip + 0.62, 0.2, g, 0.9, 0.2, 0.9);
-      add(CY(0.004, 0.004, 0.7, 4), black, 0.15, hip + 0.62, 0.3, g, 0, 0, 1.2);
-    }
-    if (I === 'cello') {
-      add(BX(0.42, 0.72, 0.2), wood, 0, hip + 0.02, 0.42, g, -0.12);
-      add(BX(0.06, 0.5, 0.04), woodD, 0, hip + 0.62, 0.36, g, -0.12);
-      add(CY(0.005, 0.005, 0.8, 4), black, 0.15, hip + 0.1, 0.55, g, 0, 0, 1.4);
-    }
-    if (I === 'dbass') {
-      add(BX(0.6, 1.05, 0.28), wood, 0.3, 0.75, 0.3, g, -0.08, 0, 0.12);
-      add(BX(0.07, 0.75, 0.05), woodD, 0.22, 1.62, 0.28, g, -0.08, 0, 0.12);
-    }
-    if (I === 'trumpet') add(CY(0.06, 0.018, 0.45, 10), gold, 0, hip + 0.76, 0.32, g, Math.PI / 2 - 0.25);
-    if (I === 'trombone') {
-      add(CY(0.08, 0.02, 0.5, 10), gold, 0.06, hip + 0.74, 0.35, g, Math.PI / 2 - 0.2);
-      add(CY(0.012, 0.012, 0.9, 5), gold, 0.06, hip + 0.62, 0.62, g, Math.PI / 2 - 0.2);
-    }
-    if (I === 'flute') add(CY(0.012, 0.012, 0.62, 6), silver, 0.25, hip + 0.8, 0.16, g, 0, 0, Math.PI / 2 - 0.1);
-    if (I === 'clarinet') add(CY(0.025, 0.015, 0.62, 8), black, 0, hip + 0.52, 0.28, g, -0.55);
-    if (I === 'timpani')
-      for (const [tx, r] of [
-        [-0.5, 0.36],
-        [0.5, 0.32],
-      ]) {
-        add(CY(r, r * 0.6, 0.6, 20), copper, tx, 0.55, 0.55, g);
-        add(CY(r, r, 0.01, 20), new THREE.MeshStandardMaterial({ color: 0xd8d0c0 }), tx, 0.86, 0.55, g);
-      }
-    if (I === 'keys') {
-      add(BX(1.35, 0.09, 0.38), black, 0, 1.0, 0.45, g);
-      add(BX(1.2, 0.015, 0.14), new THREE.MeshStandardMaterial({ color: 0xe8e8e8 }), 0, 1.05, 0.38, g);
-      for (const sx of [-0.45, 0.45]) add(BX(0.04, 1, 0.04), kit, sx, 0.5, 0.45, g, 0, 0, sx > 0 ? 0.4 : -0.4);
-    }
-    if (o.stand) {
-      const sz = seated ? 0.7 : 0.75;
-      add(CY(0.01, 0.01, 1.05, 5), kit, 0, 0.52, sz, g);
-      add(BX(0.46, 0.32, 0.015), black, 0, 1.12, sz - 0.03, g, -0.5);
-      add(BX(0.08, 0.025, 0.05), lampM, 0, 1.3, sz - 0.1, g);
-    }
-    g.position.set(x, y, z);
-    g.rotation.y = ry;
-    scene.add(g);
-    performers.push({
-      g,
-      y,
-      ph: Math.random() * 6,
-      amp: o.amp ?? (seated ? 0.006 : 0.025),
-      sway: o.sway ?? (seated ? 0.02 : 0.05),
-      head,
-      torso,
-      ry,
-    });
-    return g;
-  }
-  // ---- band (8) ----
-  person(0, DECK, -2.5, 0, { instr: 'mic', pose: 'mic', amp: 0.04, sway: 0.12, c: 3 });
-  person(-5, DECK, -4.5, 0.25, { instr: 'guitar', pose: 'guitar', amp: 0.05, sway: 0.1 });
-  person(-7.4, DECK, -6.2, 0.35, { instr: 'guitar', pose: 'guitar', amp: 0.04 });
-  person(5, DECK, -4.5, -0.25, { instr: 'bass', pose: 'guitar', amp: 0.05, sway: 0.08 });
-  person(0, DECK + 0.5, -10.3, 0, { seated: true, pose: 'up', amp: 0.03 });
-  person(6.5, DECK + 0.5, -9.1, -0.2, { instr: 'keys', pose: 'forward', amp: 0.03 });
-  person(2.6, DECK, -6.6, -0.15, { instr: 'vox', pose: 'mic', c: 4 });
-  person(3.9, DECK, -7, -0.2, { instr: 'vox', pose: 'mic', c: 3 });
-  // ---- orchestra (20) ----
-  const XS = [-16.6, -15, -13.4, -11.8, -10.2];
-  const L = [
-    ['violin', 'violin', 'violin', 'violin', 'violin'],
-    ['violin', 'violin', 'violin', 'viola', 'viola'],
-    ['dbass', 'cello', 'cello', 'cello', 'viola'],
-  ];
-  const R = [
-    ['flute', 'flute', 'clarinet', 'clarinet', 'clarinet'],
-    ['trombone', 'trombone', 'trumpet', 'trumpet', 'trumpet'],
-    ['cello', 'cello', 'trombone', 'dbass', 'timpani'],
-  ];
-  const POSE = {
-    violin: 'violin',
-    viola: 'violin',
-    cello: 'cello',
-    flute: 'up',
-    clarinet: 'forward',
-    trumpet: 'up',
-    trombone: 'up',
-    dbass: 'cello',
-    timpani: 'forward',
-  };
-  ROWS.forEach((r, ri) =>
-    XS.forEach((x, xi) => {
-      const li = L[ri][xi],
-        rr = R[ri][4 - xi];
-      if (li) person(x, DECK + r.h, r.z, 0.32, { instr: li, pose: POSE[li], seated: li !== 'dbass', stand: true });
-      if (rr)
-        person(-x, DECK + r.h, r.z, -0.32, {
-          instr: rr,
-          pose: POSE[rr],
-          seated: !(rr === 'dbass' || rr === 'timpani'),
-          stand: rr !== 'timpani',
-        });
-    }),
-  );
-  for (let i = __n0; i < scene.children.length; i++) {
-    const o = scene.children[i];
-    o.position.x *= SXZ[0];
-    o.position.z *= SXZ[1];
-    if (o.userData.riser) {
-      o.scale.x *= SXZ[0];
-      o.scale.z *= SXZ[1];
-      o.receiveShadow = true;
-    }
-  }
-  for (const p of performers)
-    p.g.traverse((o) => {
-      if (o.isMesh) o.castShadow = true;
-    });
-  // crowd: standing on the pool floor + seated on the terraces; bounces to the beat, some hands up
-  {
-    const spots = [];
-    const chairs = [];
-    for (let z = 8.4; z < VEN.Z1 - 0.8; z += 1.02)
-      for (let x = -VEN.X + 1.2; x <= VEN.X - 1.2; x += 0.6) {
-        if (Math.abs(x) < 1.1 || Math.abs(Math.abs(x) - 21) < 0.7) continue; // centre + side aisles
-        if (Math.abs(x) < 6.5 && z > 43 && z < 51) continue; // FOH
-        if (Math.abs(Math.abs(x) - 24) < 1.6 && Math.abs(z - 33) < 1.6) continue; // delay towers
-        chairs.push([x, z]);
-        if (Math.random() < 0.93) spots.push([x, 0.3, z - 0.05, 1]);
-      }
-    for (let k = 0; k < VEN.STEPS; k++)
-      for (let x = -VEN.X + 1; x <= VEN.X - 1; x += 0.6) {
-        if (Math.abs(x) < 1.1 || Math.random() < 0.25) continue;
-        spots.push([x, (k + 1) * VEN.RISE + 0.05, VEN.Z1 + k * VEN.RUN + 0.62, 0]);
-      }
-    {
-      const seatG = new THREE.BoxGeometry(0.46, 0.05, 0.44).translate(0, 0.45, 0),
-        backG = new THREE.BoxGeometry(0.46, 0.42, 0.04).translate(0, 0.72, 0.21),
-        legG = new THREE.BoxGeometry(0.42, 0.43, 0.38).translate(0, 0.215, 0);
-      const chM = new THREE.MeshStandardMaterial({ color: 0x26262c, roughness: 0.6, metalness: 0.2 }),
-        lgM = new THREE.MeshStandardMaterial({ color: 0x0c0c0e, roughness: 0.8, transparent: true, opacity: 0.55 });
-      const ms = [
-          new THREE.InstancedMesh(seatG, chM, chairs.length),
-          new THREE.InstancedMesh(backG, chM, chairs.length),
-          new THREE.InstancedMesh(legG, lgM, chairs.length),
-        ],
-        m4c = new THREE.Matrix4();
-      chairs.forEach(([x, z], i) => {
-        m4c.makeTranslation(x, 0, z);
-        ms.forEach((m) => m.setMatrixAt(i, m4c));
-      });
-      ms.forEach((m) => scene.add(m));
-    }
-    const N = spots.length,
-      ph = new Float32Array(N),
-      amp = new Float32Array(N);
-    const bodyG = new THREE.CapsuleGeometry(0.21, 0.82, 2, 7).translate(0, 0.65, 0),
-      headG = new THREE.SphereGeometry(0.12, 8, 6).translate(0, 1.3, 0),
-      armG = new THREE.CylinderGeometry(0.04, 0.035, 0.62, 5).translate(0, 1.58, 0);
-    const cm = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 }),
-      skinM = new THREE.MeshStandardMaterial({ color: 0x6e5444, roughness: 0.8 });
-    const inject = (m) => {
-      m.onBeforeCompile = (sh) => {
-        sh.uniforms.uBeat = crowdU.uBeat;
-        sh.uniforms.uJump = crowdU.uJump;
-        sh.vertexShader =
-          'attribute float aPh;attribute float aAmp;uniform float uBeat;uniform float uJump;\n' +
-          sh.vertexShader.replace(
-            '#include <begin_vertex>',
-            '#include <begin_vertex>\ntransformed.y += abs(sin(uBeat + aPh)) * aAmp * uJump;',
-          );
-      };
-      return m;
-    };
-    const body = new THREE.InstancedMesh(bodyG, inject(cm), N),
-      head = new THREE.InstancedMesh(headG, inject(skinM), N);
-    const armIdx = [];
-    spots.forEach((s_, i) => {
-      if (Math.random() < 0.14) armIdx.push(i);
-    });
-    const arm = new THREE.InstancedMesh(armG, inject(skinM.clone()), armIdx.length);
-    const m4 = new THREE.Matrix4(),
-      q = new THREE.Quaternion(),
-      e = new THREE.Euler(),
-      cc = new THREE.Color();
-    spots.forEach(([x, y, z, stand], i) => {
-      const sc = 0.9 + Math.random() * 0.18;
-      q.setFromAxisAngle(UP3, Math.PI + (Math.random() - 0.5) * 0.35);
-      m4.compose(new V3(x, y - 0.05, z), q, new V3(sc, sc * 0.72, sc));
-      body.setMatrixAt(i, m4);
-      head.setMatrixAt(i, m4);
-      const hue = Math.random();
-      cc.setHSL(hue, Math.random() * 0.4, 0.07 + Math.random() * 0.2);
-      body.setColorAt(i, cc);
-      ph[i] = Math.random() * 6.28;
-      amp[i] = Math.random() < 0.35 ? 0.03 + Math.random() * 0.04 : 0.008;
-    });
-    armIdx.forEach((i, k) => {
-      const [x, y, z] = spots[i];
-      e.set((Math.random() - 0.5) * 0.5, 0, (Math.random() < 0.5 ? 1 : -1) * (0.15 + Math.random() * 0.35));
-      q.setFromEuler(e);
-      m4.compose(new V3(x + (Math.random() - 0.5) * 0.25, y - 0.5, z), q, new V3(1, 1, 1));
-      arm.setMatrixAt(k, m4);
-    });
-    const setA = (g, idx) => {
-      g.setAttribute('aPh', new THREE.InstancedBufferAttribute(idx ? Float32Array.from(idx, (i) => ph[i]) : ph, 1));
-      g.setAttribute(
-        'aAmp',
-        new THREE.InstancedBufferAttribute(idx ? Float32Array.from(idx, (i) => amp[i] * 1.2) : amp, 1),
-      );
-    };
-    setA(bodyG);
-    setA(headG);
-    setA(armG, armIdx);
-    for (const m of [body, head, arm]) {
-      m.frustumCulled = false;
-      scene.add(m);
-    }
-  }
-}
-
-/* --- LED screen --- */
-const screenU = {
-  uT: { value: 0 },
-  uDim: { value: 0 },
-  uMode: { value: 1 },
-  uSpd: { value: 0 },
-  uCol: { value: new THREE.Color(1, 1, 1) },
-};
-const screenMesh = new THREE.Mesh(
-  new THREE.PlaneGeometry(SCREEN.x1 - SCREEN.x0, SCREEN.y1 - SCREEN.y0),
-  new THREE.ShaderMaterial({
-    uniforms: screenU,
-    fog: false,
-    vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-    fragmentShader: `uniform float uT,uDim,uMode,uSpd;uniform vec3 uCol;varying vec2 vUv;
-  float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-  void main(){vec2 uv=vUv;float t=uT*(0.4+uSpd*0.03);float m=uMode;float v=1.;vec3 c=uCol;
-  if(m<0.5){v=1.;}
-  else if(m<1.5){v=mix(.15,1.,uv.y)*(.8+.2*sin(t*.7+uv.x*3.));}
-  else if(m<2.5){v=step(.5,fract(uv.x*8.-t*.6));}
-  else if(m<3.5){float p=sin(uv.x*6.+t)+sin(uv.y*5.-t*1.3)+sin((uv.x+uv.y)*4.+t*.7);v=.5+.5*sin(p*1.7);c=mix(uCol,uCol.gbr,.5+.5*sin(p));}
-  else if(m<4.5){float d=length((uv-.5)*vec2(2.9,1.));v=pow(.5+.5*sin(d*12.-t*4.),3.);}
-  else if(m<5.5){vec2 g=floor(uv*vec2(13.,4.5));v=step(.5,h(g+floor(t*1.5)));}
-  else if(m<6.5){v=.5+.5*sin(uv.x*14.+sin(uv.y*3.+t)*2.-t*2.);v=pow(v,3.);}
-  else {vec2 g=floor(uv*vec2(80.,28.));v=step(.93,h(g+floor(t*8.)));}
-  vec2 px=fract(uv*vec2(208.,72.));float led=smoothstep(.0,.2,px.x)*smoothstep(1.,.8,px.x)*smoothstep(.0,.2,px.y)*smoothstep(1.,.8,px.y);
-  vec3 col=c*v*uDim*1.35*(.55+.45*led);gl_FragColor=vec4(col+vec3(.006),1.);}`,
-  }),
-);
-screenMesh.position.set(0, (SCREEN.y0 + SCREEN.y1) / 2, SCREEN.z);
-scene.add(screenMesh);
-for (const sx of [-1, 1]) {
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(12, 6.75), screenMesh.material);
-  m.position.set(sx * 33.5, 15, 4);
-  m.rotation.y = -sx * 0.38;
-  scene.add(m);
-  const fr = box(12.5, 7.2, 0.35, matDark, sx * 33.5 + sx * 0.07, 15, 4 - 0.2);
-  fr.rotation.y = -sx * 0.38;
-}
-const ledStrip = new THREE.Mesh(
-  new THREE.BoxGeometry(STAGE.x1 - STAGE.x0, 0.06, 0.06),
-  new THREE.MeshBasicMaterial({ color: 0x000000, toneMapped: false }),
-);
-ledStrip.position.set(0, DECK - 0.12, STAGE.z1 + 0.06);
-scene.add(ledStrip);
-box(
-  SCREEN.x1 - SCREEN.x0 + 0.4,
-  SCREEN.y1 - SCREEN.y0 + 0.4,
-  0.3,
-  matDark,
-  0,
-  (SCREEN.y0 + SCREEN.y1) / 2,
-  SCREEN.z - 0.2,
-);
-
-/* --- aggregated scene lights (stage bounce) --- */
-const stageLight = new THREE.PointLight(0xffffff, 0, 34, 1.5);
-stageLight.position.set(0, 9, -10);
-scene.add(stageLight);
-const audLight = new THREE.PointLight(0xffa860, 0, 95, 1);
-audLight.position.set(0, 18, 10);
-scene.add(audLight);
-/* crowd lighting: colour of beams landing in the audience, split in 3 zones, plus house lights */
-const audZones = [-26, 0, 26].map((x) => {
-  const L = new THREE.PointLight(0xffffff, 0, 75, 1.1);
-  L.position.set(x, 13, 28);
-  scene.add(L);
-  return { L, c: new THREE.Color() };
-});
-const houseLights = [
-  [-34, 30, 96],
-  [34, 30, 96],
-  [0, 26, 5],
-].map(([x, y, z]) => {
-  const L = new THREE.SpotLight(z > 50 ? 0xffd4a0 : 0xdfe6ff, 0, 160, 0.62, 0.85, 1.2);
-  L.position.set(x, y, z);
-  L.target.position.set(x * 0.3, 0, 34);
-  scene.add(L);
-  scene.add(L.target);
-  return L;
-});
-let houseLevel = 0.3;
-const scrLight = new THREE.PointLight(0xffffff, 0, 40, 1.2);
-scrLight.position.set(0, 8, -16);
-scene.add(scrLight);
-
-/* --- gobo + glow textures --- */
-function drawGobo(S, i, soft = true) {
-  const c = document.createElement('canvas');
-  c.width = c.height = S;
-  const x = c.getContext('2d'),
-    R = S / 2;
-  const m = document.createElement('canvas');
-  m.width = m.height = S;
-  const mx = m.getContext('2d');
-  mx.fillStyle = '#fff';
-  const r = rng(i * 99 + 7);
-  if (i === 0) {
-    mx.beginPath();
-    mx.arc(R, R, R * 0.96, 0, 7);
-    mx.fill();
-  }
-  if (i === 1) {
-    for (let k = 0; k < 8; k++) {
-      const a = (k / 8) * Math.PI * 2;
-      mx.beginPath();
-      mx.arc(R + Math.cos(a) * R * 0.62, R + Math.sin(a) * R * 0.62, R * 0.16, 0, 7);
-      mx.fill();
-    }
-    mx.beginPath();
-    mx.arc(R, R, R * 0.18, 0, 7);
-    mx.fill();
-  }
-  if (i === 2) {
-    for (let k = 0; k < 26; k++) {
-      const a = r() * 7,
-        d = Math.sqrt(r()) * R * 0.8;
-      mx.beginPath();
-      mx.ellipse(
-        R + Math.cos(a) * d,
-        R + Math.sin(a) * d,
-        R * (0.08 + r() * 0.14),
-        R * (0.05 + r() * 0.1),
-        r() * 3,
-        0,
-        7,
-      );
-      mx.fill();
-    }
-  }
-  if (i === 3) {
-    for (let k = 0; k < 10; k++) {
-      const a = (k / 10) * Math.PI * 2;
-      mx.beginPath();
-      mx.moveTo(R, R);
-      mx.lineTo(R + Math.cos(a - 0.1) * R, R + Math.sin(a - 0.1) * R);
-      mx.lineTo(R + Math.cos(a + 0.1) * R, R + Math.sin(a + 0.1) * R);
-      mx.fill();
-    }
-  }
-  if (i === 4) {
-    for (let k = 0; k < 5; k++) mx.fillRect(S * (0.1 + k * 0.17), 0, S * 0.09, S);
-  }
-  if (i === 5) {
-    for (let k = 0; k < 3; k++) {
-      const a = (k / 3) * Math.PI * 2 + 0.3;
-      mx.beginPath();
-      mx.moveTo(R + Math.cos(a) * R * 0.15, R + Math.sin(a) * R * 0.15);
-      mx.lineTo(R + Math.cos(a - 0.35) * R, R + Math.sin(a - 0.35) * R);
-      mx.lineTo(R + Math.cos(a + 0.35) * R, R + Math.sin(a + 0.35) * R);
-      mx.fill();
-    }
-  }
-  if (i === 6) {
-    mx.strokeStyle = '#fff';
-    mx.lineWidth = S * 0.07;
-    for (let k = 1; k <= 4; k++) {
-      mx.beginPath();
-      mx.arc(R, R, R * k * 0.22, 0, 7);
-      mx.stroke();
-    }
-  }
-  if (i === 7) {
-    for (let k = 0; k < 6; k++) {
-      mx.save();
-      mx.translate(R, R);
-      mx.rotate((k / 6) * Math.PI * 2);
-      mx.beginPath();
-      mx.ellipse(0, R * 0.45, R * 0.17, R * 0.42, 0, 0, 7);
-      mx.fill();
-      mx.restore();
-    }
-  }
-  // soft circular aperture
-  const g = x.createRadialGradient(R, R, 0, R, R, R);
-  g.addColorStop(0, '#fff');
-  g.addColorStop(0.78, '#fff');
-  g.addColorStop(0.98, 'rgba(255,255,255,0)');
-  x.fillStyle = g;
-  x.fillRect(0, 0, S, S);
-  x.globalCompositeOperation = 'destination-in';
-  if (soft) x.filter = `blur(${S / 90}px)`;
-  x.drawImage(m, 0, 0);
-  x.filter = 'none';
-  return c;
-}
-const goboCanvas = [...Array(8)].map((_, i) => drawGobo(128, i));
-const goboIcons = [...Array(8)].map((_, i) => drawGobo(48, i, false).toDataURL());
-const goboTex = goboCanvas.map((c) => {
-  const t = new THREE.CanvasTexture(c);
-  t.center.set(0.5, 0.5);
-  return t;
-});
-const glowTex = (() => {
-  const c = document.createElement('canvas');
-  c.width = c.height = 64;
-  const x = c.getContext('2d');
-  const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
-  g.addColorStop(0, '#fff');
-  g.addColorStop(0.12, 'rgba(255,255,255,.9)');
-  g.addColorStop(0.35, 'rgba(255,255,255,.25)');
-  g.addColorStop(1, 'rgba(255,255,255,0)');
-  x.fillStyle = g;
-  x.fillRect(0, 0, 64, 64);
-  return new THREE.CanvasTexture(c);
-})();
-
-/* --- beam shader --- */
-const hazeU = { value: 0.62 },
-  timeU = { value: 0 };
-const beamGeo = new THREE.CylinderGeometry(0, 1, 1, 40, 1, true).translate(0, -0.5, 0);
-const BEAM_VS = `varying float vT;varying vec3 vN;varying vec3 vV;varying vec3 vL;varying vec3 vW;
-void main(){vT=-position.y;vL=position;vW=(modelMatrix*vec4(position,1.)).xyz;vec4 mv=modelViewMatrix*vec4(position,1.);vV=-mv.xyz;vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*mv;}`;
-const BEAM_FS = `uniform vec3 uColor;uniform float uInt,uHaze,uGobo,uGRot,uLen,uEnd,uSoft,uTime;varying float vT;varying vec3 vN;varying vec3 vV;varying vec3 vL;varying vec3 vW;
-float h3(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
-float n3(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(h3(i),h3(i+vec3(1,0,0)),f.x),mix(h3(i+vec3(0,1,0)),h3(i+vec3(1,1,0)),f.x),f.y),mix(mix(h3(i+vec3(0,0,1)),h3(i+vec3(1,0,1)),f.x),mix(h3(i+vec3(0,1,1)),h3(i+vec3(1,1,1)),f.x),f.y),f.z);}
-void main(){float f=abs(dot(normalize(vN),normalize(vV)));float edge=pow(f,uSoft);
-float d=vT*uLen;float fall=1./(1.+d*.075);float a=smoothstep(0.,.012,vT)*fall;a*=mix(1.,1.-smoothstep(.55,1.,vT),uEnd);
-float g=1.;if(uGobo>.5){float an=atan(vL.x,vL.z)+uGRot;float n=uGobo;
- if(n<1.5)g=.5+.5*cos(an*8.);else if(n<2.5)g=.5+.5*sin(an*5.)*sin(an*3.+1.7);else if(n<3.5)g=pow(.5+.5*cos(an*10.),3.);else if(n<4.5)g=.5+.5*cos(an*5.);else if(n<5.5)g=pow(.5+.5*cos(an*3.),2.);else if(n<6.5)g=.75;else g=.5+.5*cos(an*6.);
- g=mix(.12,1.,smoothstep(.25,.75,g));}
-a*=smoothstep(3.,26.,length(vV));vec3 hp=vW*.16+vec3(uTime*.05,uTime*.025,-uTime*.035);float hz=.45*n3(hp)+.3*n3(hp*2.3+7.)+.25;float o=uInt*uHaze*edge*a*g*mix(1.,.35+1.1*hz,clamp(uHaze*1.2,0.,1.));gl_FragColor=vec4(uColor,o);}`;
-
-/* --- fixture visuals --- */
-const pickables = [];
-const darkTrim = new THREE.MeshStandardMaterial({ color: 0x0c0c0e, metalness: 0.4, roughness: 0.6 });
-// lens faces, one per model; drawn white on black and tinted by the fixture colour (lensMat.color) at runtime
-const LENS_TEX = (() => {
-  const mk = (draw, w = 128, h = 128) => {
-    const c = document.createElement('canvas');
-    c.width = w;
-    c.height = h;
-    const x = c.getContext('2d');
-    x.fillStyle = '#000';
-    x.fillRect(0, 0, w, h);
-    draw(x, w, h);
-    const t = new THREE.CanvasTexture(c);
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  };
-  const disc = (x, cx, cy, r, inner = '#fff') => {
-    const g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
-    g.addColorStop(0, inner);
-    g.addColorStop(0.65, 'rgba(255,255,255,.85)');
-    g.addColorStop(1, 'rgba(255,255,255,0)');
-    x.fillStyle = g;
-    x.beginPath();
-    x.arc(cx, cy, r, 0, 7);
-    x.fill();
-  };
-  const hex = (x, cx, cy, r) => {
-    x.beginPath();
-    for (let k = 0; k < 6; k++) {
-      const a = ((k + 0.5) / 6) * Math.PI * 2;
-      x.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
-    }
-    x.closePath();
-  };
-  const L = {
-    // Robe FORTE: one large 180 mm front lens, with faint rings from the zoom optics behind it
-    forte: mk((x) => {
-      disc(x, 64, 64, 62);
-      x.strokeStyle = 'rgba(0,0,0,.28)';
-      x.lineWidth = 2;
-      for (const r of [16, 30, 44, 56]) {
-        x.beginPath();
-        x.arc(64, 64, r, 0, 7);
-        x.stroke();
-      }
-    }),
-    // Robe MegaPointe: the hot spot of the short-arc lamp in a deep, dark lens
-    megapointe: mk((x) => {
-      const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
-      g.addColorStop(0, '#fff');
-      g.addColorStop(0.25, '#fff');
-      g.addColorStop(0.3, 'rgba(255,255,255,.35)');
-      g.addColorStop(1, 'rgba(255,255,255,.08)');
-      x.fillStyle = g;
-      x.beginPath();
-      x.arc(64, 64, 63, 0, 7);
-      x.fill();
-    }),
-    // Robe Spiider: a centre cell and 18 hexagonal cells in two rings, black ribs between the domed lenses
-    spiider: mk((x) => {
-      const d = 25;
-      for (let q = -2; q <= 2; q++)
-        for (let r = -2; r <= 2; r++) {
-          if (Math.abs(q + r) > 2) continue;
-          const cx = 64 + d * (q + r / 2),
-            cy = 64 + (d * r * Math.sqrt(3)) / 2;
-          const g = x.createRadialGradient(cx - 2, cy - 3, 0, cx, cy, 14);
-          g.addColorStop(0, '#fff');
-          g.addColorStop(0.5, 'rgba(255,255,255,.85)');
-          g.addColorStop(1, 'rgba(255,255,255,.3)');
-          x.fillStyle = g;
-          hex(x, cx, cy, 13);
-          x.fill();
-        }
-      x.globalCompositeOperation = 'destination-in';
-      x.beginPath();
-      x.arc(64, 64, 63, 0, 7);
-      x.fill();
-    }),
-    // Robe ParFect 150: 7 multichip cells
-    parfect: mk((x) => {
-      const pts = [[0, 0]];
-      for (let k = 0; k < 6; k++) {
-        const a = (k / 6) * Math.PI * 2;
-        pts.push([Math.cos(a) * 34, Math.sin(a) * 34]);
-      }
-      for (const [px, py] of pts) disc(x, 64 + px, 64 + py, 16);
-    }),
-    // Chauvet STRIKE 4: one warm cup (the model maps it on each of its 4 cups): faceted reflector behind a wire grid
-    strike4: mk((x) => {
-      const g = x.createRadialGradient(64, 64, 0, 64, 64, 62);
-      g.addColorStop(0, '#fff');
-      g.addColorStop(0.7, 'rgba(255,244,214,.9)');
-      g.addColorStop(1, 'rgba(255,226,170,.45)');
-      x.fillStyle = g;
-      x.beginPath();
-      x.arc(64, 64, 62, 0, 7);
-      x.fill();
-      x.strokeStyle = 'rgba(0,0,0,.2)';
-      x.lineWidth = 2;
-      for (let k = 0; k < 12; k++) {
-        const a = (k / 12) * Math.PI * 2;
-        x.beginPath();
-        x.moveTo(64, 64);
-        x.lineTo(64 + Math.cos(a) * 62, 64 + Math.sin(a) * 62);
-        x.stroke();
-      }
-      x.strokeStyle = 'rgba(0,0,0,.6)';
-      x.lineWidth = 1.5;
-      for (let i = 8; i < 128; i += 10) {
-        x.beginPath();
-        x.moveTo(i, 0);
-        x.lineTo(i, 128);
-        x.moveTo(0, i);
-        x.lineTo(128, i);
-        x.stroke();
-      }
-      x.globalCompositeOperation = 'destination-in';
-      x.beginPath();
-      x.arc(64, 64, 62, 0, 7);
-      x.fill();
-    }),
-    // Robe WTF!: two panels of tiny white strobe cups, with the warm amber blinder strip across the middle
-    wtf: mk(
-      (x) => {
-        x.fillStyle = 'rgba(255,255,255,.92)';
-        for (const [y0, y1] of [
-          [6, 52],
-          [76, 122],
-        ])
-          for (let y = y0 + 3; y < y1; y += 5.5)
-            for (let i = 0, cx = 5; cx < 252; cx += 5.5, i++) {
-              x.beginPath();
-              x.arc(cx + (Math.round(y) % 2 ? 2.7 : 0), y, 2.1, 0, 7);
-              x.fill();
-            }
-        x.fillStyle = '#ffae3c';
-        x.fillRect(8, 59, 240, 10);
-        x.fillStyle = '#ffe2a8';
-        for (let cx = 10; cx < 246; cx += 4) x.fillRect(cx, 61, 2, 6);
-      },
-      256,
-      128,
-    ),
-    // Robe Tetra2: 18 rounded cells in one row, in two groups of 9
-    tetra2: mk(
-      (x) => {
-        for (let i = 0; i < 18; i++) {
-          const cx = 10.5 + i * 13.3 + (i >= 9 ? 3 : 0),
-            g = x.createRadialGradient(cx, 14, 0, cx, 16, 12);
-          g.addColorStop(0, '#fff');
-          g.addColorStop(0.6, 'rgba(255,255,255,.85)');
-          g.addColorStop(1, 'rgba(255,255,255,.35)');
-          x.fillStyle = g;
-          x.beginPath();
-          if (x.roundRect) x.roundRect(cx - 5.6, 4, 11.2, 24, 4);
-          else x.rect(cx - 5.6, 4, 11.2, 24);
-          x.fill();
-        }
-      },
-      256,
-      32,
-    ),
-    // ETC Source Four: one hard-edged lens
-    s4: mk((x) => {
-      const g = x.createRadialGradient(64, 64, 0, 64, 64, 60);
-      g.addColorStop(0, '#fff');
-      g.addColorStop(0.85, 'rgba(255,255,255,.9)');
-      g.addColorStop(1, 'rgba(255,255,255,.4)');
-      x.fillStyle = g;
-      x.beginPath();
-      x.arc(64, 64, 60, 0, 7);
-      x.fill();
-    }),
-  };
-  L.forteFS = L.forte;
-  return L;
-})();
-/* real spot lights: the brightest fixtures hitting the stage light performers & scenery (3 with soft shadows) */
-const KEY_N = 12,
-  KEY_SH = 4,
-  keyLights = [];
-for (let i = 0; i < KEY_N; i++) {
-  const L = new THREE.SpotLight(0xffffff, 0, 0, 0.3, 0.5, 2);
-  L.castShadow = i < KEY_SH;
-  if (L.castShadow) {
-    L.shadow.mapSize.set(1024, 1024);
-    L.shadow.bias = -0.0004;
-    L.shadow.camera.near = 2;
-    L.shadow.camera.far = 70;
-    L.shadow.radius = 3;
-  }
-  scene.add(L);
-  scene.add(L.target);
-  keyLights.push(L);
-}
-const UP = new V3(0, 1, 0),
-  DOWN = new V3(0, -1, 0);
-const cylG = new THREE.CylinderGeometry(1, 1, 1, 18),
-  boxG = new THREE.BoxGeometry(1, 1, 1),
-  circG = new THREE.CircleGeometry(1, 20),
-  planeG = new THREE.PlaneGeometry(1, 1),
-  poolG = new THREE.PlaneGeometry(2, 2);
-/* --- fixture models: one procedural builder per real product (TYPES[...].model) ---
-   Geometry is in fixture units (buildVis scales the fixture group by T.size) and is built once per model, then shared by every
-   fixture of that model. Parts of one material are merged into one mesh and fine details (screens, vents, lens cells) are canvas
-   textures, so each fixture costs only a few draw calls. All models are built in the hang orientation: base up, head below,
-   tilt axis at the group origin, lens facing -Y. Floor movers are turned over by buildVis; static floor units flip their stand. */
-const _m4 = new THREE.Matrix4(),
-  _q4 = new THREE.Quaternion(),
-  _eu = new THREE.Euler(),
-  _pv = new V3(),
-  _sv = new V3();
-// a transformed, non-indexed copy of a primitive, ready to merge (scale, then rotate XYZ, then move)
-function part(geo, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1, rx = 0, ry = 0, rz = 0) {
-  const g = geo.index ? geo.toNonIndexed() : geo.clone();
-  return g.applyMatrix4(_m4.compose(_pv.set(x, y, z), _q4.setFromEuler(_eu.set(rx, ry, rz)), _sv.set(sx, sy, sz)));
-}
-// joins parts into one geometry (position, normal, uv); BufferGeometryUtils is not vendored and this is all the models need
-function merge(parts) {
-  let n = 0;
-  for (const p of parts) n += p.attributes.position.count;
-  const pos = new Float32Array(n * 3),
-    nor = new Float32Array(n * 3),
-    uv = new Float32Array(n * 2);
-  let o = 0;
-  for (const p of parts) {
-    const a = p.attributes;
-    pos.set(a.position.array, o * 3);
-    nor.set(a.normal.array, o * 3);
-    if (a.uv) uv.set(a.uv.array, o * 2);
-    o += a.position.count;
-    p.dispose();
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
-  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-  g.computeBoundingSphere();
-  return g;
-}
-const Bx = (x, y, z, w, h, d, rx = 0, ry = 0, rz = 0) => part(boxG, x, y, z, w, h, d, rx, ry, rz);
-const Cy = (x, y, z, r, h, rx = 0, ry = 0, rz = 0) => part(cylG, x, y, z, r, h, r, rx, ry, rz); // cylinder, axis Y before rotation
-const CyX = (x, y, z, r, len) => Cy(x, y, z, r, len, 0, 0, Math.PI / 2); // cylinder along X (tilt hubs, knobs)
-// a revolved profile around Y; list the [radius, y] points from front (-y) to rear (+y) so the faces point outward
-const lathe = (pts, seg = 28) =>
-  part(
-    new THREE.LatheGeometry(
-      pts.map(([r, y]) => new THREE.Vector2(r, y)),
-      seg,
-    ),
-  );
-const sphG = new THREE.SphereGeometry(1, 8, 6),
-  torG = new THREE.TorusGeometry(1, 0.12, 6, 20);
-const canvasTex = (w, h, draw) => {
-  const c = document.createElement('canvas');
-  c.width = w;
-  c.height = h;
-  draw(c.getContext('2d'), w, h);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-};
-const ventSlots = (x, x0, y0, w, h, n) => {
-  x.fillStyle = '#2a2a30';
-  x.fillRect(x0, y0, w, h);
-  x.fillStyle = '#060607';
-  for (let i = 0; i < n; i++) x.fillRect(x0 + 3, y0 + 3 + (i * (h - 6)) / n, w - 6, ((h - 6) / n) * 0.55);
-};
-// front of a Robe base: vents either side of the RNS2 colour screen (ROBE splash) and its 4 menu buttons
-const panelMat = new THREE.MeshBasicMaterial({
-  map: canvasTex(256, 64, (x) => {
-    x.fillStyle = '#121215';
-    x.fillRect(0, 0, 256, 64);
-    ventSlots(x, 6, 8, 74, 48, 8);
-    ventSlots(x, 176, 8, 74, 48, 8);
-    x.fillStyle = '#050506';
-    x.fillRect(88, 6, 80, 52);
-    const g = x.createLinearGradient(0, 10, 0, 50);
-    g.addColorStop(0, '#1d3f7a');
-    g.addColorStop(1, '#0b1730');
-    x.fillStyle = g;
-    x.fillRect(92, 10, 50, 40);
-    x.fillStyle = '#fff';
-    x.font = 'bold 13px Arial';
-    x.textAlign = 'center';
-    x.fillText('ROBE', 116, 35);
-    x.fillStyle = '#e03030';
-    x.fillRect(135, 28, 3, 3);
-    x.fillStyle = '#3a3a40';
-    for (let i = 0; i < 4; i++) x.fillRect(148, 12 + i * 10, 14, 6);
-  }),
-});
-const ventMat = new THREE.MeshStandardMaterial({
-  color: 0xa0a0a8,
-  metalness: 0.5,
-  roughness: 0.5,
-  map: canvasTex(64, 64, (x) => {
-    ventSlots(x, 0, 0, 64, 64, 9);
-  }),
-});
-const aluMat = new THREE.MeshStandardMaterial({ color: 0xb4b8c0, metalness: 0.85, roughness: 0.32 });
-const MODEL_GEO = {};
-const geoOf = (key, make) => MODEL_GEO[key] || (MODEL_GEO[key] = make());
-// Robe moving heads (FORTE, FORTE FS, MegaPointe, Spiider) share the base and the yoke design; they differ in the head
-const robeBase = () =>
-  geoOf('robeBase', () => ({
-    // rounded base with recessed side handles, feet and the truss clamp
-    body: merge([
-      Bx(0, 0.83, 0, 0.84, 0.26, 0.7),
-      Bx(0, 0.83, 0, 1.0, 0.26, 0.54),
-      ...[-1, 1].flatMap((sx) => [-1, 1].map((sz) => Cy(sx * 0.42, 0.83, sz * 0.27, 0.08, 0.26))),
-    ]),
-    trim: merge([
-      ...[-1, 1].map((sx) => Bx(sx * 0.505, 0.83, 0, 0.03, 0.08, 0.42)),
-      ...[-1, 1].flatMap((sx) => [-1, 1].map((sz) => Cy(sx * 0.38, 0.975, sz * 0.24, 0.045, 0.03))),
-      Bx(0, 0.985, 0, 0.62, 0.03, 0.12),
-      Cy(0, 1.03, 0, 0.09, 0.12),
-    ]),
-  }));
-// thick U yoke: bearing, cross-member, arms with rounded ends at the tilt axis, angled inner corners, outer covers with grip lines
-const robeYoke = (ax) => ({
-  yoke: merge([
-    Cy(0, 0.02, 0, 0.2, 0.06),
-    Bx(0, -0.03, 0, ax * 2 + 0.12, 0.09, 0.34),
-    ...[-1, 1].flatMap((sx) => [
-      Bx(sx * ax, -0.33, 0, 0.12, 0.62, 0.34),
-      CyX(sx * ax, -0.66, 0, 0.17, 0.12),
-      Bx(sx * (ax - 0.04), -0.075, 0, 0.1, 0.1, 0.32, 0, 0, Math.PI / 4),
-      Bx(sx * (ax + 0.085), -0.28, 0, 0.05, 0.42, 0.28),
-    ]),
-  ]),
-  yokeTrim: merge(
-    [-1, 1].flatMap((sx) => [
-      CyX(sx * (ax + 0.075), -0.66, 0, 0.11, 0.03),
-      ...[0, 1, 2].map((k) => Bx(sx * (ax + 0.112), -0.2, -0.06 + k * 0.06, 0.012, 0.12, 0.025)),
-    ]),
-  ),
-});
-const ROBE_HEADS = {
-  // FORTE: long barrel, wider body around the tilt axis, ribbed rear underside, stepped front bezel around the 180 mm lens
-  forte: {
-    ax: 0.43,
-    lensR: 0.235,
-    lensY: 0.772,
-    lensOff: 0.78,
-    geo: (fs) => ({
-      head: merge([
-        lathe([
-          [0.26, -0.72],
-          [0.3, -0.7],
-          [0.3, -0.42],
-          [0.315, -0.3],
-          [0.33, -0.15],
-          [0.335, 0.05],
-          [0.33, 0.2],
-          [0.31, 0.32],
-          [0.27, 0.4],
-          [0.18, 0.44],
-          [0, 0.45],
-        ]),
-      ]),
-      headTrim: merge([
-        lathe([
-          [0.235, -0.78],
-          [0.3, -0.78],
-          [0.3, -0.765],
-          [0.325, -0.755],
-          [0.325, -0.69],
-          [0.305, -0.68],
-        ]),
-        ...[0.12, 0.17, 0.22, 0.27].map((y) => Cy(0, y, 0, 0.345, 0.014)),
-        // FORTE FS: the RoboSpot camera on top of the barrel, next to the lens
-        ...(fs
-          ? [
-              Bx(-0.13, -0.5, 0.4, 0.12, 0.26, 0.12),
-              Cy(-0.13, -0.645, 0.4, 0.045, 0.04),
-              Bx(-0.13, -0.47, 0.345, 0.06, 0.1, 0.03),
-            ]
-          : []),
-      ]),
-    }),
-  },
-  // MegaPointe: short, fat head; deep lens inside a thick front ring; vent grilles on the head sides
-  megapointe: {
-    ax: 0.51,
-    lensR: 0.27,
-    lensY: 0.445,
-    lensOff: 0.53,
-    geo: () => ({
-      head: merge([
-        lathe([
-          [0.36, -0.4],
-          [0.4, -0.37],
-          [0.41, -0.2],
-          [0.41, 0.1],
-          [0.39, 0.24],
-          [0.33, 0.33],
-          [0.2, 0.37],
-          [0, 0.38],
-        ]),
-      ]),
-      headTrim: merge([
-        lathe([
-          [0.27, -0.53],
-          [0.4, -0.53],
-          [0.42, -0.5],
-          [0.42, -0.4],
-          [0.4, -0.37],
-        ]),
-        lathe([
-          [0.27, -0.44],
-          [0.27, -0.53],
-        ]),
-      ]), // ring, then its inner wall (listed rear to front: faces inward)
-      vents: merge([Bx(0, 0.06, 0.405, 0.3, 0.26, 0.02), Bx(0, 0.06, -0.405, 0.3, 0.26, 0.02)]),
-    }),
-  },
-  // Spiider: wide, short drum; the front is all honeycomb lens (texture); grooves round the drum
-  spiider: {
-    ax: 0.62,
-    lensR: 0.48,
-    lensY: 0.3,
-    lensOff: 0.305,
-    geo: () => ({
-      head: merge([
-        lathe(
-          [
-            [0.5, -0.27],
-            [0.52, -0.24],
-            [0.525, -0.1],
-            [0.52, 0.03],
-            [0.49, 0.1],
-            [0.41, 0.15],
-            [0.24, 0.18],
-            [0, 0.19],
-          ],
-          32,
-        ),
-      ]),
-      headTrim: merge([
-        lathe(
-          [
-            [0.47, -0.305],
-            [0.525, -0.305],
-            [0.535, -0.29],
-            [0.535, -0.25],
-            [0.52, -0.24],
-          ],
-          32,
-        ),
-        ...[-0.16, -0.12, -0.08].map((y) => Cy(0, y, 0, 0.53, 0.012)),
-      ]),
-    }),
-  },
-};
-ROBE_HEADS.forteFS = { ...ROBE_HEADS.forte };
-const robePanel = (c, par, y, z, w, h) => {
-  const p = c.mk(planeG, panelMat, par);
-  p.position.set(0, y, z);
-  p.scale.set(w, h, 1);
-  if (c.floor) p.rotation.z = Math.PI;
-  return p;
-}; // keep the screen upright on floor units
-function robeMover(f, c) {
-  const H = ROBE_HEADS[f.T.model],
-    G = geoOf(f.T.model, () => ({ ...H.geo(f.T.model === 'forteFS'), ...robeYoke(H.ax) })),
-    BS = robeBase();
-  const base = c.mk(BS.body, c.bodyMat, c.g);
-  c.mk(BS.trim, darkTrim, c.g);
-  robePanel(c, c.g, 0.83, 0.351, 0.96, 0.22);
-  const yoke = new THREE.Group();
-  yoke.position.y = 0.66;
-  c.g.add(yoke);
-  c.mk(G.yoke, c.bodyMat, yoke);
-  c.mk(G.yokeTrim, darkTrim, yoke);
-  const tiltG = new THREE.Group();
-  tiltG.position.y = -0.66;
-  yoke.add(tiltG);
-  const head = c.mk(G.head, c.bodyMat, tiltG);
-  c.mk(G.headTrim, darkTrim, tiltG);
-  if (G.vents) c.mk(G.vents, ventMat, tiltG);
-  const lens = c.mk(circG, c.lensMat, tiltG);
-  lens.rotation.x = Math.PI / 2;
-  lens.position.y = -H.lensY;
-  lens.scale.setScalar(H.lensR);
-  return { head, lens, lensOff: H.lensOff, yoke, tiltG, pick: [base, head] };
-}
-// static units: c.st is the stand (bracket/yoke, turned to the fixed pan; flipped on the floor), c.aim holds the tilting head
-const flatLens = (c, y, w, h) => {
-  const l = c.mk(planeG, c.lensMat, c.aim);
-  l.rotation.x = Math.PI / 2;
-  l.position.y = y;
-  l.scale.set(w, h, 1);
-  return l;
-};
-const BUILD = {
-  forte: robeMover,
-  forteFS: robeMover,
-  megapointe: robeMover,
-  spiider: robeMover,
-  // Robe WTF!: wide 2:1 box head between two rounded side towers, base with screen on top
-  wtf(f, c) {
-    const G = geoOf('wtf', () => ({
-      base: merge([
-        Bx(0, 0.44, 0, 0.56, 0.12, 0.4),
-        Bx(0, 0.35, 0, 1.24, 0.07, 0.3),
-        ...[-1, 1].flatMap((sx) => [Bx(sx * 0.57, 0.17, 0, 0.1, 0.36, 0.34), CyX(sx * 0.57, 0, 0, 0.17, 0.1)]),
-      ]),
-      baseTrim: merge([
-        ...[-1, 1].map((sx) => Bx(sx * 0.285, 0.44, 0, 0.02, 0.06, 0.26)),
-        ...[-1, 1].map((sx) => CyX(sx * 0.63, 0, 0, 0.1, 0.025)),
-      ]),
-      head: merge([Bx(0, 0, 0, 1.0, 0.24, 0.48), Bx(0, 0.15, 0, 0.88, 0.08, 0.4)]),
-      headTrim: merge([
-        ...[-1, 1].map((sz) => Bx(0, -0.125, sz * 0.235, 1.02, 0.035, 0.035)),
-        ...[-1, 1].map((sx) => Bx(sx * 0.495, -0.125, 0, 0.035, 0.035, 0.48)),
-        ...[-0.3, 0, 0.3].map((x) => Bx(x, 0.2, 0, 0.02, 0.02, 0.36)),
-      ]),
-    }));
-    const base = c.mk(G.base, c.bodyMat, c.st);
-    c.mk(G.baseTrim, darkTrim, c.st);
-    robePanel(c, c.st, 0.44, 0.201, 0.5, 0.11);
-    const head = c.mk(G.head, c.bodyMat, c.aim);
-    c.mk(G.headTrim, darkTrim, c.aim);
-    return { head, lens: flatLens(c, -0.13, 0.94, 0.42), lensOff: 0.13, pick: [base, head] };
-  },
-  // Chauvet STRIKE 4: four round cups on an X-shaped plate, wire grids (lens texture), U-bracket with clamp
-  strike4(f, c) {
-    const cups = [
-      [-0.23, -0.23],
-      [0.23, -0.23],
-      [-0.23, 0.23],
-      [0.23, 0.23],
-    ];
-    const G = geoOf('strike4', () => ({
-      head: merge([Bx(0, 0.02, 0, 0.4, 0.26, 0.4), ...cups.map(([x, z]) => Cy(x, 0, z, 0.2, 0.32))]),
-      headTrim: merge(cups.map(([x, z]) => part(torG, x, -0.16, z, 0.19, 0.19, 0.19, Math.PI / 2))),
-      lens: merge(cups.map(([x, z]) => part(circG, x, -0.165, z, 0.18, 0.18, 1, Math.PI / 2))),
-      stand: merge([
-        ...[-1, 1].map((sx) => Bx(sx * 0.5, 0.25, 0, 0.04, 0.5, 0.1)),
-        Bx(0, 0.5, 0, 1.04, 0.04, 0.1),
-        Cy(0, 0.64, 0, 0.045, 0.26),
-        ...[-1, 1].map((sx) => CyX(sx * 0.53, 0, 0, 0.06, 0.04)),
-      ]),
-    }));
-    c.mk(G.stand, darkTrim, c.st);
-    const head = c.mk(G.head, c.bodyMat, c.aim);
-    c.mk(G.headTrim, darkTrim, c.aim);
-    return { head, lens: c.mk(G.lens, c.lensMat, c.aim), lensOff: 0.17, pick: [head] };
-  },
-  // Robe ParFect 150: static cylinder with cooling rings, rear handle, 4-leaf barndoor, U-bracket (a floor stand when on the deck)
-  parfect(f, c) {
-    const G = geoOf('parfect', () => ({
-      head: merge([
-        lathe([
-          [0.33, -0.45],
-          [0.34, -0.42],
-          [0.34, 0.2],
-          [0.31, 0.32],
-          [0.22, 0.38],
-          [0, 0.39],
-        ]),
-      ]),
-      headTrim: merge([
-        lathe([
-          [0.29, -0.475],
-          [0.355, -0.475],
-          [0.355, -0.43],
-          [0.34, -0.42],
-        ]),
-        ...[0, 0.05, 0.1, 0.15].map((y) => Cy(0, y, 0, 0.35, 0.018)),
-        Bx(0, 0.45, 0, 0.05, 0.05, 0.36),
-        ...[-1, 1].map((sz) => Bx(0, 0.41, sz * 0.16, 0.05, 0.07, 0.05)),
-      ]),
-      doors: merge([
-        ...[-1, 1].map((sz) => Bx(0, -0.61, sz * 0.42, 0.62, 0.3, 0.015, -sz * 0.44, 0, 0)),
-        ...[-1, 1].map((sx) => Bx(sx * 0.42, -0.61, 0, 0.015, 0.3, 0.55, 0, 0, sx * 0.44)),
-      ]),
-      stand: merge([
-        ...[-1, 1].map((sx) => Bx(sx * 0.4, 0.23, 0, 0.035, 0.46, 0.14)),
-        Bx(0, 0.46, 0, 0.835, 0.035, 0.14),
-        ...[-1, 1].map((sx) => CyX(sx * 0.43, 0, 0, 0.07, 0.05)),
-      ]),
-    }));
-    c.mk(G.stand, darkTrim, c.st);
-    const head = c.mk(G.head, c.bodyMat, c.aim);
-    c.mk(G.headTrim, darkTrim, c.aim);
-    c.mk(G.doors, aluMat, c.aim);
-    const lens = c.mk(circG, c.lensMat, c.aim);
-    lens.rotation.x = Math.PI / 2;
-    lens.position.y = -0.47;
-    lens.scale.setScalar(0.29);
-    return { head, lens, lensOff: 0.48, pick: [head] };
-  },
-  // ETC Source Four: finned lamp housing at the rear, shutter barrel with 4 handles, lens tube, colour-frame holder; yoke + C-clamp
-  s4(f, c) {
-    const G = geoOf('s4', () => ({
-      head: merge([
-        lathe([
-          [0.14, -0.62],
-          [0.15, -0.6],
-          [0.15, -0.22],
-          [0.21, -0.2],
-          [0.21, 0.02],
-          [0.25, 0.08],
-          [0.25, 0.22],
-          [0.2, 0.3],
-          [0.1, 0.36],
-          [0.1, 0.44],
-          [0, 0.45],
-        ]),
-      ]),
-      headTrim: merge([
-        ...[0.1, 0.14, 0.18, 0.22].map((y) => Cy(0, y, 0, 0.265, 0.014)),
-        ...[0, 1, 2, 3].map((k) => {
-          const a = ((k + 0.5) * Math.PI) / 2;
-          return Bx(Math.sin(a) * 0.26, -0.1, Math.cos(a) * 0.26, 0.03, 0.03, 0.11, 0, a, 0);
-        }),
-        ...[-1, 1].map((sz) => Bx(0, -0.63, sz * 0.165, 0.36, 0.025, 0.03)),
-        ...[-1, 1].map((sx) => Bx(sx * 0.165, -0.63, 0, 0.03, 0.025, 0.36)),
-        Bx(0, 0.5, 0, 0.05, 0.1, 0.05),
-      ]),
-      stand: merge([
-        ...[-1, 1].map((sx) => Bx(sx * 0.32, 0.27, 0, 0.035, 0.6, 0.08)),
-        Bx(0, 0.57, 0, 0.675, 0.035, 0.08),
-        ...[-1, 1].map((sx) => CyX(sx * 0.36, 0, 0, 0.06, 0.06)),
-        Bx(0, 0.65, 0, 0.1, 0.12, 0.08),
-        Cy(0, 0.76, 0, 0.025, 0.14),
-      ]),
-    }));
-    c.mk(G.stand, darkTrim, c.st);
-    const head = c.mk(G.head, c.bodyMat, c.aim);
-    c.mk(G.headTrim, darkTrim, c.aim);
-    const lens = c.mk(circG, c.lensMat, c.aim);
-    lens.rotation.x = Math.PI / 2;
-    lens.position.y = -0.62;
-    lens.scale.setScalar(0.14);
-    return { head, lens, lensOff: 0.64, pick: [head] };
-  },
-  // Robe Tetra2: long base with screen and vents, two end pivots, a tilting bar head with 18 cells (no pan)
-  tetra2(f, c) {
-    const G = geoOf('tetra2', () => ({
-      base: merge([
-        Bx(0, 0.2, 0, 1.0, 0.1, 0.14),
-        ...[-1, 1].flatMap((sx) => [Bx(sx * 0.475, 0.08, 0, 0.05, 0.2, 0.12), CyX(sx * 0.475, 0, 0, 0.06, 0.05)]),
-      ]),
-      baseTrim: merge([
-        ...[-1, 1].flatMap((sx) => [-1, 1].map((sz) => Bx(sx * 0.42, 0.257, sz * 0.045, 0.06, 0.015, 0.03))),
-        ...[-1, 1].map((sx) => Bx(sx * 0.3, 0.2, 0.071, 0.2, 0.07, 0.004)),
-      ]),
-      head: merge([Bx(0, 0, 0, 0.9, 0.1, 0.13), Bx(0, 0.06, 0, 0.86, 0.03, 0.1)]),
-      headTrim: merge([
-        ...[-1, 1].map((sz) => Bx(0, -0.05, sz * 0.064, 0.9, 0.02, 0.012)),
-        ...[-1, 0, 1].map((sx) => Bx(sx * 0.445, -0.05, 0, 0.012, 0.02, 0.13)),
-      ]),
-    }));
-    const base = c.mk(G.base, c.bodyMat, c.g);
-    c.mk(G.baseTrim, darkTrim, c.g);
-    robePanel(c, c.g, 0.2, 0.0715, 0.36, 0.09);
-    const yoke = new THREE.Group();
-    c.g.add(yoke);
-    const tiltG = new THREE.Group();
-    yoke.add(tiltG); // pivots are fixed to the base: the yoke never pans
-    const head = c.mk(G.head, c.bodyMat, tiltG);
-    c.mk(G.headTrim, darkTrim, tiltG);
-    const lens = c.mk(planeG, c.lensMat, tiltG);
-    lens.rotation.x = Math.PI / 2;
-    lens.position.y = -0.052;
-    lens.scale.set(0.87, 0.115, 1);
-    return { head, lens, lensOff: 0.055, yoke, tiltG, pick: [base, head] };
-  },
-};
-function buildVis(f) {
-  const T = f.T;
-  if (T.shape === 'screen') {
-    screenMesh.userData.fix = f;
-    pickables.push(screenMesh);
-    f.vo = { screen: true };
-    return;
-  }
-  const s = T.size,
-    floor = f.mount === 'floor',
-    g = new THREE.Group();
-  g.position.copy(f.pos);
-  g.scale.setScalar(s);
-  scene.add(g);
-  if (T.moving && floor) g.rotation.z = Math.PI; // floor movers stand on their base
-  const bodyMat = new THREE.MeshStandardMaterial({
-    color: 0x232328,
-    metalness: 0.55,
-    roughness: 0.38,
-    emissive: 0x000000,
-  });
-  const lensMat = new THREE.MeshBasicMaterial({
-    color: 0x050505,
-    side: THREE.DoubleSide,
-    toneMapped: false,
-    map: LENS_TEX[T.model],
-  });
-  const pivot = new THREE.Group();
-  g.add(pivot);
-  // statics: pivot gets the shortest-arc rotation DOWN -> aim each frame, which rolls the head by -pan; aim.rotation.y = pan undoes it
-  let aim = null,
-    st = null;
-  if (!T.moving) {
-    const pan = (f.fixed ? f.fixed.pan : 0) * D2R;
-    aim = new THREE.Group();
-    aim.rotation.y = pan;
-    pivot.add(aim);
-    st = new THREE.Group();
-    st.rotation.set(0, pan, floor ? Math.PI : 0);
-    g.add(st);
-  }
-  const mk = (geo, mat, par) => {
-    const o = new THREE.Mesh(geo, mat);
-    par.add(o);
-    return o;
-  };
-  const b = BUILD[T.model](f, { g, aim, st, bodyMat, lensMat, mk, floor });
-  for (const m of b.pick) {
-    m.userData.fix = f;
-    pickables.push(m);
-  }
-  let pix = null;
-  if (f.pix) {
-    pix = new THREE.Mesh(boxG, new THREE.MeshBasicMaterial({ color: 0x000000, toneMapped: false }));
-    pix.position.copy(f.pix.p);
-    pix.quaternion.setFromUnitVectors(new V3(1, 0, 0), f.pix.tan);
-    pix.scale.set(f.pix.len, 0.07, 0.07);
-    scene.add(pix);
-  }
-  const bu = {
-    uColor: { value: new THREE.Color() },
-    uInt: { value: 0 },
-    uHaze: hazeU,
-    uGobo: { value: 0 },
-    uGRot: { value: 0 },
-    uLen: { value: 30 },
-    uEnd: { value: 0 },
-    uTime: timeU,
-    uSoft: { value: T.soft ?? 1.6 },
-  };
-  const beam = new THREE.Mesh(
-    beamGeo,
-    new THREE.ShaderMaterial({
-      uniforms: bu,
-      vertexShader: BEAM_VS,
-      fragmentShader: BEAM_FS,
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-      fog: false,
-    }),
-  );
-  beam.frustumCulled = false;
-  scene.add(beam);
-  const pool = new THREE.Mesh(
-    poolG,
-    new THREE.MeshBasicMaterial({
-      map: goboTex[0],
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      fog: false,
-      polygonOffset: true,
-      polygonOffsetFactor: -2,
-    }),
-  );
-  scene.add(pool);
-  const glow = new THREE.Sprite(
-    new THREE.SpriteMaterial({
-      map: glowTex,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      transparent: true,
-      fog: false,
-    }),
-  );
-  scene.add(glow);
-  f.vo = {
-    g,
-    pivot,
-    head: b.head,
-    lens: b.lens,
-    lensOff: b.lensOff * s,
-    bodyMat,
-    lensMat,
-    beam,
-    bu,
-    pool,
-    glow,
-    poolTex: [],
-    s,
-    yoke: b.yoke || null,
-    tiltG: b.tiltG || null,
-    flip: floor,
-    pix,
-  };
-}
-fixtures.forEach(buildVis);
-
-/* --- scenery props (not patched): Antari HZ-500 hazers upstage, and the RoboSpot station that runs the follow spots --- */
-const puffs = [];
-{
-  // HZ-500: black road case with aluminium edges, ball corners, butterfly latches, handle; the nozzle opening and lid flap on top
-  const caseMat = new THREE.MeshStandardMaterial({ color: 0x141417, roughness: 0.55, metalness: 0.2 });
-  const body = merge([
-    Bx(0, 0.18, 0, 0.5, 0.34, 0.36),
-    Bx(0, 0.365, -0.04, 0.16, 0.02, 0.1),
-    Bx(0, 0.4, -0.11, 0.17, 0.01, 0.12, -0.6, 0, 0),
-  ]);
-  const alu = merge([
-    ...[0.01, 0.35, 0.28].flatMap((y) => [-1, 1].map((sz) => Bx(0, y, sz * 0.18, 0.52, 0.02, 0.02))),
-    ...[0.01, 0.35].flatMap((y) => [-1, 1].map((sx) => Bx(sx * 0.25, y, 0, 0.02, 0.02, 0.38))),
-    ...[-1, 1].flatMap((sx) => [-1, 1].map((sz) => Bx(sx * 0.25, 0.18, sz * 0.18, 0.02, 0.36, 0.02))),
-    ...[0.01, 0.35].flatMap((y) =>
-      [-1, 1].flatMap((sx) => [-1, 1].map((sz) => part(sphG, sx * 0.25, y, sz * 0.18, 0.028, 0.028, 0.028))),
-    ),
-    ...[-1, 1].map((sx) => Bx(sx * 0.14, 0.28, 0.186, 0.07, 0.07, 0.01)),
-    Bx(0, 0.15, 0.186, 0.14, 0.07, 0.012),
-  ]);
-  const puffTex = canvasTex(64, 64, (x) => {
-    for (let k = 0; k < 7; k++) {
-      const cx = 32 + (Math.random() - 0.5) * 18,
-        cy = 32 + (Math.random() - 0.5) * 18,
-        r = 14 + Math.random() * 12,
-        g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
-      g.addColorStop(0, 'rgba(255,255,255,.35)');
-      g.addColorStop(1, 'rgba(255,255,255,0)');
-      x.fillStyle = g;
-      x.fillRect(0, 0, 64, 64);
-    }
-  });
-  for (const [x, z] of [
-    [-20.6, -15.6],
-    [20.6, -15.6],
-    [-12.1, -19.3],
-    [12.1, -19.3],
-  ]) {
-    const g = new THREE.Group();
-    g.position.set(x, DECK, z);
-    g.add(new THREE.Mesh(body, caseMat), new THREE.Mesh(alu, aluMat));
-    scene.add(g);
-    for (let k = 0; k < 3; k++) {
-      const sp = new THREE.Sprite(
-        new THREE.SpriteMaterial({ map: puffTex, color: 0xc4c8d2, transparent: true, depthWrite: false, opacity: 0 }),
-      );
-      sp.visible = false;
-      scene.add(sp);
-      puffs.push({ sp, x, z, ph: k / 3 });
-    }
-  }
-}
-// a soft puff of haze rises from each hazer; its density follows the Haze master
-function updateProps(now) {
-  hazeU.value = appState.haze;
-  const h = hazeU.value;
-  for (const p of puffs) {
-    p.sp.visible = h > 0.01;
-    if (!p.sp.visible) continue;
-    const k = (now * 0.16 + p.ph) % 1,
-      sc = (0.5 + k * 2.4) * (0.6 + h * 0.6);
-    p.sp.position.set(p.x + Math.sin(now * 0.4 + p.ph * 6) * 0.2 * k, DECK + 0.85 + k * 2.2, p.z - k * 0.6);
-    p.sp.scale.set(sc, sc, 1);
-    p.sp.material.opacity = h * 0.55 * Math.sin(Math.PI * k);
-  }
-}
-{
-  // RoboSpot BaseStation on a flight case at FOH: pan/tilt handles, fader panel, hooded monitor, clipboard; hidden with the FOH riser in the MA view
-  const m = new THREE.MeshStandardMaterial({ color: 0x232328, roughness: 0.5, metalness: 0.4 });
-  const body = merge([
-    Bx(0, 0.275, 0, 0.7, 0.55, 0.5),
-    Bx(0, 0.63, 0, 0.62, 0.16, 0.45),
-    Cy(0, 0.77, 0, 0.14, 0.12),
-    Bx(0, 0.9, 0, 0.5, 0.14, 0.22),
-    Bx(0, 1.0, 0.05, 0.38, 0.05, 0.2, 0.35, 0, 0),
-    ...[-1, 1].map((sx) => CyX(sx * 0.42, 0.9, 0.06, 0.03, 0.34)),
-    Bx(0, 1.12, -0.02, 0.06, 0.14, 0.06),
-    Bx(0, 1.3, -0.02, 0.62, 0.38, 0.06),
-    Bx(0, 1.5, 0.09, 0.66, 0.02, 0.24),
-    ...[-1, 1].map((sx) => Bx(sx * 0.32, 1.3, 0.09, 0.02, 0.38, 0.24)),
-    Bx(-0.55, 1.25, 0.02, 0.26, 0.36, 0.02, 0, 0.35, 0),
-  ]);
-  const scr = canvasTex(128, 72, (x) => {
-    x.fillStyle = '#04081a';
-    x.fillRect(0, 0, 128, 72);
-    x.fillStyle = '#10142a';
-    x.fillRect(0, 54, 128, 18);
-    for (let i = 0; i < 6; i++) {
-      const bx = 14 + i * 20,
-        g = x.createLinearGradient(bx, 0, 64, 60);
-      g.addColorStop(0, 'rgba(120,170,255,.9)');
-      g.addColorStop(1, 'rgba(60,110,255,0)');
-      x.fillStyle = g;
-      x.beginPath();
-      x.moveTo(bx - 2, 0);
-      x.lineTo(bx + 2, 0);
-      x.lineTo(64 + (i - 2.5) * 6, 58);
-      x.lineTo(64 + (i - 2.5) * 4, 58);
-      x.fill();
-    }
-    x.fillStyle = '#e8eeff';
-    x.fillRect(62, 46, 4, 10);
-  });
-  const g = new THREE.Group();
-  g.position.set(3.0, 5.0, 47.3);
-  g.add(new THREE.Mesh(body, m));
-  scene.add(g);
-  const sc = new THREE.Mesh(planeG, new THREE.MeshBasicMaterial({ map: scr }));
-  sc.position.set(0, 1.3, 0.012);
-  sc.scale.set(0.56, 0.32, 1);
-  g.add(sc);
-  g.visible = fohRig.length ? fohRig[0].visible : true;
-  fohRig.push(g);
-}
 
 /* ====================================================================
    SHOW DATA: the engine (state, playback, programmer) and its event bus
@@ -2395,225 +110,69 @@ const runner = new CommandRunner({
 });
 
 /* ====================================================================
-   VISUAL UPDATE
+   THREE.JS SCENE: three.js draws each object's uuid from the seeded Math.random, so the
+   creation order below is render parity (decision 24); the engine above creates no
+   three.js object and draws no random number
 ==================================================================== */
-const tmpD = new V3(),
-  tmpP = new V3(),
-  tmpQ = new THREE.Quaternion(),
-  camDir = new V3(),
-  mBasis = new THREE.Matrix4(),
-  tU = new V3(),
-  tV = new V3(),
-  NZ = new V3(0, 0, 1);
-function hitSurface(o, d) {
-  let best = null;
-  {
-    const den = d.y - (VEN.RISE / VEN.RUN) * d.z;
-    if (Math.abs(den) > 1e-4) {
-      const t = (((o.z - VEN.Z1) * VEN.RISE) / VEN.RUN - o.y) / den;
-      if (t > 0) {
-        const x = o.x + d.x * t,
-          z = o.z + d.z * t;
-        if (Math.abs(x) < VEN.X && z > VEN.Z1 && z < VEN.Z1 + VEN.STEPS * VEN.RUN) best = { t, n: TIER_N };
-      }
-    }
-  }
-  if (d.y < -1e-4) {
-    let t = (DECK - o.y) / d.y;
-    if (t > 0) {
-      const x = o.x + d.x * t,
-        z = o.z + d.z * t;
-      if (x > STAGE.x0 && x < STAGE.x1 && z > STAGE.z0 && z < STAGE.z1 && o.y > DECK) best = { t, n: UP };
-    }
-    if (!best) {
-      t = -o.y / d.y;
-      const x = o.x + d.x * t,
-        z = o.z + d.z * t;
-      if (
-        t > 0 &&
-        (!best || t < best.t) &&
-        !(x > STAGE.x0 && x < STAGE.x1 && z > STAGE.z0 && z < STAGE.z1) &&
-        Math.abs(x) < VEN.X &&
-        z < VEN.Z1 &&
-        z > STAGE.z0 - 6
-      )
-        best = { t, n: UP };
-    }
-  }
-  if (d.z < -1e-4 && o.z > SCREEN.z) {
-    const t = (SCREEN.z + 0.05 - o.z) / d.z;
-    if (t > 0 && (!best || t < best.t)) {
-      const x = o.x + d.x * t,
-        y = o.y + d.y * t;
-      if (x > SCREEN.x0 - 5 && x < SCREEN.x1 + 5 && y > DECK && y < 27) best = { t, n: NZ };
-    }
-  }
-  return best;
+const canvas = $('#c');
+const { renderer, scene } = createStageGraphics(canvas);
+// MA layout: FOH is the operator's standing eye at the control position in the audience, behind the console overlay;
+// the scene's raised FOH riser and its desk are hidden there (they would show as a second, empty desk)
+const views = new CameraViews(canvas, {
+  isMaLayout: () => document.body.classList.contains('ma'),
+  onViewChanged: (view) => $$('[data-view]').forEach((b) => b.classList.toggle('on', b.dataset.view === view)),
+});
+const { camera, controls } = views;
+// the view buttons and the test hook pass plain strings; an unknown name leaves the camera where it is
+const isViewName = (view: string): view is ViewName => Object.hasOwn(VIEWS, view);
+function setView(view: string, instant?: boolean): void {
+  if (isViewName(view)) views.setView(view, instant);
 }
-const stageAcc = new THREE.Color(),
-  audAcc = { v: 0 },
-  keyCand = [];
-function updateVisuals(now, dt) {
-  camDir.copy(camera.position);
-  stageAcc.setRGB(0, 0, 0);
-  let aud = 0;
-  keyCand.length = 0;
-  for (const z of audZones) z.c.setRGB(0, 0, 0);
-  for (const f of fixtures) {
-    const o = f.out,
-      T = f.T,
-      v = f.vis,
-      vo = f.vo;
-    let I = clamp(o.dim / 100, 0, 1);
-    if (o.strobe > 0.5) {
-      const hz = 1 + (o.strobe / 100) * 22;
-      I *= (now * hz) % 1 < 0.22 ? 1 : 0;
-    }
-    if (f.type === 'screen') {
-      screenU.uDim.value = I;
-      screenU.uCol.value.setRGB(o.r / 100, o.g / 100, o.b / 100);
-      screenU.uMode.value = Math.round(o.gobo);
-      screenU.uSpd.value = o.grot;
-      screenU.uT.value = now;
-      timeU.value = now;
-      scrLight.color.setRGB(o.r / 100, o.g / 100, o.b / 100);
-      scrLight.intensity = I * 9;
-      ledStrip.material.color.setRGB((o.r / 100) * I * 2, (o.g / 100) * I * 2, (o.b / 100) * I * 2);
-      continue;
-    }
-    if (T.moving) {
-      const k = 1 - Math.exp(-dt * 9);
-      v.pan += (o.pan - v.pan) * k;
-      v.tilt += (o.tilt - v.tilt) * k;
-    } else {
-      v.pan = o.pan;
-      v.tilt = o.tilt;
-    }
-    v.gang += o.grot * dt * 0.05;
-    dirFrom(f, v.pan, v.tilt, tmpD);
-    if (vo.tiltG) {
-      vo.yoke.rotation.y = T.tiltOnly ? 0 : (vo.flip ? -1 : 1) * v.pan * D2R;
-      vo.tiltG.rotation.x = -v.tilt * D2R;
-    } else vo.pivot.quaternion.setFromUnitVectors(DOWN, tmpD);
-    const col = [o.r / 100, o.g / 100, o.b / 100];
-    vo.bodyMat.emissive.setHex(selection.has(f.id) ? 0x7a5a00 : 0x000000);
-    vo.lensMat.color.setRGB(0.03 + col[0] * I * 3, 0.03 + col[1] * I * 3, 0.03 + col[2] * I * 3);
-    if (vo.pix) vo.pix.material.color.setRGB(0.02 + col[0] * I * 2.2, 0.02 + col[1] * I * 2.2, 0.02 + col[2] * I * 2.2);
-    const on = I > 0.004;
-    vo.beam.visible = vo.pool.visible = vo.glow.visible = on;
-    if (!on) continue;
-    tmpP.copy(f.pos).addScaledVector(tmpD, vo.lensOff + 0.02);
-    const zoom = clamp(o.zoom, T.zr[0], T.zr[1]),
-      tz = Math.tan((zoom / 2) * D2R);
-    const hit = hitSurface(tmpP, tmpD),
-      L = hit ? hit.t : 85;
-    // beam
-    const bm = vo.beam,
-      bu = vo.bu;
-    bm.position.copy(tmpP);
-    bm.quaternion.setFromUnitVectors(DOWN, tmpD);
-    const rr = Math.max(L * tz, 0.02);
-    bm.scale.set(rr, L, rr);
-    bu.uColor.value.setRGB(col[0], col[1], col[2]);
-    bu.uInt.value = I * T.power * (T.beamK ?? 1) * 0.38 * clamp(Math.pow(14 / (zoom + 4), 0.8), 0.06, 2.2);
-    bu.uLen.value = L;
-    bu.uEnd.value = hit ? 0 : 1;
-    const gob = f.has('gobo') ? Math.round(o.gobo) : 0;
-    bu.uGobo.value = gob;
-    bu.uGRot.value = v.gang;
-    // pool
-    const pl = vo.pool;
-    if (hit) {
-      pl.visible = true;
-      const r = L * tz,
-        n = hit.n,
-        cosA = Math.abs(tmpD.dot(n));
-      tU.copy(tmpD).addScaledVector(n, -tmpD.dot(n));
-      if (tU.lengthSq() < 1e-6) tU.set(1, 0, 0).cross(n).normalize();
-      else tU.normalize();
-      tV.crossVectors(n, tU);
-      mBasis.makeBasis(tU, tV, n);
-      pl.quaternion.setFromRotationMatrix(mBasis);
-      pl.position
-        .copy(tmpP)
-        .addScaledVector(tmpD, L)
-        .addScaledVector(n, 0.015 + (f.id % 7) * 0.002);
-      pl.scale.set(r / Math.max(cosA, 0.22), r, 1);
-      if (!vo.poolTex[gob]) {
-        vo.poolTex[gob] = goboTex[gob].clone();
-        vo.poolTex[gob].needsUpdate = true;
-      }
-      const tx = vo.poolTex[gob];
-      tx.rotation = v.gang;
-      if (pl.material.map !== tx) {
-        pl.material.map = tx;
-        pl.material.needsUpdate = true;
-      }
-      const pI = ((I * T.power * 0.3) / (1 + r * 0.1)) * (n === NZ ? 0.45 : L > 24 ? 0.45 : 1);
-      pl.material.color.setRGB(col[0] * pI, col[1] * pI, col[2] * pI);
-      if (n === UP && L < 40 && hit && T.shape !== 'blinder')
-        keyCand.push({ f, sc: I * T.power * (T.moving ? 1 : 0.6), I, col, zoom, L, p: tmpP.clone(), d: tmpD.clone() });
-      const hz_ = tmpP.z + tmpD.z * L;
-      if (hz_ > 4) {
-        const hx = tmpP.x + tmpD.x * L,
-          w = I * T.power * (T.shape === 'wash' ? 1.4 : 1) * clamp(zoom / 12, 0.35, 2.5),
-          zi = hx < -13 ? 0 : hx > 13 ? 2 : 1;
-        audZones[zi].c.r += col[0] * w;
-        audZones[zi].c.g += col[1] * w;
-        audZones[zi].c.b += col[2] * w;
-      } else if (n === UP && L < 30)
-        ((stageAcc.r += col[0] * I * T.power),
-          (stageAcc.g += col[1] * I * T.power),
-          (stageAcc.b += col[2] * I * T.power));
-    } else pl.visible = false;
-    if (f.type === 'blinder') aud += I;
-    // lens glow
-    const gl = vo.glow;
-    gl.position.copy(tmpP);
-    tU.subVectors(camDir, tmpP);
-    const dist = tU.length();
-    tU.divideScalar(dist);
-    const facing = Math.max(0, tmpD.dot(tU)),
-      coneCos = Math.cos((Math.max(zoom, 8) / 2) * D2R * 1.6);
-    const into = facing > coneCos ? Math.pow((facing - coneCos) / (1 - coneCos), 2) : 0;
-    const gs = vo.s * (1.1 + 4.5 * into) * Math.sqrt(I) * (T.glowK ?? 1);
-    gl.scale.set(gs, gs, 1);
-    const gI = (0.3 + 0.75 * into) * I;
-    gl.material.color.setRGB(col[0] * gI, col[1] * gI, col[2] * gI);
-  }
-  const sm = Math.max(stageAcc.r, stageAcc.g, stageAcc.b);
-  if (sm > 0) {
-    stageLight.color.setRGB(stageAcc.r / sm, stageAcc.g / sm, stageAcc.b / sm);
-    stageLight.intensity = Math.min(sm * 0.12, 6);
-  } else stageLight.intensity = 0;
-  audLight.intensity = aud * 4;
-  for (const z of audZones) {
-    const m = Math.max(z.c.r, z.c.g, z.c.b);
-    if (m > 0) {
-      z.L.color.setRGB(z.c.r / m, z.c.g / m, z.c.b / m);
-      z.L.intensity = Math.min(m * 4.5, 70);
-    } else z.L.intensity = 0;
-    z.L.intensity += aud * 6;
-  }
-  houseLights.forEach((L, i) => (L.intensity = houseLevel * (i === 2 ? 500 : 1100)));
-  if (WALL_LIGHT.l) WALL_LIGHT.l.intensity = 0;
-  keyCand.sort((a, b) => b.sc - a.sc);
-  for (let i = 0; i < KEY_N; i++) {
-    const L = keyLights[i],
-      c = keyCand[i];
-    if (!c || !lightsOn) {
-      L.intensity = 0;
-      continue;
-    }
-    L.position.copy(c.p);
-    L.target.position.copy(c.p).addScaledVector(c.d, c.L);
-    L.target.updateMatrixWorld();
-    L.angle = Math.min((clamp(c.zoom, 4, 60) / 2) * D2R * 1.15, 1.2);
-    L.penumbra = c.f.type === 'wash' ? 0.85 : 0.35;
-    L.color.setRGB(c.col[0], c.col[1], c.col[2]);
-    L.intensity = c.I * c.f.T.power * 450 * clamp(12 / (c.zoom + 6), 0.25, 1.6);
-  }
-}
+setView('foh', true);
+const postFx = new PostFx(renderer, scene, camera);
+addEnvironmentLights(scene);
+const venue = buildVenue(scene);
+const sceneLights = new SceneLights(scene, venue.wallFloodlight);
+
+/* --- fixture visuals --- */
+const gobo = createGoboAtlas();
+const beamShared = createBeamShared();
+const trimMaterial = createTrimMaterial();
+const lensTextures = createLensTextures();
+const keyLights = new KeyLights(scene);
+const prims = new ModelPrimitives();
+const modelKit = { prims, materials: createModelMaterials(trimMaterial) };
+const picker = new FixturePicker(canvas, camera);
+const visualBuilder = new FixtureVisualBuilder({
+  scene,
+  prims,
+  beam: beamShared,
+  gobo,
+  models: createFixtureModels(modelKit),
+  lensTextures,
+  screenMesh: venue.ledWall.screen,
+  picker,
+});
+const visuals = fixtures.map((f) => visualBuilder.build(f));
+const props = new Props({ scene, kit: modelKit, fohRig: venue.fohRig, state: appState, beamHaze: beamShared.haze });
+views.fohRig.add(...venue.fohRig);
+const lightFrame = new LightFrame();
+const visualSync = new FixtureVisualSync({
+  visuals,
+  selection,
+  screen: { uniforms: venue.ledWall.uniforms, light: sceneLights.screenLight, strip: venue.ledWall.strip },
+  beamTime: beamShared.time,
+  goboTextures: gobo.textures,
+  lights: lightFrame,
+});
+const stageRenderer = new StageRenderer({
+  renderer,
+  scene,
+  views,
+  postFx,
+  overlay: new FixtureIdOverlay($('#ov'), fixtures, (id) => selection.has(id)),
+  viewer: $('#viewer'),
+});
 
 /* ====================================================================
    COMMAND LINE
@@ -2705,7 +264,7 @@ function renderPools() {
     }
     if (pr && presetTab === 3 && pr.gobo != null) {
       const im = el('img', 'gi');
-      im.src = goboIcons[pr.gobo];
+      im.src = gobo.icons[pr.gobo];
       d.appendChild(im);
     }
     d.onclick = () => {
@@ -3199,7 +758,7 @@ function renderEncExtra() {
       });
     else
       GOBO_NAMES.forEach((n, i) => {
-        const b = el('button', '', `<img src="${goboIcons[i]}">${n}`);
+        const b = el('button', '', `<img src="${gobo.icons[i]}">${n}`);
         b.onclick = () => encAbs('gobo', i);
         r.appendChild(b);
       });
@@ -3573,19 +1132,24 @@ $('#boBtn').onclick = () => {
 };
 $('#tapBtn').onclick = () => tempo.tap(clock.nowMs());
 $('#haze').oninput = (ev) => (appState.haze = ev.target.value / 100);
-$('#house').oninput = (ev) => (houseLevel = ev.target.value / 100);
+$('#house').oninput = (ev) => sceneLights.setHouseLevel(ev.target.value / 100);
+let glowOn = true,
+  lightsOn = true;
 $('#glowBtn').onclick = (ev) => {
   glowOn = !glowOn;
+  stageRenderer.setGlow(glowOn);
   ev.target.classList.toggle('on', glowOn);
 };
 $('#realBtn').onclick = (ev) => {
   lightsOn = !lightsOn;
-  renderer.shadowMap.enabled = lightsOn;
+  keyLights.setEnabled(lightsOn);
+  stageRenderer.setShadows(lightsOn);
   ev.target.classList.toggle('on', lightsOn);
 };
 let showIds = false;
 $('#idsBtn').onclick = (ev) => {
   showIds = !showIds;
+  stageRenderer.setShowIds(showIds);
   ev.target.classList.toggle('on', showIds);
 };
 
@@ -3796,15 +1360,6 @@ $('#fileBtn').onclick = () => {
 /* ====================================================================
    VIEWPORT INTERACTION (picking, box select, tooltip)
 ==================================================================== */
-const ray = new THREE.Raycaster(),
-  ndc = new THREE.Vector2();
-function pickAt(cx, cy) {
-  const r = canvas.getBoundingClientRect();
-  ndc.set(((cx - r.left) / r.width) * 2 - 1, (-(cy - r.top) / r.height) * 2 + 1);
-  ray.setFromCamera(ndc, camera);
-  const h = ray.intersectObjects(pickables, false)[0];
-  return h ? h.object.userData.fix : null;
-}
 let down = null;
 canvas.addEventListener('pointerdown', (ev) => {
   down = { x: ev.clientX, y: ev.clientY, shift: ev.shiftKey, box: ev.shiftKey && ev.button === 0 };
@@ -3836,13 +1391,12 @@ window.addEventListener('pointerup', (ev) => {
       x1 = Math.max(down.x, ev.clientX),
       y0 = Math.min(down.y, ev.clientY),
       y1 = Math.max(down.y, ev.clientY),
-      ids = [];
+      ids = [],
+      point = { x: 0, y: 0, ndcX: 0, ndcY: 0, depth: 0 };
     for (const f of fixtures) {
-      tmpP.copy(f.pos).project(camera);
-      if (tmpP.z > 1) continue;
-      const sx = r.left + ((tmpP.x + 1) / 2) * r.width,
-        sy = r.top + ((1 - tmpP.y) / 2) * r.height;
-      if (sx >= x0 && sx <= x1 && sy >= y0 && sy <= y1) ids.push(f);
+      projectToScreen(camera, f.pos, r, point);
+      if (point.depth > 1) continue;
+      if (point.x >= x0 && point.x <= x1 && point.y >= y0 && point.y <= y1) ids.push(f);
     }
     ids.sort((a, b) => a.id - b.id);
     selection.set(
@@ -3851,7 +1405,7 @@ window.addEventListener('pointerup', (ev) => {
     );
     log(`Box select +${ids.length}`, 'ok');
   } else if (moved < 5 && ev.target === canvas) {
-    const f = pickAt(ev.clientX, ev.clientY);
+    const f = picker.pickAt(ev.clientX, ev.clientY);
     if (f) {
       selection.set([f.id], down.shift ? 'toggle' : 'replace');
       log(`Fixture ${f.id} (${f.T.name})`, 'ok');
@@ -3867,7 +1421,7 @@ canvas.addEventListener('pointermove', (ev) => {
   const t = performance.now();
   if (t - tipT < 60) return;
   tipT = t;
-  const f = pickAt(ev.clientX, ev.clientY),
+  const f = picker.pickAt(ev.clientX, ev.clientY),
     tip = $('#tip');
   if (f) {
     const r = $('#viewer').getBoundingClientRect();
@@ -3920,43 +1474,9 @@ $('#midiBtn').onclick = async () => {
 /* ====================================================================
    OVERLAY (fixture IDs) + RESIZE + LOOP
 ==================================================================== */
-function drawOverlay() {
-  const w = ov.width,
-    h = ov.height;
-  ovx.clearRect(0, 0, w, h);
-  if (!showIds) return;
-  const dpr = ov.width / ov.clientWidth;
-  ovx.font = `${10 * dpr}px JetBrains Mono`;
-  ovx.textAlign = 'center';
-  for (const f of fixtures) {
-    tmpP.copy(f.pos).project(camera);
-    if (tmpP.z > 1 || Math.abs(tmpP.x) > 1 || Math.abs(tmpP.y) > 1) continue;
-    const x = ((tmpP.x + 1) / 2) * w,
-      y = ((1 - tmpP.y) / 2) * h - 10 * dpr;
-    ovx.fillStyle = selection.has(f.id) ? '#ffc21a' : '#ffffff99';
-    ovx.fillText(f.id, x, y);
-  }
-}
 // projected height of the MA console overlay (0 in the other layouts), set by fitDesk()
 let maConH = 0;
-function resize() {
-  const v = $('#viewer'),
-    w = v.clientWidth,
-    h = v.clientHeight;
-  renderer.setSize(w, h, false);
-  composer.setSize(w, h);
-  bloom.setSize(w / 2, h / 2);
-  camera.aspect = w / h;
-  // MA: the console covers the bottom of the stage view, so the look-at point is moved to the middle of the free area above it
-  if (maConH) camera.setViewOffset(w, h, 0, Math.round(maConH / 2), w, h);
-  else camera.clearViewOffset();
-  camera.updateProjectionMatrix();
-  const d = Math.min(devicePixelRatio, 1.5);
-  ov.width = w * d;
-  ov.height = h * d;
-}
-new ResizeObserver(resize).observe($('#viewer'));
-resize();
+stageRenderer.observeViewer();
 
 let last = performance.now(),
   fpsAcc = 0,
@@ -3968,20 +1488,18 @@ function loop(t) {
   const dt = Math.min((t - last) / 1000, 0.1);
   last = t;
   const now = t / 1000;
-  crowdU.uBeat.value = (((now - tempo.beatOrigin) * tempo.bpm) / 60) * Math.PI;
-  crowdU.uJump.value =
-    autoShow.settings.pulse === 'audio' && songPlayer.audioGraph ? 0.3 + autoShow.modulation.pump : 1;
+  const crowdJump = autoShow.settings.pulse === 'audio' && songPlayer.audioGraph ? 0.3 + autoShow.modulation.pump : 1;
+  animateCrowd(venue.crowd, now, tempo, crowdJump);
   songPlayer.sync(tempo);
   autoShow.tick(now);
   pool.stepFades(now);
   merger.compute(now, autoShow.modulation);
-  updateVisuals(now, dt);
-  updateProps(now);
-  animPerformers(now);
-  controls.update();
-  if (glowOn) composer.render();
-  else renderer.render(scene, camera);
-  drawOverlay();
+  visualSync.update(now, dt, camera.position);
+  props.update(now);
+  sceneLights.update(lightFrame);
+  keyLights.update(lightFrame);
+  animatePerformers(venue.performers, now, tempo);
+  stageRenderer.renderFrame();
   fpsAcc += dt;
   fpsN++;
   if (t - uiT > 50) {
@@ -4157,15 +1675,6 @@ $('#aList').onclick = () => {
   toast(`8-cue ${S.name} list built in Exec ${ei + 1}`);
   log(`Built ${S.name} cue list → Exec ${ei + 1}`, 'ok');
 };
-function animPerformers(now) {
-  const bf = (((now - tempo.beatOrigin) * tempo.bpm) / 60) * Math.PI * 2;
-  for (const p of performers) {
-    const b = Math.sin(bf + p.ph);
-    p.g.position.y = p.y + Math.abs(b) * p.amp;
-    p.g.rotation.y = p.ry + Math.sin(bf * 0.25 + p.ph) * p.sway;
-    p.head.rotation.x = b * 0.12;
-  }
-}
 
 /* ====================================================================
    USER GUIDE (Hebrew) + GUIDED TOUR
@@ -4802,8 +2311,8 @@ function applyLayout() {
   maGeo = null;
   renderEncoders();
   fitDesk();
-  resize();
-  if (curView === 'foh' && wasMa !== ma) setView('foh', true);
+  stageRenderer.resize();
+  if (views.currentView === 'foh' && wasMa !== ma) setView('foh', true);
   saveLayout();
 }
 function fitDesk() {
@@ -4812,6 +2321,7 @@ function fitDesk() {
   const mb = $('#maBody');
   if (deskMode !== 'ma') {
     maConH = 0;
+    stageRenderer.setConsoleHeight(maConH);
     mb.style.setProperty(
       '--mz',
       (deskZoom === 'auto' ? clamp((innerWidth - 24) / 1920, 0.55, 1.05) : +deskZoom).toFixed(3),
@@ -4849,6 +2359,7 @@ function fitDesk() {
   mb.style.setProperty('--mb', maGeo.mb.toFixed(1) + 'px');
   mb.style.setProperty('--mz', zm.toFixed(3));
   maConH = maGeo.H * zm;
+  stageRenderer.setConsoleHeight(maConH);
   const C = $('#maConsole').style;
   C.setProperty('--ch', maConH.toFixed(0) + 'px');
   C.setProperty('--cw', (maGeo.W * zm).toFixed(0) + 'px');
@@ -4982,7 +2493,7 @@ $('#layoutSel').onchange = (ev) => {
 $('#deskZoom').onchange = (ev) => {
   deskZoom = ev.target.value;
   fitDesk();
-  resize();
+  stageRenderer.resize();
   saveLayout();
 };
 {
@@ -4991,7 +2502,7 @@ $('#deskZoom').onchange = (ev) => {
   const apply = () => {
     raf = 0;
     fitDesk();
-    resize();
+    stageRenderer.resize();
   };
   g.onpointerdown = (ev) => {
     g.setPointerCapture(ev.pointerId);
@@ -5011,7 +2522,7 @@ $('#deskZoom').onchange = (ev) => {
   g.ondblclick = () => {
     maSize = undefined;
     fitDesk();
-    resize();
+    stageRenderer.resize();
     saveLayout();
   };
 }
@@ -5098,7 +2609,7 @@ requestAnimationFrame(loop);
 window.__desk = {
   renderer,
   THREE,
-  perf: performers,
+  perf: venue.performers,
   prog: programmer,
   applyPreset: (type, slot) => programmer.applyPreset(type, slot),
   runCmd: (raw) => runner.run(raw),
@@ -5112,7 +2623,6 @@ window.__desk = {
   camera,
   controls,
   fixtures,
-  puffs,
   groups: () => groupLibrary.all,
 };
 // TEST HOOK (see the "?test" block in <head>): read-only views and drivers for the Playwright suite; absent without "?test"
