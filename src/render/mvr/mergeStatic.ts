@@ -1,5 +1,6 @@
 import { Mesh, type BufferGeometry, type Material, type Matrix4 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { flipWinding } from './flipWinding';
 import type { MeshPart } from './MeshPart';
 
 /** A file placed once, with the parts to draw there. */
@@ -40,7 +41,8 @@ function meshesOf({ material, geometries }: MergeGroup): Mesh[] {
 /**
  * The files placed once, merged into one mesh per material in world space, so a set of 300 distinct props costs a
  * draw call per material, not per prop. The meshes own their merged geometries; materials stay the library's.
- * Static scenery receives shadows but casts none, which keeps the shadow pass cheap.
+ * Static scenery receives shadows but casts none, which keeps the shadow pass cheap. A mirrored placement gets its
+ * winding reversed (`flipWinding`), since a baked mirror leaves no object matrix for the renderer to flip by.
  */
 export function mergeStatic(placements: readonly SinglePlacement[]): Mesh[] {
   const groups = new Map<string, MergeGroup>();
@@ -48,7 +50,9 @@ export function mergeStatic(placements: readonly SinglePlacement[]): Mesh[] {
     for (const part of parts) {
       const key = mergeKey(part);
       const group = groups.get(key) ?? { material: part.material, geometries: [] };
-      group.geometries.push(part.geometry.clone().applyMatrix4(matrix));
+      const placed = part.geometry.clone().applyMatrix4(matrix);
+      if (matrix.determinant() < 0) flipWinding(placed);
+      group.geometries.push(placed);
       groups.set(key, group);
     }
   }
