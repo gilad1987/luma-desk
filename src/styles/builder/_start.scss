@@ -1,0 +1,53 @@
+// The builder start screen (src/ui/builder/StartScreen.ts): template cards, then venue cards. It fills the builder
+// below the bar until a choice switches the builder to `is-editing`.
+.start-screen {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-height: 0;
+  overflow: auto;
+  padding-block: 32px;
+  padding-inline: 16px;
+  background: var(--bg);
+  pointer-events: auto;
+
+  h2 {
+    font-size: 18px;
+  }
+  .start-help {
+    color: var(--mut);
+  }
+  .start-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    width: min(960px, 100%);
+  }
+  .start-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: var(--builder-target);
+    padding: 16px;
+    text-align: start;
+    background: var(--p2);
+    color: var(--txt);
+    border: 1px solid var(--line2);
+    border-radius: 8px;
+    cursor: pointer;
+    &:hover {
+      border-color: var(--acc);
+    }
+  }
+  .start-card small {
+    color: var(--mut);
+    line-height: 1.5;
+  }
+}
+
+.builder.is-editing .start-screen {
+  display: none;
+}
