@@ -50,6 +50,23 @@ describe('LazyMvrStage', () => {
     expect(fit).toBeLessThan(move ?? 0);
   });
 
+  it('fits the views again to the shown scenery and a new design of the same file', async () => {
+    const { lazy, views } = lazyStage();
+    await lazy.show(INPUT);
+    const edited = createTemplate('festival');
+    lazy.refit(edited);
+    expect(views.fitTo).toHaveBeenLastCalledWith(mvrCameraBounds(edited, INPUT.geometry));
+    expect(views.setView).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not fit again after a dispose, as the stage rebuild fits the next stage itself', async () => {
+    const { lazy, views } = lazyStage();
+    await lazy.show(INPUT);
+    lazy.dispose();
+    lazy.refit(INPUT.design);
+    expect(views.fitTo).toHaveBeenCalledTimes(1);
+  });
+
   it('does not fit when the scenery is disposed while the show still builds', async () => {
     const { lazy, views } = lazyStage();
     const shown = lazy.show(INPUT);

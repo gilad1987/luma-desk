@@ -1,13 +1,13 @@
 import type { Scene } from 'three';
-import type { CameraViews } from '../../render/camera/CameraViews';
+import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { MeshFailure } from '../../render/mvr/MeshLibrary';
-import { mvrCameraBounds } from '../../render/mvr/mvrCameraBounds';
 import type { MvrStage, MvrStageInput } from '../../render/mvr/MvrStage';
+import { MvrCameraFit, type FittedViews } from './MvrCameraFit';
 
 /** The render parts the scenery uses: the scene it adds its group to, and the camera views it fits to its bounds. */
 export interface MvrSceneryRender {
   readonly scene: Pick<Scene, 'add'>;
-  readonly views: Pick<CameraViews, 'fitTo' | 'setView' | 'currentView'>;
+  readonly views: FittedViews;
 }
 
 /**
@@ -16,13 +16,15 @@ export interface MvrSceneryRender {
  * The module is a lazy chunk (`import()`), like the parser it uses, so the boot bundle does not grow.
  */
 export class LazyMvrStage {
-  readonly #render: MvrSceneryRender;
+  readonly #scene: Pick<Scene, 'add'>;
+  readonly #fit: MvrCameraFit;
   #stage: MvrStage | undefined;
   #loading: Promise<MvrStage> | undefined;
   #showing = false;
 
-  constructor(render: MvrSceneryRender) {
-    this.#render = render;
+  constructor({ scene, views }: MvrSceneryRender) {
+    this.#scene = scene;
+    this.#fit = new MvrCameraFit(views);
   }
 
   /**
@@ -43,7 +45,7 @@ export class LazyMvrStage {
     this.#showing = true;
     try {
       const failures = await (await this.#loaded()).show(input);
-      if (this.#showing) this.#fitViews(input);
+      if (this.#showing) this.#fit.fit(input.design, input.geometry);
       return failures;
     } catch (error) {
       this.#showing = false;
@@ -67,14 +69,13 @@ export class LazyMvrStage {
   /** Frees the scenery, for a stage that is not an MVR import. */
   dispose(): void {
     this.#showing = false;
+    this.#fit.forget();
     this.#stage?.dispose();
   }
 
-  /** Fits the views to the design joined with the scenery and moves to the current view, as a stage rebuild does. */
-  #fitViews({ design, geometry }: MvrStageInput): void {
-    const { views } = this.#render;
-    views.fitTo(mvrCameraBounds(design, geometry));
-    views.setView(views.currentView);
+  /** Fits the views again to the shown scenery and `design`, after a rebuild of the same file fitted the design only. */
+  refit(design: StageDesign): void {
+    this.#fit.refit(design);
   }
 
   #loaded(): Promise<MvrStage> {
@@ -88,7 +89,7 @@ export class LazyMvrStage {
   async #create(): Promise<MvrStage> {
     const { MvrStage } = await import('../../render/mvr/MvrStage');
     const stage = new MvrStage();
-    this.#render.scene.add(stage.group);
+    this.#scene.add(stage.group);
     this.#stage = stage;
     return stage;
   }

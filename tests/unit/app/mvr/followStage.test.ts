@@ -21,7 +21,8 @@ function followed(initial?: StageDesign) {
   const calls: string[] = [];
   const record = (name: string) => (): void => void calls.push(name);
   const setHiddenLayers = (uuids: readonly string[]): void => void calls.push(`hide ${JSON.stringify(uuids)}`);
-  const scenery = { dispose: record('dispose'), setHiddenLayers };
+  const refit = (design: StageDesign): void => void calls.push(`refit ${design.source.name}`);
+  const scenery = { dispose: record('dispose'), setHiddenLayers, refit };
   const prompt = { hide: record('prompt.hide') };
   const restore = (design: StageDesign): void => void calls.push(`restore ${design.source.name}`);
   followStage({ bus: world.bus, stage: world.service, scenery, prompt, restore });
@@ -81,13 +82,13 @@ describe('followStage', () => {
     const mvr = { ...RIG.mvr, hiddenLayers: [] } as StageDesign['mvr'];
     world.serializer.load({ stage: jsonRoundTrip({ ...RIG, mvr }) });
     expect(world.service.design.mvr?.hiddenLayers).toEqual([]);
-    expect(world.calls).toEqual(['hide []']);
+    expect(world.calls).toEqual(['hide []', 'refit Rig.mvr']);
   });
 
-  it('keeps the scenery when the builder edits the MVR stage (same file hash)', () => {
+  it('keeps the scenery when the builder edits the MVR stage (same file hash) and fits the views to it again', () => {
     const world = followed(RIG);
     world.service.apply({ ...RIG, source: { kind: 'builder', name: 'Edit', fileHash: 'h1' } }, 'builder');
-    expect(world.calls).toEqual(['hide ["L-1"]']);
+    expect(world.calls).toEqual(['hide ["L-1"]', 'refit Edit']);
   });
 
   it('restores the MVR stage that a builder Cancel brings back after a template preview', () => {
