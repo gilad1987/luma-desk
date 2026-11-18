@@ -8,4 +8,6 @@ export const mvrNameWords = {
   screen: ['מסך', 'לד'],
   /** "Hall": a layer with it is the venue around the stage and starts hidden. */
   hall: ['אולם'],
+  /** "Wall", "walls", "floor" and "ceiling": a layer with one of them is the hall only when it reaches far past the rig. */
+  structure: ['קיר', 'קירות', 'רצפה', 'תקרה'],
 } as const;
