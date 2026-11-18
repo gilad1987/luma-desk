@@ -1,6 +1,7 @@
 import { MvrArchive } from './archive/MvrArchive';
 import { toStageDesign, type DesignResult } from './design/toStageDesign';
 import { applyLumaData, type LumaApplied } from './import/applyLumaData';
+import { placeBodies } from './import/placeBodies';
 import { meshBytes } from './import/meshBytes';
 import { readLumaData } from './import/readLumaData';
 import { resolveFixtures } from './import/resolveFixtures';
@@ -78,7 +79,7 @@ function importNow(bytes: Uint8Array, options: MvrImportOptions): MvrImport {
   const design = withLumaData(result, luma);
   const noGeometry = design.warnings.some((warning) => warning.code === 'no-geometry');
   return {
-    design: design.design,
+    design: placeBodies(design.design),
     geometry: result.geometry,
     ...meshFiles,
     summary: summarize(walked, rig, noGeometry),
@@ -92,6 +93,7 @@ function importNow(bytes: Uint8Array, options: MvrImportOptions): MvrImport {
  * off the main thread without a new API. A file it cannot use at all rejects with `MvrError` (`not-zip`, `no-scene`,
  * `bad-xml`); smaller problems become `warnings`, ordered by step: scene, GDTF, patch, mesh, design. A file with
  * the desk's own luma data (a luma export) gets its stage back from that data and keeps its positions, unfitted.
+ * Every fixture is then moved from its MVR mounting point to its model origin (`placeBodies`).
  */
 export function importMvr(bytes: Uint8Array, options: MvrImportOptions): Promise<MvrImport> {
   return Promise.resolve().then(() => importNow(bytes, options));

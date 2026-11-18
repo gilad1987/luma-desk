@@ -4,6 +4,7 @@
  * and the fit offset is taken off. Losing any of them breaks a console's match of the re-exported file to its show.
  */
 import { describe, expect, it } from 'vitest';
+import { MOUNT_HEIGHTS } from '../../../../src/domain/fixtureTypes/mountHeights.ts';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign.ts';
 import { createTemplate } from '../../../../src/domain/stage/templates/index.ts';
 import { writeScene } from '../../../../src/mvr/export/writeScene.ts';
@@ -73,8 +74,10 @@ describe('writeScene of an imported design', () => {
     ]);
   });
 
-  it('takes the fit offset off the positions', () => {
+  // The matrix is the mounting point: the hung spot's clamp is its hang height above the desk position (tilt axis).
+  it('takes the fit offset off the positions and writes the mounting point', () => {
     const position = spot ? pointToThree(transformPoint(spot.matrix, [0, 0, 0])) : [];
-    expect(position.map((value) => Math.round(value * 1000) / 1000)).toEqual([1, 5, 2]);
+    const mounting = 5 + MOUNT_HEIGHTS.spot.hang;
+    expect(position.map((value) => Math.round(value * 1000) / 1000)).toEqual([1, mounting, 2]);
   });
 });
