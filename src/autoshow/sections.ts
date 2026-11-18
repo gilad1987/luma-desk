@@ -2,8 +2,8 @@
 export type Section = 'groove' | 'verse' | 'chorus' | 'hook' | 'build' | 'drop' | 'intro';
 
 /**
- * The display name of each section. `intro` has a name although no style uses it (known quirk E5); it stays because
- * removing it would change nothing visible and the data is kept as it was.
+ * The display name of each section. `intro` has a name although no style uses it (known quirk E5, orig:2557); it
+ * stays because removing it would change nothing visible and the data is kept as it was.
  */
 export const SECTION_NAMES: Readonly<Record<Section, string>> = {
   groove: 'Groove',

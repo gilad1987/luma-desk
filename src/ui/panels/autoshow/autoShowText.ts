@@ -38,7 +38,7 @@ export function runningStatus(style: AutoStyle, section: Section | '', barsPerLo
   );
 }
 
-/** The `#songStat` line after a song loads: name, detected BPM and length as m:ss (both parts rounded). */
+/** The `#songStat` line after a song loads: name, detected BPM, length as m:ss (both rounded, quirk E2, orig:2668). */
 export function songStatHtml(song: LoadedSong): string {
   const minutes = Math.round(song.duration / 60),
     seconds = String(Math.round(song.duration % 60)).padStart(2, '0');

@@ -62,6 +62,6 @@ export class SceneLights {
       const light = this.houseLights[i];
       if (light) light.intensity = this.houseLevel * (i === 2 ? 500 : 1100);
     }
-    this.wallLight.intensity = 0;
+    this.wallLight.intensity = 0; // quirk F1 (orig:1783)
   }
 }

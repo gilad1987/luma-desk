@@ -3,7 +3,7 @@ import type { Group, GroupPool } from './GroupLibrary';
 
 /**
  * The default groups that older saved shows do not have. They were appended as slots 35-37, so a show saved before
- * them may already use those slots for its own groups.
+ * them may already use those slots for its own groups (quirk D5, orig:2303).
  */
 export const NEW_GROUPS: readonly string[] = ['LED Bars', 'Follow Spots', 'Profiles'];
 

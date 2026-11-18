@@ -7,9 +7,9 @@ const buttons = (ok: string): string =>
   `<div class="row"><button id="mOk" class="on">${ok}</button><button id="mCancel">Cancel</button></div>`;
 
 /**
- * The rename dialog. Only `"` is escaped in the value, as before (known quirk Q11): the value sits in an attribute,
- * and the title is trusted code text such as `Cue 3`. Saved shows are not validated, so a cue or group may have no
- * name; the field then opens empty, as the original `(val || '')` did.
+ * The rename dialog. Only `"` is escaped in the value, as before (known quirk Q11, orig:2280): the value sits in an
+ * attribute, and the title is trusted code text such as `Cue 3`. Saved shows are not validated, so a cue or group may
+ * have no name; the field then opens empty, as the original `(val || '')` did.
  */
 export const renameMarkup = (title: string, value: string): string => {
   const shown = (value || '').replace(/"/g, '&quot;');

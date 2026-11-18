@@ -21,7 +21,7 @@ export class Parser {
 
   /**
    * Whether the line should end with "N fixtures selected": something selected it (or `+`/`-` appeared) and no
-   * At/Full/Zero appears anywhere in it (quirk C5).
+   * At/Full/Zero appears anywhere in it (quirk C5, orig:1941).
    */
   get reportsSelection(): boolean {
     return this.#selected && !mentionsLevel(this.#line);
@@ -66,8 +66,8 @@ export class Parser {
   }
 
   /**
-   * Quirk C1: the first list in a line replaces the selection, any later one adds unless `-` came just before it.
-   * The merge state advances here because a selection that fails to run aborts the whole line anyway.
+   * quirk C1 (orig:1897): the first list in a line replaces the selection, any later one adds unless `-` came just
+   * before it. The merge state advances here because a selection that fails to run aborts the whole line anyway.
    */
   #select(source: SelectionSource): Statement {
     const merge = this.#nextMerge();
@@ -83,8 +83,8 @@ export class Parser {
 }
 
 /**
- * Quirk C5: whether At, Full or Zero appears anywhere in the line, whatever its position. Such a line reports the
- * level it set instead of "N fixtures selected".
+ * quirk C5 (orig:1941): whether At, Full or Zero appears anywhere in the line, whatever its position. Such a line
+ * reports the level it set instead of "N fixtures selected".
  */
 function mentionsLevel(line: TokenLine): boolean {
   return line.lower.some((t) => {

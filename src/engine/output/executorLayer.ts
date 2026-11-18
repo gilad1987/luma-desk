@@ -13,6 +13,7 @@ import type { AttrOutput } from './resetOutput';
 export function mergeExecutors(f: Fixture, o: AttrOutput, active: readonly Executor[], pump: number): PhaserSlots {
   const slots = emptySlots();
   for (const e of active) {
+    // quirk A6 (orig:1674): the pump scales beams and spots only, not `follow`
     const lv = (e.flash ? 1 : e.level) * (e.auto && (f.type === 'beam' || f.type === 'spot') ? pump : 1),
       v = e.vals[f.id];
     if (v) mergeValues(o, v, lv);
@@ -31,6 +32,7 @@ function mergeValues(o: AttrOutput, v: AttrValues, lv: number): void {
   for (const key in v) {
     const a = attrName(key),
       value = v[a] as number;
+    // quirk A5 (orig:1675): only the dimmer is scaled by the level
     if (a === 'dim') o.dim = Math.max(o.dim, value * lv);
     else o[a] = value;
   }

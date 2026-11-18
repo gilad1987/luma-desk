@@ -55,16 +55,16 @@ function blendAttr(o: AttrValues, at: AttrName, a: AttrValues, b: AttrValues, k:
   const fa = a[at],
     fb = b[at];
   if (at === 'dim') {
-    o[at] = lerp(fa ?? 0, fb ?? 0, k);
+    o[at] = lerp(fa ?? 0, fb ?? 0, k); // quirk A4 (orig:1655): a missing dimmer fades from or to 0
     return;
   }
   if (fb == null) {
-    // kept from the original: k < 1 is always true here
+    // quirk A3 (orig:1656): k < 1 is always true here
     if (k < 1) o[at] = fa ?? fb;
     return;
   }
   const from = fa ?? fb;
-  // gobo is a slot number: it snaps half way through the fade instead of blending
+  // quirk A4 (orig:1657): gobo is a slot number, so it snaps half way through the fade instead of blending
   if (at === 'gobo') o[at] = k < 0.5 ? from : fb;
   else o[at] = lerp(from, fb, k);
 }

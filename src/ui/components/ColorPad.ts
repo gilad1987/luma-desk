@@ -2,7 +2,7 @@ import { clamp, hsv } from '../../core';
 import type { Programmer } from '../../engine/Programmer';
 import { boxMap, pointerDrag, type BoxMap } from '../shared';
 
-/** Paints the hue (x) by saturation (y, full at the top) field, one `fillRect` per pixel (quirk Q21). */
+/** Paints the hue (x) by saturation (y, full at the top) field, one `fillRect` per pixel (quirk Q21, orig:2083). */
 function paintHueField(c: HTMLCanvasElement): void {
   const x = c.getContext('2d');
   if (!x) throw new Error('color pad: no 2D canvas context');

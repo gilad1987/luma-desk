@@ -1,7 +1,7 @@
 import type { Programmer } from '../Programmer';
 import type { ProgrammerDeps } from './ProgrammerDeps';
 
-/** A second CLEAR within this many milliseconds of the first is Clear All. */
+/** A second CLEAR within this many milliseconds of the first is Clear All (quirk B8, orig:1837-1843). */
 const DOUBLE_PRESS_MS = 400;
 
 /**

@@ -23,5 +23,5 @@ export function setValue(vals: FixtureValues, rig: Rig, { id, attr, value }: Val
   let v = clamp(value, min, max);
   if (spec.step) v = Math.round(v);
   // the inner `+` is the original's: a hand-edited show can carry a string, which clamp passes through unchanged
-  (vals[id] ??= {})[attr] = +(+v).toFixed(2);
+  (vals[id] ??= {})[attr] = +(+v).toFixed(2); // quirk B3 (orig:1809): 2 decimals here, 1 in aimAt
 }

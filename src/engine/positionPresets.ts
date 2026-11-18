@@ -16,7 +16,7 @@ const fan = (k: number, n: number): number => (n > 1 ? k / (n - 1) : 0.5);
 /** The entry for the `k`-th fixture, cycling through `list`; `k` is an index into the selection, never negative. */
 function cycle<T>(list: readonly T[], k: number): T {
   const item = list[k % list.length];
-  if (item === undefined) throw new RangeError(`preset index ${k} is not a selection index`);
+  if (item === undefined) throw new RangeError(`preset index ${k} is not a selection index`); // quirk J3 (orig:846)
   return item;
 }
 
