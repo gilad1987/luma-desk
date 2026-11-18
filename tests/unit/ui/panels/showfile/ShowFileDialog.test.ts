@@ -30,7 +30,7 @@ function openDialog() {
     serializer: { serialize: () => show },
     storage: { persist: vi.fn() },
     demo: { load: vi.fn() },
-    loadShow: vi.fn(),
+    loadShow: vi.fn(() => ({ badStage: false })),
     download: vi.fn(),
     stamp: () => '20261117-2350',
   };

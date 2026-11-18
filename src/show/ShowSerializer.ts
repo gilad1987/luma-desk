@@ -33,6 +33,11 @@ export interface ShowSerializerDeps {
   readonly stage?: StageFieldDeps;
 }
 
+/** What a load reports: `badStage` when the show's `stage` did not parse and the bad-stage toast is already sent. */
+export interface ShowLoadResult {
+  readonly badStage: boolean;
+}
+
 /**
  * Converts between the engine and show file format v1. It touches no storage and no UI: the caller saves, and the
  * caller repaints after a load (haze slider, then pools), so the same loader serves boot, import and the demo.
@@ -66,10 +71,10 @@ export class ShowSerializer {
    * `null` throws before the stage changes; the stage loads next (`readStage`), so the default groups below are the pool
    * of the loaded stage, the same pool `StageGroups` compares with at the next rig change.
    */
-  load(data: unknown): void {
+  load(data: unknown): ShowLoadResult {
     const d = readShowFile(data);
     const { stage } = this.#deps;
-    if (stage) readStage(data, stage);
+    const badStage = stage ? readStage(data, stage) : false;
     const { rig, groups, presets, execs, tempo, state, programmer, selection } = this.#deps;
     const defaults = stage ? defaultPoolOf(stage.service) : defaultGroups(rig);
     groups.replace(d.groups ? addNewDefaultGroups(d.groups, defaults) : defaults);
@@ -86,5 +91,6 @@ export class ShowSerializer {
     state.haze = d.haze ?? 0.62;
     programmer.clear();
     selection.set([]);
+    return { badStage };
   }
 }

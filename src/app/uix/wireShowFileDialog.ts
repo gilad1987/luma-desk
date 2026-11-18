@@ -46,8 +46,9 @@ export function wireShowFileDialog(deps: ShowFileDialogDeps): ShowFileDialog {
     },
     loadShow: (show) => {
       cancelBuilder();
-      serializer.load(show);
+      const result = serializer.load(show);
       showLoaded();
+      return result;
     },
     download: downloadJson,
     stamp,

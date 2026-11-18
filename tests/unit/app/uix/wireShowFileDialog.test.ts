@@ -18,7 +18,13 @@ function open() {
   for (const id of ['fileBtn', 'fSave', 'fCopy', 'fDemo', 'fNew', 'fImp']) dom.add(id, new FakeButton());
   for (const id of ['fTxt', 'fFile']) dom.add(id);
   const record = (name: string) => vi.fn(() => void calls.push(name));
-  const serializer = { serialize: vi.fn(), load: record('load') };
+  const serializer = {
+    serialize: vi.fn(),
+    load: vi.fn(() => {
+      calls.push('load');
+      return { badStage: false };
+    }),
+  };
   wireShowFileDialog({
     bus: new EventBus<EngineEvents>(),
     stage,
