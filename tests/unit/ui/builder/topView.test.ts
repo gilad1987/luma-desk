@@ -4,6 +4,7 @@
  * `topViewGeometry.test.ts` and `topViewMove.test.ts`.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { FakeResizeObserver } from '../../../shared/dom';
 import { prop } from './toolsDom';
 import { mountTopView } from './topViewSetup';
 
@@ -40,6 +41,12 @@ describe('TopView', () => {
     expect([cancelled, slot.children.length]).toEqual([[1], 0]);
   });
 
+  it('stops observing the canvas size on dispose', () => {
+    const { view } = setup();
+    view.dispose();
+    expect(FakeResizeObserver.made.flatMap((observer) => observer.targets)).toEqual([]);
+  });
+
   it('asks for no frame after dispose, however the session changes', () => {
     const { session, view, frames, runFrames } = setup();
     runFrames();
@@ -71,6 +78,7 @@ describe('TopView', () => {
     runFrames();
     const sameBox = [style.mock.calls.length, prop(canvas, 'width')];
     Object.assign(canvas, { offsetWidth: 300 });
+    FakeResizeObserver.resizeAll();
     view.preview(null);
     runFrames();
     expect([sameBox, style.mock.calls.length, prop(canvas, 'width')]).toEqual([[1, 1], 2, 300]);
