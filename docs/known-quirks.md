@@ -532,6 +532,27 @@ Groups:
   `LayoutManager.restore` with a saved known layout at boot.
 - Future fix: accept only the three known names and fall back to `ma`.
 
+### D10. A failed import no longer drops the user's presets
+
+- Source: `index.html:2301` (`presets = defaultPresets()`), `2304` (the copy loop that throws), caught at `2320`
+  and `2321` (`toast('Invalid JSON')`, `toast('Invalid file')`)
+- Code:
+  ```js
+  groups = d.groups || defaultGroups(); // 2301
+  presets = defaultPresets(); // 2301
+  for (const t in d.presets || {}) for (const s in d.presets[t]) presets[t][s] = d.presets[t][s]; // 2304
+  ```
+- Lives in: `src/show/ShowSerializer.ts:62` (`load`: `presets.replace(withSavedPresets(defaultPresets(), d.presets))`),
+  `src/show/savedPresets.ts` (`withSavedPresets` throws `Unknown preset pool ...`)
+- What it does: a show whose `presets` has a slot in a pool number the desk does not have throws at 2304. The
+  original had already reset the presets to the defaults at 2301, so the import failed and the user's own presets
+  were gone too; the next save stored the loss. The new code builds the presets first and replaces them only when
+  the build succeeds, so a failed import keeps the user's presets. The groups are still replaced before the throw,
+  as at 2301, and the executors stay as they were, as before.
+- Status: fixed in the refactor, on purpose. The old result was data loss on a path that only fails; no golden
+  covers it.
+- Pinned by: no test.
+
 ## E. Auto Show and audio
 
 ### E1. BPM is rounded, but the beat offset uses the unrounded value
