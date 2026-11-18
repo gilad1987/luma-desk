@@ -1,3 +1,4 @@
+import type { Object3D } from 'three';
 import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { MvrGeometry } from '../../mvr/index';
 import type { CameraViews } from '../../render/camera/CameraViews';
@@ -12,7 +13,7 @@ export type FittedViews = Pick<CameraViews, 'fitTo' | 'setView' | 'currentView'>
 /** The desk render that a shown MVR scenery adds to: the camera views and the boxes beams land on. */
 export interface MvrDeskRender {
   readonly views: FittedViews;
-  readonly surfaceHit: Pick<SurfaceHit, 'setSurfaces' | 'setVenue'>;
+  readonly surfaceHit: Pick<SurfaceHit, 'setSurfaces' | 'setVenue' | 'setScenery'>;
 }
 
 /**
@@ -30,9 +31,13 @@ export class MvrSceneryFit {
     this.#render = render;
   }
 
-  /** Remembers the scenery of a drawn show and fits the views and beam surfaces to it and its design. */
-  fit(design: StageDesign, geometry: MvrGeometry): void {
+  /**
+   * Remembers the scenery of a drawn show and fits the views and beam surfaces to it and its design. `meshes` is the
+   * built scenery group: beams land on its triangles, which are read once here.
+   */
+  fit(design: StageDesign, geometry: MvrGeometry, meshes: Object3D): void {
     this.#geometry = geometry;
+    this.#render.surfaceHit.setScenery(meshes);
     this.refit(design);
   }
 
@@ -45,7 +50,7 @@ export class MvrSceneryFit {
     this.#design = design;
     const { views, surfaceHit } = this.#render;
     surfaceHit.setVenue(design.venue.kind);
-    surfaceHit.setSurfaces(mvrSurfaces(design, this.#geometry));
+    surfaceHit.setSurfaces(mvrSurfaces(design));
     const box = mvrCameraBounds(design, this.#geometry);
     views.fitTo(
       box,
@@ -68,6 +73,7 @@ export class MvrSceneryFit {
 
   /** Drops the scenery, so a later refit does nothing; the next stage's rebuild sets its views and surfaces itself. */
   forget(): void {
+    if (this.#geometry) this.#render.surfaceHit.setScenery(null);
     this.#geometry = undefined;
     this.#design = undefined;
   }

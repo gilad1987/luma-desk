@@ -39,7 +39,7 @@ function wired(design?: StageDesign) {
   const render = {
     scene: { add: vi.fn() },
     views: { fitTo: vi.fn(), setView: vi.fn(), currentView: 'foh' as const },
-    surfaceHit: { setSurfaces: vi.fn(), setVenue: vi.fn() },
+    surfaceHit: { setSurfaces: vi.fn(), setVenue: vi.fn(), setScenery: vi.fn() },
   };
   const { modal, cancelBuilder } = flow.deps;
   const bus = { emit, on: vi.fn() };

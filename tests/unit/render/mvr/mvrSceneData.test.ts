@@ -18,7 +18,8 @@ const geometry: MvrGeometry = {
 };
 
 describe('mvrSurfaces', () => {
-  it('gives the design surfaces first, then the mesh tops, for one setSurfaces call', () => {
-    expect(mvrSurfaces(design, geometry)).toEqual([...surfacesOf(design), table]);
+  it('gives the design surfaces and no mesh box top: beams meet the real triangles instead', () => {
+    expect(geometry.surfaces).toEqual([table]);
+    expect(mvrSurfaces(design)).toEqual(surfacesOf(design));
   });
 });
