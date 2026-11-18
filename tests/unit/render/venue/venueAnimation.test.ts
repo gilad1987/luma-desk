@@ -4,7 +4,7 @@ import { animateCrowd } from '../../../../src/render/venue/crowdAnimation';
 import { animatePerformers } from '../../../../src/render/venue/performersAnimation';
 import type { Performer } from '../../../../src/render/venue/performerSpec';
 
-// The expected values use the legacy frame-loop expressions verbatim (src/main.ts 2462, 4731, 5477-5484).
+// The expected values use the legacy frame-loop expressions verbatim (src/main.ts 2462, 4731).
 const tempo = { beatOrigin: 1234.5, bpm: 128 };
 const now = 98765.4;
 
