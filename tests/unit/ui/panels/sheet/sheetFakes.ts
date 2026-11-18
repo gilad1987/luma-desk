@@ -1,9 +1,9 @@
-import type { FixtureTypeId } from '../../../../src/domain/FixtureType';
-import type { DmxPatch } from '../../../../src/domain/stage/DmxPatch';
-import type { MvrDesignInfo, MvrFixtureInfo } from '../../../../src/domain/stage/mvr';
-import type { StageDesign, StageFixture } from '../../../../src/domain/stage/StageDesign';
-import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
-import type { FakeElement } from '../../../shared/dom';
+import type { FixtureTypeId } from '../../../../../src/domain/FixtureType';
+import type { DmxPatch } from '../../../../../src/domain/stage/DmxPatch';
+import type { MvrDesignInfo, MvrFixtureInfo } from '../../../../../src/domain/stage/mvr';
+import type { StageDesign, StageFixture } from '../../../../../src/domain/stage/StageDesign';
+import { BUILT_IN_DESIGN } from '../../../../../src/domain/stage/templates/sultansPool/builtInDesign';
+import type { FakeElement } from '../../../../shared/dom';
 
 /**
  * One fixture of a test design: its id, its patch when patched, its GDTF mode when the MVR facts name one, and its

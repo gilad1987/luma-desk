@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { TYPES } from '../../../../src/domain/fixtureTypes';
-import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
-import { NO_DMX, sheetDmxById } from '../../../../src/ui/panels/sheet/sheetDmx';
+import { TYPES } from '../../../../../src/domain/fixtureTypes';
+import { BUILT_IN_DESIGN } from '../../../../../src/domain/stage/templates/sultansPool/builtInDesign';
+import { NO_DMX, sheetDmxById } from '../../../../../src/ui/panels/sheet/sheetDmx';
 import { dmxDesign } from './sheetFakes';
 
 describe('sheetDmxById (the Universe.Address and Mode columns)', () => {

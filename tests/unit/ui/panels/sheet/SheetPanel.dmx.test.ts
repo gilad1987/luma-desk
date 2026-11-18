@@ -5,7 +5,7 @@ import { SheetPanel } from '../../../../../src/ui/panels/sheet/SheetPanel';
 import type { SheetFixture } from '../../../../../src/ui/panels/sheet/SheetFixture';
 import { engineParts } from '../../../../shared';
 import { asReal, FakeDom, FakeElement, FakeHost } from '../../../../shared/dom';
-import { countTextWrites, dmxDesign } from '../sheetFakes';
+import { countTextWrites, dmxDesign } from './sheetFakes';
 
 const fixture = (id: number): SheetFixture => ({ id, T: TYPES.spot, base: {}, out: {}, has: () => false });
 

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { AttrName } from '../../../../src/domain/attributes';
-import { TYPES } from '../../../../src/domain/fixtureTypes';
-import { sheetRowView, sheetTable } from '../../../../src/ui/panels/sheet/sheetCells';
-import { NO_DMX } from '../../../../src/ui/panels/sheet/sheetDmx';
-import type { SheetFixture } from '../../../../src/ui/panels/sheet/SheetFixture';
+import type { AttrName } from '../../../../../src/domain/attributes';
+import { TYPES } from '../../../../../src/domain/fixtureTypes';
+import { sheetRowView, sheetTable } from '../../../../../src/ui/panels/sheet/sheetCells';
+import { NO_DMX } from '../../../../../src/ui/panels/sheet/sheetDmx';
+import type { SheetFixture } from '../../../../../src/ui/panels/sheet/SheetFixture';
 
 const base = { dim: 0, pan: 12.6, tilt: -3.4, r: 50, g: 10, b: 100, gobo: 2.2, grot: 0, zoom: 7, strobe: 0 };
 const fixture = (attrs: readonly AttrName[]): SheetFixture => ({
