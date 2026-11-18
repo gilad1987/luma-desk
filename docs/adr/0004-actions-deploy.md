@@ -36,8 +36,14 @@ of a build is easy to get wrong: an old `dist/`, a build from uncommitted files,
    environment.
 
 2. Least privilege: the workflow has `contents: read`; only `deploy` gets `pages: write` and `id-token: write`.
-   Concurrency group `pages` with `cancel-in-progress: false`, so two deploys never overlap and a running deploy is
-   never cut off.
+   Concurrency is set on the whole workflow, because the checks of an older `main` commit can finish after those of
+   a newer one. All `main` runs (push and `workflow_dispatch`) share the group `pages-refs/heads/main` with
+   `cancel-in-progress: true`: a newer run cancels the older one, also during its deploy, so the newest commit
+   always deploys last and two deploys never overlap. A re-run of an older run deploys that older commit again; to
+   deploy the newest commit again, run `gh workflow run deploy.yml --ref main`. Each pull request run has its own
+   group (`pages-<run id>`) and `cancel-in-progress: false`, so a check is never queued or cancelled. The `deploy`
+   job has no concurrency of its own: the workflow group already runs one `main` run at a time. A job group named
+   like the workflow group would deadlock.
 3. A failed check stops the deploy. Nothing reaches the live site without passing typecheck, lint (ESLint, line
    check, Prettier), the Vitest unit tests, the build and the Playwright suite without its screenshot tests.
 
