@@ -12,6 +12,7 @@ function removeTextures(material: Material): void {
   for (const [key, value] of Object.entries(material)) {
     if (!(value instanceof Texture)) continue;
     value.dispose();
+    // `Material` declares no map fields; each subclass has its own, so the key found above is set by reflection.
     Reflect.set(material, key, null);
   }
 }
