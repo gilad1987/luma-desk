@@ -22,6 +22,12 @@ const NO_SCENERY: Readonly<Record<SceneryPart, boolean>> = {
   crowd: false,
 };
 
+/**
+ * The venue of an import: the black box, a dark room with no sky, city, terraces, barricade or FOH riser. A plot
+ * shows its stage in a void, and an open-air venue around it would add objects the file does not have.
+ */
+const MVR_VENUE: StageDesign['venue'] = { kind: 'black-box' };
+
 /** What `toStageDesign` gives the import: the design, the scenery to draw and the design step's own warnings. */
 export interface DesignResult {
   readonly design: StageDesign;
@@ -46,8 +52,8 @@ function stageFixture(fixture: ResolvedFixture, id: number, position: Vec3, fitt
 }
 
 /**
- * Builds the stage design of an MVR import from the scene and its resolved fixtures. The design uses the Sultan's
- * Pool venue with all scenery off, keeps the file's fixtures at their real places (fitted on the stage), and puts
+ * Builds the stage design of an MVR import from the scene and its resolved fixtures. The design uses the black box
+ * venue with all scenery off, keeps the file's fixtures at their real places (fitted on the stage), and puts
  * the MVR facts in `mvr`; the meshes go to `geometry`, which render draws. Without any readable mesh the fixtures are
  * still fitted and placed, and a `no-geometry` warning says the stage shows fixtures only.
  */
@@ -75,7 +81,7 @@ export function toStageDesign(input: DesignInput): DesignResult {
   const design: StageDesign = {
     v: STAGE_DESIGN_VERSION,
     source,
-    venue: { kind: 'sultans-pool' },
+    venue: MVR_VENUE,
     scenery: NO_SCENERY,
     deck: fitted.deck,
     screens: [],
