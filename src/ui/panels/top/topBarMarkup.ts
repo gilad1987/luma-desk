@@ -20,7 +20,8 @@ const text = he.panels;
 
 /**
  * The "Build Stage" button that opens the Stage Builder: the one part of the bar the original page did not have. It
- * is one constant, so the markup-parity test can name it and remove exactly this text before it compares the bar.
+ * is one constant, so the markup-parity test can name it and remove exactly this text before it compares the bar. It
+ * opens the Glow group, the last group that a 1280 px window shows without a scroll (known-quirks G10).
  */
 export const buildStageButton = `<button id="buildBtn" title="${he.builder.openTitle}">Build Stage</button>`;
 
@@ -38,7 +39,7 @@ export const topBarMarkup =
       'style="width:70px" title="Audience house lights"></div>',
     '<div class="tbg"><label>Haze</label><input type="range" id="haze" min="0" max="100" value="62" ' +
       'style="width:90px"></div>',
-    '<div class="tbg"><button id="glowBtn" class="on">Glow</button><button id="idsBtn">Fixture IDs</button>' +
+    `<div class="tbg">${buildStageButton}<button id="glowBtn" class="on">Glow</button><button id="idsBtn">Fixture IDs</button>` +
       '<button id="realBtn" class="on" title="Real spot lights & shadows on performers">Real light</button></div>',
     '<div class="spacer"></div>',
     `<div class="tbg" id="layoutBox"><label>Layout</label><select id="layoutSel" title="${text.layoutTitle}">` +
@@ -46,6 +47,6 @@ export const topBarMarkup =
     `<div class="tbg"><button id="recBtn" title="${text.recTitle}">● REC</button>` +
       `<button id="fsBtn" title="${text.fullscreenTitle}">⛶</button>` +
       `<button id="installBtn" style="display:none">${text.install}</button><button id="midiBtn">MIDI</button>` +
-      `${buildStageButton}<button id="fileBtn">Show File</button><button id="helpBtn" class="on">${text.guide}</button></div>`,
+      `<button id="fileBtn">Show File</button><button id="helpBtn" class="on">${text.guide}</button></div>`,
     '<div id="clock"></div><div id="fps"></div>',
   ].join('\n    ') + '\n  </header>';

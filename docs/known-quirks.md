@@ -809,6 +809,20 @@ Groups:
 - Pinned by: `tests/unit/i18n/he.test.ts` (`toHaveLength(17)`).
 - Future fix: none.
 
+### G10. The top bar scrolls sideways; the legacy bar clipped its controls at 1280 px
+
+- Source: `index.html` `#top` (`overflow: hidden`)
+- Lives in: `src/styles/desk/_top-bar-layout.scss` (`#top`), `src/ui/panels/top/topBarMarkup.ts`
+  (`buildStageButton`)
+- What it did: at 1280 px the legacy bar ended after "Real light". The layout selects, REC, fullscreen, MIDI, Show
+  File, Guide and the clock were cut off and could not be reached.
+- What it does now: the bar scrolls sideways with a hidden scrollbar (trackpad, Shift+wheel, or Tab to a control), so
+  every control is reachable. The scroll position is 0 at boot. The Stage Builder's "Build Stage" button opens the
+  Glow group, so it shows at 1280 px in all three layouts; it pushes Fixture IDs and Real light to the scrolled part.
+- Why changed: a new control must be visible, and the clipped controls were a defect, not a behavior to keep.
+- Pinned by: `tests/e2e/screenshots.spec.ts` (the 9 baselines differ from the legacy bar only in the top bar).
+- Future fix: a bar that wraps or folds its groups at narrow widths.
+
 ## H. Dead code and unused names
 
 All of these have no effect. They are listed so that the refactor can delete or keep them on purpose and the
