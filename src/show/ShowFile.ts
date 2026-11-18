@@ -2,7 +2,9 @@ import type { Cue } from '../engine/CueList';
 import type { GroupPool } from '../engine/GroupLibrary';
 import type { Preset } from '../engine/presetTypes';
 
-/** A preset as the show file holds it: computed (`fn`) presets are rebuilt from the defaults, so they are never saved. */
+/**
+ * A preset as the show file holds it: computed (`fn`) presets are rebuilt from the defaults, so they are never saved.
+ */
 export type SavedPreset = Exclude<Preset, { kind: 'fn' }>;
 
 /** One executor as the show file holds it, in saved key order. Playback state is not saved. */

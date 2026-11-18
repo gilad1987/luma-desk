@@ -38,3 +38,16 @@ describe('EncodersPanel.fast', () => {
     expect(setup([]).byAttr.get('grot')?.[2]).toBe(false);
   });
 });
+
+describe('EncodersPanel.feature', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('starts on Dimmer and follows the feature tab clicks', () => {
+    const dom = new FakeDom();
+    for (const id of ['encoders', 'encExtra', 'featTabs']) dom.add(id);
+    const panel = new EncodersPanel(asReal<HTMLElement>(new FakeHost()), encodersFakes([fixture(1, {})]).deps);
+    expect(panel.feature).toBe('dim');
+    dom.created.find((b) => b.dataset['f'] === 'beam')?.onclick?.({ target: null });
+    expect(panel.feature).toBe('beam');
+  });
+});

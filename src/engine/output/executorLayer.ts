@@ -24,7 +24,9 @@ export function mergeExecutors(f: Fixture, o: AttrOutput, active: readonly Execu
   return slots;
 }
 
-/** Merges one executor's values into `o`: the dimmer is highest-takes-precedence at the executor's level, the rest LTP. */
+/**
+ * Merges one executor's values into `o`: the dimmer is highest-takes-precedence at the executor's level, the rest LTP.
+ */
 function mergeValues(o: AttrOutput, v: AttrValues, lv: number): void {
   for (const [a, value] of attrEntries(v)) {
     if (a === 'dim') o.dim = Math.max(o.dim, value * lv);

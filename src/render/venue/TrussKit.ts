@@ -1,6 +1,6 @@
 import { CylinderGeometry, Group, MeshBasicMaterial, Vector3, type Material, type Object3D } from 'three';
-import { ROOF, UP } from '../../domain/venue';
 import type { Vec3Tuple } from '../../core';
+import { ROOF, UP } from '../../domain/venue';
 import { addMesh } from '../shared';
 
 /** The four chords of a square box truss, as corner signs. */

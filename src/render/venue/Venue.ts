@@ -17,7 +17,7 @@ import { buildTrusses } from './Trusses';
 /** The venue handles that the camera views, fixture visuals and frame loop need after the build. */
 export interface Venue {
   readonly sky: Sky;
-  /** The FOH riser and desk in build order, for `views.fohRig.add(...)`: the MA layout hides them. */
+  /** The FOH riser and desk in build order; `wireFixtureVisuals` adds them to `views.fohRig` before the props. */
   readonly fohRig: Mesh[];
   /** Forced dark every frame by the fixture sync (legacy quirk). */
   readonly wallFloodlight: PointLight;

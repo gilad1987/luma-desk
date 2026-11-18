@@ -4,8 +4,8 @@ import type { VenueMaterials } from './materials';
 
 /**
  * Builds the raised FOH riser and its desk in the audience. It returns both meshes, in build order, and keeps no
- * registry: the integrator adds them to the camera views' `FohRig` (`views.fohRig.add(...)`), which hides them in
- * the MA layout, where the camera stands at that spot behind the real console overlay.
+ * registry: `wireFixtureVisuals` adds them to the camera views' `FohRig` before the props build (the RoboSpot station
+ * joins after them). The rig hides them in the MA layout, where the camera stands at that spot behind the console.
  */
 export function buildFohRiser(scene: Object3D, materials: VenueMaterials): Mesh[] {
   const riser = addMesh(scene, new BoxGeometry(8, 1.4, 4.5), materials.dark, { position: [0, 4.3, 47] });

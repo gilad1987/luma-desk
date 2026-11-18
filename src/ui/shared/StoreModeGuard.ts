@@ -36,7 +36,9 @@ export class StoreModeGuard {
     return true;
   }
 
-  /** Arms store mode when `command` is the bare `store` command; the caller then clears its input instead of running. */
+  /**
+   * Arms store mode when `command` is the bare `store` command; the caller then clears its input instead of running.
+   */
   takeStoreCommand(command: string): boolean {
     if (!STORE_COMMAND.test(command)) return false;
     this.#state.setStoreMode(true);

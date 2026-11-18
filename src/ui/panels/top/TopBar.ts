@@ -3,25 +3,33 @@ import { byId } from '../../dom';
 import { topBarMarkup } from './topBarMarkup';
 import { VIEWS, type ViewName } from './topBarViews';
 
+/**
+ * A render flag one top-bar button flips. The render object owns the state and the button only shows it, so there
+ * is no second copy of the flag in the UI that could drift from what is drawn.
+ */
+export interface RenderToggle {
+  isOn(): boolean;
+  set(on: boolean): void;
+}
+
 /** The renderer controls the bar drives; plain callbacks, so the UI does not import the renderer. */
 export interface TopBarRender {
   setView(view: ViewName): void;
   setHouseLevel(level: number): void;
-  setGlow(on: boolean): void;
+  readonly glow: RenderToggle;
   /** Real light: spot lights and shadow maps on performers. */
-  setRealLight(on: boolean): void;
+  readonly realLight: RenderToggle;
+  readonly fixtureIds: RenderToggle;
 }
 
-/** Flips a toggle button's state and its `on` light together. */
-function toggle(id: string, initial: boolean, apply: (on: boolean) => void): () => boolean {
-  let on = initial;
+/** Flips `flag` and lights the button with the new state; the markup's `on` class matches the render start value. */
+function wireToggle(id: string, flag: RenderToggle): void {
   const button = byId(id);
   button.onclick = () => {
-    on = !on;
-    apply(on);
+    const on = !flag.isOn();
+    flag.set(on);
     button.classList.toggle('on', on);
   };
-  return () => on;
 }
 
 /**
@@ -29,7 +37,6 @@ function toggle(id: string, initial: boolean, apply: (on: boolean) => void): () 
  * buttons in it are wired by their own modules after the bar renders.
  */
 export class TopBar {
-  readonly #showIds: () => boolean;
   readonly #state: AppState;
   readonly #haze: HTMLInputElement;
 
@@ -47,14 +54,9 @@ export class TopBar {
     house.oninput = () => render.setHouseLevel(Number(house.value) / 100);
     haze.oninput = () => (state.haze = Number(haze.value) / 100);
     this.#haze = haze;
-    toggle('glowBtn', true, (on) => render.setGlow(on));
-    toggle('realBtn', true, (on) => render.setRealLight(on));
-    this.#showIds = toggle('idsBtn', false, () => undefined);
-  }
-
-  /** Fixture IDs: the overlay draws the ids while this is on. */
-  get showIds(): boolean {
-    return this.#showIds();
+    wireToggle('glowBtn', render.glow);
+    wireToggle('realBtn', render.realLight);
+    wireToggle('idsBtn', render.fixtureIds);
   }
 
   /**

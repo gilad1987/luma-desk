@@ -40,6 +40,11 @@ export class EncodersPanel implements UiPanel {
     this.#tabs.render(this.#feat);
   }
 
+  /** The feature tab on screen; the layouts read it for the MA screen header (`d2info`). */
+  get feature(): FeatureTab {
+    return this.#feat;
+  }
+
   /** Rebuilds the encoder row for the current feature and layout, then the extras. */
   render(): void {
     const { modal } = this.#deps;

@@ -40,6 +40,11 @@ export class KeyLights {
     this.isEnabled = isOn;
   }
 
+  /** The Real light button reads this flag, so the key lights stay its one owner (starts on). */
+  get enabled(): boolean {
+    return this.isEnabled;
+  }
+
   /** Sorts the frame's candidates by score (in place, stable) and aims one light at each of the best. */
   update(frame: LightFrame): void {
     const candidates = frame.keyCandidates;

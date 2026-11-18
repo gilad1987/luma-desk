@@ -2,7 +2,9 @@ import type { ShowFileInput } from '../../../show/ShowFile';
 import { byId } from '../../dom';
 import type { ShowFileDeps } from './ShowFileDeps';
 
-/** Loads a show from JSON text and saves it; any failure (parse or load) toasts `failure` and leaves the dialog open. */
+/**
+ * Loads a show from JSON text and saves it; any failure (parse or load) toasts `failure` and leaves the dialog open.
+ */
 function importShow({ loadShow, storage, modal, bus }: ShowFileDeps, json: string, failure: string): void {
   try {
     loadShow(JSON.parse(json) as ShowFileInput);

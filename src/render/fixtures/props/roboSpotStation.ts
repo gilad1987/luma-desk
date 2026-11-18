@@ -1,4 +1,5 @@
 import { Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, type Object3D } from 'three';
+import type { FohRig } from '../../camera/FohRig';
 import { merge } from '../modelGeometry';
 import type { ModelKit } from '../models/ModelContext';
 import { srgbCanvasTexture } from '../srgbCanvasTexture';
@@ -28,10 +29,10 @@ const paintMonitor = (x: CanvasRenderingContext2D): void => {
 
 /**
  * The RoboSpot BaseStation on a flight case at FOH: pan/tilt handles, fader panel, hooded monitor, clipboard. It
- * joins `fohRig` (render core's FOH group list), so it hides with the FOH riser in the MA view; it starts with the
- * visibility the riser has now.
+ * joins the camera views' `FohRig` after the riser, so it hides with the riser in the MA view and `FohRig.add` gives
+ * it the visibility the riser has now.
  */
-export function buildRoboSpotStation(scene: Object3D, { prims }: ModelKit, fohRig: Object3D[]): void {
+export function buildRoboSpotStation(scene: Object3D, { prims }: ModelKit, fohRig: Pick<FohRig, 'add'>): void {
   const { box, cylinder, cylinderX } = prims;
   const m = new MeshStandardMaterial({ color: 0x232328, roughness: 0.5, metalness: 0.4 });
   const body = merge([
@@ -56,6 +57,5 @@ export function buildRoboSpotStation(scene: Object3D, { prims }: ModelKit, fohRi
   sc.position.set(0, 1.3, 0.012);
   sc.scale.set(0.56, 0.32, 1);
   g.add(sc);
-  g.visible = fohRig[0]?.visible ?? true;
-  fohRig.push(g);
+  fohRig.add(g);
 }

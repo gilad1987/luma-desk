@@ -1,9 +1,7 @@
 import type { Linter } from 'eslint';
 
 /**
- * The code rules adopted from budget-app (docs/rules/code.md). This list must come before the legacy block in
- * eslint.config.ts: that block turns the type-aware rules off for src/main.ts, and a type-aware rule set again after it
- * makes ESLint stop with "requires type information".
+ * The code rules adopted from budget-app (docs/rules/code.md).
  */
 export const codeRules: Linter.Config[] = [
   {

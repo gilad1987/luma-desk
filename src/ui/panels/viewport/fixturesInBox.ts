@@ -16,8 +16,8 @@ export function boxBetween(ax: number, ay: number, bx: number, by: number): Clie
 }
 
 /**
- * The fixtures whose position projects through `camera` inside `box`, sorted by id. `rect` is the canvas's client rect; a fixture with
- * a depth above 1 (behind the camera or past the far plane) never counts.
+ * The fixtures whose position projects through `camera` inside `box`, sorted by id. `rect` is the canvas's client
+ * rect; a fixture with a depth above 1 (behind the camera or past the far plane) never counts.
  */
 export function fixturesInBox(
   fixtures: readonly Pick<Fixture, 'id' | 'pos'>[],
@@ -26,11 +26,12 @@ export function fixturesInBox(
   box: ClientBox,
 ): Pick<Fixture, 'id' | 'pos'>[] {
   const hits: Pick<Fixture, 'id' | 'pos'>[] = [];
-  const p: ScreenPoint = { x: 0, y: 0, ndcX: 0, ndcY: 0, depth: 0 };
+  // one scratch point per box select, reused for every fixture: the release allocates nothing per fixture
+  const point: ScreenPoint = { x: 0, y: 0, ndcX: 0, ndcY: 0, depth: 0 };
   for (const f of fixtures) {
-    projectToScreen(camera, f.pos, rect, p);
-    if (p.depth > 1) continue;
-    if (p.x >= box.x0 && p.x <= box.x1 && p.y >= box.y0 && p.y <= box.y1) hits.push(f);
+    projectToScreen(camera, f.pos, rect, point);
+    if (point.depth > 1) continue;
+    if (point.x >= box.x0 && point.x <= box.x1 && point.y >= box.y0 && point.y <= box.y1) hits.push(f);
   }
   return hits.sort((a, b) => a.id - b.id);
 }

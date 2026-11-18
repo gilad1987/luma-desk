@@ -21,8 +21,8 @@ export const D2R = Math.PI / 180;
 
 /**
  * Deep copy through JSON, used to snapshot cues, presets and saved shows. The JSON round trip is the contract, not an
- * implementation detail: it drops `undefined` members, turns NaN into `null` and keeps key order, exactly like the saved
- * show format, so a copy equals what a save and load would give. A top-level `undefined` throws, as before.
+ * implementation detail: it drops `undefined` members, turns NaN into `null` and keeps key order, exactly like the
+ * saved show format, so a copy equals what a save and load would give. A top-level `undefined` throws, as before.
  */
 export function jsonClone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;

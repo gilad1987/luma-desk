@@ -34,6 +34,12 @@ function forbiddenThree(layer: Layer): (typeof THREE_CORE)[] {
   return [];
 }
 
+/** `src/app` is the composition root's wiring: only `src/main.ts` and `src/app` itself may import it. */
+const APP_WIRING = {
+  group: ['**/app', '**/app/*'],
+  message: 'Only src/main.ts may import src/app: the wiring knows every area, so no area may depend on it.',
+};
+
 /** Rules for one layer; it repeats the shared-folder rule because a later no-restricted-imports entry replaces it. */
 function layerBlock(layer: Layer, forbidden: readonly Layer[]): Linter.Config {
   const layers = forbidden.map((name) => ({
@@ -43,12 +49,23 @@ function layerBlock(layer: Layer, forbidden: readonly Layer[]): Linter.Config {
   return {
     files: [`src/${layer}/**/*.ts`],
     rules: {
-      'no-restricted-imports': ['error', { patterns: [SHARED_INTERNALS, ...layers, ...forbiddenThree(layer)] }],
+      'no-restricted-imports': [
+        'error',
+        { patterns: [SHARED_INTERNALS, APP_WIRING, ...layers, ...forbiddenThree(layer)] },
+      ],
     },
   };
 }
 
-/** One config block per layer that has import limits, built from the FORBIDDEN_LAYERS table. */
-export const layerRules: Linter.Config[] = Object.entries(FORBIDDEN_LAYERS).map(([layer, forbidden]) =>
-  layerBlock(layer as Layer, forbidden),
-);
+/** Every src folder outside the wiring; the layer blocks after it replace it for their own folders. */
+const appWiringBlock: Linter.Config = {
+  files: ['src/**/*.ts'],
+  ignores: ['src/main.ts', 'src/app/**'],
+  rules: { 'no-restricted-imports': ['error', { patterns: [SHARED_INTERNALS, APP_WIRING] }] },
+};
+
+/** The wiring block, then one config block per layer that has import limits, from the FORBIDDEN_LAYERS table. */
+export const layerRules: Linter.Config[] = [
+  appWiringBlock,
+  ...Object.entries(FORBIDDEN_LAYERS).map(([layer, forbidden]) => layerBlock(layer as Layer, forbidden)),
+];

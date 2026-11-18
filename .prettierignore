@@ -12,9 +12,6 @@ docs/screenshots/
 
 package-lock.json
 
-# Third-party code that Phase 6 deletes
-vendor/
-
 # Planning notes, kept as the explorers wrote them
 docs/plan/
 

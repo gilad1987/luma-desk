@@ -1,17 +1,7 @@
+import type { DeskLayout } from '../../show';
 import { byId } from '../dom';
 import { maZoom, zoomFactor, type MaGeometry } from './fitMath';
 import { measureMaGeometry } from './measureMaGeometry';
-import type { StoredSetting } from './StoredSetting';
-
-/**
- * What the fit reads: the layout name as stored and selected (not narrowed, so an unknown name round-trips as before),
- * the `#deskZoom` value and the grip size (undefined = adaptive).
- */
-export interface LayoutSettings {
-  readonly mode: StoredSetting;
-  readonly zoom: StoredSetting;
-  readonly maSize: number | undefined;
-}
 
 /**
  * Scales the consoles to the window through CSS variables (`--dz`, `--mz/--mt/--mb`, `--ch/--cw`). The MA console
@@ -32,12 +22,16 @@ export class DeskFit {
     this.geo = null;
   }
 
-  fit(s: LayoutSettings): void {
-    byId('cbody').style.setProperty('--dz', zoomFactor(s.zoom, innerWidth, 1880, 0.66).toFixed(3));
+  /**
+   * Fits for the layout as saved and selected: the mode name is not narrowed, so an unknown name fits like classic, as
+   * before; `maSize` undefined is the adaptive size.
+   */
+  fit(s: DeskLayout): void {
+    byId('cbody').style.setProperty('--dz', zoomFactor(s.deskZoom, innerWidth, 1880, 0.66).toFixed(3));
     const mb = byId('maBody');
-    if (s.mode !== 'ma') {
+    if (s.deskMode !== 'ma') {
       this.setConsoleHeight(0);
-      mb.style.setProperty('--mz', zoomFactor(s.zoom, innerWidth, 1920, 0.55).toFixed(3));
+      mb.style.setProperty('--mz', zoomFactor(s.deskZoom, innerWidth, 1920, 0.55).toFixed(3));
       return;
     }
     if (!this.geo || !this.geo.W) this.geo = measureMaGeometry(mb);
