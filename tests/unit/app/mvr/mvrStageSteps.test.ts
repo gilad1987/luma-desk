@@ -38,12 +38,13 @@ describe('hideMvrLayers', () => {
 });
 
 describe('loadDemoRig', () => {
-  it('drops the scenery and the prompt, clears the error line, applies the built-in stage, then closes', async () => {
+  // the scenery and the prompt follow the apply through `followStage` (followStage.test.ts)
+  it('clears the error line, applies the built-in stage, then closes', async () => {
     const dom = new FakeDom();
     dom.add('mvrImportError').textContent = 'bad zip';
     const flow = fakeMvrFlowDeps(imported);
     await loadDemoRig(flow.deps);
-    expect(flow.calls).toEqual(['dispose', 'prompt.hide', 'apply', 'modal.close', 'toast']);
+    expect(flow.calls).toEqual(['apply', 'modal.close', 'toast']);
     expect(flow.stage.apply).toHaveBeenCalledWith(flow.deps.stage.builtIn, 'builder');
     expect(dom.get('mvrImportError').textContent).toBe('');
   });

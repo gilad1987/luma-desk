@@ -79,4 +79,14 @@ describe('importPickedMvr', () => {
     // the parser reports two warnings for this one-fixture file; the toast counts them
     expect(flow.toasts).toEqual([he.mvr.imported('Rig.mvr', 1, 2)]);
   });
+
+  it('draws no scenery and opens no summary when the stage changed after the apply', async () => {
+    page();
+    const flow = fakeMvrFlowDeps();
+    // the stage ends on another design, as when a template is applied while the import still runs
+    flow.stage.apply.mockImplementationOnce(() => (flow.stage.design = flow.deps.stage.builtIn));
+    await importPickedMvr(goodFile(), flow.deps);
+    expect(flow.scenery.show).not.toHaveBeenCalled();
+    expect(flow.calls).toEqual(['load']);
+  });
 });

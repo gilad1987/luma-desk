@@ -24,7 +24,7 @@ describe('wireMvr', () => {
     const { stage, modal } = fakeMvrFlowDeps().deps;
     const emit = vi.fn();
     const download = vi.fn();
-    const mvr = wireMvr({ bus: { emit }, scene: { add: vi.fn() }, stage, modal, download });
+    const mvr = wireMvr({ bus: { emit, on: vi.fn() }, scene: { add: vi.fn() }, stage, modal, download });
     const { file, release } = heldFile();
     mvr.actions.importFile(file);
     mvr.actions.exportMvr();

@@ -6,7 +6,7 @@ import type { MvrBytesStore } from './openMvrStore';
 
 /** What the MVR import, restore, demo-rig and export flows share; `wireMvr` builds it once. */
 export interface MvrFlowDeps {
-  readonly stage: Pick<StageService, 'apply' | 'updateMeta' | 'design' | 'builtIn'>;
+  readonly stage: Pick<StageService, 'apply' | 'updateMeta' | 'design' | 'builtIn' | 'cause'>;
   readonly store: MvrBytesStore;
   readonly scenery: Pick<LazyMvrStage, 'load' | 'show' | 'setHiddenLayers' | 'dispose'>;
   readonly prompt: Pick<MvrMissingPrompt, 'show' | 'hide'>;

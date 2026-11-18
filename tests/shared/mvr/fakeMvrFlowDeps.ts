@@ -2,6 +2,7 @@ import { vi, type Mock } from 'vitest';
 import type { MvrFlowDeps } from '../../../src/app/mvr/MvrFlowDeps';
 import type { StageDesign } from '../../../src/domain/stage/StageDesign';
 import { BUILT_IN_DESIGN } from '../../../src/domain/stage/templates/sultansPool/builtInDesign';
+import type { RigChangeCause } from '../../../src/engine/stage/rigChanged';
 import type { MeshFailure } from '../../../src/render/mvr/MeshLibrary';
 import type { MvrStageInput } from '../../../src/render/mvr/MvrStage';
 
@@ -36,9 +37,11 @@ export function fakeMvrFlowDeps(design: StageDesign = BUILT_IN_DESIGN): FakeMvrF
   const stage = {
     design,
     builtIn: BUILT_IN_DESIGN,
-    apply: vi.fn((next: StageDesign) => {
+    cause: 'boot' as RigChangeCause,
+    apply: vi.fn((next: StageDesign, cause: RigChangeCause) => {
       calls.push('apply');
       stage.design = next;
+      stage.cause = cause;
     }),
     updateMeta: vi.fn((next: StageDesign) => {
       calls.push('updateMeta');
