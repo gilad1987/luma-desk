@@ -64,6 +64,14 @@ describe('parseStageDesign fixtures', () => {
     expect(errorsOf(withFixture({ rotation: null }))).toEqual(['fixtures[0].rotation: expected 4 numbers, got null']);
   });
 
+  it('rejects a rotation whose length overflows to Infinity, so it never reads as a zero quaternion', () => {
+    expect(errorsOf(withFixture({ rotation: [1.7e308, 1.7e308, 0, 0] }))).toEqual([
+      'fixtures[0].rotation: quaternion too long to normalize [1.7e+308, 1.7e+308, 0, 0]',
+    ]);
+    const huge = parseStageDesign(withFixture({ rotation: [1e308, 0, 0, 0] }));
+    expect(huge.ok && huge.design.fixtures[0]?.rotation).toEqual([1, 0, 0, 0]);
+  });
+
   it('rejects bad fixed and pixel fields by path', () => {
     expect(errorsOf(withFixture({ fixed: { pan: 0 } }))).toEqual([
       'fixtures[0].fixed.tilt: expected a finite number, got undefined',

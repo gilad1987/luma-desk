@@ -25,13 +25,16 @@ type LocalPlace = { readonly at: Vec3; readonly turn?: Quat };
  * `count` evenly spread places on a truss, in lane `lane` (0 = on the truss line): a straight from `a` to `b`, a
  * goalpost along its top beam, a roof across its width, a circle at angle steps of 2π/count, with a yaw that turns
  * each body to the centre; all of them `HANG_DROP_M` below the truss. A tower spreads from `a` to `b` beside the
- * column (`besideColumn`), with no drop, so no fixture goes below its base. A rotated truss passes its rotation on,
+ * column (`besideColumn`), with no drop, so no fixture goes below its base; `besideColumn` also moves its lane, which
+ * must follow the side step so a later lane never lands back in the column. A rotated truss passes its rotation on,
  * so beams follow the truss.
  */
 export function placesOnTruss(truss: StageTruss, count: number, lane: number): FixturePlace[] {
-  const local = localPlaces(truss, count, lane);
-  if (truss.params.kind === 'tower') return besideColumn(local.map((p) => toWorld(truss.transform, p)));
-  return local.map((p) => toWorld(truss.transform, hung(p)));
+  if (truss.params.kind === 'tower') {
+    const onLine = localPlaces(truss, count, 0).map((p) => toWorld(truss.transform, p));
+    return besideColumn(onLine, lane * LANE_SHIFT_M);
+  }
+  return localPlaces(truss, count, lane).map((p) => toWorld(truss.transform, hung(p)));
 }
 
 /**

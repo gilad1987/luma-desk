@@ -1,14 +1,6 @@
 import { trussPoints } from './bounds';
 import type { StageDesign } from './StageDesign';
-import type { TrussParams } from './trussTypes';
-
-/**
- * How far a truss body reaches below its highest enclosing point. The points of a tube truss run along its centre
- * line, so half its section hangs below them; the points of a roof are its box corners, so its full height does.
- */
-function depthBelowTop(params: TrussParams): number {
-  return params.kind === 'roof' ? params.size[1] : params.section / 2;
-}
+import type { StageTruss } from './trussTypes';
 
 /**
  * The y of the underside of the highest truss of `d`: the PA hangs under it, so a design with low trusses does not
@@ -18,11 +10,16 @@ function depthBelowTop(params: TrussParams): number {
  */
 export function highestTrussY(d: Pick<StageDesign, 'trusses' | 'scenery'>): number | null {
   if (!d.scenery.trusses || d.trusses.length === 0) return null;
-  let underside = -Infinity;
-  for (const truss of d.trusses) {
-    let top = -Infinity;
-    for (const p of trussPoints(truss)) top = Math.max(top, p.y);
-    underside = Math.max(underside, top - depthBelowTop(truss.params));
-  }
-  return underside;
+  return Math.max(...d.trusses.map(undersideOf));
+}
+
+/**
+ * The y of one truss's underside. The points of a tube truss run along its centre line, so half its section hangs
+ * below the highest of them. The points of a roof are its turned box corners, so the lowest of them is its underside:
+ * a roof turned on its side hangs its width, not its height, below its centre.
+ */
+function undersideOf(truss: StageTruss): number {
+  const ys = trussPoints(truss).map((p) => p.y);
+  const { params } = truss;
+  return params.kind === 'roof' ? Math.min(...ys) : Math.max(...ys) - params.section / 2;
 }
