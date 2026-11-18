@@ -5,6 +5,7 @@ import type { EngineBus } from '../events';
 import type { ExecutorPool } from '../ExecutorPool';
 import type { PresetLibrary } from '../PresetLibrary';
 import type { Selection } from '../Selection';
+import type { RigSource } from '../stage/RigSource';
 
 /**
  * The owners the programmer works with. They are injected, not imported, so tests build a programmer on any rig and
@@ -23,4 +24,9 @@ export interface ProgrammerDeps {
   /** Times the CLEAR double press; the original used `performance.now()`, not the frame time. */
   readonly clock: Clock;
   readonly bus: EngineBus;
+  /**
+   * The stage, for the cause of a `rigChanged`: a builder preview does not prune the programmer, so Cancel gives the
+   * operator's values back. Without it (a fixed rig in tests) every change prunes.
+   */
+  readonly source?: Pick<RigSource, 'cause'>;
 }

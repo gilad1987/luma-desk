@@ -24,7 +24,9 @@ export interface ProgrammerHandles {
 export function wireProgrammer(deps: ProgrammerWiringDeps): ProgrammerHandles {
   const { stage, bus, clock, appState, selection, tempo, pool } = deps;
   const presets = deps.presetLibrary;
-  const programmer = new Programmer(withLiveRig(stage, { selection, presets, pool, state: appState, clock, bus }));
+  const programmer = new Programmer(
+    withLiveRig(stage, { selection, presets, pool, state: appState, clock, bus, source: stage }),
+  );
   const merger = new OutputMerger(withLiveRig(stage, { pool, programmer, master: appState, selection, tempo }));
   const runner = new CommandRunner(
     withLiveRig(stage, {

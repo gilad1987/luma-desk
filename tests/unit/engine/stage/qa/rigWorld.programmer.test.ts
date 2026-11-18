@@ -48,4 +48,13 @@ describe('programmer across a stage change (F25)', () => {
     expect(fxList.map((inst) => inst.ids)).toEqual([[...kept, ...gone]]);
     expect(w.count('stateDirty')).toBe(0);
   });
+
+  it('keeps every value through a builder preview, so Cancel gives the operator the programmer back', () => {
+    const { w } = programmedWorld();
+    const vals = structuredClone(w.programmer.vals);
+    const ids = w.programmer.fxList.map((inst) => inst.ids);
+    w.to('theatre', 'preview');
+    w.to('sultans-pool', 'preview');
+    expect([w.programmer.vals, w.programmer.fxList.map((inst) => inst.ids)]).toEqual([vals, ids]);
+  });
 });
