@@ -5,7 +5,8 @@ import type { ShowFileDeps } from './ShowFileDeps';
 /**
  * Loads a show from JSON text and saves it; any failure (parse or load) toasts `failure` and leaves the dialog open.
  * A bad `stage` already toasted during the load; the toast shows only the latest text, so "Show loaded" is skipped
- * then and the user reads the bad-stage text.
+ * then and the user reads the bad-stage text. A later failure of the same load replaces that text with `failure`,
+ * the more important message.
  */
 function importShow({ loadShow, storage, modal, bus }: ShowFileDeps, json: string, failure: string): void {
   try {

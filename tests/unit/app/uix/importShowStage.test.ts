@@ -1,3 +1,5 @@
+// Owns the toast order of a Show File import with a real serializer and stage service. The dialog wiring itself is in
+// wireShowFileDialog.test.ts, and the browser paths are in tests/e2e/stage-bad-import.spec.ts.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { wireShowFileDialog } from '../../../../src/app/uix/wireShowFileDialog';
 import { FakeButton, FakeDom, FakeElement } from '../../../shared/dom';
