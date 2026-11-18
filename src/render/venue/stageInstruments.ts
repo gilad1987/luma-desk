@@ -1,4 +1,5 @@
 import { BoxGeometry, CylinderGeometry, MeshStandardMaterial, type Group } from 'three';
+import type { Vec3Tuple } from '../../core';
 import { addMesh } from '../shared';
 import type { BandMaterials } from './bandMaterials';
 import type { InstrumentBuilder } from './performerSpec';
@@ -49,7 +50,7 @@ export const STAGE_INSTRUMENTS: Readonly<Record<StageInstrument, InstrumentBuild
     });
   },
   trombone: (body, m, hip) => {
-    const raised: [number, number, number] = [Math.PI / 2 - 0.2, 0, 0];
+    const raised: Vec3Tuple = [Math.PI / 2 - 0.2, 0, 0];
     addMesh(body, new CylinderGeometry(0.08, 0.02, 0.5, 10), m.gold, {
       position: [0.06, hip + 0.74, 0.35],
       rotation: raised,

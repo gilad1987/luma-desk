@@ -1,20 +1,16 @@
 import { BoxGeometry, type Material, type Object3D } from 'three';
+import { DELAY_TOWERS } from '../../domain/delayTowers';
 import { DECK, TOWERS } from '../../domain/venue';
 import { addMesh } from '../shared';
 import type { TrussKit } from './TrussKit';
 
-/** The two delay speaker towers in the audience as [x, z]. */
-const DELAYS: readonly (readonly [x: number, z: number])[] = [
-  [-24, 33],
-  [24, 33],
-];
-
 /**
- * Builds the standing truss towers: the two delay speaker towers in the audience (base plate and speaker head), then
- * the light towers on the deck (base plate, top plate and a mid shelf for the fixture).
+ * Builds the standing truss towers: the two delay speaker towers in the audience (base plate and speaker head; the
+ * crowd layout keeps a gap around them), then the light towers on the deck (base plate, top plate and a mid shelf for
+ * the fixture).
  */
 export function buildTrussTowers(scene: Object3D, kit: TrussKit, dark: Material): void {
-  for (const [x, z] of DELAYS) {
+  for (const [x, z] of DELAY_TOWERS) {
     kit.addSection(scene, [x, 0, z], [x, 11, z], 0.6);
     addMesh(scene, new BoxGeometry(1.8, 0.1, 1.8), kit.steel, { position: [x, 0.05, z] });
     addMesh(scene, new BoxGeometry(1.6, 1.4, 1.2), dark, { position: [x, 11.2, z] });

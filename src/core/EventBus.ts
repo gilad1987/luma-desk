@@ -14,9 +14,9 @@ type SubscriptionTable<E> = { [K in keyof E]?: Set<Subscription<E[K]>> };
  * Delivery is synchronous and in subscribe order, because callers depend on it: the command line reads the feedback
  * the engine emitted before `runCmd` returns, and a log line must reach the DOM before the toast that follows it.
  *
- * Each `emit` iterates a snapshot of the listeners taken when it starts. A listener added during an emit is first called
- * by the next emit; one removed during an emit is still called by the current one if it had not run yet. A listener that
- * throws stops the emit and the error reaches the emitter, as a direct call would.
+ * Each `emit` iterates a snapshot of the listeners taken when it starts. A listener added during an emit is first
+ * called by the next emit; one removed during an emit is still called by the current one if it had not run yet. A
+ * listener that throws stops the emit and the error reaches the emitter, as a direct call would.
  */
 export class EventBus<E extends Record<string, unknown>> {
   // no prototype, so an event named like an Object member (`constructor`, `toString`) is still an own, empty slot

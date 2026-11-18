@@ -1,4 +1,5 @@
 import { AUDIENCE_TERRAIN } from '../../domain/audienceTerrain';
+import { DELAY_TOWERS } from '../../domain/delayTowers';
 
 /** One audience member's feet position and posture: 1 standing on the pool floor, 0 seated on a terrace. */
 export type CrowdSpot = readonly [x: number, y: number, z: number, standing: 0 | 1];
@@ -15,7 +16,7 @@ const isAisle = (x: number, z: number): boolean =>
   Math.abs(x) < 1.1 ||
   Math.abs(Math.abs(x) - 21) < 0.7 ||
   (Math.abs(x) < 6.5 && z > 43 && z < 51) ||
-  (Math.abs(Math.abs(x) - 24) < 1.6 && Math.abs(z - 33) < 1.6);
+  DELAY_TOWERS.some(([tx, tz]) => Math.abs(x - tx) < 1.6 && Math.abs(z - tz) < 1.6);
 
 /**
  * Lays out the audience: a chair grid on the pool floor (93 % of chairs taken) and people on the terraces (75 % of

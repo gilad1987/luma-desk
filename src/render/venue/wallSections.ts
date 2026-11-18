@@ -9,7 +9,7 @@ const WALL_HEIGHT = 14;
 
 /**
  * A wall run from corner `start` to corner `end`, with its ground `length` and `heading` about the up axis. The caller
- * computes length and heading once, because the wall sections and the corner tower of the run both need them.
+ * computes length and heading once: the sections need both; the corner tower needs the heading.
  */
 export interface WallRun {
   readonly start: Vector3;
@@ -20,27 +20,27 @@ export interface WallRun {
 
 /** Builds one run as about 6 m sections whose base follows the terrain; returns 3 merlons per section. */
 export function addWallSections(scene: Object3D, stone: JerusalemStone, run: WallRun): CrenelPlacement[] {
-  const { start: A, end: B, length: L, heading: ang } = run;
+  const { start, end, length, heading } = run;
   const merlons: CrenelPlacement[] = [],
-    n = Math.ceil(L / 6),
+    n = Math.ceil(length / 6),
     H = WALL_HEIGHT;
   for (let k = 0; k < n; k++) {
     const t0 = k / n,
       t1 = (k + 1) / n,
-      x = lerp(A.x, B.x, (t0 + t1) / 2),
-      z = lerp(A.z, B.z, (t0 + t1) / 2),
+      x = lerp(start.x, end.x, (t0 + t1) / 2),
+      z = lerp(start.z, end.z, (t0 + t1) / 2),
       base =
         Math.min(
-          terrainHeight(lerp(A.x, B.x, t0), lerp(A.z, B.z, t0)),
-          terrainHeight(lerp(A.x, B.x, t1), lerp(A.z, B.z, t1)),
+          terrainHeight(lerp(start.x, end.x, t0), lerp(start.z, end.z, t0)),
+          terrainHeight(lerp(start.x, end.x, t1), lerp(start.z, end.z, t1)),
         ) - 3;
-    addMesh(scene, new BoxGeometry(2.4, H, L / n + 0.05), stone.floodlit(L / n, H), {
+    addMesh(scene, new BoxGeometry(2.4, H, length / n + 0.05), stone.floodlit(length / n, H), {
       position: [x, base + H / 2, z],
-      rotation: [0, ang, 0],
+      rotation: [0, heading, 0],
     });
     for (let c = 0; c < 3; c++) {
       const tt = lerp(t0, t1, (c + 0.5) / 3);
-      merlons.push([lerp(A.x, B.x, tt), base + H + 0.65, lerp(A.z, B.z, tt), ang]);
+      merlons.push([lerp(start.x, end.x, tt), base + H + 0.65, lerp(start.z, end.z, tt), heading]);
     }
   }
   return merlons;

@@ -1,6 +1,6 @@
 import { BoxGeometry, MeshBasicMaterial, type Mesh, type Object3D } from 'three';
-import { DECK } from '../../domain/venue';
 import type { Vec3Tuple } from '../../core';
+import { DECK } from '../../domain/venue';
 import { addMesh } from '../shared';
 import type { BandMaterials } from './bandMaterials';
 import { BAND_MEMBERS } from './bandMembers';

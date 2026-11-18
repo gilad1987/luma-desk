@@ -40,18 +40,15 @@ const TOWER_MERLONS: readonly (readonly [dx: number, dz: number])[] = [
 const TOWER_HEIGHT = 20;
 
 /** Builds the square tower at the run's start corner, turned like the run; returns its 8 merlons. */
-function addCornerTower(
-  scene: Object3D,
-  stone: JerusalemStone,
-  { start: A, heading: ang }: WallRun,
-): CrenelPlacement[] {
+function addCornerTower(scene: Object3D, stone: JerusalemStone, run: WallRun): CrenelPlacement[] {
+  const { start, heading } = run;
   const H = TOWER_HEIGHT,
-    base = A.y - 3;
+    base = start.y - 3;
   addMesh(scene, new BoxGeometry(8, H, 8), stone.floodlit(8, H), {
-    position: [A.x, base + H / 2, A.z],
-    rotation: [0, ang, 0],
+    position: [start.x, base + H / 2, start.z],
+    rotation: [0, heading, 0],
   });
-  return TOWER_MERLONS.map(([dx, dz]) => [A.x + dx, base + H + 0.65, A.z + dz, ang]);
+  return TOWER_MERLONS.map(([dx, dz]) => [start.x + dx, base + H + 0.65, start.z + dz, heading]);
 }
 
 /**
