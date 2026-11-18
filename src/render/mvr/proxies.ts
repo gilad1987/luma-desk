@@ -1,6 +1,7 @@
 import { Group, InstancedMesh, Matrix4, type Object3D } from 'three';
 import type { Vec3 } from '../../domain/stage/types';
 import { toThree, type MvrGeometry, type MvrProxy } from '../../mvr/index';
+import { LedProxyLook } from './led/ledProxyLook';
 import { proxyGeometry, proxyMaterial, type DrawnProxyKind } from './proxiesShapes';
 
 /** The name of the group that holds a layer's proxy meshes, so one flag hides the proxies of the layer. */
@@ -40,6 +41,18 @@ function proxyMesh(kind: DrawnProxyKind, matrices: readonly Matrix4[]): Instance
   return mesh;
 }
 
+/** Adds the meshes of one kind on one layer. Panels draw as LED walls; a duplicate of a panel gets its own mesh. */
+function addKind(holder: Group, kind: DrawnProxyKind, onLayer: readonly MvrProxy[], led: LedProxyLook): void {
+  const mine = onLayer.filter((proxy) => proxy.kind === kind);
+  for (const group of kind === 'panel' ? led.split(mine) : [{ panels: mine, keeper: undefined }]) {
+    const matrices = group.panels.flatMap((proxy) => proxyMatrix(proxy, led.offset) ?? []);
+    if (matrices.length === 0) continue;
+    const mesh = proxyMesh(kind, matrices);
+    if (kind === 'panel') led.dress(mesh, group);
+    holder.add(mesh);
+  }
+}
+
 /**
  * Adds the proxies of `geometry` to the layer groups: per layer one `PROXY_GROUP` with one instanced mesh per kind,
  * so proxies follow their layer's `visible` flag. A layer that holds only proxies gets its group here. Nothing is
@@ -47,15 +60,14 @@ function proxyMesh(kind: DrawnProxyKind, matrices: readonly Matrix4[]): Instance
  */
 export function addProxyMeshes(layers: Map<string, Group>, geometry: MvrGeometry): void {
   const kinds: readonly DrawnProxyKind[] = ['panel', 'seat'];
+  const led = new LedProxyLook(geometry);
   for (const layer of new Set((geometry.proxies ?? []).map((proxy) => proxy.layer))) {
     const holder = new Group();
     holder.name = PROXY_GROUP;
-    for (const kind of kinds) {
-      const mine = (geometry.proxies ?? []).filter((proxy) => proxy.layer === layer && proxy.kind === kind);
-      const matrices = mine.flatMap((proxy) => proxyMatrix(proxy, geometry.offset) ?? []);
-      if (matrices.length > 0) holder.add(proxyMesh(kind, matrices));
-    }
+    const onLayer = (geometry.proxies ?? []).filter((proxy) => proxy.layer === layer);
+    for (const kind of kinds) addKind(holder, kind, onLayer, led);
     if (holder.children.length === 0) continue;
+    led.holder(layer, holder);
     holders.add(holder);
     const group = layers.get(layer) ?? new Group();
     layers.set(layer, group.add(holder));

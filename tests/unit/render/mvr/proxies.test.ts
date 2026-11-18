@@ -2,7 +2,7 @@
  * Proxies on the stage: one instanced mesh per kind and layer, made only for a file that has proxies, hidden with
  * their layer or by the "Show proxies" choice, and freed with the stage.
  */
-import type { Object3D } from 'three';
+import { SpotLight, type Object3D } from 'three';
 import { describe, expect, it } from 'vitest';
 import { createTemplate } from '../../../../src/domain/stage/templates/index.ts';
 import type { MvrGeometry } from '../../../../src/mvr/index.ts';
@@ -29,7 +29,9 @@ describe('proxy meshes', () => {
   it('draws one instanced mesh per kind and layer, and none for unknown placements', async () => {
     const stage = new MvrStage();
     await stage.show(input);
-    expect(stage.group.children).toHaveLength(2);
+    // two layer groups; the panel walls bring their light set, which hangs beside the layers
+    expect(stage.group.children.filter((child) => child.getObjectByName(PROXY_GROUP))).toHaveLength(2);
+    expect(stage.group.children.filter((child) => child instanceof SpotLight)).toHaveLength(4);
     expect(proxyMeshes(stage.group, 'panel').map((mesh) => mesh.count)).toEqual([20, 9]);
     expect(proxyMeshes(stage.group, 'seat').map((mesh) => mesh.count)).toEqual([24]);
     stage.dispose();

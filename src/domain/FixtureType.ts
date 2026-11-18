@@ -2,7 +2,7 @@ import type { AttrName } from './attributes';
 
 /** The fixture type keys. The rig, the 3D model builders and the type-based groups all refer to types by this key. */
 export type FixtureTypeId =
-  'spot' | 'beam' | 'wash' | 'par' | 'blinder' | 'strobe' | 'bar' | 'follow' | 'profile' | 'screen';
+  'spot' | 'beam' | 'wash' | 'par' | 'blinder' | 'strobe' | 'bar' | 'follow' | 'profile' | 'screen' | 'device';
 
 /**
  * What one kind of fixture can do and how it looks. The engine reads the attributes, zoom range and default colour;

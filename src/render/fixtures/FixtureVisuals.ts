@@ -5,7 +5,8 @@ import { Disposer } from '../shared';
 import type { FixtureVisual } from './FixtureVisual';
 import { FixtureVisualBuilder, type FixtureVisualDeps } from './FixtureVisualBuilder';
 import type { FixtureVisualSync } from './FixtureVisualSync';
-import { releaseLightVisual } from './releaseLightVisual';
+import type { GdtfBodySource } from './gdtf/GdtfBodySource';
+import { releaseDeviceVisual, releaseLightVisual } from './releaseLightVisual';
 import type { ScreenTargets } from './sync/syncScreen';
 
 /** One LED screen of the stage, keyed by its screen fixture id: the mesh it picks and the targets it drives. */
@@ -30,6 +31,8 @@ export class FixtureVisuals {
   readonly #deps: FixtureVisualsDeps;
   readonly #disposer = new Disposer();
   #visuals: readonly FixtureVisual[] = [];
+  #gdtf: GdtfBodySource | undefined;
+  #last: [readonly Fixture[], ReadonlyMap<number, ScreenSlot>] | undefined;
 
   constructor(deps: FixtureVisualsDeps) {
     this.#deps = deps;
@@ -51,13 +54,24 @@ export class FixtureVisuals {
       meshes.set(id, slot.mesh);
       targets.set(id, slot.targets);
     }
-    const builder = new FixtureVisualBuilder({ ...this.#deps, screenMesh: meshes });
+    const builder = new FixtureVisualBuilder({ ...this.#deps, screenMesh: meshes, gdtf: this.#gdtf });
     for (const f of fixtures) builder.assertBuildable(f);
     this.dispose();
+    this.#last = [fixtures, screens];
     const visuals = fixtures.map((f) => builder.build(f));
     this.#deps.sync.setVisuals(visuals, targets);
     this.#visuals = visuals;
     return visuals;
+  }
+
+  /**
+   * Sets where real GDTF bodies come from (undefined: nowhere) and rebuilds the current rig, so bodies that arrive
+   * after the rig swap in, and picking and selection go on by fixture. Taking the source away rebuilds only a rig that drew from it.
+   */
+  setGdtf(source: GdtfBodySource | undefined): void {
+    const used = this.#visuals.some((v) => v.kind === 'light' && v.axisAt !== undefined);
+    this.#gdtf = source;
+    if (this.#last && (source || used)) this.rebuild(...this.#last);
   }
 
   /**
@@ -73,10 +87,14 @@ export class FixtureVisuals {
   /** Removes every visual from the scene, frees what they own and leaves an empty rig in sync and picker. */
   dispose(): void {
     const { scene, picker, sync } = this.#deps;
-    for (const v of this.#visuals) if (v.kind === 'light') releaseLightVisual(v, scene, this.#disposer);
+    for (const v of this.#visuals) {
+      if (v.kind === 'light') releaseLightVisual(v, scene, this.#disposer);
+      if (v.kind === 'device') releaseDeviceVisual(v, scene, this.#disposer);
+    }
     this.#disposer.dispose();
     picker.clear();
     sync.setVisuals([], new Map());
     this.#visuals = [];
+    this.#last = undefined;
   }
 }

@@ -50,6 +50,7 @@ describe('readSizes', () => {
   it('measures a 1 m batten whose pixels are GeometryReferences, and the pixel template on its own', () => {
     const sizes = sizesOf(model('Body', 1, 0.12, 0.15) + model('Cell', 0.1, 0.1, 0.02), BATTEN + CELL);
     expect(sizes.map((tree) => tree.geometry)).toEqual(['Body', 'Cell']);
+    // on Z the body hangs from its origin (0) down to its bottom (-0.15); the cells end there too (-0.14 - 0.02 / 2)
     [1, 0.12, 0.15].forEach((value, axis) => expect(sizes[0]?.size[axis]).toBeCloseTo(value, 9));
   });
 

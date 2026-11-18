@@ -13,6 +13,7 @@ import { fitScene, type FittedScene } from './fitScene';
 import { hallLayers } from './hallLayers';
 import { layerBoxes } from './layerBoxes';
 import { mvrInfo } from './mvrInfo';
+import { seatAreaOf } from './seatArea';
 import { stageCore } from './stageCore';
 import { placementBoxes } from './surfaces';
 
@@ -32,10 +33,10 @@ export interface DesignResult {
   readonly warnings: readonly MvrWarning[];
 }
 
-/** One desk fixture from a resolved fixture, its id and its fitted position; a body at rest gets no `rotation`. */
+/** One desk fixture from a resolved fixture, its id and its fitted position; a hanging body at rest gets no `rotation`. */
 function stageFixture(fixture: ResolvedFixture, id: number, position: Vec3, fitted: FittedScene): StageFixture {
   const mount = mountOf(fixture.record.matrix);
-  const rotation = bodyRotation(quaternionOf(toThree(fixture.record.matrix)), mount);
+  const rotation = bodyRotation(quaternionOf(toThree(fixture.record.matrix)));
   const base: StageFixture = {
     id,
     type: fixture.type,
@@ -57,9 +58,7 @@ function stageFixture(fixture: ResolvedFixture, id: number, position: Vec3, fitt
  */
 export function toStageDesign(input: DesignInput): DesignResult {
   const warnings: MvrWarning[] = [];
-  const warn = (warning: MvrWarning): void => {
-    warnings.push(warning);
-  };
+  const warn = (warning: MvrWarning): void => void warnings.push(warning);
   const ids = assignIds(
     input.fixtures.map((fixture) => fixture.record),
     warn,
@@ -74,6 +73,7 @@ export function toStageDesign(input: DesignInput): DesignResult {
   const fixtures = input.fixtures.map((fixture, index) =>
     stageFixture(fixture, ids[index] ?? index + 1, fitted.positions[index] ?? [0, 0, 0], fitted),
   );
+  const seats = seatAreaOf(input.scene.proxies, fitted);
   const source: StageSource = {
     kind: 'mvr',
     name: input.name,
@@ -89,7 +89,7 @@ export function toStageDesign(input: DesignInput): DesignResult {
     risers: [],
     trusses: [],
     fixtures,
-    mvr: { ...mvrInfo(input.fixtures, ids, input.scene, fitted.offset), hiddenLayers: hidden },
+    mvr: { ...mvrInfo(input.fixtures, ids, input.scene, fitted.offset), hiddenLayers: hidden, ...seats },
   };
   const { offset, bounds, surfaces } = fitted;
   const geometry = { placements, offset, bounds, surfaces, layers: fitted.layers, hallLayers: hall };

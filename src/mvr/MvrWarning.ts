@@ -7,6 +7,9 @@ export type MvrWarningCode =
   | 'bad-address'
   | 'missing-gdtf'
   | 'type-from-name'
+  | 'placeholder-gdtf'
+  | 'non-light-fixture'
+  | 'fixture-geometry'
   | 'bad-gdtf'
   | 'unknown-mode'
   | 'missing-symdef'
@@ -22,10 +25,17 @@ export type MvrWarningCode =
   | 'scene-depth'
   | 'bad-matrix'
   | 'ambiguous-gdtf'
+  | 'ambiguous-file'
   | 'patch-overlap'
   | 'missing-screen-driver'
   | 'hidden-layers'
-  | 'empty-symdef';
+  | 'shared-layer-uuid'
+  | 'empty-symdef'
+  | 'symdef-fixture'
+  | 'dangling-position'
+  | 'dangling-class'
+  | 'bad-color'
+  | 'newer-version';
 
 /**
  * A problem the importer survived. MVR files from real consoles are often partial (stub GDTFs, unpatched fixtures),
@@ -37,6 +47,8 @@ export interface MvrWarning {
   readonly message: string;
   /** What the warning is about: a fixture uuid, a GDTF name or a file name, so the user can find it. */
   readonly ref?: string;
+  /** On a folded line (`foldWarnings`): every `ref` of the lines it stands for, as the message shows only three. */
+  readonly refs?: readonly string[];
 }
 
 /** Why an import failed as a whole. */

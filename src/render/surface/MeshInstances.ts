@@ -15,6 +15,8 @@ export interface InstanceList {
   readonly layer: Uint16Array;
   /** The world box of each instance, six floats. */
   readonly boxes: Float32Array;
+  /** What each instance is for a beam near its lens: a `RIG_KIND`. */
+  readonly kind: Uint8Array;
 }
 
 /**
@@ -25,6 +27,8 @@ export interface InstanceList {
 export class MeshInstances implements Leaf {
   /** One flag per layer index: 0 lets rays pass through all its instances. The owner sets them. */
   readonly shown: Uint8Array;
+  /** The `RIG_KIND` of each instance, by `ray.prim`. */
+  readonly kind: Uint8Array;
   readonly #list: InstanceList;
   readonly #bvh: Bvh;
   readonly #outer = new Uint32Array(STACK_SIZE);
@@ -35,6 +39,7 @@ export class MeshInstances implements Leaf {
 
   constructor(list: InstanceList, layerCount: number) {
     this.#list = list;
+    this.kind = list.kind;
     this.#bvh = buildBvh(list.boxes);
     this.shown = new Uint8Array(layerCount).fill(1);
   }

@@ -1,59 +1,91 @@
 import type { StageBounds, Vec3 } from '../../domain/stage/types';
-import { VIEWS, type CameraView, type ViewTable } from '../camera/viewTable';
-import { frontView } from './frontView';
-import { DEFAULT_FOV, tanHalfH, tanHalfV } from './lens';
-import { wideView } from './wideView';
+import { clearEye } from '../camera/clearEye';
+import { stageZone, type EyeZone } from '../camera/eyeFaults';
+import type { ViewFitter, ViewFrame } from '../camera/viewFrame';
+import type { CameraView, ViewTable } from '../camera/viewTable';
+import { crowdView } from './crowdView';
+import { onStageView } from './onStageView';
+import { withPoints } from './proxyPoints';
+import { stageViews, type StagePlace } from './stageViews';
+import { fohDepth, fohView, frontView, sideView, topView, wideView } from './wholeStageViews';
 
-/** The views an imported stage frames itself; the other named views keep the scaled positions of `fitViews`. */
-export type MvrViewTable = Pick<ViewTable, 'foh' | 'fohMa' | 'front' | 'wide' | 'top' | 'side'>;
+/** An imported stage frames every named view itself; none keeps a scaled position of `fitViews`. */
+export type MvrViewTable = ViewTable;
 
-/** The fraction of the frame width the box front fills from FOH, as in the target audience view. */
-const FOH_FILL = 0.75;
-/** The front view stands closer than FOH: the box fills nearly the whole frame width. */
-const FRONT_FILL = 0.95;
-/** The fraction of the frame the box takes from the top and the side. */
-const PLAN_FILL = 0.8;
-/** In the MA layout the console overlay covers the lower third: the box centre sits a sixth of the frame higher. */
-const MA_LIFT = 1 / 6;
+/**
+ * The views of an imported stage, for any frame. `fitViews` scales the hand-placed built-in views about one anchor,
+ * which cannot fill the frame for a small stage, cuts a tall rig in a wide window and knows nothing of the MA console;
+ * these views are fitted to the frame instead (`wholeStageViews`), so the camera asks for them again whenever the
+ * window or the layout changes (`ViewFitter`). It holds data only, so two fits of the same stage compare equal.
+ * - FOH, Front and Side hold the rig box (`place.stage`: the stage without the hall and the seats) in frame.
+ * - Wide and Top hold the house box (`house`: the rig and the seat area) in frame while the stage stays large; a deep
+ *   or wide house is cut at its far rows, the stage never (`stageFirst`).
+ * - On Stage (`onStageView`), Band and Audience stand on or next to the deck (`stageViews`).
+ * - Crowd stands in the front rows and opens its lens until the rig height is in frame (`crowdView`).
+ * The eye of each of the seven whole-stage views gets a clear zone (`clearEye`): it is in no drawn object, and none
+ * stands between it and the stage (`place.obstacles`).
+ * The scene box (`scene`: every shown part of the file) is framed by no button: a wide file would show its stage as
+ * a small part of the frame. It sets the zoom-out limit, so the user reaches the whole file with the wheel.
+ * The demo venue's own places do not exist on an imported stage, so their buttons fall back: Drums and Orchestra
+ * frame the band, Ring stands on the stage, Walls and Old City give the overview. FOH in the MA layout is the same
+ * FOH view: the renderer already centres the picture in the area above the console.
+ */
+export class MvrViews implements ViewFitter {
+  readonly rig: StageBounds;
+  readonly scene: StageBounds;
+  readonly house: StageBounds;
+  readonly outliers: number;
+  /** The drawn seats and panels that stand far from the house box and are in no framed view (`seatCluster`). */
+  readonly farProxies: number;
+  private readonly place: StagePlace;
+  private readonly depth: number;
+  /** What may block an eye that stands on the stage or in the house, and one that looks at the stage from outside. */
+  private readonly near: EyeZone;
+  private readonly far: EyeZone;
 
-/** The world z of the farthest fixture in front of the box (the FOH positions the stage box left out), if any. */
-function farFront(box: StageBounds, fixtures: readonly Vec3[]): number | undefined {
-  const out = fixtures.map((position) => position[2]).filter((z) => z > box.max[2]);
-  return out.length === 0 ? undefined : Math.max(...out);
-}
+  constructor(box: StageBounds, fixtures: readonly Vec3[], place: StagePlace) {
+    this.rig = place.stage;
+    this.scene = box;
+    this.house = place.seats ? withPoints(place.stage, [place.seats.min, place.seats.max]) : place.stage;
+    this.outliers = place.outliers ?? 0;
+    this.farProxies = place.farProxies ?? 0;
+    this.place = place;
+    this.depth = fohDepth(place.stage, this.house, fixtures);
+    this.near = { obstacles: place.obstacles ?? [] };
+    this.far = stageZone(this.near.obstacles, place.stage);
+  }
 
-/** The distance at which a `span` x `rise` face fills `PLAN_FILL` of a 16:9 frame with the default lens. */
-const planDistance = (span: number, rise: number): number =>
-  Math.max(span / (2 * PLAN_FILL * tanHalfH(DEFAULT_FOV)), rise / (2 * PLAN_FILL * tanHalfV(DEFAULT_FOV)));
-
-/** Straight down on the box; the target sits 0.1 m upstage of the eye, as in `VIEWS.top`, so the view has an up. */
-function topView({ min, max }: StageBounds): CameraView {
-  const [x, z] = [(min[0] + max[0]) / 2, (min[2] + max[2]) / 2];
-  const y = max[1] + planDistance(max[0] - min[0], max[2] - min[2]);
-  return { position: [x, y, z], target: [x, min[1], z - 0.1], fov: DEFAULT_FOV };
-}
-
-/** From stage right, level with 40% of the box height, the box depth across the frame. */
-function sideView({ min, max }: StageBounds): CameraView {
-  const [y, z] = [min[1] + 0.4 * (max[1] - min[1]), (min[2] + max[2]) / 2];
-  const x = max[0] + planDistance(max[2] - min[2], max[1] - min[1]);
-  return { position: [x, y, z], target: [(min[0] + max[0]) / 2, y, z], fov: DEFAULT_FOV };
+  tableFor(frame: ViewFrame): MvrViewTable {
+    const out = (view: CameraView): CameraView => clearEye(view, frame, this.near);
+    const at = (view: CameraView, hold: StageBounds): CameraView => clearEye(view, frame, this.far, hold);
+    const onStage = stageViews(this.place, this.house);
+    const stage = out(onStageView(this.place, onStage.stage, frame));
+    const foh = at(fohView(this.rig, this.depth, frame), this.rig);
+    const [overview, plan] = [wideView(this.house, this.rig, frame), topView(this.house, this.rig, frame)];
+    const wide = at(overview.view, overview.box);
+    return {
+      ...onStage,
+      stage,
+      crowd: out(crowdView(this.place, frame)),
+      drums: onStage.band,
+      orch: onStage.band,
+      ring: stage,
+      walls: wide,
+      valley: wide,
+      foh,
+      fohMa: foh,
+      front: at(frontView(this.rig, frame), this.rig),
+      wide,
+      top: at(plan.view, plan.box),
+      side: at(sideView(this.rig, frame), this.rig),
+    };
+  }
 }
 
 /**
- * The framing views of an imported stage, from its stage box (`mvrCameraBounds`) and its fixtures. `fitViews` scales
- * the hand-placed built-in views about one anchor, which cannot fill the frame for a small stage nor stand the FOH
- * eye behind the file's own FOH positions; these views are plain frustum maths on the box instead (see `frontView`).
+ * The frame-fitted views of an imported stage from its scene box, its fixture positions and its performance place
+ * (`mvrStagePlace`); without a place the scene box stands in for the rig box.
  */
-export function mvrViews(box: StageBounds, fixtures: readonly Vec3[]): MvrViewTable {
-  const behind = farFront(box, fixtures);
-  const foh = { fill: FOH_FILL, ...(behind === undefined ? {} : { behind }) };
-  return {
-    foh: frontView(box, { ...foh, fov: DEFAULT_FOV, lift: 0 }),
-    fohMa: frontView(box, { ...foh, fov: VIEWS.fohMa.fov, lift: MA_LIFT }),
-    front: frontView(box, { fov: DEFAULT_FOV, fill: FRONT_FILL, lift: 0 }),
-    wide: wideView(box),
-    top: topView(box),
-    side: sideView(box),
-  };
+export function mvrViews(box: StageBounds, fixtures: readonly Vec3[], place: StagePlace = { stage: box }): MvrViews {
+  return new MvrViews(box, fixtures, place);
 }

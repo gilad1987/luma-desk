@@ -1,5 +1,6 @@
 import { SpotLight, type Scene } from 'three';
 import { clamp, D2R } from '../../core';
+import { surfaceLight } from '../lighting/surfaceLight';
 import type { KeyLightCandidate, LightFrame } from './LightFrame';
 
 /** How many beams become real spot lights each frame. */
@@ -35,9 +36,10 @@ export class KeyLights {
     }
   }
 
-  /** The UI "lights" toggle; off keeps every key light dark. */
+  /** The UI "lights" toggle; off keeps every key light dark, and the surface light of an MVR stage too. */
   setEnabled(isOn: boolean): void {
     this.isEnabled = isOn;
+    surfaceLight.isEnabled = isOn;
   }
 
   /** The Real light button reads this flag, so the key lights stay its one owner (starts on). */

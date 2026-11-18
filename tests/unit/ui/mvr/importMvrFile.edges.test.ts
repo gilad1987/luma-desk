@@ -5,7 +5,7 @@
  * bytes left in IndexedDB for a file the desk rejected, a delete of a key that was never stored, or a duplicate record.
  * The main path and "not a zip" are owned by importMvrFile.test.ts.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { MvrStore } from '../../../../src/io/mvrStore';
 import { importMvrFile, type MvrImportDeps } from '../../../../src/ui/panels/mvr/importMvrFile';
 import { FakeIndexedDb, makeMvr, makeZip, sceneXml } from '../../../shared';
@@ -53,5 +53,15 @@ describe('importMvrFile edges', () => {
       outcome.kind === 'imported' ? outcome.result.design.source.fileHash : undefined;
     expect([db.records.size, applies(), hashOf(first) === hashOf(second)]).toEqual([1, 2, true]);
     expect(hashOf(first)).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  // the cause of the flaky test above: the same sample zipped across a 2-second step had other bytes
+  it('builds the same sample bytes at any time', () => {
+    vi.useFakeTimers({ now: new Date(2026, 0, 1, 12, 0, 0) });
+    const before = mvrBytes();
+    vi.setSystemTime(new Date(2026, 0, 1, 12, 0, 3));
+    const after = mvrBytes();
+    vi.useRealTimers();
+    expect(after).toEqual(before);
   });
 });

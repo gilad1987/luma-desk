@@ -2,6 +2,7 @@ import type { StageService } from '../../engine/stage/StageService';
 import type { MvrImportDeps } from '../../ui/panels/mvr/importMvrFile';
 import type { MvrMissingPrompt } from '../../ui/panels/mvr/MvrMissingPrompt';
 import type { Modal } from '../../ui/shared';
+import type { GdtfBodyFlow } from './GdtfBodyFlow';
 import type { LazyMvrStage } from './LazyMvrStage';
 import type { MvrShow } from './mvrShow';
 import type { MvrBytesStore } from './openMvrStore';
@@ -11,6 +12,8 @@ export interface MvrFlowDeps {
   readonly stage: Pick<StageService, 'apply' | 'updateMeta' | 'design' | 'builtIn'>;
   readonly store: MvrBytesStore;
   readonly scenery: Pick<LazyMvrStage, 'load' | 'show' | 'setHiddenLayers' | 'dispose'>;
+  /** The real fixture bodies of the import; `show` runs beside the scenery and swaps the bodies into the rig that already stands. */
+  readonly bodies: Pick<GdtfBodyFlow, 'show'>;
   readonly prompt: Pick<MvrMissingPrompt, 'show' | 'hide'>;
   readonly toast: (text: string) => void;
   /** The shared modal; the panels build it after `wireMvr`, so the flows read it when they run. */

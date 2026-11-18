@@ -35,6 +35,7 @@ export class FixtureVisualSync {
   readonly #beamTime: SharedUniform;
   readonly #lights: LightFrame;
   readonly #light: LightSync;
+  readonly #selection: Pick<Selection, 'has'>;
   #visuals: readonly FixtureVisual[] = [];
   #screens: ReadonlyMap<number, ScreenTargets> = new Map();
   #hasScreen = false;
@@ -42,6 +43,7 @@ export class FixtureVisualSync {
   constructor(deps: FixtureVisualSyncDeps) {
     const { selection, goboTextures, lights, surface } = deps;
     this.#beamTime = deps.beamTime;
+    this.#selection = selection;
     this.#lights = lights;
     this.#light = new LightSync({ selection, goboTextures, lights, surface });
   }
@@ -68,7 +70,9 @@ export class FixtureVisualSync {
         syncScreen(targetsOf(this.#screens, v), o, intensity, now);
         // the legacy code moved the beam haze-noise time in the screen branch; the built-in rig keeps that order
         this.#beamTime.value = now;
-      } else this.#light.sync(v, o, intensity, dt);
+      } else if (v.kind === 'light') this.#light.sync(v, o, intensity, dt);
+      // a device has no output to sync, only the selection tint a light body gets (`LightSync`)
+      else v.bodyMat.emissive.setHex(this.#selection.has(v.fixture.id) ? 0x7a5a00 : 0x000000);
     }
     // a rig without a screen (theatre, empty) would otherwise freeze the haze
     if (!this.#hasScreen) this.#beamTime.value = now;

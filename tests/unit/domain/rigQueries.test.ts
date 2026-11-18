@@ -55,6 +55,7 @@ describe('type and attribute tables', () => {
       'follow',
       'profile',
       'screen',
+      'device',
     ]);
     expect(TYPES.spot.attrs).toBe(TYPES.follow.attrs);
   });

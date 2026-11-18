@@ -10,7 +10,13 @@ export type LogLevel = '' | 'ok' | 'er';
  */
 export type EngineMessage =
   | { readonly kind: 'log'; readonly text: string; readonly level: LogLevel }
-  | { readonly kind: 'toast'; readonly text: string };
+  | { readonly kind: 'toast'; readonly text: string; readonly action?: ToastAction };
+
+/** The one button a toast may carry beside its text, such as "Details"; the UI draws it and runs it on a click. */
+export interface ToastAction {
+  readonly label: string;
+  readonly run: () => void;
+}
 
 /**
  * Everything the engine announces. A `type` alias, not an interface, because `EventBus` needs an index-signature

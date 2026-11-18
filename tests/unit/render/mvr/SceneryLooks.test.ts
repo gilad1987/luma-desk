@@ -3,10 +3,11 @@
  * SceneryLooks: one shared material per class, tone and surface; metal reflects a hall made only when needed, cloth
  * reflects nothing; dispose frees every look and the hall. sceneryGroups keeps placements of one look together.
  */
-import { BufferGeometry, DataTexture, EquirectangularReflectionMapping, MeshStandardMaterial, Texture } from 'three';
+import { BufferGeometry, DataTexture, MeshStandardMaterial, Texture } from 'three';
 import type { Material } from 'three';
 import { describe, expect, it, vi } from 'vitest';
 import type { MeshPlacement } from '../../../../src/mvr/index.ts';
+import * as hall from '../../../../src/render/lighting/hallReflection.ts';
 import { SceneryLooks } from '../../../../src/render/mvr/SceneryLooks.ts';
 import { sceneryGroups } from '../../../../src/render/mvr/sceneryGroups.ts';
 import { styleScenery } from '../../../../src/render/mvr/sceneryStyle.ts';
@@ -35,8 +36,14 @@ describe('SceneryLooks', () => {
     const cloth = standard(looks.of(scenery(0x000000), at('SceneObject', 'Curtain')));
     expect(truss.metalness).toBeGreaterThan(0.5);
     expect(truss.roughness).toBeLessThan(1);
-    expect(truss.envMap?.mapping).toBe(EquirectangularReflectionMapping);
+    // the looks make no map of their own: the truss takes the one hall map of the stage when it is made
+    expect(truss.envMap).toBeNull();
+    hall.syncHallReflection(1);
+    hall.prefilterHall((panorama) => ({ texture: panorama, dispose: () => undefined }));
+    expect(truss.envMap).toBeInstanceOf(Texture);
     expect(cloth.envMap).toBeNull();
+    hall.syncHallReflection(undefined);
+    expect(truss.envMap).toBeNull();
     expect(cloth.roughness).toBe(1);
     expect(cloth.color.getHSL({ h: 0, s: 0, l: 0 }).l).toBeLessThan(truss.color.getHSL({ h: 0, s: 0, l: 0 }).l);
   });
@@ -50,22 +57,19 @@ describe('SceneryLooks', () => {
     expect(standard(chosen).color.getHex()).toBe(0x336699);
   });
 
-  it('makes no hall before a reflecting look, and dispose frees every look and the hall', () => {
+  it('makes no hall texture of its own, and dispose frees every look', () => {
     const made = vi.spyOn(DataTexture.prototype, 'dispose');
     const looks = new SceneryLooks();
     const cloth = looks.of(scenery(0x000000), at('SceneObject', 'Drape'));
-    expect(standard(cloth).envMap).toBeNull();
     const truss = standard(looks.of(scenery(0xc0c0c0), at('Truss')));
-    const hall = truss.envMap;
     const freed: string[] = [];
     cloth.addEventListener('dispose', () => freed.push('cloth'));
     truss.addEventListener('dispose', () => freed.push('truss'));
-    hall?.addEventListener('dispose', () => freed.push('hall'));
     looks.dispose();
-    expect(freed.sort()).toEqual(['cloth', 'hall', 'truss']);
-    expect(made).toHaveBeenCalledTimes(1);
     looks.dispose();
-    expect(made).toHaveBeenCalledTimes(1);
+    expect(freed.sort()).toEqual(['cloth', 'truss']);
+    // the hall map has one owner (`hallReflection`): the looks hold no panorama to free
+    expect(made).not.toHaveBeenCalled();
     made.mockRestore();
   });
 });

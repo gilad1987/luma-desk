@@ -24,6 +24,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ci": "playwright test --grep-invert @screenshot",
     "test:screenshots": "playwright test --grep @screenshot",
+    "test:perf": "playwright test -c playwright.perf.config.ts",
     "test:e2e:update": "playwright test --update-snapshots"
   },
   "dependencies": {

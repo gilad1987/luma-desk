@@ -3,8 +3,10 @@ import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { MvrGeometry } from '../../mvr/index';
 import type { CameraViews } from '../../render/camera/CameraViews';
 import { mvrCameraBounds } from '../../render/mvr/mvrCameraBounds';
+import { mvrStagePlace } from '../../render/mvr/mvrStagePlace';
 import { mvrSurfaces } from '../../render/mvr/mvrSurfaces';
 import { mvrViews } from '../../render/mvr/mvrViews';
+import type { MvrHall } from '../../render/lights/MvrHall';
 import type { SurfaceHit } from '../../render/surface/SurfaceHit';
 
 /** The camera views as the MVR fit uses them: fit the table, then move to the current view. */
@@ -14,6 +16,11 @@ export type FittedViews = Pick<CameraViews, 'fitTo' | 'setView' | 'currentView'>
 export interface MvrDeskRender {
   readonly views: FittedViews;
   readonly surfaceHit: Pick<SurfaceHit, 'setSurfaces' | 'setVenue' | 'setScenery'>;
+  /**
+   * The hall light, placed over the camera box of the scenery. Only placed here: whether it is on follows the stage
+   * kind (`followStage`), so a scenery that never loads (no stored file, a failed chunk) still gets the hall.
+   */
+  readonly sceneLights: { readonly hall: Pick<MvrHall, 'place'> };
 }
 
 /**
@@ -42,6 +49,16 @@ export class MvrSceneryFit {
   }
 
   /**
+   * `fit`, then the desk's audience on the seat proxies of `meshes`, after the beam surfaces were read: beams land on
+   * seats as before. A stage change while the chunk loads wins; a chunk that does not load leaves the file's scenery.
+   */
+  async fitSeated(design: StageDesign, geometry: MvrGeometry, meshes: Object3D): Promise<void> {
+    this.fit(design, geometry, meshes);
+    const audience = await import('../../render/venue/audience/addAudience').catch(() => undefined);
+    if (this.#geometry === geometry) audience?.addAudience(meshes);
+  }
+
+  /**
    * Fits the views to the stage box and its framing views (`mvrViews`), and the surfaces to the shown meshes, of the
    * remembered scenery and `design`; nothing to do while no scenery is shown.
    */
@@ -52,11 +69,13 @@ export class MvrSceneryFit {
     surfaceHit.setVenue(design.venue.kind);
     surfaceHit.setSurfaces(mvrSurfaces(design));
     const box = mvrCameraBounds(design, this.#geometry);
+    this.#render.sceneLights.hall.place(box, this.#geometry.hallLayers, design.mvr?.hiddenLayers);
     views.fitTo(
       box,
       mvrViews(
         box,
         design.fixtures.map((fixture) => fixture.position),
+        mvrStagePlace(design, this.#geometry),
       ),
     );
     views.setView(views.currentView);
@@ -73,6 +92,7 @@ export class MvrSceneryFit {
 
   /** Drops the scenery, so a later refit does nothing; the next stage's rebuild sets its views and surfaces itself. */
   forget(): void {
+    // the hall and the title stay: they follow the stage kind (`followStage`), which a dropped scenery does not change
     if (this.#geometry) this.#render.surfaceHit.setScenery(null);
     this.#geometry = undefined;
     this.#design = undefined;

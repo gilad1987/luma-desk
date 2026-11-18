@@ -40,8 +40,8 @@ function builtSpan(type: FixtureTypeId, bodyScale?: number): number {
 
 it('matches the built model: the largest dimension of every hung body, to the millimetre', () => {
   stubCanvasDocument();
-  expect(BODY_SPANS.screen).toBe(0);
-  const types = (Object.keys(BODY_SPANS) as FixtureTypeId[]).filter((type) => type !== 'screen');
+  expect([BODY_SPANS.screen, BODY_SPANS.device]).toEqual([0, 0]);
+  const types = (Object.keys(BODY_SPANS) as FixtureTypeId[]).filter((type) => type !== 'screen' && type !== 'device');
   const measured = types.map((type) => [type, builtSpan(type)]);
   expect(measured).toEqual(types.map((type) => [type, Math.round(BODY_SPANS[type] * 1000)]));
 });

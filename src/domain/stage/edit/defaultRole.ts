@@ -21,6 +21,7 @@ export function defaultRole(type: FixtureTypeId, truss: StageTruss | null): Fixt
     case 'beam':
     case 'wash':
     case 'par':
+    case 'device':
       return truss ? truss.role : 'floor';
   }
 }

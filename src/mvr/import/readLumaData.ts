@@ -8,7 +8,8 @@ import type { Vec3 } from '../../domain/stage/types';
 import { LUMA_DATA_VERSION, LUMA_PROVIDER, linkOf } from '../luma/lumaData';
 import type { FixtureLink, LinkFootprint, LumaStageData } from '../luma/lumaData';
 import { attr, childElement, childElements } from '../xml/elements';
-import { linkFootprints, lumaStandIns } from './lumaStandIns';
+import { linkFootprints, lumaStandIns, ownRotations } from './lumaStandIns';
+import { readOriginalProvider } from './originalProvider';
 
 /** The text of the desk's `<Data>` block in the current version, or `undefined` when the file has none. */
 function lumaDataText(doc: Document): string | undefined {
@@ -88,9 +89,11 @@ export function readLumaData(doc: Document): LumaStageData | undefined {
   const hidden = readHiddenLayers(raw);
   if (!parsed.ok || offset === undefined || footprints === undefined || hidden === undefined) return undefined;
   const { venue, scenery, deck, screens, risers, trusses, fixtures } = parsed.design;
+  const own = ownRotations(raw);
   const links = fixtures.map((fixture): FixtureLink => {
     const footprint = footprints.get(fixture.id);
-    return footprint === undefined ? linkOf(fixture) : { ...linkOf(fixture), footprint };
+    const link = own.has(fixture.id) ? { ...linkOf(fixture), ownRotation: true as const } : linkOf(fixture);
+    return footprint === undefined ? link : { ...link, footprint };
   });
-  return { venue, scenery, deck, screens, risers, trusses, offset, links, ...hidden };
+  return { venue, scenery, deck, screens, risers, trusses, offset, links, ...hidden, ...readOriginalProvider(raw) };
 }

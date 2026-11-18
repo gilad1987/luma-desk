@@ -37,6 +37,11 @@ export interface LinkFootprint {
  */
 export type FixtureLink = Pick<StageFixture, 'id' | 'type' | 'role' | 'trussId' | 'mount' | 'fixed' | 'pixel'> & {
   readonly footprint?: LinkFootprint;
+  /**
+   * The fixture has a `rotation`: its `<Matrix>` is its real body orientation. Without the flag a matrix in the rest
+   * pose of the mount is the desk's own pose and gives no `rotation` (a desk floor unit, and every older export).
+   */
+  readonly ownRotation?: true;
 };
 
 /**
@@ -50,10 +55,19 @@ export type LumaStageData = Pick<StageDesign, 'venue' | 'scenery' | 'deck' | 'sc
   readonly offset: Vec3;
   readonly links: readonly FixtureLink[];
   readonly hiddenLayers?: readonly string[];
+  /** Only in an export made from another program's file: who wrote that file, as the root now names the desk. */
+  readonly originalProvider?: OriginalProvider;
 };
+
+/** The root `provider` and `providerVersion` of the file the desk exported from. */
+export interface OriginalProvider {
+  readonly provider: string;
+  readonly providerVersion: string;
+}
 
 /** The link of a fixture; optional fields stay absent when the fixture has none, so the JSON never holds `null`s. */
 export function linkOf(fixture: StageFixture): FixtureLink {
-  const { id, type, role, trussId, mount, fixed, pixel } = fixture;
-  return { id, type, role, trussId, mount, ...(fixed ? { fixed } : {}), ...(pixel ? { pixel } : {}) };
+  const { id, type, role, trussId, mount, fixed, pixel, rotation } = fixture;
+  const own = rotation ? { ownRotation: true as const } : {};
+  return { id, type, role, trussId, mount, ...(fixed ? { fixed } : {}), ...(pixel ? { pixel } : {}), ...own };
 }

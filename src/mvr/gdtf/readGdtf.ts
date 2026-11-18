@@ -4,6 +4,7 @@ import { attr, childElement, descendantElements } from '../xml/elements';
 import { parseXml } from '../xml/parseXml';
 import { gdtfEntryNames } from './gdtfEntries';
 import type { GdtfInfo } from './GdtfInfo';
+import { readOpticsSource } from './optics/readOpticsSource';
 import { readBodies } from './readGdtfBody';
 import { readBeam, readReferences } from './readGdtfGeometry';
 import { readModes } from './readGdtfModes';
@@ -29,7 +30,13 @@ function badGdtf(fileName: string, reason: string): GdtfReadResult {
  */
 function toInfo(fixtureType: Element, fileName: string, entries: readonly string[], warnings: MvrWarning[]): GdtfInfo {
   const geometries = childElement(fixtureType, 'Geometries');
-  const modes = readModes(fixtureType);
+  const dropped = { count: 0 };
+  const modes = readModes(fixtureType, dropped);
+  if (dropped.count > 0) {
+    const what = dropped.count === 1 ? 'channel Offset is' : 'channel Offsets are';
+    const message = `In the GDTF file "${fileName}", ${dropped.count} ${what} below 1 or not a whole number, so no DMX slot.`;
+    warnings.push({ code: 'bad-gdtf', message, ref: fileName });
+  }
   const bad = (offset: string): void => {
     const message = `The GDTF file "${fileName}" has a DMXOffset "${offset}" that is not an address; it reads as 1.`;
     warnings.push({ code: 'bad-gdtf', message, ref: fileName });
@@ -44,6 +51,7 @@ function toInfo(fixtureType: Element, fileName: string, entries: readonly string
     hasDisplay: geometries !== undefined && descendantElements(geometries, 'Display').length > 0,
     sizes: readSizes(fixtureType),
     bodies: readBodies(fixtureType, modes, entries),
+    optics: readOpticsSource(fixtureType, modes),
   };
 }
 

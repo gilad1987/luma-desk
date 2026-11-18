@@ -26,7 +26,10 @@ it('matches the built model: top of the hung body and bottom of the floor body, 
   };
   // the screen has no model: the venue draws it, so its origin is its mounting point
   expect(MOUNT_HEIGHTS.screen).toEqual({ hang: 0, floor: 0 });
-  const types = (Object.keys(MOUNT_HEIGHTS) as FixtureTypeId[]).filter((type) => type !== 'screen');
+  expect(MOUNT_HEIGHTS.device).toEqual({ hang: 0, floor: 0 });
+  const types = (Object.keys(MOUNT_HEIGHTS) as FixtureTypeId[]).filter(
+    (type) => type !== 'screen' && type !== 'device',
+  );
   const mm = (value: number): number => Math.round(value * 1000);
   const measured = types.map((type) => [type, mm(span(type, 'hang').max.y), mm(-span(type, 'floor').min.y)]);
   const pinned = types.map((type) => [type, mm(MOUNT_HEIGHTS[type].hang), mm(MOUNT_HEIGHTS[type].floor)]);

@@ -51,6 +51,7 @@ test('New Show keeps the imported MVR stage, also after a reload', async ({ page
 
   await clickInShowFile(page, 'fNew');
   expect(await readMvrStage(desk)).toEqual(imported);
+  await expect(page.locator('#showName')).toHaveText('Synthetic');
   await waitForSavedStage(page, { kind: 'mvr' });
   await reloadDesk(page);
   expect(await readMvrStage(await waitForTestApi(page))).toEqual(imported);
@@ -62,7 +63,7 @@ test('a layer hidden in the import summary stays hidden in the saved show after 
   const errors = collectErrors(page);
   const desk = await bootApp(page);
   await pickMvrFile(page, desk, SYNTHETIC_MVR);
-  await page.locator('#mvrLayers input[type=checkbox]').uncheck();
+  await page.locator('#mvrLayers input[type=checkbox]:not(.mvrLayerLed)').uncheck();
   await waitForSavedStage(page, { kind: 'mvr', hiddenLayers: ['L1'] });
 
   await reloadDesk(page);

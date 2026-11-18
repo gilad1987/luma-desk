@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Rig } from '../../../src/domain/rig/Rig';
 import { buildDemoShowFile } from '../../../src/show/demo/demoShowFile';
+import { buildLegacyFirstLook } from '../../../src/show/mvrLook/legacy/legacyFirstLook';
 import { MVR_FIRST_LOOK_NAME } from '../../../src/show/mvrLook/mvrFirstLook';
 import { isStartingShow } from '../../../src/show/startingShow/isStartingShow';
 import { sameFixtureIds } from '../../../src/show/startingShow/sameFixtureIds';
@@ -27,6 +28,27 @@ describe('isStartingShow (the "unchanged demo show" rule)', () => {
     expect(world.execs[0]?.name).toBe(MVR_FIRST_LOOK_NAME);
     expect(isStartingShow(world.execs, live)).toBe(true);
   });
+
+  it('still knows a show saved with the first look of the previous desk version (festival: 33, 20, 15)', () => {
+    const { world, live, show } = startingShowWorld('festival');
+    show.build();
+    const [first] = world.execs;
+    const legacy = buildLegacyFirstLook(live);
+    if (first === undefined || legacy === null) throw new Error('no executor or no legacy look');
+    expect([...new Set(Object.values(legacy.vals).map((vals) => vals?.dim))].sort()).toEqual([15, 20, 33]);
+    first.name = MVR_FIRST_LOOK_NAME;
+    first.cues = [legacy];
+    reload(world);
+    expect(isStartingShow(world.execs, live)).toBe(true);
+    const [id] = Object.keys(legacy.vals);
+    const saved = world.execs[0]?.cues[0];
+    if (saved === undefined || id === undefined) throw new Error('the legacy look was not saved');
+    saved.vals[Number(id)] = { ...saved.vals[Number(id)], dim: 13 };
+    expect(isStartingShow(world.execs, live)).toBe(false);
+  });
+
+  // The looks of earlier versions are checked as recorded literals in `startingShow.literal.test.ts`: a look the
+  // current code builds at an earlier balance would compare the code with itself.
 
   it('fails when the operator changed one cue value, on any executor', () => {
     const { world, live, show } = startingShowWorld();

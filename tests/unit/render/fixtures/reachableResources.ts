@@ -24,7 +24,7 @@ export function reachableResources(visuals: readonly FixtureVisual[]): Set<Resou
     }
   };
   for (const v of visuals) {
-    if (v.kind === 'screen') continue;
+    if (v.kind !== 'light') continue;
     for (const root of [v.g, v.beam, v.pool, v.glow, v.pix]) root?.traverse(visit);
     for (const t of v.poolTex) if (t) out.add(t);
   }

@@ -6,13 +6,13 @@ import type { ShowFileV1 } from '../../show/ShowFile';
 import { CommandCapture, type CapturedOutput } from './CommandCapture';
 import { readDeskClock, type DeskClock } from './deskClock';
 import { installFrameStats, type RenderStats } from './frameStats';
+import { mvrHooks, type MvrTestApi } from './mvrHooks';
 import { readDeskState, type DeskState } from './readDeskState';
-import { readMvrStageInfo, type MvrStageInfo } from './readMvrStageInfo';
 import { createStageHooks } from './stageHooks';
 import type { TestHookDeps } from './TestHookDeps';
 
 /** `window.__desk.test`: the only door the Playwright suite uses into the app (see tests/shared/deskApi.ts). */
-export interface DeskTestApi extends DeskClock {
+export interface DeskTestApi extends DeskClock, MvrTestApi {
   state(): DeskState;
   serialize(): ShowFileV1;
   /** Moves to an absolute time (seconds, never backwards) and returns the output of every fixture there. */
@@ -21,12 +21,6 @@ export interface DeskTestApi extends DeskClock {
   run(line: string): CapturedOutput & { state: DeskState };
   /** Starts a programmer phaser on the selection, as the phaser buttons do. */
   applyFx(type: string): void;
-  /** The stage the rig is built from, read live; named for MVR so it does not meet Stage Builder's `stage()`. */
-  mvrStage(): MvrStageInfo;
-  /** Resolves after the latest MVR load ended (a picked file or the boot restore), with success or failure. */
-  mvrReady(): Promise<void>;
-  /** True while the MVR scenery shows the layers of a file; the 3D view itself is not inspectable. */
-  mvrScenery(): boolean;
   /** Draw calls, triangles, lines, points of the last drawn frame (all its passes), programs and GPU memory. */
   renderStats(): RenderStats;
   /** The real durations (ms) of the last `n` drawn frames, read around the frame loop's callback. */
@@ -56,9 +50,7 @@ function createTestApi(clock: DeskClock, deps: TestHookDeps, frameStats: FrameSt
       if (!isPhaserType(type)) throw new Error(`unknown phaser type: ${type}`);
       deps.programmer.applyPhaser(type);
     },
-    mvrStage: () => readMvrStageInfo(deps.stage),
-    mvrReady: deps.mvrReady,
-    mvrScenery: deps.mvrScenery,
+    ...mvrHooks(deps),
     ...frameStats,
   };
 }
@@ -84,5 +76,9 @@ export function installTestHook(deps: TestHookDeps): void {
     },
     test: createTestApi(clock, deps, installFrameStats(deps.renderer)),
   };
-  Object.assign(window, { __desk: desk });
+  Object.assign(window, {
+    __desk: desk,
+    __deskStill: () =>
+      import('../../render/still/testing/stillHarness').then((m) => m.createStillHarness(deps.renderer)),
+  });
 }

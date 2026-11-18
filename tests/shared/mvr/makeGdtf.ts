@@ -10,6 +10,9 @@ export interface GdtfParts {
   readonly models?: string;
   /** The `FixtureType` name; a test that groups fixtures by product gives each GDTF its own. */
   readonly name?: string;
+  /** Inner XML of `<Wheels>` and of `<PhysicalDescriptions>` (emitters, filters); absent leaves the element out. */
+  readonly wheels?: string;
+  readonly physical?: string;
   /** More entries of the archive by path: the model files (`models/gltf/head.glb`). */
   readonly files?: Readonly<Record<string, Uint8Array | string>>;
 }
@@ -22,6 +25,8 @@ export function makeGdtf(parts: GdtfParts): Uint8Array {
   const xml =
     '<?xml version="1.0" encoding="UTF-8"?><GDTF DataVersion="1.2">' +
     `<FixtureType Name="${parts.name ?? 'Test Spot'}" Manufacturer="Acme">` +
+    (parts.wheels === undefined ? '' : `<Wheels>${parts.wheels}</Wheels>`) +
+    (parts.physical === undefined ? '' : `<PhysicalDescriptions>${parts.physical}</PhysicalDescriptions>`) +
     (parts.models === undefined ? '' : `<Models>${parts.models}</Models>`) +
     `<Geometries>${parts.geometries ?? ''}</Geometries>` +
     `<DMXModes>${parts.modes ?? ''}</DMXModes>` +

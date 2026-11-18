@@ -3,12 +3,10 @@ import { UP } from '../../domain/venue';
 import { Ray } from './Ray';
 import { collectScenery, isShownUnder, type Scenery } from './collectScenery';
 import { HitCache } from './HitCache';
+import { OwnRigPass } from './OwnRigPass';
 import type { BeamHit } from './SurfaceHit';
 
-/**
- * Mesh hits nearer than this (metres) do not count. A fixture hangs on or stands in scenery: its clamp, truss chord
- * or floor plate lies within this reach of the lens, and a beam must leave its own mount to light the stage.
- */
+/** Mesh hits nearer than this (metres) never count: the clamp or floor plate of the fixture (see `OwnRigPass`). */
 const NEAR = 0.5;
 
 /** A normal this close to straight up is the shared `UP`: the fixture sync finds floors by `normal === UP`. */
@@ -27,6 +25,7 @@ export class SceneryHit {
   readonly #scenery: Scenery;
   readonly #cache = new HitCache();
   readonly #ray = new Ray();
+  readonly #ownRig: OwnRigPass;
   readonly #normal = new Vector3();
   readonly #out: { t: number; normal: Readonly<Vector3> } = { t: 0, normal: UP };
   /** Raised whenever a cached hit may be wrong: a layer toggle, or `invalidate`. */
@@ -36,6 +35,12 @@ export class SceneryHit {
     this.#root = root;
     this.#scenery = collectScenery(root);
     this.triangleCount = this.#scenery.triangleCount;
+    this.#ownRig = new OwnRigPass(this.#scenery.instances);
+  }
+
+  /** The instances and their BVH, read-only: another tracer shares them and does not read the meshes again. */
+  get scenery(): Scenery {
+    return this.#scenery;
   }
 
   /** Forgets every cached hit: the other surfaces that the hits were compared with have changed. */
@@ -64,8 +69,9 @@ export class SceneryHit {
     const ray = this.#ray;
     const normal = this.#normal;
     const { instances } = this.#scenery;
-    ray.set(origin, direction, NEAR, other ? other.t : Infinity);
-    instances.trace(ray);
+    const far = other ? other.t : Infinity;
+    ray.set(origin, direction, NEAR, far);
+    this.#ownRig.trace(ray, origin, direction, far);
     const slot = this.#cache.claim(origin, direction, this.#epoch);
     const { values, shared } = this.#cache;
     if (ray.prim >= 0) {

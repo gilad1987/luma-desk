@@ -62,6 +62,11 @@ export class Fixture {
    * real size (`bodyScale`). `declare` keeps every other fixture without the key, so the built-in rig stays at parity.
    */
   declare bodyScale?: number;
+  /**
+   * The colour filter of a single-colour unit, as red, green and blue in percent, set only on an MVR import whose
+   * file assigns one (`fileGelOf`). It is the fixture's resting colour. `declare` keeps the others without the key.
+   */
+  declare gel?: readonly [r: number, g: number, b: number];
 
   constructor({ id, type, pos, mount, fixed }: Pick<Fixture, 'id' | 'type' | 'pos' | 'mount' | 'fixed'>) {
     this.id = id;

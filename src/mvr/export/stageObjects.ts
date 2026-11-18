@@ -12,10 +12,16 @@ export interface StageObject extends Pick<ObjectSpec, 'tag' | 'part'> {
   readonly xml: string;
 }
 
-/** The tags whose MVR element must hold a `<FixtureID>` (spec Tables 28 and 32), even an empty one. */
-const NEEDS_FIXTURE_ID: ReadonlySet<ObjectSpec['tag']> = new Set(['Truss', 'VideoScreen']);
+/**
+ * The ids of an object the desk gives no id. The MVR 1.6 children tables of `SceneObject`, `Truss` and `VideoScreen`
+ * give `FixtureID` (String) and `FixtureIDNumeric` (Integer) the count 1, so neither may be left out. The text is
+ * empty and the number is 0: the desk's objects have no id to select them by, and 0 is what readers, this import
+ * included, take as "no id". The spec asks that the numbers "should be unique in one scene"; an object without an id
+ * cannot meet that, and a made-up number would show on a console as a real selection id.
+ */
+const NO_ID = [xmlText('FixtureID', ''), xmlText('FixtureIDNumeric', '0')];
 
-/** One object element with its matrix, a `<Symbol>` of its mesh's Symdef and, where the XSD needs it, an empty id. */
+/** One object element with its matrix, a `<Symbol>` of its mesh's Symdef and the ids the spec requires. */
 function writeObject(spec: ObjectSpec, context: ExportContext): StageObject {
   const file = meshFileOf(spec.shape);
   const uuid = context.uuidOf(spec.shape.kind, spec.id);
@@ -23,7 +29,7 @@ function writeObject(spec: ObjectSpec, context: ExportContext): StageObject {
   const children = [
     xmlText('Matrix', poseMatrix(spec.position, spec.rotation, context.offset)),
     xmlElement('Geometries', {}, [xmlElement('Symbol', symbol, [])]),
-    ...(NEEDS_FIXTURE_ID.has(spec.tag) ? [xmlText('FixtureID', '')] : []),
+    ...NO_ID,
   ];
   return { part: spec.part, tag: spec.tag, file, xml: xmlElement(spec.tag, { uuid, name: spec.name }, children) };
 }

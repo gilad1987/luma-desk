@@ -30,6 +30,12 @@ export function linkFootprints(raw: object): (readonly [unknown, unknown])[] {
     .map((link) => [field(link, 'id'), field(link, 'footprint')] as const);
 }
 
+/** The raw id of every link whose `ownRotation` is `true`; any other value reads as absent, as in an older export. */
+export function ownRotations(raw: object): ReadonlySet<unknown> {
+  const own = objects(field(raw, 'links')).filter((link) => field(link, 'ownRotation') === true);
+  return new Set(own.map((link) => field(link, 'id')));
+}
+
 /**
  * Raw fixtures for checking the luma data with the stored-show parser: one per `links` entry (id, type, role, truss
  * id, mount, fixed, pixel) and

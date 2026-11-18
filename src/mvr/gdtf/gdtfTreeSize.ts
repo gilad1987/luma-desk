@@ -1,32 +1,47 @@
-import { emptyBox, isEmpty, isFiniteBox, transformBox, union, type Aabb } from '../math/Aabb';
+import { emptyBox, isEmpty, isFiniteBox, union, type Aabb } from '../math/Aabb';
 import { identity, multiply, type Mat4 } from '../math/Mat4';
 import type { GdtfModel, GdtfNode } from './GdtfBody';
+import { partBox, placedBox, type MeshBoxOf } from './gdtfPartBox';
 
-/** The box of `node` and the parts under it, in the frame of the tree's root. */
-function boxOf(node: GdtfNode, parent: Mat4, depth: number): Aabb {
+export type { MeshBoxOf, MeshShape } from './gdtfPartBox';
+
+/** The boxes of a tree in the root frame: `fixed` from meshes and hanging parts, `centred` from assumed centred boxes. */
+interface TreeBox {
+  readonly fixed: Aabb;
+  readonly centred: Aabb;
+}
+
+/** The boxes of `node` and the parts under it, in the frame of the tree's root. */
+function boxOf(node: GdtfNode, parent: Mat4, meshBox: MeshBoxOf | undefined, isRoot: boolean): TreeBox {
   const world = multiply(parent, node.position);
-  const [x, y, z] = node.model?.size ?? [0, 0, 0];
-  // the top part hangs from the device origin, the centre of its base plate; every other part is drawn around its own
-  const own: Aabb = { min: [-x / 2, -y / 2, depth === 0 ? -z : -z / 2], max: [x / 2, y / 2, depth === 0 ? 0 : z / 2] };
-  let box = x + y + z > 0 ? transformBox(own, world) : emptyBox();
-  for (const child of node.children) box = union(box, boxOf(child, world, depth + 1));
-  return box;
+  const own = partBox(node, isRoot, meshBox);
+  const placed = own ? placedBox(own, world) : emptyBox();
+  let fixed = own?.centred ? emptyBox() : placed;
+  let centred = own?.centred ? placed : emptyBox();
+  for (const child of node.children) {
+    const under = boxOf(child, world, meshBox, false);
+    fixed = union(fixed, under.fixed);
+    centred = union(centred, under.centred);
+  }
+  return { fixed, centred };
 }
 
 /**
- * The overall size of a geometry tree in metres on X, Y and Z: the box around the model boxes of its parts, each
- * placed through the `Position` chain. GDTF: Length, Width and Height are metres on X, Y and Z, the mesh is scaled to
- * them, and the device hangs with Z up and its origin at the centre of the base plate. The file does not say where a
- * mesh sits in its box, so this takes the top part as hanging below the origin and every deeper part as centred on
- * its own (GDTF: a part is drawn around its suspension point and centred on its axis of rotation). The result can be
- * wrong by half the size of an outermost part. `undefined` when no part has a sized model.
+ * The overall size of a geometry tree in metres on X, Y and Z: the box around its parts, each placed through the
+ * `Position` chain (`partBox` gives the rule for one part and the GDTF text behind it). A hanging device lies below
+ * its origin (GDTF: "0,0,0 - center base plate"; "the offsets are mostly negative, because the device is displayed in
+ * a hanging position"), so where most of the tree does, an assumed centred box that reaches above the origin is cut
+ * there: a yoke box centred on its pan origin does not rise through the base plate. A measured mesh is never cut. The
+ * pigtail and wiring objects are not the body. A mesh with vertices is measured on its turned vertices (`placedBox`).
+ * Known limit: a part without vertices under a turn that is not a right angle is measured by its turned box, which is
+ * too large. `undefined` when no part gives a box.
  */
-export function treeSize(root: GdtfNode): readonly [number, number, number] | undefined {
-  const box = boxOf(root, identity(), 0);
+export function treeSize(root: GdtfNode, meshBox?: MeshBoxOf): readonly [number, number, number] | undefined {
+  const { fixed, centred } = boxOf(root, identity(), meshBox, true);
+  const box = union(fixed, centred);
   if (isEmpty(box) || !isFiniteBox(box)) return undefined;
   const { min, max } = box;
-  // a hanging device lies below its origin: where most of the tree does, a centred box that reaches above is cut
-  const top = -min[2] >= max[2] ? Math.min(max[2], 0) : max[2];
+  const top = -min[2] >= max[2] ? Math.max(fixed.max[2], Math.min(centred.max[2], 0)) : max[2];
   return [max[0] - min[0], max[1] - min[1], top - min[2]];
 }
 

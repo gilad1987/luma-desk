@@ -1,49 +1,69 @@
-import type { Fixture } from '../../domain/Fixture';
 import type { CueValueStep } from '../../engine/cueValues';
+import type { Placed } from './lookArea';
+import { mirrorGroups } from './mirrorGroups';
 
 /**
- * Light adds up: every mover aims at the same few points on the deck (`lookTargetOf`) and the haze between the fans
- * takes the sum of every beam through it, so a level that reads on a club rig turns a big rig's stage and haze white.
- * Each group of the look therefore has a budget of this many units at its base level; a bigger group shares it.
- * The festival template (72 key spots and beams, 48 moving washes and bars) so starts at 33, 20 and 15 for static
- * fill; a theatre-size rig keeps 100, 40 and 15.
+ * The light budget of one group of the first look. Light adds up on the deck and in the haze, so a group runs at
+ * `base` per cent up to `budget` units; a bigger group shares the budget and its level falls, down to `minShare` of
+ * the base; past that point the group lights fewer units at that share and leaves the others off.
  */
-export const LOOK_BUDGET = 24;
+export interface GroupBudget {
+  readonly base: number;
+  readonly budget: number;
+  readonly minShare: number;
+  /** Lights every unit, also past the budget: a dim wash or glow still colours, a dark unit is a hole in the row. */
+  readonly all?: boolean;
+}
 
 /**
- * Below this share of its base level a beam no longer reads as a shaft in haze; past that point the group lights
- * fewer units at this share rather than more units at less.
+ * The fixed budgets. Key and tone are not here: their budget follows the area to light (`areaBudget`). Aerial shafts
+ * stop at 30 lit units at 80 %: fewer, brighter shafts read in haze, more turn into fog. Side washes, bars and
+ * fixed units are all lit and only fall in level: a dark unit among them is a hole in the picture.
  */
-export const MIN_SHARE = 0.25;
+export const LOOK_BUDGETS = {
+  follow: { base: 60, budget: 4, minShare: 0.5 },
+  cross: { base: 50, budget: 12, minShare: 0.3, all: true },
+  aerial: { base: 100, budget: 24, minShare: 0.8 },
+  bars: { base: 12, budget: 48, minShare: 0.5, all: true },
+  blinders: { base: 5, budget: 24, minShare: 0.6 },
+  statics: { base: 25, budget: 24, minShare: 0.3, all: true },
+} as const satisfies Record<string, GroupBudget>;
 
-/** How a group of `count` units at base level `base` shares the budget: the level and how many of them are lit. */
+/** How a group of `count` units shares its budget: the level of a lit unit and how many units are lit. */
 export interface GroupLevel {
   readonly level: number;
   readonly lit: number;
 }
 
-/** The level and lit count of a group: full base up to the budget, then the level falls, then the lit count stops. */
-export function groupLevel(base: number, count: number): GroupLevel {
-  const share = Math.max(MIN_SHARE, Math.min(1, LOOK_BUDGET / count));
-  return { level: Math.round(base * share), lit: Math.min(count, Math.round(LOOK_BUDGET / share)) };
+/**
+ * The level and lit count of a group: full base up to the budget, then the level falls, then the lit count stops.
+ * The level never passes 100 and at least one unit is lit.
+ */
+export function groupLevel(spec: GroupBudget, count: number): GroupLevel {
+  const share = Math.max(spec.minShare, Math.min(1, spec.budget / Math.max(count, 1)));
+  const lit = spec.all ? count : Math.min(count, Math.max(1, Math.round(spec.budget / share)));
+  return { level: Math.min(100, Math.round(spec.base * share)), lit };
 }
 
-type Placed = Pick<Fixture, 'id' | 'pos'>;
-/** Left to right, then front to back, then by id, so the same rig always gives the same order. */
-const byPlace = (a: Placed, b: Placed): number => a.pos.x - b.pos.x || a.pos.z - b.pos.z || a.id - b.id;
-
 /**
- * The dimmer steps of one group: `lit` units spread evenly across the rig's width at the shared level, the others at
- * 0, so a very big rig still shows beams from every truss and the sum stays on the budget.
+ * The dimmer steps of one group: the lit units at the shared level, the others at 0. Units are lit in mirrored
+ * pairs (`mirrorGroups`), evenly spaced from the ends of the rig to the centre line, so the picture is symmetric and
+ * a very big rig shows light from every part of its width. The lit count is the nearest whole number of pairs and
+ * single units. An empty group gives no step.
  */
-export function levelSteps(fixtures: readonly Placed[], base: number): CueValueStep[] {
-  const { level, lit } = groupLevel(base, fixtures.length);
-  const sorted = [...fixtures].sort(byPlace);
-  const picked = new Set(Array.from({ length: lit }, (_, i) => sorted[Math.floor(((i + 0.5) * sorted.length) / lit)]));
-  const on = sorted.filter((f) => picked.has(f)).map((f) => f.id);
-  const off = sorted.filter((f) => !picked.has(f)).map((f) => f.id);
+export function levelSteps(fixtures: readonly Placed[], spec: GroupBudget, cx: number): CueValueStep[] {
+  if (fixtures.length === 0) return [];
+  const { level, lit } = groupLevel(spec, fixtures.length);
+  const groups = mirrorGroups(fixtures, cx);
+  const want = Math.max(1, Math.round((groups.length * lit) / fixtures.length));
+  const picked = Array.from({ length: want }, (_, j) => groups[Math.floor(((j + 0.5) * groups.length) / want)] ?? []);
+  const on = new Set(picked.flat().map((f) => f.id));
+  const idsOf = (isOn: boolean): number[] => {
+    const ids = fixtures.filter((f) => on.has(f.id) === isOn).map((f) => f.id);
+    return ids.sort((a, b) => a - b);
+  };
   return [
-    [on, { dim: level }],
-    [off, { dim: 0 }],
+    [idsOf(true), { dim: level }],
+    [idsOf(false), { dim: 0 }],
   ];
 }

@@ -62,6 +62,7 @@ export function fakeMvrFlowDeps(design: StageDesign = BUILT_IN_DESIGN): FakeMvrF
   const flowParts = { stage, store, scenery: fullScenery, prompt, toast, modal: () => modal };
   const deps: MvrFlowDeps = {
     ...flowParts,
+    bodies: { show: vi.fn(() => Promise.resolve([])) },
     cancelBuilder: named('cancelBuilder'),
     show: { ...show, afterImport: firstLook },
   };

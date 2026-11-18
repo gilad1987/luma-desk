@@ -1,6 +1,7 @@
 import type { StageDesign, StageFixture } from '../../domain/stage/StageDesign';
 import type { Vec3 } from '../../domain/stage/types';
 import { LUMA_DATA_VERSION, LUMA_PROVIDER, linkOf, type FixtureLink } from '../luma/lumaData';
+import type { OriginalProvider } from '../luma/lumaData';
 import { gdtfIdentity } from './gdtfIdentity';
 import { xmlElement, xmlText } from './xmlWriter';
 
@@ -27,10 +28,20 @@ function linkWithFootprint(fixture: StageFixture, design: StageDesign): FixtureL
  * provider put its own data there and other readers skip it, so a desk export can come back to the desk complete.
  * `offset` is the one the export takes off every point; `hiddenLayers` is written only for a design with MVR facts.
  */
-export function writeLumaData(design: StageDesign, offset: Vec3): string {
+export function writeLumaData(
+  design: StageDesign,
+  offset: Vec3,
+  unpatched: ReadonlyMap<string, number> = new Map(),
+  originalProvider?: OriginalProvider,
+): string {
   const { venue, scenery, deck, screens, risers, trusses } = design;
   const links = design.fixtures.map((fixture) => linkWithFootprint(fixture, design));
   const hidden = design.mvr ? { hiddenLayers: design.mvr.hiddenLayers } : {};
-  const json = JSON.stringify({ venue, scenery, deck, screens, risers, trusses, offset, links, ...hidden });
+  // By fixture key, the desk's break of each fixture written without a patch beside kept breaks (`unpatchedBreaksOf`).
+  const open = unpatched.size > 0 ? { unpatchedBreaks: Object.fromEntries(unpatched) } : {};
+  // Who wrote the file a pass-through export started from; the root names the desk now (`nameExporter`).
+  const origin = originalProvider ? { originalProvider } : {};
+  const parts = { venue, scenery, deck, screens, risers, trusses, offset, links, ...hidden, ...open, ...origin };
+  const json = JSON.stringify(parts);
   return xmlElement('UserData', {}, [xmlText('Data', json, { provider: LUMA_PROVIDER, ver: LUMA_DATA_VERSION })]);
 }

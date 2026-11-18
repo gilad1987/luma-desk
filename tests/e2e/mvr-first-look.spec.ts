@@ -36,7 +36,7 @@ const LOOK_MVR = mvrFile(
   ),
 );
 
-test('an MVR import plays the first look on executor 1: key beams, mirrored pans, glow', async ({ page }) => {
+test('an MVR import plays the first look on executor 1: warm key, mirrored pans, tone', async ({ page }) => {
   const errors = collectErrors(page);
   const desk = await bootApp(page);
   expect((await desk.evaluate((d) => d.state())).execs[0]?.name).toBe('Main Show');
@@ -46,17 +46,18 @@ test('an MVR import plays the first look on executor 1: key beams, mirrored pans
   expect(exec?.cues).toEqual([[1, 'MVR First Look', 2]]);
   const out = await desk.evaluate((d) => d.outputAt(1));
   const byId = (id: number): FixtureOutput => out.find((o) => o.id === id) ?? { id };
-  // the movers are the key beams at full; the static pars are a low glow
-  expect([201, 202, 203, 204, 205, 206].map((id) => byId(id)['dim'])).toEqual([100, 100, 15, 15, 15, 15]);
+  // the plot has no front light, so its two spots key the band, at full for an area this size; the pars tone the stage
+  expect([201, 202, 203, 204, 205, 206].map((id) => byId(id)['dim'])).toEqual([100, 100, 25, 25, 25, 25]);
   const [left, right] = [byId(201), byId(202)];
   expect(left['pan']).not.toBe(0);
   expect(right['pan']).toBeCloseTo(-(left['pan'] ?? NaN), 3);
   expect(right['tilt']).toBeCloseTo(left['tilt'] ?? NaN, 3);
-  // key movers (one place) magenta; fill pars by place from the centre out: 2 m magenta, 6 m blue, never white
+  expect(Math.abs(left['tilt'] ?? 0)).toBeGreaterThanOrEqual(8);
+  // key in warm white; the pars in the primary of the pair a rig of six fixtures gets (red + cool white)
   const colorOf = (id: number): string => ['r', 'g', 'b'].map((a) => byId(id)[a]).join(',');
   expect([201, 202, 203, 204, 205, 206].map(colorOf)).toEqual([
-    ...['100,0,100', '100,0,100', '100,0,100', '100,0,100'],
-    ...['0,12,100', '0,12,100'],
+    ...['100,80,58', '100,80,58'],
+    ...['100,0,0', '100,0,0', '100,0,0', '100,0,0'],
   ]);
   expect(errors).toEqual([]);
 });
