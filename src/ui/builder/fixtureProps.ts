@@ -34,7 +34,7 @@ export function fixtureProps(session: Pick<EditorSession, 'edit'>, fixture: Stag
     value: fixture.role,
     onPick: (value) => error.show(send({ role: oneOf(FIXTURE_ROLES, value) })),
   });
-  const move: SendPosition = (_target, delta) => session.edit((d) => moveFixtures(d, [fixture.id], delta));
+  const move: SendPosition = (delta) => session.edit((d) => moveFixtures(d, [fixture.id], delta));
   const placement =
     fixture.type === 'screen' ? [] : [...positionFields(fixture.position, move), ...aimFields(fixture, send)];
   return [id, ...placement, role, error.root];

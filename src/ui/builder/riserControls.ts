@@ -17,7 +17,7 @@ const RISER_SIZE_M: Vec3 = [2, 0.4, 2];
  */
 export function riserControls(d: StageDesign, session: Pick<EditorSession, 'edit'>, run: RunEdit): HTMLElement[] {
   const rows = d.risers.flatMap((riser) => {
-    const move: SendPosition = (_target, delta) => session.edit((draft) => moveRiser(draft, riser.id, delta));
+    const move: SendPosition = (delta) => session.edit((draft) => moveRiser(draft, riser.id, delta));
     return [riserRow(riser, run), ...positionFields(riser.at, move, [0, 2], `${riser.id} `)];
   });
   const add = makeButton('Add riser', he.builder.tools.addRiser, () =>

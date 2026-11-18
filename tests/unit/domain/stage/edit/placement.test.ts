@@ -1,17 +1,20 @@
 /**
- * Owns the placing ops of the property fields: `moveRiser` and `placeTruss` store the typed position on whole
- * millimetres, a truss carries its fixtures, a no-op returns the same design and a stale id is refused. The fixture
- * move is owned by fixtureMoves.test.ts, the truss delta move by trussOps.test.ts.
+ * Owns the placing ops of the property fields and the top view drag: `moveRiser` and `moveTruss` store the moved
+ * position on whole millimetres, a truss carries its fixtures, a no-op returns the same design and a stale id is
+ * refused. The fixture move is owned by fixtureMoves.test.ts, the truss parent link by trussOps.test.ts.
  */
 import { describe, expect, it } from 'vitest';
 import { addRiser, moveRiser } from '../../../../../src/domain/stage/edit/deckOps.ts';
 import { moveTruss } from '../../../../../src/domain/stage/edit/trussOps.ts';
-import { placeTruss } from '../../../../../src/domain/stage/edit/trussPlace.ts';
-import { sampleDesign } from './sampleDesign.ts';
+import { patchedFixture, PIPE, sampleDesign } from './sampleDesign.ts';
 
 /** -39.528 + (5.473 + 39.528) is 5.472999999999999 in floats; a placed item must store 5.473. */
 const FROM_X = -39.528;
 const TO_X = 5.473;
+
+/** A drag sends `target - anchor`: -59.9993 + (10.5 + 59.9993) is 10.500000000000007; the truss must store 10.5. */
+const DRAG_FROM_X = -59.9993;
+const DRAG_TO_X = 10.5;
 
 describe('moveRiser', () => {
   const withRiser = addRiser(sampleDesign(), [FROM_X, 1, 2], [2, 0.4, 2]);
@@ -29,26 +32,23 @@ describe('moveRiser', () => {
   });
 });
 
-describe('placeTruss', () => {
-  const start = moveTruss(sampleDesign(), 'pipe-1', [FROM_X, 0, 0]);
+describe('moveTruss on whole millimetres', () => {
+  /** The pipe off the millimetre grid, as an imported show holds it, with one fixture 0.3 m off its centre. */
+  const offGrid = {
+    ...patchedFixture(sampleDesign(), 101, { position: [DRAG_FROM_X + 0.3, 7, 0.0004] }),
+    trusses: [{ ...PIPE, transform: { position: [DRAG_FROM_X, 7, 0] as const } }],
+  };
 
-  it('puts the truss exactly on the target and moves its fixtures by the same delta', () => {
-    const placed = placeTruss(start, 'pipe-1', [TO_X, 7, 0]);
-    const delta = TO_X - FROM_X;
-    expect([
-      Object.is(placed.trusses[0]?.transform.position[0], TO_X),
-      placed.fixtures.slice(0, 2).map((f) => f.position[0]),
-    ]).toEqual([
-      true,
-      moveTruss(start, 'pipe-1', [delta, 0, 0])
-        .fixtures.slice(0, 2)
-        .map((f) => f.position[0]),
+  it('stores a dragged target exactly and rounds the fixtures it carries', () => {
+    const dragged = moveTruss(offGrid, PIPE.id, [DRAG_TO_X - DRAG_FROM_X, 0, 0]);
+    expect([dragged.trusses[0]?.transform.position, dragged.fixtures[0]?.position]).toEqual([
+      [DRAG_TO_X, 7, 0],
+      [10.8, 7, 0],
     ]);
   });
 
-  it('returns the same design for the current position and refuses a stale id or a non-finite target', () => {
-    expect(placeTruss(start, 'pipe-1', [FROM_X, 7, 0])).toBe(start);
-    expect(() => placeTruss(start, 'gone', [0, 0, 0])).toThrow(/placeTruss: no truss with id gone/);
-    expect(() => placeTruss(start, 'pipe-1', [Number.NaN, 7, 0])).toThrow(RangeError);
+  it('rounds a sub-millimetre target to the nearest millimetre', () => {
+    const moved = moveTruss(sampleDesign(), PIPE.id, [1.2344, 0, -0.0006]);
+    expect(moved.trusses[0]?.transform.position).toEqual([1.234, 7, -0.001]);
   });
 });

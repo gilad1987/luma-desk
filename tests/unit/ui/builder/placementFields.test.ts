@@ -1,11 +1,11 @@
 /**
- * Owns the position fields of a truss and a riser: a truss gets X, Y and Z that place it through `placeTruss` (its
+ * Owns the position fields of a truss and a riser: a truss gets X, Y and Z that move it through `moveTruss` (its
  * fixtures follow) and no size fields (those are in the Trusses tab); a riser gets X and Z that move it through
  * `moveRiser`. The ops are owned by tests/unit/domain/stage/edit/placement.test.ts.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { addRiser, moveRiser } from '../../../../src/domain/stage/edit/deckOps';
-import { placeTruss } from '../../../../src/domain/stage/edit/trussPlace';
+import { moveTruss } from '../../../../src/domain/stage/edit/trussOps';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { createTemplate } from '../../../../src/domain/stage/templates';
 import { EditorSession } from '../../../../src/ui/builder/EditorSession.ts';
@@ -35,15 +35,22 @@ describe('position fields', () => {
     const [front] = start.trusses;
     if (!front) throw new Error('the theatre template has trusses');
     const root = mount(trussProps(session, front));
-    const [x, y, z] = front.transform.position;
+    const [x, y] = front.transform.position;
     change(control(root, 'Y (m)'), '7.25');
     const raised = session.draft;
     change(control(root, 'X (m)'), '-1.5');
     expect([labels(root), raised, session.draft]).toEqual([
       ['Name', 'Default role', 'X (m)', 'Y (m)', 'Z (m)'],
-      placeTruss(start, front.id, [x, 7.25, z]),
-      placeTruss(raised, front.id, [-1.5, y, z]),
+      moveTruss(start, front.id, [0, 7.25 - y, 0]),
+      moveTruss(raised, front.id, [-1.5 - x, 0, 0]),
     ]);
+  });
+
+  it('stores a sub-millimetre typed truss position on the nearest millimetre', () => {
+    const [front] = start.trusses;
+    if (!front) throw new Error('the theatre template has trusses');
+    change(control(mount(trussProps(session, front)), 'Z (m)'), '1.23456');
+    expect(session.draft.trusses[0]?.transform.position[2]).toBe(1.235);
   });
 
   it('moves a riser on X and Z only', () => {
