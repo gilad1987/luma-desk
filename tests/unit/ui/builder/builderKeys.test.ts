@@ -57,4 +57,15 @@ describe('listenBuilderKeys', () => {
       0,
     ]);
   });
+
+  it('still runs the keys after a click on a checkbox or a list, which take no typed text', () => {
+    const run = vi.fn();
+    listenBuilderKeys(source, run);
+    const box = Object.assign(new FakeElement('INPUT'), { type: 'checkbox' });
+    const number = Object.assign(new FakeElement('INPUT'), { type: 'number' });
+    send({ ...press('z', { ctrlKey: true }), target: asReal<EventTarget>(box) });
+    send({ ...press('Delete'), target: asReal<EventTarget>(new FakeElement('SELECT')) });
+    send({ ...press('Delete'), target: asReal<EventTarget>(number) });
+    expect(run.mock.calls).toEqual([['undo'], ['delete']]);
+  });
 });
