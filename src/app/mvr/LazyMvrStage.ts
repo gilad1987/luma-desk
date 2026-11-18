@@ -11,6 +11,7 @@ export class LazyMvrStage {
   readonly #scene: Pick<Scene, 'add'>;
   #stage: MvrStage | undefined;
   #loading: Promise<MvrStage> | undefined;
+  #showing = false;
 
   constructor(scene: Pick<Scene, 'add'>) {
     this.#scene = scene;
@@ -27,6 +28,7 @@ export class LazyMvrStage {
 
   /** Builds the scenery of `input` (see `MvrStage.show`), after `load`. */
   async show(input: MvrStageInput): Promise<readonly MeshFailure[]> {
+    this.#showing = true;
     return (await this.#loaded()).show(input);
   }
 
@@ -35,8 +37,17 @@ export class LazyMvrStage {
     this.#stage?.setHiddenLayers(uuids);
   }
 
+  /**
+   * True from a `show` until the next `dispose`, even for a file without meshes; the e2e reads it, as the 3D view is
+   * not inspectable. A dispose while a show still builds wins, as in `MvrStage`.
+   */
+  get hasScenery(): boolean {
+    return this.#showing;
+  }
+
   /** Frees the scenery, for a stage that is not an MVR import. */
   dispose(): void {
+    this.#showing = false;
     this.#stage?.dispose();
   }
 

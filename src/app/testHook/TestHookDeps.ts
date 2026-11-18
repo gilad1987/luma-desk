@@ -32,4 +32,6 @@ export interface TestHookDeps {
   readonly deskMode: () => LayoutMode;
   /** Resolves after the latest MVR load ended, with success or failure (the MVR load queue). */
   readonly mvrReady: () => Promise<void>;
+  /** True while the MVR scenery shows the layers of a file. */
+  readonly mvrScenery: () => boolean;
 }

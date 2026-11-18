@@ -47,4 +47,25 @@ describe('restoreStoredMvr', () => {
     await restoreStoredMvr(flow.deps);
     expect(flow.toasts).toEqual([he.mvr.meshFailed('a.3ds, b.glb')]);
   });
+
+  it('shows no prompt when the stage changed while the store was read', async () => {
+    const flow = fakeMvrFlowDeps(savedMvr);
+    flow.store.get.mockImplementation(() => {
+      flow.stage.design = flow.deps.stage.builtIn;
+      return Promise.resolve(null);
+    });
+    await restoreStoredMvr(flow.deps);
+    expect(flow.calls).toEqual([]);
+  });
+
+  it('draws no scenery when the stage changed while the file was imported again', async () => {
+    const flow = fakeMvrFlowDeps(savedMvr);
+    flow.store.get.mockResolvedValue(BYTES);
+    flow.scenery.load.mockImplementationOnce(() => {
+      flow.stage.design = flow.deps.stage.builtIn;
+      return Promise.resolve();
+    });
+    await restoreStoredMvr(flow.deps);
+    expect(flow.scenery.show).not.toHaveBeenCalled();
+  });
 });

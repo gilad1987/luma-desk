@@ -24,6 +24,8 @@ export interface DeskTestApi extends DeskClock {
   mvrStage(): MvrStageInfo;
   /** Resolves after the latest MVR load ended (a picked file or the boot restore), with success or failure. */
   mvrReady(): Promise<void>;
+  /** True while the MVR scenery shows the layers of a file; the 3D view itself is not inspectable. */
+  mvrScenery(): boolean;
 }
 
 const isPhaserType = (type: string): type is PhaserType => Object.hasOwn(PHASER_TYPES, type);
@@ -49,6 +51,7 @@ function createTestApi(clock: DeskClock, deps: TestHookDeps): DeskTestApi {
     },
     mvrStage: () => readMvrStageInfo(deps.stage),
     mvrReady: deps.mvrReady,
+    mvrScenery: deps.mvrScenery,
   };
 }
 

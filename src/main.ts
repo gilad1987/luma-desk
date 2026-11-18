@@ -94,4 +94,5 @@ installTestHook({
   autoShow: auto.autoShow,
   deskMode: () => layout.mode(),
   mvrReady: mvr.ready,
+  mvrScenery: mvr.hasScenery,
 });
