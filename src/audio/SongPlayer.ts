@@ -14,7 +14,7 @@ export interface LoadedSong {
 /**
  * Plays one song file and locks the tempo grid to it. Loading decodes the file once to detect its BPM and beat
  * offset; while it plays, `sync` sets the tempo from the song every frame, so tap tempo has no lasting effect
- * (quirk E3). The panel owns every label and button; this class reports state and leaves the DOM alone.
+ * (quirk E3, orig:2679). The panel owns every label and button; this class reports state and leaves the DOM alone.
  */
 export class SongPlayer {
   #element: HTMLAudioElement | null = null;

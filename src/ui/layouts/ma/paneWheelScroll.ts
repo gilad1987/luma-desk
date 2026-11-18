@@ -11,7 +11,7 @@ function scrollTarget(ev: WheelEvent): HTMLElement | null {
 
 /**
  * Scrolls the panes on the MA screens by wheel: Chromium does not scroll them inside the 3D-transformed console.
- * Registered in every layout, as before (known quirk Q27).
+ * Registered in every layout, as before (known quirk Q27, orig:3059).
  */
 export function bindPaneWheelScroll(body: HTMLElement): void {
   let carry = 0;

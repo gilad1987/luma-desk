@@ -25,7 +25,7 @@ export function applyMasters(f: Fixture, o: AttrOutput, master: MasterState, sel
     o.dim = 100;
     o.r = o.g = o.b = 100;
     o.strobe = 0;
-    o.gobo = f.type === 'screen' ? 0 : 0; // kept from the original; both branches are 0
+    o.gobo = f.type === 'screen' ? 0 : 0; // quirk A1 (orig:1689): both branches are 0
   }
   o.dim *= master.blackout ? 0 : master.gm;
 }

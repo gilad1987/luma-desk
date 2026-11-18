@@ -19,7 +19,7 @@ export class ShowStorage {
 
   /**
    * Asks for a save; each call restarts the delay. A failed write (storage full or blocked) is dropped without a
-   * word, as before: the refactor changes no UI, and the operator is not told (known quirk).
+   * word, as before: the refactor changes no UI, and the operator is not told (quirk D6, orig:2309).
    */
   persist(): void {
     clearTimeout(this.#timer);
@@ -27,7 +27,7 @@ export class ShowStorage {
       try {
         this.#store.setItem(STORAGE_KEYS.show, JSON.stringify(this.#show()));
       } catch {
-        // storage full or blocked: the show stays unsaved, as it always did
+        // quirk D6 (orig:2309): storage full or blocked, so the show stays unsaved, with no message
       }
     }, PERSIST_DELAY_MS);
   }

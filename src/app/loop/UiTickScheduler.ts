@@ -1,6 +1,6 @@
 /** The fast tick runs when more than this many ms passed since the last one: live readouts and faders. */
 const FAST_MS = 50;
-/** The slow tick runs when more than this many ms passed, or at once on the next frame when the UI is dirty. */
+/** The slow tick runs when more than this many ms passed, or at once when the UI is dirty (quirk Q17, orig:2543). */
 const SLOW_MS = 400;
 
 /**

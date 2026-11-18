@@ -73,7 +73,7 @@ export class ShowSerializer {
     const { rig, groups, presets, execs, tempo, state, programmer, selection } = this.#deps;
     const defaults = stage ? defaultPoolOf(stage.service) : defaultGroups(rig);
     groups.replace(d.groups ? addNewDefaultGroups(d.groups, defaults) : defaults);
-    presets.replace(withSavedPresets(defaultPresets(), d.presets));
+    presets.replace(withSavedPresets(defaultPresets(), d.presets)); // quirk J5 (orig:2301-2304)
     execs.forEach((e, i) => {
       e.off();
       const x = (d.execs || [])[i] || {};
@@ -82,7 +82,7 @@ export class ShowSerializer {
       e.level = x.level ?? 0;
       e.resetTracking();
     });
-    tempo.setBpm(d.bpm || 120);
+    tempo.setBpm(d.bpm || 120); // quirk D3 (orig:2306): `||` here, `??` for haze
     state.haze = d.haze ?? 0.62;
     programmer.clear();
     selection.set([]);

@@ -55,13 +55,22 @@ describe('ShowSerializer', () => {
     expect(world.presets.all[4][1]?.name).toBe('Mine');
   });
 
-  it('throws on a preset pool the desk lacks, after the groups were replaced (callers catch it)', () => {
+  // known quirk J5: the original reset the presets before this throw and lost the user's own (docs/known-quirks.md)
+  it('quirk J5: a preset pool the desk lacks throws, keeps the presets and executors, replaces the groups (accepted change)', () => {
     const world = showWorld();
+    world.demo.load();
+    world.presets.storeFromProgrammer(4, 1, [101], { 101: { r: 10 } });
+    const before = world.serializer.serialize();
     const groups = { 1: { name: 'Solo', ids: [101] } };
     expect(() =>
       world.serializer.load({ groups, presets: { 9: { 1: { name: 'x', kind: 'fn', fn: 'zMin' } } } }),
-    ).toThrow();
-    expect(world.groups.all[1]?.name).toBe('Solo');
+    ).toThrow('Unknown preset pool 9');
+    const after = world.serializer.serialize();
+    expect([after.groups[1], after.groups[24]]).toStrictEqual([groups[1], undefined]);
+    expect(after.presets).toStrictEqual(before.presets);
+    expect(after.presets[4]?.[1]?.kind).toBe('fix');
+    expect(after.execs).toStrictEqual(before.execs);
+    expect(world.execs[0]?.on).toBe(true);
   });
 
   it('clears the programmer and the selection on load', () => {

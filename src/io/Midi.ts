@@ -42,7 +42,7 @@ export class Midi {
 
   /**
    * Asks the browser for MIDI access and listens to every input, again whenever a device is plugged in or out. Each
-   * call asks again, with no guard, as the original button did.
+   * call asks again, with no guard, as the original button did (quirk Q24, orig:2491-2497).
    */
   async connect(): Promise<void> {
     const { host, button } = this.#deps;
@@ -67,7 +67,7 @@ export class Midi {
     access.inputs.forEach((input) => {
       count++;
       input.onmidimessage = (event) => {
-        // the browser always sends bytes; a null payload has nothing to decode
+        // quirk J4 (orig:2492): the browser always sends bytes; a null payload has nothing to decode
         const action = event.data ? decodeMidiMessage(event.data) : undefined;
         if (action) this.#apply(action);
       };

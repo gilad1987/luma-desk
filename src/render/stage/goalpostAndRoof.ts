@@ -25,7 +25,7 @@ export function buildRoof(
   transform: Transform,
   { size }: Extract<TrussParams, { kind: 'roof' }>,
 ): void {
-  // the legacy code passed this material as an argument, so it exists before the slab geometry
+  // quirk F7 (orig:1032): the legacy code passed this material as an argument, so it exists before the slab geometry
   const roof = new MeshStandardMaterial({ color: 0x0a0a0c, roughness: 0.9 });
   const slab = addMesh(parent, new BoxGeometry(...size), roof, { position: transform.position });
   if (transform.rotation) slab.quaternion.set(...transform.rotation);

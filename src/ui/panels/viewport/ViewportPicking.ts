@@ -3,7 +3,7 @@ import { boxBetween, fixturesInBox } from './fixturesInBox';
 import type { ViewportDeps } from './ViewportDeps';
 import { wireFixtureTooltip } from './wireFixtureTooltip';
 
-/** Below this travel a release is a click; above it a Shift drag is a box. Exactly 5 px is neither. */
+/** Below this travel a release is a click; above it a Shift drag is a box; 5 px is neither (quirk G5, orig:2466). */
 const CLICK_SLOP_PX = 5;
 
 interface Press {

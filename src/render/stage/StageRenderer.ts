@@ -47,7 +47,7 @@ export class StageRenderer {
 
   /** The "lights" toggle also switches shadow maps; the key lights are switched by `KeyLights.setEnabled`. */
   setShadows(isOn: boolean): void {
-    this.parts.renderer.shadowMap.enabled = isOn;
+    this.parts.renderer.shadowMap.enabled = isOn; // quirk F5 (orig:2253): no material update
   }
 
   /** Shows or hides the fixture id labels. */
