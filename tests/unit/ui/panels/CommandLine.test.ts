@@ -4,11 +4,7 @@ import type { ExecutorPool } from '../../../../src/engine/ExecutorPool';
 import { CommandLine } from '../../../../src/ui/panels/command/CommandLine';
 import type { CommandLineDeps } from '../../../../src/ui/panels/command/CommandLineDeps';
 import { commandLineMarkup } from '../../../../src/ui/panels/command/commandLineMarkup';
-import { asReal } from '../fakes/asReal';
-import type { FakeElement } from '../fakes/FakeElement';
-import { FakeDom } from '../fakes/installFakeDom';
-import { FakeButton, FakeList } from '../fakes/FakeButton';
-import { FakeHost } from '../fakes/FakeHost';
+import { asReal, FakeButton, FakeDom, type FakeElement, FakeHost, FakeList } from '../../../shared/dom';
 import { commandLineDeps } from './commandLineFakes';
 
 const KEYS = ['kStore', 'kClear', 'kHigh', 'kFan', 'kAll', 'kOdd', 'kEven', 'kRev'];

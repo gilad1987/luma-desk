@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MasterSection } from '../../../../../src/ui/panels/executors/MasterSection';
-import { FakeDom } from '../../fakes/installFakeDom';
+import { FakeDom } from '../../../../shared/dom';
 import { executorsFakes } from './executorsFakes';
 
 const IDS = ['mSelName', 'pauseBtn', 'boBtn', 'bpmBox', 'gmVal', 'gmFader', 'goBig', 'goBack', 'offBtn', 'tapBtn'];

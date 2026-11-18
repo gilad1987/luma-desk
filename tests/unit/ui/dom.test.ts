@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { byId, requireChild } from '../../../src/ui/dom';
-import { FakeElement } from './fakes/FakeElement';
-import { FakeDom } from './fakes/installFakeDom';
+import { FakeDom, FakeElement } from '../../shared/dom';
 
 class FakeInput extends FakeElement {}
 

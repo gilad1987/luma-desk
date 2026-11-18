@@ -2,8 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EventBus } from '../../../src/core';
 import type { EngineEvents } from '../../../src/engine/events';
 import { Modal } from '../../../src/ui/shared';
-import type { FakeElement } from './fakes/FakeElement';
-import { FakeDom } from './fakes/installFakeDom';
+import { FakeDom, type FakeElement } from '../../shared/dom';
 
 const FIELD = 'width:100%;background:#000;color:#fff;border:1px solid #444;border-radius:4px;padding:8px;font:14px ';
 const ROW = (ok: string) =>

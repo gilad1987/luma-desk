@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { wireExecutorCard } from '../../../../../src/ui/panels/executors/wireExecutorCard';
-import { asReal } from '../../fakes/asReal';
-import { FakeElement } from '../../fakes/FakeElement';
-import { pointer } from '../../fakes/fakePointer';
-import { FakeDom } from '../../fakes/installFakeDom';
+import { asReal, FakeDom, FakeElement, pointer } from '../../../../shared/dom';
 import { executorsFakes } from './executorsFakes';
 
 // legacy: buildExecs in index.html at 48a3b63, lines 2157-2166

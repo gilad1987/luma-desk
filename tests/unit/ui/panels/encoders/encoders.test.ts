@@ -3,7 +3,7 @@ import { encoderList } from '../../../../../src/ui/panels/encoders/encoderList';
 import { encodersMarkup } from '../../../../../src/ui/panels/encoders/encodersMarkup';
 import { encoderSpec, isPhaserParam } from '../../../../../src/ui/panels/encoders/encoderSpec';
 import { formatEncoderValue } from '../../../../../src/ui/panels/encoders/formatEncoderValue';
-import { legacyMarkup } from '../../legacy/legacyMarkup';
+import { legacyMarkup } from '../../../../shared/legacy';
 
 describe('encoders markup', () => {
   // the oracle is index.html at 48a3b63, lines 606-609

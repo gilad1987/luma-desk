@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CueHud } from '../../../../../src/ui/panels/executors/CueHud';
-import { FakeDom } from '../../fakes/installFakeDom';
+import { FakeDom } from '../../../../shared/dom';
 import { executorsFakes } from './executorsFakes';
 
 // legacy: updateExecUI in index.html at 48a3b63, lines 2184-2185

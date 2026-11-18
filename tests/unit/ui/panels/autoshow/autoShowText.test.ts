@@ -8,7 +8,7 @@ import {
   songStatHtml,
   styleCardHtml,
 } from '../../../../../src/ui/panels/autoshow/autoShowText';
-import { legacyMarkup } from '../../legacy/legacyMarkup';
+import { legacyMarkup } from '../../../../shared/legacy';
 
 /** The original `COL(n)` swatch maths, restated so the test does not lean on the code under test. */
 const legacyRgb = (name: string): string => {

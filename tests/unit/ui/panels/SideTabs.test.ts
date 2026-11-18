@@ -4,11 +4,7 @@ import type { EngineEvents } from '../../../../src/engine/events';
 import type { LayoutMode } from '../../../../src/ui/panels/layoutMode';
 import { SideTabs } from '../../../../src/ui/panels/side/SideTabs';
 import { sideTabsMarkup } from '../../../../src/ui/panels/side/sideTabsMarkup';
-import { asReal } from '../fakes/asReal';
-import { FakeElement } from '../fakes/FakeElement';
-import { FakeDom } from '../fakes/installFakeDom';
-import { FakeButton } from '../fakes/FakeButton';
-import { FakeHost } from '../fakes/FakeHost';
+import { asReal, FakeButton, FakeDom, FakeElement, FakeHost } from '../../../shared/dom';
 
 describe('SideTabs', () => {
   let bus: EventBus<EngineEvents>, host: FakeHost, buttons: FakeButton[], panes: FakeElement[], mode: LayoutMode;

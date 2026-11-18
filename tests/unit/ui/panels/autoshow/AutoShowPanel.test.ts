@@ -3,11 +3,7 @@ import { STYLES } from '../../../../../src/autoshow/styles';
 import { AutoShowPanel } from '../../../../../src/ui/panels/autoshow/AutoShowPanel';
 import { autoShowMarkup } from '../../../../../src/ui/panels/autoshow/autoShowMarkup';
 import { IDLE_STATUS } from '../../../../../src/ui/panels/autoshow/autoShowText';
-import { asReal } from '../../fakes/asReal';
-import { FakeElement } from '../../fakes/FakeElement';
-import { FakeDom } from '../../fakes/installFakeDom';
-import { FakeButton } from '../../fakes/FakeButton';
-import { FakeHost } from '../../fakes/FakeHost';
+import { asReal, FakeButton, FakeDom, FakeElement, FakeHost } from '../../../../shared/dom';
 import { autoShowDeps } from './autoShowFakes';
 
 const IDS = ['styleGrid', 'autoBpm', 'autoSec', 'autoStatus', 'songStat', 'aEnergyV', 'aMasterV', 'aBars', 'aPulse'];

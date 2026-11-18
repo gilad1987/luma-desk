@@ -16,6 +16,12 @@ export type Preset =
 /** The five preset pools, each by slot number (1-based); an empty slot has no key. */
 export type PresetPools = Record<PresetType, Record<number, Preset>>;
 
+/**
+ * The pool numbers in ascending order, the order the original page's `for…in` over the pool names gave. A list is
+ * needed because `Object.keys` returns strings, which the type system cannot narrow back to `PresetType`.
+ */
+export const PRESET_TYPE_IDS = [1, 2, 3, 4, 5] as const satisfies readonly PresetType[];
+
 /** The pool names, used in pool tabs, default preset names and store feedback. */
 export const PRESET_TYPES: Readonly<Record<PresetType, string>> = {
   1: 'Dimmer',

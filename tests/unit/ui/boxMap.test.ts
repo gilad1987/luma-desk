@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { byId } from '../../../src/ui/dom';
 import { boxMap } from '../../../src/ui/shared';
-import { FakeCanvas } from './fakes/FakeElement';
-import { FakeDom } from './fakes/installFakeDom';
+import { FakeCanvas, FakeDom } from '../../shared/dom';
 
 /** A real perspective: x and y shrink with depth, which grows down the screen (the MA console tilt). */
 const tilt = (x: number, y: number): readonly [number, number] => {

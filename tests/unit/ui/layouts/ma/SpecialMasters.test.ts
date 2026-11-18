@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SpecialMasters } from '../../../../../src/ui/layouts/ma/SpecialMasters';
-import { FakeElement } from '../../fakes/FakeElement';
-import { FakeDom } from '../../fakes/installFakeDom';
+import { FakeDom, FakeElement } from '../../../../shared/dom';
 
 /** A strip part that accepts the change listeners the strip adds; its own parts are the same kind. */
 class Part extends FakeElement {

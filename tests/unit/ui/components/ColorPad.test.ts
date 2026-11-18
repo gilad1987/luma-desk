@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { colorPad } from '../../../../src/ui/components/ColorPad';
-import { asReal } from '../fakes/asReal';
-import { FakeCanvas } from '../fakes/FakeElement';
-import { pointer } from '../fakes/fakePointer';
-import { FakeDom } from '../fakes/installFakeDom';
+import { asReal, FakeCanvas, FakeDom, pointer } from '../../../shared/dom';
 
 /** A canvas whose 2D context records every fill. */
 class PaintCanvas extends FakeCanvas {

@@ -4,10 +4,7 @@ import { AppState } from '../../../../src/engine/AppState';
 import type { EngineEvents } from '../../../../src/engine/events';
 import { TopBar, type TopBarRender } from '../../../../src/ui/panels/top/TopBar';
 import { topBarMarkup } from '../../../../src/ui/panels/top/topBarMarkup';
-import { asReal } from '../fakes/asReal';
-import { FakeDom } from '../fakes/installFakeDom';
-import { FakeButton } from '../fakes/FakeButton';
-import { FakeHost } from '../fakes/FakeHost';
+import { asReal, FakeButton, FakeDom, FakeHost } from '../../../shared/dom';
 
 describe('TopBar', () => {
   afterEach(() => vi.unstubAllGlobals());
