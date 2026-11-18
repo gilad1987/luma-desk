@@ -28,6 +28,8 @@ export class BuilderHarness {
   readonly calls: string[] = [];
   readonly keys = new Set<KeyListener>();
   readonly emit = vi.fn();
+  /** Each `setDeskInert` value in order; kept out of `calls`, whose order the layout tests check. */
+  readonly deskInert: boolean[] = [];
   readonly deps: BuilderDeps;
   session: EditorSession | null = null;
   view: TopViewDeps | null = null;
@@ -43,6 +45,7 @@ export class BuilderHarness {
       },
       setConsoleHeight: (px) => this.calls.push(`height ${px}`),
       fitLayout: () => this.calls.push('fit'),
+      setDeskInert: (inert) => void this.deskInert.push(inert),
       frames: { nextFrame: () => 0, cancelFrame: () => undefined },
       mountTools: (_slots, session, view) => {
         this.session = session;

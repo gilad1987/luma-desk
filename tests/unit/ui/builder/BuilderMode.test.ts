@@ -31,6 +31,7 @@ describe('BuilderMode', () => {
     mode.enter();
     expect([dom.body.children.length, host()?.className, isBuilding()]).toEqual([1, 'builder', true]);
     expect([mode.isOpen, h.keys.size, h.calls]).toEqual([true, 1, ['mount', 'fit', 'height 0']]);
+    expect(h.deskInert).toEqual([true]);
   });
 
   it('gives <body> a class other than the host class, so no host rule styles the body', () => {
@@ -69,7 +70,7 @@ describe('BuilderMode', () => {
     ]);
   });
 
-  it('removes the DOM and the body class and fits the layout even when the commit throws', () => {
+  it('removes the DOM and the body class, frees the desk and fits the layout even when the commit throws', () => {
     mode.enter();
     addTruss();
     h.stage.apply = () => {
@@ -83,5 +84,6 @@ describe('BuilderMode', () => {
       0,
       'fit',
     ]);
+    expect(h.deskInert).toEqual([true, false]);
   });
 });
