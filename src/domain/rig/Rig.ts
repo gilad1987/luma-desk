@@ -46,4 +46,12 @@ export class Rig {
   lightIds(): number[] {
     return this.fixtures.filter(isLight).map((f) => f.id);
   }
+
+  /**
+   * The ids of the LED screens, in build order: the one rule for "the screens of this stage", so the auto-show and the
+   * demo light whatever screens a stage has (none, one or several) instead of a fixed id.
+   */
+  screenIds(): number[] {
+    return this.fixtures.filter((f) => !isLight(f)).map((f) => f.id);
+  }
 }

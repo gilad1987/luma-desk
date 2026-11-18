@@ -1,6 +1,12 @@
+/**
+ * Owns DemoShow on a stage source: the demo keeps the current stage, uses its default pool, screens and presets, and
+ * is still the golden file on the built-in stage. The demo's cue content itself is owned by the demo-show golden.
+ */
 import { describe, expect, it } from 'vitest';
 import { createTemplate, type TemplateId } from '../../../src/domain/stage/templates';
+import { PRESET_FNS } from '../../../src/engine/presetFunctions';
 import { defaultPoolOf } from '../../../src/engine/stage/defaultPool';
+import { presetFnsOf } from '../../../src/engine/stage/presetFnsOf';
 import { DemoShow } from '../../../src/show';
 import { readGolden, type SavedShow } from '../../shared';
 import { stageWorld } from './stageWorld';
@@ -37,6 +43,27 @@ describe('DemoShow on the current stage', () => {
     world.demo.load();
     const intro = world.execs[0]?.cues[0];
     expect(intro?.vals[1001]?.dim).toBeGreaterThan(0);
+  });
+
+  it('aims the Key Light singer cue with the theatre presets, not the built-in ones', () => {
+    const world = demoWorld('theatre');
+    const { service } = world;
+    world.demo.load();
+    const saved = JSON.parse(world.json()) as SavedShow;
+    const vals = saved.execs.find((e) => e.name === 'Key Light')?.cues[0]?.vals ?? {};
+    const foh = saved.groups['1']?.ids ?? [];
+    const singer = presetFnsOf(service.frame).singer;
+    const aims = foh.flatMap((id, k) => {
+      const f = service.rig.get(id);
+      return f
+        ? [{ stage: singer(f, k, foh.length), builtIn: PRESET_FNS.singer(f, k, foh.length), vals: vals[id] }]
+        : [];
+    });
+    expect(aims).toHaveLength(6);
+    for (const { stage, builtIn, vals: written } of aims) {
+      expect(written).toMatchObject(stage);
+      expect(builtIn).not.toEqual(stage);
+    }
   });
 
   it('is still the golden demo on the built-in stage, with no stage key', () => {

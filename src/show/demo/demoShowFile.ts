@@ -1,10 +1,9 @@
 import type { Rig } from '../../domain/rig';
-import type { StageDesign } from '../../domain/stage/StageDesign';
 import { defaultGroups } from '../../engine/defaultGroups';
 import { defaultPoolOf } from '../../engine/stage/defaultPool';
 import { presetFnsOf } from '../../engine/stage/presetFnsOf';
 import type { RigSource } from '../../engine/stage/RigSource';
-import type { ShowFileInput } from '../ShowFile';
+import type { ShowFileInput, ShowFileV1 } from '../ShowFile';
 import { buskingExecs } from './buskingExecs';
 import { closingCues } from './closingCues';
 import { createDemoKit } from './demoKit';
@@ -23,7 +22,7 @@ import { addTowerLayers } from './towerLayers';
  * A custom stage is written into the file as its `stage` key, because the loader resets a show without one to the
  * built-in stage; the built-in stage gets no key, so its demo stays the golden file.
  */
-export function buildDemoShowFile(rig: Rig, source?: RigSource): ShowFileInput & { stage?: StageDesign } {
+export function buildDemoShowFile(rig: Rig, source?: RigSource): ShowFileInput & Pick<ShowFileV1, 'stage'> {
   const groups = source ? defaultPoolOf(source) : defaultGroups(rig);
   const kit = createDemoKit(rig, groups, source && presetFnsOf(source.frame));
   const song = [...openingCues(kit), ...closingCues(kit)];

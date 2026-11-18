@@ -18,7 +18,7 @@ import type { Section } from './sections';
  * `Math.random` (not a private generator) because the test build seeds `Math.random` itself and the golden looks
  * depend on that (quirk E4). The build steps run in a fixed order, which is also the order of the random draws.
  * Without a `source` it works on the fixed built-in `rig` and presets, exactly as before the stage builder; with one
- * it follows the current stage.
+ * it follows the current stage and never builds the built-in groups (`rig` is then not read).
  */
 export class LookGenerator {
   readonly #random: () => number;
@@ -29,12 +29,12 @@ export class LookGenerator {
   constructor(rig: Rig, random: () => number = Math.random, source?: RigSource) {
     this.#random = random;
     this.#stage = source;
-    this.#current = { rig, groups: buildAutoGroups(rig), random };
+    this.#current = source ? this.#stageSource(source) : { rig, groups: buildAutoGroups(rig), random };
   }
 
   /** A new look for one section of a style, as cue 1 of the auto executor (with its `sec` label, quirk E7). */
   generate(style: AutoStyle, section: Section, options: LookOptions): Cue {
-    const look = new LookDraft(this.#lookSource(), style, section, options);
+    const look = new LookDraft(this.#currentLookSource(), style, section, options);
     addWashes(look);
     addGoboSpots(look);
     addActiveGroups(look);
@@ -47,12 +47,16 @@ export class LookGenerator {
    * groups by identity, and `presetFnsOf` builds new functions on each call. Reads the stage at call time, so a stage
    * change needs no re-wiring and no `rigChanged` subscription.
    */
-  #lookSource(): LookSource {
+  #currentLookSource(): LookSource {
     const stage = this.#stage;
-    if (!stage || stage.design === this.#design) return this.#current;
-    this.#design = stage.design;
-    const { rig, design, frame } = stage;
-    this.#current = { rig, groups: buildAutoGroups(rig, design), random: this.#random, fns: presetFnsOf(frame) };
+    if (stage && stage.design !== this.#design) this.#current = this.#stageSource(stage);
     return this.#current;
+  }
+
+  /** The look source of `stage`'s rig, design and presets; remembers the design it was built for. */
+  #stageSource(stage: RigSource): LookSource {
+    const { rig, design, frame } = stage;
+    this.#design = design;
+    return { rig, groups: buildAutoGroups(rig, design), random: this.#random, fns: presetFnsOf(frame) };
   }
 }

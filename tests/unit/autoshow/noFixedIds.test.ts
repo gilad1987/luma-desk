@@ -1,3 +1,7 @@
+/**
+ * Owns a source scan: Auto Show and the demo show name no fixed fixture id. It reads text only; that the code then
+ * follows the stage at run time is owned by lookStages.test.ts and demoStages.test.ts.
+ */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';

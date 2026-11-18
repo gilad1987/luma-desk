@@ -1,7 +1,6 @@
 import type { Rig } from '../domain/rig';
 import { defaultGroupsOf } from '../domain/stage/groupsOf';
-import type { StageDesign } from '../domain/stage/StageDesign';
-import { sultansPool } from '../domain/stage/templates/sultansPool';
+import { BUILT_IN_DESIGN } from '../domain/stage/templates/sultansPool/builtInDesign';
 import type { Group, GroupPool } from './GroupLibrary';
 
 /**
@@ -9,9 +8,6 @@ import type { Group, GroupPool } from './GroupLibrary';
  * them may already use those slots for its own groups.
  */
 export const NEW_GROUPS: readonly string[] = ['LED Bars', 'Follow Spots', 'Profiles'];
-
-/** The built-in stage design; every call of `defaultGroups` reads the same one. */
-const BUILT_IN: StageDesign = sultansPool();
 
 /**
  * The factory group pool of the built-in stage only; `rig` must be the rig built from it (`buildRig()`). Slot numbers
@@ -22,7 +18,7 @@ const BUILT_IN: StageDesign = sultansPool();
  * the help page) until it wires the StageService; after that wiring this function can go.
  */
 export function defaultGroups(rig: Rig): GroupPool {
-  return defaultGroupsOf(rig, BUILT_IN, { trussGroups: false });
+  return defaultGroupsOf(rig, BUILT_IN_DESIGN, { trussGroups: false });
 }
 
 /**

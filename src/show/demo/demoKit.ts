@@ -41,7 +41,7 @@ export function createDemoKit(
   fns: Readonly<Record<PresetFnName, PresetFn>> = PRESET_FNS,
 ): DemoKit {
   return {
-    screen: rig.fixtures.filter((f) => f.type === 'screen').map((f) => f.id),
+    screen: rig.screenIds(),
     rig,
     vals: (steps) => buildCueVals(rig, steps, {}, fns),
     group: (slot) => groups[slot]?.ids ?? [],

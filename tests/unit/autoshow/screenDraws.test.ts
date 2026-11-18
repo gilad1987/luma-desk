@@ -1,3 +1,7 @@
+/**
+ * Owns the screen step's random parity: on a stage without a screen it draws the same values and sets nothing, so the
+ * rest of the look keeps its random stream. Which ids a whole look writes is owned by lookStages.test.ts.
+ */
 import { describe, expect, it } from 'vitest';
 import { rng } from '../../../src/core';
 import { buildRig } from '../../../src/domain/rig';
@@ -26,7 +30,7 @@ function screenStep(id: AutoStyleId, look: AutoGroups) {
 
 describe('addStrobesAndScreen on a stage without a screen', () => {
   it('has the built-in LED screen as its only screen group', () => {
-    expect(groups.screen).toEqual(rig.fixtures.filter((f) => f.type === 'screen').map((f) => f.id));
+    expect(groups.screen).toEqual(rig.screenIds());
     expect(groups.screen).toHaveLength(1);
   });
 

@@ -64,7 +64,7 @@ function colourExecs({ vals, group, color, aimed }: DemoKit): Partial<SavedExec>
           name: 'Singer',
           fade: 2,
           vals: vals([
-            [centre(group(1), 6), aimed('singer', { dim: 100, ...color('White'), gobo: 0, zoom: 8, grot: 0 })],
+            [middleIds(group(1), 6), aimed('singer', { dim: 100, ...color('White'), gobo: 0, zoom: 8, grot: 0 })],
           ]),
           fx: [],
         },
@@ -74,7 +74,7 @@ function colourExecs({ vals, group, color, aimed }: DemoKit): Partial<SavedExec>
 }
 
 /** The middle `count` ids of a group: the singer's key light is the centre of the FOH spots (108-113 of 101-120). */
-function centre(ids: readonly number[], count: number): number[] {
+function middleIds(ids: readonly number[], count: number): number[] {
   const first = Math.max(0, Math.floor((ids.length - count) / 2));
   return ids.slice(first, first + count);
 }
