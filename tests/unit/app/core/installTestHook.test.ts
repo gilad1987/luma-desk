@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { wireEngine } from '../../../../src/app/boot/wireEngine';
 import type { DeskTestApi } from '../../../../src/app/testHook/installTestHook';
 import { installTestHook } from '../../../../src/app/testHook/installTestHook';
+import type { DeskStageApi } from '../../../../src/app/testHook/stageHooks';
 import { ShowSerializer } from '../../../../src/show';
 import { FakeDom, FakeElement } from '../../../shared/dom';
 
@@ -20,31 +21,26 @@ class FakeObserver {
   }
 }
 
+type DeskPage = { test: DeskTestApi; fixtures: unknown; setView: unknown } & DeskStageApi;
+
 /** The hook over a real engine and serializer, on a fake page whose window holds `clock` (or no clock at all). */
 function install(clock?: object) {
   const engine = wireEngine();
-  const { groupLibrary: groups, presetLibrary: presets, pool, tempo, appState: state, programmer } = engine;
+  const { groupLibrary: groups, presetLibrary: presets, pool, tempo, appState: state, programmer, selection } = engine;
   const { rig } = engine.stage;
   const execs = pool.execs;
-  const selection = engine.selection;
   const serializer = new ShowSerializer({ rig, groups, presets, execs, tempo, state, programmer, selection });
   const dom = new FakeDom();
   dom.add('cmdFb');
   dom.add('toast');
   FakeObserver.all.length = 0;
   vi.stubGlobal('MutationObserver', FakeObserver);
-  const page: { __deskClock?: object; __desk?: { test: DeskTestApi; fixtures: unknown; setView: unknown } } = {};
+  const page: { __deskClock?: object; __desk?: DeskPage } = {};
   if (clock) page.__deskClock = clock;
   vi.stubGlobal('window', page);
   const setView = vi.fn();
-  const deps = {
-    ...engine,
-    setView,
-    execs: pool.execs,
-    serializer,
-    deskMode: () => 'desk' as const,
-  };
-  installTestHook({ ...deps, autoShow: { modulation: { pump: 1, hitUntil: 0 } } });
+  const autoShow = { modulation: { pump: 1, hitUntil: 0 } };
+  installTestHook({ ...engine, setView, execs, serializer, deskMode: () => 'desk', autoShow });
   return { engine, dom, page, setView };
 }
 
@@ -63,6 +59,12 @@ describe('installTestHook', () => {
     expect(Object.keys(page.__desk ?? {})).toEqual(['setView', 'fixtures', 'stage', 'applyTemplate', 'test']);
     expect(page.__desk?.fixtures).toBe(engine.stage.rig.fixtures);
     expect(page.__desk?.setView).toBe(setView);
+  });
+
+  it('reads fixtures from the stage at each access, so they follow a template change', () => {
+    const { page, engine } = install(fakeClock());
+    page.__desk?.applyTemplate('theatre');
+    expect([page.__desk?.fixtures, engine.stage.rig.fixtures.length]).toEqual([engine.stage.rig.fixtures, 30]);
   });
 
   it('moves the clock forward only in outputAt and returns every fixture output with its id', () => {

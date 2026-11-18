@@ -1,6 +1,5 @@
-import type { Rig } from '../../domain/rig';
 import type { AppState } from '../../engine/AppState';
-import type { EngineBus } from '../../engine/events';
+import type { EngineBus, EngineMessage } from '../../engine/events';
 import type { Executor } from '../../engine/Executor';
 import type { GroupLibrary } from '../../engine/GroupLibrary';
 import type { PresetLibrary } from '../../engine/PresetLibrary';
@@ -10,7 +9,7 @@ import type { StageService } from '../../engine/stage/StageService';
 import type { Tempo } from '../../engine/Tempo';
 import { he } from '../../i18n/he';
 import { DemoShow, GuideFlag, LayoutPrefs, ShowSerializer, ShowStorage } from '../../show';
-import { browserStore } from '../shared';
+import { browserStore, withLiveRig } from '../shared';
 
 /** The engine parts a show file holds, named as the composition root names them. */
 export interface ShowFilesDeps {
@@ -43,32 +42,26 @@ export interface ShowFiles {
  */
 export function createShowFiles(deps: ShowFilesDeps): ShowFiles {
   const { stage, execs, tempo, programmer, selection, bus } = deps;
-  const serializer = new ShowSerializer({
-    get rig(): Rig {
-      return stage.rig;
-    },
-    groups: deps.groupLibrary,
-    presets: deps.presetLibrary,
-    execs,
-    tempo,
-    state: deps.appState,
-    programmer,
-    selection,
-    stage: { service: stage, badStage: he.builder.badStage, toast: (message) => bus.emit('message', message) },
-  });
+  const serializer = new ShowSerializer(
+    withLiveRig(stage, {
+      groups: deps.groupLibrary,
+      presets: deps.presetLibrary,
+      execs,
+      tempo,
+      state: deps.appState,
+      programmer,
+      selection,
+      stage: {
+        service: stage,
+        badStage: he.builder.badStage,
+        toast: (message: EngineMessage) => bus.emit('message', message),
+      },
+    }),
+  );
   const showStorage = new ShowStorage(browserStore, () => serializer.serialize());
   // every show edit reports `showChanged`; the delayed browser save is its one listener
   bus.on('showChanged', () => showStorage.persist());
-  const demo = new DemoShow({
-    get rig(): Rig {
-      return stage.rig;
-    },
-    source: stage,
-    serializer,
-    execs,
-    state: deps.appState,
-    bus,
-  });
+  const demo = new DemoShow(withLiveRig(stage, { source: stage, serializer, execs, state: deps.appState, bus }));
   return {
     serializer,
     showStorage,
