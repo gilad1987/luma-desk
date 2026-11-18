@@ -424,6 +424,20 @@ Groups:
 - Pinned by: `tests/unit/command/CommandRunner.test.ts`.
 - Future fix: goes with C2.
 
+### C9. `Pause` on a fractional executor names `pause`, not `fade`, in its error
+
+- Source: `index.html:1920` (`selExec = clamp(num() - 1, 0, 9)`, no rounding), `1924`
+  (`execPause(execs[selExec])`), `1640` (`execPause` reads `e.fade` first)
+- Lives in: `src/command/run/runPlayback.ts:30` (`runPause`: `executorAt(..., 'reading', 'pause')`)
+- What it does: `Exec 2.5` selects index 1.5, which has no executor. A following `Pause` failed in the original
+  with `Cannot read properties of undefined (reading 'fade')`, because `execPause` read `e.fade`. The new code
+  logs `Cannot read properties of undefined (reading 'pause')`, the call it makes on the missing executor.
+- Accepted change: only the property name in the error text differs. Both versions fail the command, change no
+  state and show a red line in the command feedback. The text of a `TypeError` on a path that only crashes is not
+  user behavior, so C7's text parity does not extend to it.
+- Pinned by: no test.
+- Future fix: goes with C2 (validate the executor number, and round or reject a fraction, in the parser).
+
 ## D. Show file and boot
 
 ### D1. A saved show with no cues is replaced by the demo on the next load
