@@ -3,7 +3,7 @@ import { TYPES } from '../../domain/fixtureTypes';
 import { classifyType } from '../gdtf/classifyType';
 import type { GdtfChannel, GdtfInfo } from '../gdtf/GdtfInfo';
 import { isGenericGdtf } from '../gdtf/isGenericGdtf';
-import { typeFromKeywords } from './typeFromKeywords';
+import { typeFromKeywords } from '../gdtf/typeFromKeywords';
 
 /** The desk type of a fixture that has a GDTF, and whether a name keyword, not the GDTF, chose it. */
 export interface FixtureClass {

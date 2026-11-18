@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { exportMvr, importMvr } from '../../../src/mvr/index.ts';
 import { fallbackType } from '../../../src/mvr/import/fallbackType.ts';
-import { typeFromKeywords } from '../../../src/mvr/import/typeFromKeywords.ts';
+import { typeFromKeywords } from '../../../src/mvr/gdtf/typeFromKeywords.ts';
 import { makeMvr, sceneXml } from '../../shared/index.ts';
 
 describe('typeFromKeywords', () => {
