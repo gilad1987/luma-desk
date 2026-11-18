@@ -3,7 +3,7 @@ import type { AttrValues } from '../../../domain/attributes';
 import type { SharedUniform } from '../BeamMaterial';
 import { outputValue } from './BeamFrame';
 
-/** The LED wall shader inputs (venue LedWall); `uMode` picks the content, `uSpd` its speed. */
+/** The LED wall shader inputs (render/stage ledWallMaterial); `uMode` picks the content, `uSpd` its speed. */
 export interface ScreenUniforms {
   readonly uT: SharedUniform;
   readonly uDim: SharedUniform;
@@ -12,7 +12,10 @@ export interface ScreenUniforms {
   readonly uCol: { readonly value: Color };
 }
 
-/** Everything the screen fixture drives: wall uniforms (venue), its spill light (render core), the deck LED strip. */
+/**
+ * Everything the screen fixture drives: the wall uniforms and the deck LED strip (render/stage ScreenBuilder), and
+ * its spill light (render core).
+ */
 export interface ScreenTargets {
   readonly uniforms: ScreenUniforms;
   readonly light: PointLight;

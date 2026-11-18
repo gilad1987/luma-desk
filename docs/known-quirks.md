@@ -687,7 +687,8 @@ Groups:
 ### F7. Nosing, FOH desk and roof slab create their material before their geometry
 
 - Source: `index.html:931` (nosing), `1009` (FOH desk), `1032` (roof slab)
-- Lives in: `src/render/venue/Stage.ts`, `src/render/venue/FohRiser.ts`, `src/render/venue/RoofGrid.ts`
+- Lives in: `src/render/stage/DeckBuilder.ts` (nosing), `src/render/venue/FohRiser.ts` (FOH desk),
+  `src/render/stage/goalpostAndRoof.ts` (roof slab)
 - What it does: the original passed `new THREE.MeshStandardMaterial(...)` as an argument to `box()`, so the
   material was created before the box geometry. The new code creates the material first in a local variable.
 - Why kept: the creation order sets the uuid order (decision 24); the other order changes the venue golden.

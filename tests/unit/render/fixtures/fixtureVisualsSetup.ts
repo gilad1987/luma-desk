@@ -1,5 +1,6 @@
 import { Color, Mesh, PointLight } from 'three';
 import { vi } from 'vitest';
+import type { Fixture } from '../../../../src/domain/Fixture';
 import { rigFromDesign } from '../../../../src/domain/stage/deriveRig';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { FixtureVisualSync, FixtureVisuals } from '../../../../src/render/fixtures';
@@ -24,4 +25,11 @@ export function setupFixtureVisuals(design: StageDesign) {
     fixtures.filter((f) => f.T.shape === 'screen').map((f) => [f.id, { mesh: new Mesh(), targets }]),
   );
   return { scene, sync, picker, visuals, fixtures, screens, targets };
+}
+
+/** A copy of the first light of `fixtures` that inherits every field, with a type whose model the table lacks. */
+export function lightWithoutModel(fixtures: readonly Fixture[]): Fixture {
+  const light = fixtures.find((f) => f.T.shape !== 'screen');
+  if (!light) throw new Error('rig has no light');
+  return Object.assign(Object.create(light) as Fixture, { T: { ...light.T, model: 'no-such-model' } });
 }

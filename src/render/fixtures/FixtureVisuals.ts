@@ -60,6 +60,16 @@ export class FixtureVisuals {
     return visuals;
   }
 
+  /**
+   * Checks the light fixtures of a rig, so a stage rebuild can refuse the rig before it frees its old parts. Screen
+   * fixtures are skipped: their walls are not built yet, and the stage drops a screen fixture without a wall.
+   * @throws Error when a light type has no model or size.
+   */
+  assertBuildable(fixtures: readonly Fixture[]): void {
+    const builder = new FixtureVisualBuilder({ ...this.#deps, screenMesh: new Map() });
+    for (const f of fixtures) if (f.T.shape !== 'screen') builder.assertBuildable(f);
+  }
+
   /** Removes every visual from the scene, frees what they own and leaves an empty rig in sync and picker. */
   dispose(): void {
     const { scene, picker, sync } = this.#deps;

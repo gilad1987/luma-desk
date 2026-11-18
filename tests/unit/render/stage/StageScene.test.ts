@@ -1,17 +1,22 @@
 /** The stage scene's build and rebuild contract: one surface update per build, refit on rebuild only, no leaks. */
 import { BufferGeometry, InstancedMesh, Material, Mesh, type Object3D } from 'three';
-import type { Fixture } from '../../../../src/domain/Fixture';
-import type { ScreenSlot } from '../../../../src/render/fixtures';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { Fixture } from '../../../../src/domain/Fixture';
 import { boundsOf } from '../../../../src/domain/stage/bounds';
 import { rigFromDesign } from '../../../../src/domain/stage/deriveRig';
 import { surfacesOf } from '../../../../src/domain/stage/surfaces';
 import { festivalStage } from '../../../../src/domain/stage/templates/festival';
 import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
+import type { ScreenSlot } from '../../../../src/render/fixtures';
 import { bootStageScene } from './stageSceneSetup';
 
 afterEach(() => vi.restoreAllMocks());
 afterEach(() => vi.unstubAllGlobals());
+
+/** The built-in deck's scene children: deck, skirt and nosing (it has no risers). */
+const BUILT_IN_DECK_PARTS = 3;
+/** The built-in LED wall's scene children: the wall, two side screens with their frames, the strip, the frame. */
+const BUILT_IN_WALL_PARTS = 7;
 
 /** Every geometry, material and instanced mesh under `roots`, once each. */
 function resourcesOf(roots: readonly Object3D[]): Set<unknown> {
@@ -78,10 +83,12 @@ describe('StageScene', () => {
     const shown = scene.children.length;
     const hidden = { ...BUILT_IN_DESIGN, scenery: { ...BUILT_IN_DESIGN.scenery, deck: false, ledWall: false } };
     const hiddenStage = bootStageScene(hidden);
-    expect(hiddenStage.scene.children.length).toBe(shown - 3 - 7);
+    expect(hiddenStage.scene.children.length).toBe(shown - BUILT_IN_DECK_PARTS - BUILT_IN_WALL_PARTS);
     const [fixtures, slots] = hiddenStage.host.visuals.rebuild.mock.calls[0] as [Fixture[], Map<number, ScreenSlot>];
     expect(slots.size).toBe(0);
     expect(fixtures.some((f) => f.id === 2001)).toBe(false);
+    // the overlay labels the same fixtures: a screen without a wall gets no label
+    expect(hiddenStage.host.overlay.setFixtures).toHaveBeenCalledWith(fixtures);
     expect(host.visuals.rebuild).toHaveBeenCalledTimes(1);
   });
 });

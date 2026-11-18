@@ -26,8 +26,10 @@ export interface TestHookDeps {
   readonly merger: Pick<OutputMerger, 'compute'>;
   readonly autoShow: Pick<AutoShow, 'modulation'>;
   readonly runner: Pick<CommandRunner, 'run'>;
-  /** `renderMemory` reads its GPU resource counts. */
-  readonly renderer: Pick<WebGLRenderer, 'info'>;
+  /** `renderMemory` reads its GPU resource counts; only those two, so a test can pass a plain object. */
+  readonly renderer: {
+    readonly info: { readonly memory: Pick<WebGLRenderer['info']['memory'], 'geometries' | 'textures'> };
+  };
   /** The current console layout (`deskMode`), owned by the layout area. */
   readonly deskMode: () => LayoutMode;
 }
