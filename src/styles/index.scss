@@ -1,0 +1,47 @@
+// The cascade order of the app. Many selectors are styled in more than one file and the later rule wins at equal
+// specificity (e.g. #top in base/_top-bar.scss and desk/_top-bar-layout.scss), so keep this order: base, panels, the desk
+// layout, the MA layout, then the overlays.
+@use 'base/app';
+@use 'base/top-bar';
+@use 'base/viewer';
+@use 'base/viewer-hud';
+@use 'panels/side-panel';
+@use 'panels/pools';
+@use 'panels/sequence';
+@use 'panels/encoder-bar';
+@use 'panels/encoders';
+@use 'panels/encoder-extras';
+@use 'panels/command-line';
+@use 'panels/executors';
+@use 'panels/faders';
+@use 'panels/master';
+@use 'panels/auto-show';
+@use 'panels/auto-controls';
+@use 'desk/console';
+@use 'desk/centre-wing';
+@use 'desk/right-wing';
+@use 'desk/top-bar-layout';
+@use 'ma/console' as ma-console;
+@use 'ma/housing';
+@use 'ma/deck';
+@use 'ma/side-panel' as ma-side-panel;
+@use 'ma/screen-panels';
+@use 'ma/surface';
+@use 'ma/hardware-keys';
+@use 'ma/fader-wing';
+@use 'ma/executor-labels';
+@use 'ma/executor-buttons';
+@use 'ma/faders' as ma-faders;
+@use 'ma/feature-keys';
+@use 'ma/encoders' as ma-encoders;
+@use 'ma/touch-screens';
+@use 'ma/touch-pads';
+@use 'ma/master' as ma-master;
+@use 'ma/chassis-front';
+@use 'ma/auto-show' as ma-auto-show;
+@use 'overlays/guide-nav';
+@use 'overlays/guide-body';
+@use 'overlays/guide-boxes';
+@use 'overlays/tour';
+@use 'overlays/modal';
+@use 'overlays/rec-toast-scrollbar';

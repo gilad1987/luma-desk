@@ -1,9 +1,7 @@
 import type { Linter } from 'eslint';
 
 /**
- * The code rules adopted from budget-app (docs/rules/code.md). This list must come before the legacy block in
- * eslint.config.ts: that block turns the type-aware rules off for src/main.ts, and a type-aware rule set again after it
- * makes ESLint stop with "requires type information".
+ * The code rules adopted from budget-app (docs/rules/code.md).
  */
 export const codeRules: Linter.Config[] = [
   {
@@ -40,6 +38,17 @@ export const codeRules: Linter.Config[] = [
     files: ['src/domain/rig/*.ts'],
     ignores: ['src/domain/rig/index.ts', 'src/domain/rig/Rig.ts', 'src/domain/rig/RigBuilder.ts'],
     rules: { 'max-lines-per-function': 'off' },
+  },
+  {
+    // T20: a test that seems to need a module mock means the class should take the dependency in its constructor
+    files: ['tests/**/*.ts'],
+    rules: {
+      'no-restricted-properties': [
+        'error',
+        { object: 'vi', property: 'mock', message: 'T20: no vi.mock; inject the dependency instead.' },
+        { object: 'vi', property: 'doMock', message: 'T20: no vi.doMock; inject the dependency instead.' },
+      ],
+    },
   },
   {
     // oracles are the original desk code copied as is: the copy is the reference the parity tests compare against

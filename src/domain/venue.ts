@@ -42,7 +42,9 @@ export const TOWZ = [4.8, -20.6] as const;
 /** The circular truss: centre, outer beam radius `R`, inner wash ring radius `r2` at height `y2`. */
 export const RING = { x: 0, y: 17, z: -9, R: 9, r2: 5.2, y2: 18.2 } as const;
 
-/** The standing light towers on the deck as [x, z, height], sorted left to right then upstage first: that is id order. */
+/**
+ * The standing light towers on the deck as [x, z, height], sorted left to right then upstage first: that is id order.
+ */
 export const TOWERS: readonly (readonly [x: number, z: number, height: number])[] = [
   ...[4.5, 11, 18].flatMap((x): [number, number, number][] => [
     [-x, -16.8, 7.5],
@@ -67,16 +69,6 @@ export const ANG: readonly AngledTruss[] = [-1, 1].flatMap((sx) =>
   [-5.5, -12, -17.5].map((z) => ({ a: new Vector3(sx * 24.4, 23.6, z), b: new Vector3(sx * 11.8, 14.2, z), z, sx })),
 );
 
-/**
- * The two audience delay towers as [x, z] in metres. The Sultan's Pool template builds its delay towers from this
- * record. `src/main.ts` still draws them from its own legacy copy; the wiring step removes that copy, so the scene
- * reads this record too.
- */
-export const DELAYS: readonly (readonly [x: number, z: number])[] = [
-  [-24, 33],
-  [24, 33],
-];
-
 /** The x and z scale of the band layout, shared by the band position preset and the performer props. */
 export const SXZ = [1.3, 1.28] as const;
 
@@ -95,3 +87,12 @@ export const BAND_PTS: readonly (readonly [x: number, z: number, lift: number | 
     [3.2, -6.8],
   ] as const
 ).map((p) => [p[0] * SXZ[0], p[1] * SXZ[1], p[2]] as const);
+
+/**
+ * The world up axis. One shared vector replaces the three copies in the legacy script (`UP3`, `UP` and
+ * `new V3(0, 1, 0)`), so truss alignment, crenellation turns and crowd facing all rotate about the same axis.
+ *
+ * Shared identity object: never mutate it. Venue builders pass it to three.js as an axis, and the fixture sync tells a
+ * deck or floor hit by `normal === UP`; a changed value would tilt the venue and a copy would lose the stage lights.
+ */
+export const UP: Readonly<Vector3> = new Vector3(0, 1, 0);

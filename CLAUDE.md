@@ -11,13 +11,17 @@ Node 26 (`.nvmrc`), npm. The refactor from `index.html` into `src/` follows `doc
 
 In short:
 
-- Layers point one way: core <- domain <- engine <- command/show/autoshow/audio; render/ui -> engine. The engine
-  never imports render, ui or the DOM.
+- Layers point one way: core <- domain <- engine <- command/show/autoshow/audio; render/ui -> engine; app ->
+  everything. `src/app/` is the wiring under the composition root `src/main.ts`; no `src/` layer except
+  `src/main.ts` imports `src/app` (linted). The engine never imports render, ui or the DOM.
 - Max 100 lines per file (Markdown excluded), measured after Prettier. Split by responsibility.
-- All TypeScript: no .js/.mjs/.cjs outside `vendor/` (deleted in Phase 6). Configs are .ts.
+- All TypeScript: no .js/.mjs/.cjs file anywhere. Configs are .ts.
 - Prettier 120, single quotes, semicolons, trailing commas. SCSS only in Phase 5, by the styles owner.
 - Shared code only when 2+ modules use it: `src/core/`, `<layer>/shared/`, `tests/shared/`, each with an `index.ts`.
 - Behaviour does not change: the parity suite (goldens, screenshots) is the proof.
+- Agents (binding): write and edit files only with your file-edit tools (Write and Edit in Claude Code); never write
+  file content with a shell heredoc, `sed`, `echo` or an ad-hoc script. The npm scripts under Commands and the git
+  hook may write files.
 
 ## Commands
 

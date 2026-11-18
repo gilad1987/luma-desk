@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GuideFlag, LayoutPrefs, STORAGE_KEYS } from '../../../src/show';
-import { MemoryStore } from './MemoryStore';
+import { MemoryStore } from '../../shared';
 
 const MA_SIZE = 0.47;
 const stored = (raw: string | null) => {

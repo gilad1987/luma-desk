@@ -9,7 +9,10 @@ export class GuideFlag {
     this.#store = store;
   }
 
-  /** Whether the guide was seen. Unreadable storage counts as seen, so a blocked store never shows the guide (as before). */
+  /**
+   * Whether the guide was seen. Unreadable storage counts as seen, so a blocked store never shows the guide
+   * (as before).
+   */
   seen(): boolean {
     try {
       return Boolean(this.#store.getItem(STORAGE_KEYS.guideSeen));
