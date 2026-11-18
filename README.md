@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="icons/icon-192.png" width="96" alt="LUMA DESK icon">
+<img src="public/icons/icon-192.png" width="96" alt="LUMA DESK icon">
 
 # LUMA DESK
 
@@ -8,7 +8,7 @@
 
 ### [▶ Open the app](https://gilad1987.github.io/luma-desk/)
 
-No install and no build step. Works offline once loaded, and can be installed as an app on desktop or iPad.
+No install needed to use it. Works offline once loaded, and can be installed as an app on desktop or iPad.
 
 ![LUMA DESK: console and 3D stage](docs/screenshots/hero.png)
 
