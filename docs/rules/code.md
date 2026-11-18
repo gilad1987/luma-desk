@@ -11,9 +11,10 @@ the case goes to `docs/known-quirks.md`.
 
 - **Senior quality bar.** Professional, clean, easy-to-maintain code that follows the plan in `docs/plan/`.
 - **Layers, one way:** core <- domain <- engine <- command/show/autoshow/audio; render/ui -> engine. The engine never
-  imports render, ui or the DOM. [lint] `eslint/layerRules.ts`
+  imports render, ui or the DOM. [lint] `eslint/layerRules.ts` (static and dynamic `import()`),
+  `eslint/domGlobalRules.ts` (no `document`, `window`, `localStorage` in core, domain, engine)
 - **The wiring sits on top:** `src/app/` may import every layer, and no `src/` layer except `src/main.ts` imports
-  `src/app`. [lint] `eslint/layerRules.ts` (`APP_WIRING`)
+  `src/app`. [lint] `eslint/layerRules.ts` (`APP_WIRING`, static and dynamic `import()`)
 - **Small, focused files and classes:** one main export per file. Names say what a thing is. No clever code.
 - **No duplication:** each hotspot is removed by ONE shared abstraction. No copy-paste between modules.
 - **Strict types:** no `any`, no non-null `!` to hide a real gap, no `@ts-ignore`. Model the domain with types
@@ -23,7 +24,8 @@ the case goes to `docs/known-quirks.md`.
 - **TSDoc on every exported symbol** that tells WHY (technical-prose skill). No comments that repeat the code.
 - **Behaviour does not change.** Prove it with the parity suite, not with words.
 - **100 lines per file, hard.** Every file: `src/`, tests, configs, `build/`, `sw.ts`, CSS/SCSS, GLSL (Markdown
-  excluded), measured after Prettier. [lint] ESLint `max-lines` for .ts, `npm run check:lines` for .css/.scss/.glsl.
+  excluded), measured after Prettier. [lint] ESLint `max-lines` for .ts, `npm run check:lines` for
+  .css/.scss/.glsl/.html/.yml (the frozen `tests/shared/legacy/original-index.html` is exempt).
   Split by responsibility, never by cutting a file in half; never pack code to fit.
 - **All TypeScript.** No .js, .mjs or .cjs file anywhere. Configs are .ts; GLSL stays .glsl loaded with `?raw`.
   [lint] `npm run check:no-js`
