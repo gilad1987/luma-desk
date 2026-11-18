@@ -17,7 +17,8 @@ export function addPoolContributions(frame: BeamFrame, n: Readonly<Vector3>, out
       fixture: f,
       score: intensity * spec.power * (spec.moving ? 1 : 0.6),
       intensity,
-      color: col,
+      // copies: the candidate outlives this fixture's sync, and the sync reuses its colour for the next fixture
+      color: [col[0], col[1], col[2]],
       zoom,
       length,
       position: origin.clone(),
