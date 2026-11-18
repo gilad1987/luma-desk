@@ -7,6 +7,7 @@ import { createStageGraphics } from '../../render/stage/createStageGraphics';
 import { PostFx } from '../../render/stage/PostFx';
 import { buildVenue, type Venue } from '../../render/venue/Venue';
 import { byId } from '../../ui/dom';
+
 /** The renderer, camera and venue: everything the fixture visuals hang in. */
 export interface StageHandles {
   readonly canvas: HTMLCanvasElement;
