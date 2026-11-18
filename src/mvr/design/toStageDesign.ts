@@ -23,10 +23,10 @@ const NO_SCENERY: Readonly<Record<SceneryPart, boolean>> = {
 };
 
 /**
- * The venue of an import: the black box, a dark room with no sky, city, terraces, barricade or FOH riser. A plot
- * shows its stage in a void, and an open-air venue around it would add objects the file does not have.
+ * The venue of an import: only a dark ground and the night sky. A plot shows its stage in a void, and the walls,
+ * floors or terraces of another venue would add objects the file does not have, or cut through its set.
  */
-const MVR_VENUE: StageDesign['venue'] = { kind: 'black-box' };
+const MVR_VENUE: StageDesign['venue'] = { kind: 'mvr' };
 
 /** What `toStageDesign` gives the import: the design, the scenery to draw and the design step's own warnings. */
 export interface DesignResult {

@@ -1,7 +1,7 @@
 import { setVenue } from '../../domain/stage/edit/deckOps';
 import type { StageDesign } from '../../domain/stage/StageDesign';
 import { createTemplate, TEMPLATE_IDS, type TemplateId } from '../../domain/stage/templates';
-import { VENUE_KINDS } from '../../domain/stage/types';
+import { BUILDER_VENUE_KINDS } from '../../domain/stage/types';
 import { requireChild } from '../dom';
 import { templateCardsMarkup, venueCardsMarkup } from './startMarkup';
 
@@ -41,7 +41,7 @@ export class StartScreen {
     const design = id === 'sultans-pool' ? this.#deps.builtIn : createTemplate(id);
     this.#root.innerHTML = venueCardsMarkup;
     requireChild(this.#root, '[data-start="back"]').onclick = () => this.show();
-    for (const kind of VENUE_KINDS) {
+    for (const kind of BUILDER_VENUE_KINDS) {
       requireChild(this.#root, `[data-venue="${kind}"]`).onclick = () => this.#deps.choose(setVenue(design, kind));
     }
   }

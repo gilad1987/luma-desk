@@ -6,6 +6,7 @@ import type { BandFit } from './BandFit';
 import { buildBlackBox } from './BlackBox';
 import type { CrowdBounceUniforms } from './crowdBounce';
 import type { VenueMaterials } from './materials';
+import { buildMvrVenue } from './MvrVenue';
 import { buildOpenField } from './OpenField';
 import type { Performer } from './performerSpec';
 import type { Sky } from './Sky';
@@ -45,5 +46,7 @@ export function buildVenue(scene: Object3D, stage: StageSlots, kind: VenueKind):
       return buildBlackBox(scene, stage);
     case 'open-field':
       return buildOpenField(scene, stage);
+    case 'mvr':
+      return buildMvrVenue(scene, stage);
   }
 }

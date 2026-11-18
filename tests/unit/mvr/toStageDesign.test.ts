@@ -34,9 +34,9 @@ const result = toStageDesign({ name: 'Show.mvr', fileHash: 'abc', scene, fixture
 const { design } = result;
 
 describe('toStageDesign design', () => {
-  it('marks the source as MVR, stands it in a black box and turns all scenery off', () => {
+  it('marks the source as MVR, stands it in the MVR venue and turns all scenery off', () => {
     expect(design.source).toEqual({ kind: 'mvr', name: 'Show.mvr', fileHash: 'abc' });
-    expect(design.venue).toEqual({ kind: 'black-box' });
+    expect(design.venue).toEqual({ kind: 'mvr' });
     expect(Object.values(design.scenery)).toEqual([false, false, false, false, false]);
     expect([design.screens, design.risers, design.trusses]).toEqual([[], [], []]);
   });

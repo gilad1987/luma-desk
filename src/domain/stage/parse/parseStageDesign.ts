@@ -8,6 +8,7 @@ import { parseScreens } from './parseScreens';
 import { parseTrusses } from './parseTruss';
 import { allDefined, type Raw } from './rawValues';
 import { Reader } from './readers';
+import { storedMvrVenue } from './storedMvrVenue';
 
 /** The result of `parseStageDesign`: the checked design, or every problem found, each naming its path and value. */
 export type StageParseResult =
@@ -39,7 +40,11 @@ export function parseStageDesign(raw: unknown): StageParseResult {
   if (mvr) checkMvrFixtureIds(r, mvr, parsed.ids);
   if (!allDefined(design) || r.errors.length > 0) return { ok: false, errors: r.errors };
   const mvrField = mvr === undefined ? {} : { mvr };
-  return { ok: true, design: { v: STAGE_DESIGN_VERSION, ...design, trusses, fixtures: parsed.fixtures, ...mvrField } };
+  const venue = storedMvrVenue(design);
+  return {
+    ok: true,
+    design: { v: STAGE_DESIGN_VERSION, ...design, venue, trusses, fixtures: parsed.fixtures, ...mvrField },
+  };
 }
 
 /**
