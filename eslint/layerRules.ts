@@ -25,14 +25,15 @@ const FORBIDDEN_LAYERS: Partial<Record<Layer, readonly Layer[]>> = {
   render: ['ui'],
 };
 
-const THREE_ADDONS = {
-  group: ['three/addons', 'three/addons/*', 'three/examples/*'],
+const THREE_ADDONS: ImportRestriction = {
+  regex: '^three/(addons|examples)(/|$)',
   message: 'three/addons are render-only: domain and engine may use the three core math types alone.',
 };
-const THREE_CORE = { group: ['three'], message: 'core is pure helpers and imports no library.' };
+/** `three` and every subpath, as the old `three` glob matched: core imports no part of the library. */
+const THREE_CORE: ImportRestriction = { regex: '^three(/|$)', message: 'core is pure helpers and imports no library.' };
 
 /** The three.js imports a layer must not use: core uses no library, domain and engine only the core math types. */
-function forbiddenThree(layer: Layer): (typeof THREE_CORE)[] {
+function forbiddenThree(layer: Layer): ImportRestriction[] {
   if (layer === 'core') return [THREE_CORE, THREE_ADDONS];
   if (layer === 'domain' || layer === 'engine') return [THREE_ADDONS];
   return [];
@@ -64,11 +65,12 @@ function hebrewTextRule(layer: Layer): typeof HEBREW_TEXT {
  * no-restricted-imports and the Hebrew text rule of no-restricted-syntax.
  */
 function layerBlock(layer: Layer, forbidden: readonly Layer[]): Linter.Config {
-  const restrictions = [APP_WIRING, ...forbidden.map((name) => layerRestriction(layer, name))];
+  const layers = forbidden.map((name) => layerRestriction(layer, name));
+  const restrictions = [APP_WIRING, ...layers, ...forbiddenThree(layer)];
   return {
     files: [`src/${layer}/**/*.ts`],
     rules: {
-      'no-restricted-imports': ['error', { patterns: [SHARED_INTERNALS, ...restrictions, ...forbiddenThree(layer)] }],
+      'no-restricted-imports': ['error', { patterns: [SHARED_INTERNALS, ...restrictions] }],
       'no-restricted-syntax': ['error', ...hebrewTextRule(layer), ...restrictDynamicImports(restrictions)],
     },
   };
