@@ -13,6 +13,14 @@ on:
 permissions:
   contents: read
 
+# The whole run, not only the deploy job, is the unit of order: otherwise the check of an older main commit can finish
+# after a newer one and publish the older dist/. Every main run (push or workflow_dispatch) shares one group, and a
+# newer run cancels the older one, even in its deploy job, so the newest commit always deploys last. Each pull request
+# run gets its own group (its run id), so a check is never queued behind another run and never cancelled.
+concurrency:
+  group: pages-${{ github.event_name == 'pull_request' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'pull_request' }}
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -70,10 +78,8 @@ jobs:
     permissions:
       pages: write
       id-token: write
-    # one deploy at a time; a running deploy is never cut off
-    concurrency:
-      group: pages
-      cancel-in-progress: false
+    # no job-level concurrency: the workflow group already runs one main run at a time, and a job group with the
+    # same name as the workflow group would deadlock (GitHub cancels such a job)
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
