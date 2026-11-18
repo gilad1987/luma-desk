@@ -1,5 +1,5 @@
 import { MeshBasicMaterial, MeshStandardMaterial } from 'three';
-import { srgbCanvasTexture } from './srgbCanvasTexture';
+import { srgbCanvasTexture } from '../shared';
 
 /**
  * Materials every fixture model shares: `trim` (dark rubber and plastic details), `panel` (the Robe base front with

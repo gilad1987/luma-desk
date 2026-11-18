@@ -1,16 +1,18 @@
 import type { Linter } from 'eslint';
 import { SHARED_INTERNALS } from './sharedInternals.ts';
 
-type Layer = 'core' | 'domain' | 'engine' | 'command' | 'show' | 'autoshow' | 'audio' | 'render' | 'ui' | 'io';
+type Layer = 'core' | 'domain' | 'engine' | 'command' | 'show' | 'autoshow' | 'audio' | 'render' | 'ui' | 'io' | 'i18n';
 
 const FEATURES: readonly Layer[] = ['command', 'show', 'autoshow', 'audio'];
 const PRESENTATION: readonly Layer[] = ['render', 'ui', 'io'];
 
 /**
  * The layers each layer must not import, so dependencies point one way: core <- domain <- engine <- command, show,
- * autoshow, audio; render and ui sit on top of the engine, and ui drives render, never the reverse.
+ * autoshow, audio; render and ui sit on top of the engine, and ui drives render, never the reverse. i18n is plain
+ * text data that the engine, io and ui read, so it imports no layer.
  */
 const FORBIDDEN_LAYERS: Partial<Record<Layer, readonly Layer[]>> = {
+  i18n: ['core', 'domain', 'engine', ...FEATURES, ...PRESENTATION],
   core: ['domain', 'engine', ...FEATURES, ...PRESENTATION],
   domain: ['engine', ...FEATURES, ...PRESENTATION],
   engine: [...FEATURES, ...PRESENTATION],

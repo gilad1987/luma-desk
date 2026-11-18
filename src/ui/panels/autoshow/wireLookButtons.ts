@@ -5,7 +5,7 @@ import { byId } from '../../dom';
 import type { AutoShowDeps } from './AutoShowDeps';
 
 /** "Save look → cue": appends the playing auto look to the selected executor as its next whole-numbered cue. */
-export function saveLook({ auto, pool, state, storage, bus }: AutoShowDeps): void {
+function saveLook({ auto, pool, state, storage, bus }: AutoShowDeps): void {
   const look = pool.autoExec.cues[0];
   if (!auto.on || !look) {
     bus.emit('message', { kind: 'toast', text: 'Start Auto first' });
@@ -25,7 +25,7 @@ export function saveLook({ auto, pool, state, storage, bus }: AutoShowDeps): voi
 }
 
 /** "Build cue list": fills the first empty executor after Exec 1 with eight looks of the style and selects it. */
-export function buildCueList({ auto, looks, pool, state, storage, bus }: AutoShowDeps): void {
+function buildCueList({ auto, looks, pool, state, storage, bus }: AutoShowDeps): void {
   const style = auto.style,
     index = pool.execs.findIndex((e, i) => i > 0 && !e.cues.length),
     e = pool.execs[index];

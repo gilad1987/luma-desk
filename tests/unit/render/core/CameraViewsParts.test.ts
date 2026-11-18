@@ -4,7 +4,7 @@
 import { Object3D, PerspectiveCamera, Vector3 } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FohRig } from '../../../../src/render/camera/FohRig';
-import { smoothstep01, tweenCamera } from '../../../../src/render/camera/tweenCamera';
+import { tweenCamera } from '../../../../src/render/camera/tweenCamera';
 import { queuedAnimationFrames } from './queuedAnimationFrames';
 
 afterEach(() => {
@@ -12,15 +12,8 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('smoothstep01', () => {
-  it('eases 0..1 with the legacy k * k * (3 - 2k)', () => {
-    expect([smoothstep01(0), smoothstep01(0.5), smoothstep01(1)]).toEqual([0, 0.5, 1]);
-    expect(smoothstep01(0.25)).toBe(0.25 * 0.25 * (3 - 2 * 0.25));
-  });
-});
-
 describe('tweenCamera', () => {
-  it('runs the first step at once and stops after 700 ms', () => {
+  it('runs the first step at once, eases with the legacy k * k * (3 - 2k) and stops after 700 ms', () => {
     const frames = queuedAnimationFrames();
     let now = 0;
     vi.spyOn(performance, 'now').mockImplementation(() => now);
@@ -33,7 +26,11 @@ describe('tweenCamera', () => {
     expect(frames.pending()).toBe(1);
     now = 175;
     frames.run();
-    expect(camera.position.x).toBeCloseTo(10 * smoothstep01(0.25), 12);
+    const eased = 0.25 * 0.25 * (3 - 2 * 0.25);
+    expect([camera.position.x, target.y]).toEqual([10 * eased, 10 * eased]);
+    now = 350;
+    frames.run();
+    expect([camera.position.x, target.y]).toEqual([5, 5]);
     now = 2000;
     frames.run();
     expect([camera.position.x, target.y, frames.pending()]).toEqual([10, 10, 0]);

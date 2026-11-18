@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { gripShare } from '../../../../../src/ui/layouts/fitMath';
 import { colorMarker } from '../../../../../src/ui/layouts/ma/colorMarker';
-import { wheelSteps } from '../../../../../src/ui/layouts/ma/paneWheelScroll';
+import { wheelSteps } from '../../../../../src/ui/layouts/ma/wheelSteps';
 
 describe('colorMarker', () => {
   it('places pure red, green, blue and white where the original hue formula did', () => {

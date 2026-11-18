@@ -1,8 +1,8 @@
-import { Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, type Object3D } from 'three';
+import { Group, MeshBasicMaterial, MeshStandardMaterial, type Object3D } from 'three';
 import type { FohRig } from '../../camera/FohRig';
+import { addMesh, srgbCanvasTexture } from '../../shared';
 import { merge } from '../modelGeometry';
 import type { ModelKit } from '../models/ModelContext';
-import { srgbCanvasTexture } from '../srgbCanvasTexture';
 
 // the follow-spot camera view: blue beams converging on a performer
 const paintMonitor = (x: CanvasRenderingContext2D): void => {
@@ -51,11 +51,9 @@ export function buildRoboSpotStation(scene: Object3D, { prims }: ModelKit, fohRi
   const scr = srgbCanvasTexture(128, 72, paintMonitor);
   const g = new Group();
   g.position.set(3.0, 5.0, 47.3);
-  g.add(new Mesh(body, m));
+  addMesh(g, body, m);
   scene.add(g);
-  const sc = new Mesh(prims.planeGeo, new MeshBasicMaterial({ map: scr }));
-  sc.position.set(0, 1.3, 0.012);
+  const sc = addMesh(g, prims.planeGeo, new MeshBasicMaterial({ map: scr }), { position: [0, 1.3, 0.012] });
   sc.scale.set(0.56, 0.32, 1);
-  g.add(sc);
   fohRig.add(g);
 }

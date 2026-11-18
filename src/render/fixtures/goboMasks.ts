@@ -1,6 +1,7 @@
 /**
  * Paints one gobo's white mask on a transparent canvas of size `S` (`R` = S / 2). `r` is the gobo's own seeded
  * stream, so the scattered gobo looks the same on every load and in every size.
+ * The short names (`mx`, `S`, `R`, `r`) mirror the legacy mask code, so each painter reads line for line against it.
  */
 export type GoboMaskPainter = (mx: CanvasRenderingContext2D, S: number, R: number, r: () => number) => void;
 

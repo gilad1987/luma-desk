@@ -1,6 +1,6 @@
-import { CylinderGeometry, DoubleSide, Group, MeshStandardMaterial, SRGBColorSpace, type Object3D } from 'three';
+import { CylinderGeometry, DoubleSide, Group, MeshStandardMaterial, type Object3D } from 'three';
 import { DECK } from '../../domain/venue';
-import { addMesh, createCanvasTexture, drawCanvas } from '../shared';
+import { addMesh, srgbCanvasTexture } from '../shared';
 import { paintDrumLogo } from './drumLogoCanvas';
 import { DrumParts } from './DrumParts';
 
@@ -22,7 +22,7 @@ export function buildDrumKit(scene: Object3D): void {
     head = new MeshStandardMaterial({ color: 0xece6da, roughness: 0.6 });
   const chrome = new MeshStandardMaterial({ color: 0xd8dce2, metalness: 1, roughness: 0.15 }),
     cymbal = new MeshStandardMaterial({ color: 0xd4a640, metalness: 0.95, roughness: 0.22, side: DoubleSide });
-  const logo = createCanvasTexture(drawCanvas(256, 256, paintDrumLogo), { colorSpace: SRGBColorSpace });
+  const logo = srgbCanvasTexture(256, 256, paintDrumLogo);
   const parts = new DrumParts(kit, { shell, head, chrome, cymbal, logo });
   // kick, logo head toward the audience
   parts.drum({ r: 0.29, d: 0.48, at: [0, 0.3, 0.05], tilt: [Math.PI / 2, 0], front: true });

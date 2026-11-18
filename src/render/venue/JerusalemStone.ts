@@ -1,10 +1,9 @@
-import { MeshBasicMaterial, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, type CanvasTexture } from 'three';
-import { createCanvasTexture, drawCanvas } from '../shared';
+import { MeshBasicMaterial, MeshStandardMaterial, RepeatWrapping, type CanvasTexture } from 'three';
+import { srgbCanvasTexture } from '../shared';
 import { paintStone } from './stoneCanvas';
 
 /** One stone tile texture; the materials clone it so each surface sets its own repeat. */
-const stoneTexture = (lit: boolean): CanvasTexture =>
-  createCanvasTexture(drawCanvas(256, 256, paintStone(lit)), { colorSpace: SRGBColorSpace, wrap: RepeatWrapping });
+const stoneTexture = (lit: boolean): CanvasTexture => srgbCanvasTexture(256, 256, paintStone(lit), RepeatWrapping);
 
 /**
  * The two Jerusalem-stone looks of the venue. Each material gets its own texture clone with a repeat of one tile per

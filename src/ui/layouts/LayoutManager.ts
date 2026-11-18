@@ -1,11 +1,10 @@
 import type { DeskLayout } from '../../show';
 import { byId } from '../dom';
 import type { LayoutMode } from '../panels/layoutMode';
-import type { SideTab } from '../panels/side/sideTabsMarkup';
-import { ConsoleParts } from './ConsoleParts';
 import { DeskFit } from './DeskFit';
 import { MA_SIZE } from './fitMath';
 import type { LayoutHost } from './LayoutHost';
+import { PanelPlacement } from './PanelPlacement';
 import { toLayoutMode } from './toLayoutMode';
 
 /**
@@ -13,75 +12,64 @@ import { toLayoutMode } from './toLayoutMode';
  * then refits the console and the 3D view. The choice and the grip size persist through the host's `LayoutPrefs`.
  */
 export class LayoutManager {
-  private settings: DeskLayout = { deskMode: 'ma', deskZoom: 'auto', maSize: undefined };
-  /** The tab MA forced onto screen 1 because Pools sits on screen 2; leaving MA gives Pools back. */
-  private forcedTab: SideTab | null = null;
-  private readonly parts = new ConsoleParts();
-  private readonly deskFit: DeskFit;
-
+  #settings: DeskLayout = { deskMode: 'ma', deskZoom: 'auto', maSize: undefined };
   readonly #host: LayoutHost;
+  readonly #placement: PanelPlacement;
+  readonly #deskFit: DeskFit;
 
   constructor(host: LayoutHost) {
     this.#host = host;
-    this.deskFit = new DeskFit((px) => host.setConsoleHeight(px));
+    this.#placement = new PanelPlacement(host);
+    this.#deskFit = new DeskFit((px) => host.setConsoleHeight(px));
     const modeSel = byId('layoutSel', HTMLSelectElement),
       zoomSel = byId('deskZoom', HTMLSelectElement);
     modeSel.onchange = () => {
-      this.settings = { ...this.settings, deskMode: modeSel.value };
+      this.#settings = { ...this.#settings, deskMode: modeSel.value };
       this.apply();
     };
     zoomSel.onchange = () => {
-      this.settings = { ...this.settings, deskZoom: zoomSel.value };
+      this.#settings = { ...this.#settings, deskZoom: zoomSel.value };
       this.fit();
       host.resize();
       this.save();
     };
     addEventListener('resize', () => {
-      if (this.settings.deskMode !== 'classic') this.fit();
+      if (this.#settings.deskMode !== 'classic') this.fit();
     });
   }
 
+  /** The mode on screen, for code that acts per layout; any unknown saved name reads as the classic page. */
   get mode(): LayoutMode {
-    return toLayoutMode(this.settings.deskMode);
+    return toLayoutMode(this.#settings.deskMode);
   }
 
   /** The grip's share of the window height; undefined = adaptive. The grip refits and saves itself. */
   get maSize(): number | undefined {
-    return this.settings.maSize;
+    return this.#settings.maSize;
   }
   set maSize(size: number | undefined) {
-    this.settings = { ...this.settings, maSize: size };
+    this.#settings = { ...this.#settings, maSize: size };
   }
 
   /** Boot: reads the saved layout (else MA at auto zoom), shows it in the selects and applies it. */
   restore(): void {
-    this.settings = this.#host.prefs.load(MA_SIZE) ?? this.settings;
-    byId('layoutSel', HTMLSelectElement).value = this.settings.deskMode;
-    byId('deskZoom', HTMLSelectElement).value = this.settings.deskZoom;
+    this.#settings = this.#host.prefs.load(MA_SIZE) ?? this.#settings;
+    byId('layoutSel', HTMLSelectElement).value = this.#settings.deskMode;
+    byId('deskZoom', HTMLSelectElement).value = this.#settings.deskZoom;
     this.apply();
   }
 
+  /**
+   * Applies the chosen mode: places the panels, refits the console, redraws the encoders and resizes the renderer.
+   * The FOH view is not the same in MA and in the other layouts, so it is set again, without a tween, when MA is
+   * entered or left. Saves last, so a reload restores what is on screen.
+   */
   apply(): void {
     const host = this.#host,
-      body = document.body,
-      wasMa = body.classList.contains('ma'),
-      ma = this.settings.deskMode === 'ma';
-    this.parts.restore();
-    body.classList.toggle('desk', this.settings.deskMode === 'desk');
-    body.classList.toggle('ma', ma);
-    if (ma) {
-      this.parts.toMa(() => host.keypad());
-      if (host.sideTabs.current === 'pools') {
-        host.sideTabs.show('sheet');
-        this.forcedTab = 'sheet';
-      }
-    } else if (this.settings.deskMode === 'desk') this.parts.toDesk(() => host.keypad());
-    else this.parts.toClassic(() => host.removeKeypad());
-    if (!ma && this.forcedTab) {
-      if (host.sideTabs.current === this.forcedTab) host.sideTabs.show('pools');
-      this.forcedTab = null;
-    }
-    this.deskFit.invalidate();
+      wasMa = document.body.classList.contains('ma'),
+      ma = this.#settings.deskMode === 'ma';
+    this.#placement.place(this.#settings.deskMode);
+    this.#deskFit.invalidate();
     host.renderEncoders();
     this.fit();
     host.resize();
@@ -91,10 +79,11 @@ export class LayoutManager {
 
   /** Refits the console to the window (window resize, grip drag, zoom change). */
   fit(): void {
-    this.deskFit.fit(this.settings);
+    this.#deskFit.fit(this.#settings);
   }
 
+  /** Writes the layout to the host's `LayoutPrefs`; the grip calls it after a drag, the selects after a change. */
   save(): void {
-    this.#host.prefs.save(this.settings);
+    this.#host.prefs.save(this.#settings);
   }
 }

@@ -1,15 +1,4 @@
-/** Scroll step in px: just under one 21 px sheet row, so the sheet's row snapping still moves on touchpad deltas. */
-const STEP = 20;
-
-/**
- * Adds a wheel delta to the carried remainder and returns the new remainder and the whole steps to scroll. Line-mode
- * deltas (`deltaMode` 1) count as 20 px per line.
- */
-export function wheelSteps(carry: number, deltaY: number, deltaMode: number): readonly [carry: number, steps: number] {
-  const total = carry + (deltaMode ? deltaY * STEP : deltaY),
-    steps = Math.trunc(total / STEP);
-  return [total - steps * STEP, steps];
-}
+import { WHEEL_STEP_PX, wheelSteps } from './wheelSteps';
 
 /** The pane the wheel should scroll; at the end of the groups list it goes on to the pane around it. */
 function scrollTarget(ev: WheelEvent): HTMLElement | null {
@@ -34,7 +23,7 @@ export function bindPaneWheelScroll(body: HTMLElement): void {
       ev.preventDefault();
       const [rest, steps] = wheelSteps(carry, ev.deltaY, ev.deltaMode);
       carry = rest;
-      if (steps) pane.scrollBy({ top: steps * STEP });
+      if (steps) pane.scrollBy({ top: steps * WHEEL_STEP_PX });
     },
     { passive: false },
   );

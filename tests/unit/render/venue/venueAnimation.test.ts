@@ -1,7 +1,6 @@
-import { BoxGeometry, Group, Mesh, MeshBasicMaterial } from 'three';
+import { Group, Mesh } from 'three';
 import { describe, expect, it } from 'vitest';
 import { animateCrowd } from '../../../../src/render/venue/crowdAnimation';
-import { colourLedStrip } from '../../../../src/render/venue/ledStripColour';
 import { animatePerformers } from '../../../../src/render/venue/performersAnimation';
 import type { Performer } from '../../../../src/render/venue/performerSpec';
 
@@ -33,18 +32,5 @@ describe('render/venue per-frame updates', () => {
     animateCrowd(uniforms, now, tempo, 0.42);
     expect(uniforms.uBeat.value).toBe((((now - tempo.beatOrigin) * tempo.bpm) / 60) * Math.PI);
     expect(uniforms.uJump.value).toBe(0.42);
-  });
-
-  it('colourLedStrip matches the legacy strip colour', () => {
-    const strip = new Mesh(new BoxGeometry(), new MeshBasicMaterial());
-    const o = { r: 80, g: 30, b: 55 },
-      intensity = 0.7;
-    colourLedStrip(strip, o, intensity);
-    const expected = new MeshBasicMaterial().color.setRGB(
-      (o.r / 100) * intensity * 2,
-      (o.g / 100) * intensity * 2,
-      (o.b / 100) * intensity * 2,
-    );
-    expect(strip.material.color.toArray()).toEqual(expected.toArray());
   });
 });

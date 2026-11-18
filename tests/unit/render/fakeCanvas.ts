@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { asReal } from '../../shared/dom';
 
 /** The client rect fields the render code reads from `getBoundingClientRect()`. */
 interface FakeRect {
@@ -36,7 +37,7 @@ export function fakeCanvas(options: FakeCanvasOptions = {}): HTMLCanvasElement {
     removeEventListener: vi.fn(),
     getBoundingClientRect: () => rect,
   };
-  // The one cast the render tests keep: CanvasTexture and OrbitControls take DOM types that no plain object can
-  // satisfy in Node. The object above carries every member those callers read.
-  return canvas as unknown as HTMLCanvasElement;
+  // CanvasTexture and OrbitControls take DOM types that no plain object can satisfy in Node. The object above
+  // carries every member those callers read.
+  return asReal<HTMLCanvasElement>(canvas);
 }

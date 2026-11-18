@@ -1,8 +1,8 @@
-import { Group, Mesh, MeshStandardMaterial, Sprite, SpriteMaterial, type Object3D } from 'three';
+import { Group, MeshStandardMaterial, Sprite, SpriteMaterial, type Object3D } from 'three';
 import { DECK } from '../../../domain/venue';
+import { addMesh, srgbCanvasTexture } from '../../shared';
 import { merge, part } from '../modelGeometry';
 import type { ModelKit } from '../models/ModelContext';
-import { srgbCanvasTexture } from '../srgbCanvasTexture';
 
 /** One haze puff sprite rising from hazer (x, z); `ph` staggers the 3 puffs of a hazer. */
 export interface HazePuff {
@@ -60,7 +60,8 @@ export function buildHazers(scene: Object3D, { prims, materials }: ModelKit): Ha
   for (const [x, z] of HAZER_SPOTS) {
     const g = new Group();
     g.position.set(x, DECK, z);
-    g.add(new Mesh(body, caseMat), new Mesh(alu, materials.alu));
+    addMesh(g, body, caseMat);
+    addMesh(g, alu, materials.alu);
     scene.add(g);
     for (let k = 0; k < 3; k++) {
       const sp = new Sprite(

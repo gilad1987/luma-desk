@@ -1,9 +1,8 @@
 import type { CanvasTexture } from 'three';
-import type { CanvasPainter } from '../shared';
+import { srgbCanvasTexture, type CanvasPainter } from '../shared';
 import { BAR_LENS_FACES } from './lens/barLensFaces';
 import { MOVER_LENS_FACES } from './lens/moverLensFaces';
 import { STATIC_LENS_FACES } from './lens/staticLensFaces';
-import { srgbCanvasTexture } from './srgbCanvasTexture';
 
 /** One lens face per fixture model (`FixtureType.model`); FORTE FS shares the FORTE face. */
 export type LensTextureSet = Readonly<Record<string, CanvasTexture>>;

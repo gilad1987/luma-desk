@@ -11,7 +11,7 @@ export interface CameraPose {
 }
 
 /** Ease-in-out on 0..1, so the camera starts and stops gently. */
-export function smoothstep01(k: number): number {
+function smoothstep01(k: number): number {
   return k * k * (3 - 2 * k);
 }
 
