@@ -23,7 +23,7 @@ new one.
    and `import` (MVR). Only `builder` and `import` emit `showChanged`, so a preview or a show load is not saved.
 4. The built-in Sultan's Pool design derives the original rig exactly, and a show on the built-in design has no
    `stage` key, so the default stage and the default show stay as they were.
-5. No `StagePartBuilder` interface. Plan §4 W3 listed `src/render/stage/StagePartBuilder.ts` as the extension point
+5. No `StagePartBuilder` interface. The Stage Builder plan (§4, batch W3) listed `src/render/stage/StagePartBuilder.ts` as the extension point
    for MVR parts. It is deferred until MVR needs it. Until then MVR adds its parts through the contract hooks (§7,
    §9): its surfaces go in the one `SurfaceHit.setSurfaces(boxes)` call of a rebuild (G6), and it fits the camera
    with `CameraViews.fitTo(bounds)` (G7). An interface with no second implementation is a premature abstraction
