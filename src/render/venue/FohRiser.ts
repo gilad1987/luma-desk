@@ -9,7 +9,7 @@ import type { VenueMaterials } from './materials';
  */
 export function buildFohRiser(scene: Object3D, materials: VenueMaterials): Mesh[] {
   const riser = addMesh(scene, new BoxGeometry(8, 1.4, 4.5), materials.dark, { position: [0, 4.3, 47] });
-  // the legacy code passed this material as an argument, so it exists before the desk geometry
+  // quirk F7 (orig:1009): the legacy code passed this material as an argument, so it exists before the desk geometry
   const deskMaterial = new MeshStandardMaterial({ color: 0x15151a });
   const desk = addMesh(scene, new BoxGeometry(6.5, 0.9, 0.9), deskMaterial, { position: [0, 5.45, 46] });
   return [riser, desk];

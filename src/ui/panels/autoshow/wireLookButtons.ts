@@ -27,7 +27,7 @@ function saveLook({ auto, pool, state, storage, bus }: AutoShowDeps): void {
 /** "Build cue list": fills the first empty executor after Exec 1 with eight looks of the style and selects it. */
 function buildCueList({ auto, looks, pool, state, storage, bus }: AutoShowDeps): void {
   const style = auto.style,
-    index = pool.execs.findIndex((e, i) => i > 0 && !e.cues.length),
+    index = pool.execs.findIndex((e, i) => i > 0 && !e.cues.length), // quirk E6 (orig:2720)
     e = pool.execs[index];
   if (!e) {
     bus.emit('message', { kind: 'toast', text: 'No empty executor — clear one first' });

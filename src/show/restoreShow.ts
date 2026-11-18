@@ -29,11 +29,12 @@ export function restoreShow({ storage, serializer, execs, demo, repaint }: Resto
     if (saved) {
       serializer.load(JSON.parse(saved));
       repaint();
-      loaded = execs.some((e) => e.cues.length);
+      loaded = execs.some((e) => e.cues.length); // quirk D1 (orig:3089): a show with no cue counts as nothing saved
       if (loaded) startFirstExec(execs);
     }
   } catch {
-    // unreadable storage or a broken save: the demo below replaces it, unless the save already counted as loaded
+    // quirk D8, quirk D6 (orig:3089): unreadable storage or a broken save; the demo below replaces it, unless the
+    // save already counted as loaded
   }
   if (loaded) return;
   demo.load();
@@ -45,5 +46,5 @@ function startFirstExec(execs: readonly Executor[]): void {
   const first = execs[0];
   if (!first?.cues.length) return;
   first.goto(0, 0);
-  if (!first.level) first.level = 1;
+  if (!first.level) first.level = 1; // quirk D2 (orig:3089)
 }

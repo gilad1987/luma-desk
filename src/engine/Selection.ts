@@ -44,11 +44,13 @@ export class Selection {
 
   /**
    * Combines `ids` with the selection. `replace` drops duplicates and keeps first occurrences; `add` appends only new
-   * ids; `sub` removes; `toggle` flips each id in turn, so a repeated id flips twice.
+   * ids; `sub` removes; `toggle` flips each id in turn, so a repeated id flips twice. Saved shows are not validated,
+   * so a hand-edited group may hold `"101"` for 101; the original looked ids up as object keys, which matched both,
+   * so each id goes through `Number` before the numeric rig lookup.
    */
   set(ids: readonly number[], mode: SelectMode = 'replace'): void {
     const rig = this.#source?.rig ?? this.#rig;
-    const known = ids.filter((id) => rig.get(id) !== undefined);
+    const known = ids.map(Number).filter((id) => rig.get(id) !== undefined);
     if (mode === 'replace') this.#ids = [...new Set(known)];
     else if (mode === 'add') {
       for (const id of known) if (!this.#ids.includes(id)) this.#ids.push(id);
@@ -58,7 +60,7 @@ export class Selection {
         this.#ids = this.#ids.includes(id) ? this.#ids.filter((x) => x !== id) : [...this.#ids, id];
     }
     this.#members = new Set(this.#ids);
-    this.#bus.emit('selectionChanged', undefined);
+    this.#bus.emit('selectionChanged', undefined); // quirk Q2 (orig:1802): no listener reads it
   }
 
   /** Reverses the selection order, which reverses fans and phaser offsets across the same fixtures. */

@@ -14,7 +14,7 @@ const PRESET_SLOTS = 30;
 /**
  * The group and preset pools. It repaints only when the pools change (`poolsChanged`, synchronous, so exactly where
  * the old code called `renderPools`), on a preset tab click and after a rename; never on the ticks or on selection
- * changes (quirk Q4).
+ * changes (quirk Q4, orig:1959).
  */
 export class PoolsPanel {
   #presetTab: PresetType = 4;

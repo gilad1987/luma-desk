@@ -1,11 +1,11 @@
 /**
- * The 100-line limit for the files ESLint cannot see. ESLint `max-lines` covers .ts; CSS, SCSS and GLSL need this
- * check, and both must count the same way, so a file that passes one gate never fails the other.
+ * The 100-line limit for the files ESLint cannot see. ESLint `max-lines` covers .ts; CSS, SCSS, GLSL, HTML and YAML
+ * need this check, and both must count the same way, so a file that passes one gate never fails the other.
  */
 export const MAX_FILE_LINES = 100;
 
 /** Extensions this check owns; .ts is left to ESLint so a file is never reported twice. */
-const CHECKED_EXTENSIONS = ['.css', '.scss', '.glsl'];
+const CHECKED_EXTENSIONS = ['.css', '.scss', '.glsl', '.html', '.yml'];
 
 export interface SourceFile {
   readonly path: string;
@@ -27,10 +27,15 @@ export function countLines(text: string): number {
   return lines.at(-1) === '' ? lines.length - 1 : lines.length;
 }
 
-/** Returns the CSS, SCSS and GLSL files over the limit, so the caller can list every offender in one run. */
+/** Tells the scanner which files to read, so the PNG and JSON baselines under tests/ are never loaded. */
+export function isLineChecked(path: string): boolean {
+  return CHECKED_EXTENSIONS.some((ext) => path.endsWith(ext));
+}
+
+/** Returns the checked files over the limit, so the caller can list every offender in one run. */
 export function findOversizedFiles(files: readonly SourceFile[]): OversizedFile[] {
   return files
-    .filter((file) => CHECKED_EXTENSIONS.some((ext) => file.path.endsWith(ext)))
+    .filter((file) => isLineChecked(file.path))
     .map((file) => ({ path: file.path, lines: countLines(file.text) }))
     .filter((file) => file.lines > MAX_FILE_LINES);
 }

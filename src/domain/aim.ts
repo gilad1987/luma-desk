@@ -38,6 +38,7 @@ export function aimAt(
   if (f.rotation) d.applyQuaternion(inverseRotation.copy(f.rotation).conjugate());
   const isFloorPose = !f.rotation && f.mount === 'floor';
   // A tilt-only bar sweeps only its own Y-Z plane (dirFrom with pan 0), so aim at the target's projection on it.
+  // quirk B4 (orig:820): tilt-only bars clamp to ±95, not to the ±135 of the tilt attribute
   if (f.T.tiltOnly)
     return { pan: 0, tilt: +clamp(Math.atan2(d.z, isFloorPose ? d.y : -d.y) / D2R, -95, 95).toFixed(1) };
   let t = Math.acos(clamp(isFloorPose ? d.y : -d.y, -1, 1)) / D2R;
@@ -50,5 +51,5 @@ export function aimAt(
     t = -t;
   }
   if (t < 0.5 && t > -0.5) p = 0;
-  return { pan: +p.toFixed(1), tilt: +clamp(t, -135, 135).toFixed(1) };
+  return { pan: +p.toFixed(1), tilt: +clamp(t, -135, 135).toFixed(1) }; // quirk B3 (orig:825)
 }

@@ -87,8 +87,8 @@ export class LookDraft {
   }
 
   /**
-   * The finished look as cue 1 of the auto executor. It keeps the `sec` field (quirk E7): the auto panel reads it, and
-   * the save paths remove it before the cue reaches a show file.
+   * The finished look as cue 1 of the auto executor. It keeps the `sec` field (quirk E7, orig:2614): the auto panel
+   * reads it, and the save paths remove it before the cue reaches a show file.
    */
   toCue(): Cue {
     const name = `${this.style.name} · ${sectionName(this.section) || this.section}`;

@@ -38,7 +38,7 @@ function paintDeck(x: CanvasRenderingContext2D): void {
 /**
  * Creates the shared venue materials in the legacy order. Two extra materials (the legacy `matStone` and `matPerson`)
  * are created and dropped: no mesh uses them, but each takes a uuid from the seeded `Math.random`, and removing them
- * would shift every later uuid and random value (decision 24).
+ * would shift every later uuid and random value (decision 24, quirk F6, orig:925-926).
  */
 export function createVenueMaterials(): VenueMaterials {
   const dark = new MeshStandardMaterial({ color: 0x0c0c0e, roughness: 0.9, metalness: 0.05 });

@@ -84,7 +84,7 @@ export class PresetLibrary {
     const pool = this.#presets[type],
       old = pool[slot];
     pool[slot] = {
-      name: old?.name && old.kind === 'fix' ? old.name : `${PRESET_TYPES[type]} ${slot}`,
+      name: old?.name && old.kind === 'fix' ? old.name : `${PRESET_TYPES[type]} ${slot}`, // quirk B5 (orig:1876)
       kind: 'fix',
       fix,
     };

@@ -41,7 +41,9 @@ Why one direction: the engine must run in Vitest with no browser, and a parity t
 without a DOM. So `engine` never imports `render`, `ui`, `io` or the DOM. `domain` and `engine` may use the `three`
 core package for its math types only (`Vector3` keeps the float results exact, decision 1); `three/addons` stay in
 `render`. `eslint.config.ts` enforces the layer imports with `no-restricted-imports` (`eslint/layerRules.ts`), one
-rule set per layer, plus one rule that lets only `src/main.ts` and `src/app/` import `src/app/`.
+rule set per layer, plus one rule that lets only `src/main.ts` and `src/app/` import `src/app/`; the same patterns,
+the app rule included, guard `import()` through `no-restricted-syntax`, and `eslint/domGlobalRules.ts` keeps
+`document`, `window` and `localStorage` out of core, domain and engine.
 
 ## Wiring
 
@@ -160,7 +162,8 @@ There are three TypeScript projects (`tsconfig.json` references them): `tsconfig
 The full rules are in `CLAUDE.md` and `docs/rules/`. In short:
 
 - **100 lines per file**, measured after Prettier, for every file except Markdown. ESLint `max-lines` checks `.ts`;
-  `npm run check:lines` checks `.css`, `.scss` and `.glsl`. Split by responsibility: the rig is data files per area
+  `npm run check:lines` checks `.css`, `.scss`, `.glsl`, `.html` and `.yml` (the frozen
+  `tests/shared/legacy/original-index.html` is exempt). Split by responsibility: the rig is data files per area
   plus one index that joins them in build order.
 - **All TypeScript.** No `.js`, `.mjs` or `.cjs` file anywhere. Configs are `.ts`.
 - **Strict types.** `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`, `verbatimModuleSyntax`. No `any`,

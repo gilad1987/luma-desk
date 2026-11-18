@@ -14,9 +14,10 @@ const WORKER_FILE = 'sw.js';
 /**
  * Builds sw.ts into dist/sw.js and writes into it the list of files to cache and a cache name made from their
  * content (ADR 0003), so neither is edited by hand again. Build only: in `npm run dev`, Vite answers /sw.js with the
- * transformed module sw.ts. It contains `export {}`, which a classic worker (src/main.ts registers 'sw.js' without
- * `type: 'module'`) cannot parse, and the placeholders are not written in. So the registration fails, src/main.ts
- * ignores the failure (quirk I10), and the dev server never serves stale files.
+ * transformed module sw.ts. It contains `export {}`, which a classic worker (src/io/serviceWorkerRegistration.ts
+ * registers 'sw.js' without `type: 'module'`) cannot parse, and the placeholders are not written in. So the
+ * registration fails, src/io/serviceWorkerRegistration.ts ignores the failure (quirk I10, orig:2916), and the dev
+ * server never serves stale files.
  */
 export function swManifestPlugin(): Plugin {
   let root = '';

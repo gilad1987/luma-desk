@@ -37,7 +37,7 @@ export class SideTabs {
 
   /**
    * Switches pane as a click on its tab would (the old `sideTo`). The MA layout shows the pools on their own screen,
-   * so there the Pools tab is never selected (quirk Q19).
+   * so there the Pools tab is never selected (quirk Q19, orig:2845).
    */
   show(tab: SideTab): void {
     if (tab !== 'pools' || this.#mode() !== 'ma') this.#buttons.get(tab)?.click();
