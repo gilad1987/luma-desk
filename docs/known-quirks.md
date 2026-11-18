@@ -503,7 +503,8 @@ Groups:
 - What it does: older versions saved `MA_SIZE` (0.47) without a grip drag. That value is treated as the adaptive
   default. A user who drags exactly to 0.47 also gets the adaptive default after reload.
 - Why kept: `lumadesk-layout2` compatibility.
-- Pinned by: `tests/e2e/layoutRestore.spec.ts` (`LayoutManager.restore` at boot: a saved 0.47 is dropped by the
+- Pinned by: `tests/unit/show/layoutPrefs.test.ts` ("reads the default size as adaptive (known quirk D7)"). Also
+  covered by `tests/e2e/layoutRestore.spec.ts` (`LayoutManager.restore` at boot: a saved 0.47 is dropped by the
   save at the end of boot, 0.55 stays).
 - Future fix: none needed while old layouts exist.
 

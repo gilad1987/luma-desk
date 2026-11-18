@@ -171,9 +171,9 @@ The locale is the folder `src/i18n/he/`: one file per area, joined by `src/i18n/
   (`he.autoshow.styles`); a string used by 2+ modules moves to `he.common` in the same change. [review]
   Source: i18n:14-38.
 - **I4. Text with values is a function in `src/i18n/he/`.**
-  `noSelectionApplied: (n: number) => \`…${n} הגופים…\``. Keep the exact original string for parity (no
-`Intl.PluralRules` or rewording during the refactor). After the refactor, a count message may use Hebrew plural
-forms (`one`/`two`/`many`/`other`). [review] Source: i18n:51-57 (adapted: no i18next).
+  ``noSelectionApplied: (n: number) => `…${n} הגופים…` ``. Keep the exact original string for parity (no
+  `Intl.PluralRules` or rewording during the refactor). After the refactor, a count message may use Hebrew plural
+  forms (`one`/`two`/`many`/`other`). [review] Source: i18n:51-57 (adapted: no i18next).
 - **I5. `src/i18n/` imports nothing from outside `src/i18n/`.** It is pure data, so Playwright specs can import it
   (T26). Imports inside the folder, such as `src/i18n/he/index.ts` joining its area files, are allowed. [review]
   Source: test:588-589 (e2e imports only the locale file).

@@ -40,7 +40,7 @@ function forbiddenThree(layer: Layer): (typeof THREE_CORE)[] {
  * glob, because the old glob also matched package paths such as `firebase/app`. No other src folder is named `app`.
  */
 const APP_WIRING = {
-  regex: '^(\\.\\./)+app(/|$)',
+  regex: '^(\\./|(\\.\\./)+)app(/|$)',
   message: 'Only src/main.ts and src/app may import src/app.',
 };
 

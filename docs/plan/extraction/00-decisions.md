@@ -50,8 +50,8 @@
     background, where the original already showed the static panels.
 28. One layout-prefs store: `src/show/LayoutPrefs.ts` reads and writes `lumadesk-layout2` for every layout. `src/ui/layouts/layoutStorage.ts` and its test are removed; `tests/unit/show/layoutPrefs.test.ts` and `tests/unit/ui/layouts/layoutPrefsParity.test.ts` pin the reads (known quirks D7, D9).
 29. Shared test code is split by runtime: `tests/shared/dom/` (the fake DOM for Vitest), `tests/shared/legacy/` (`legacyMarkup`, the markup of the original page) and `tests/shared/e2e/` (Playwright page helpers), each behind its own `index.ts`, so a Vitest unit never loads `@playwright/test` (rule T25).
-30. The random stream is re-baselined once, in Phase 6 (commit `4cc51d2`). The original exposed `__desk.THREE`
-    (`import * as THREE`), which kept all of three.js in the bundle, including 4 module-level objects whose
+30. The random stream is re-baselined once, in Phase 6 (commit `4cc51d2`). The original and the port before Phase 6
+    exposed `__desk.THREE` (`import * as THREE`); in the bundled port this kept all of three.js, including 4 module-level objects whose
     constructors draw a uuid from `Math.random`. Decisions 23 and 26 drop `THREE` from the hook, so tree-shaking drops
     those objects: 16 fewer seeded draws at script start (84 -> 68). The crowd layout branches on random values, so the
     venue build then draws 6 more; the boot total goes from 277539 to 277529 (-10). The random-calls golden
