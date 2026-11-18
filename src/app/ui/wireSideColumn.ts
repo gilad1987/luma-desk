@@ -41,7 +41,5 @@ export function wireSideColumn(deps: PanelsWithServices, topBar: Pick<TopBar, 's
     execs: engine.pool.execs,
     sideTabs,
   });
-  // a stage change can mark other presets unavailable (G10); a show load repaints the pools through `showLoaded`
-  engine.bus.on('rigChanged', () => pools.render());
   return { sideTabs, pools, showLoaded, autoShowPanel, sequence, sheet };
 }

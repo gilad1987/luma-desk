@@ -56,7 +56,8 @@ export class SheetPanel implements UiPanel {
     const { fixtures, programmer, selection } = this.#deps;
     if (!this.#rows || this.#rows.length !== fixtures.length) {
       this.#table.innerHTML = sheetTable(fixtures);
-      this.#rows = [...this.#table.querySelectorAll<HTMLTableRowElement>('tr[data-id]')].map((tr) => new SheetRow(tr));
+      const trs = this.#table.querySelectorAll<HTMLTableRowElement>('tr[data-id]');
+      this.#rows = Array.from(trs, (tr) => new SheetRow(tr));
     }
     const rows = this.#rows;
     fixtures.forEach((f, i) => {
