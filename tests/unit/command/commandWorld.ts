@@ -89,5 +89,5 @@ export function commandWorld() {
     runner.run(line);
     return { line, log, toast, state: snapshot() };
   };
-  return { run, bus, runner };
+  return { run, bus, runner, pool };
 }
