@@ -21,19 +21,22 @@ async function openBuilder(page: Page): Promise<void> {
 async function clickCentre(page: Page, selector: string): Promise<string> {
   const box = await page.locator(selector).first().boundingBox();
   if (!box) throw new Error(`clickCentre: ${selector} has no box`);
-  const reached = page.evaluate(
-    (areas) =>
-      new Promise<string>((resolve) =>
+  // The handle resolves when the listener is attached. A plain evaluate that is not awaited can attach it after
+  // the click has gone by, and then the test waits for a click that never comes.
+  const reached = await page.evaluateHandle(
+    (areas) => ({
+      click: new Promise<string>((resolve) =>
         document.addEventListener(
           'click',
           (ev) => resolve(ev.target instanceof Element ? (ev.target.closest(areas)?.id ?? '') : ''),
           { once: true, capture: true },
         ),
       ),
+    }),
     DESK_AREAS,
   );
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-  return reached;
+  return reached.evaluate((r) => r.click);
 }
 
 /** Presses Tab `count` times and returns the desk area each focus stop lies in ('' outside the desk). */
