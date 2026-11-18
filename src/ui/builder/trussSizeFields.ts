@@ -3,16 +3,12 @@ import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { StageTruss } from '../../domain/stage/trussTypes';
 import type { EditorSession } from './EditorSession';
 import { numberField } from './numberField';
+import { MIN_SIZE_M, SIZE_STEP_M } from './sizeLimits';
 import { dimensionsOf, withDimension, type DimensionKey } from './trussDimensions';
 
-const MIN_SIZE_M = 0.1;
 const MAX_SIZE_M = 60;
-const SIZE_STEP_M = 0.5;
 
-/**
- * The size fields of one truss (length, radius, width, height by kind). The Trusses tab and the property panel both
- * show them, so both send the same edit for the same field.
- */
+/** The size fields of the selected truss in the Trusses tab (length, radius, width, height by kind). */
 export function trussSizeFields(session: Pick<EditorSession, 'edit'>, truss: StageTruss): HTMLElement[] {
   return dimensionsOf(truss.params).map(({ key, label, title, value }) =>
     numberField({

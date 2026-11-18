@@ -49,7 +49,7 @@ describe('mountTools', () => {
     click(button(panel(), 'Straight'));
     const onTarget = control(panel(), 'On').children.map((option) => option.value);
     const lengthFields = descendants(panel()).filter((el) => el.children[0]?.textContent === 'Length (m)');
-    expect([onTarget, lengthFields.length]).toEqual([[session.draft.trusses[0]?.id, ''], 2]);
+    expect([onTarget, lengthFields.length]).toEqual([[session.draft.trusses[0]?.id, ''], 1]);
   });
 
   it('removes its DOM, the top view and its pending frame, and stops following the session on dispose', () => {

@@ -3,15 +3,14 @@ import type { StageDesign } from '../../domain/stage/StageDesign';
 import { he } from '../../i18n/he';
 import type { EditorSession } from './EditorSession';
 import { ErrorText, type RunEdit } from './ErrorText';
-import { clearChildren, makeHeading } from './formControls';
+import { makeHeading } from './formControls';
 import { numberField } from './numberField';
 import { riserControls } from './riserControls';
+import { MIN_SIZE_M, SIZE_STEP_M } from './sizeLimits';
 import { venueControls } from './venueControls';
 import { wallControls } from './wallControls';
 
-const MIN_SIZE_M = 0.1;
 const DECK_MAX_M = 100;
-const SIZE_STEP_M = 0.5;
 const HEIGHT_STEP_M = 0.1;
 
 const DECK_FIELDS: readonly { key: keyof DeckSize; label: string; title: string; step: number }[] = [
@@ -35,19 +34,17 @@ export class StageTab {
 
   /** Rebuilds the tab from the current draft. */
   render(): void {
-    clearChildren(this.root);
     const d = this.#session.draft;
     const error = new ErrorText();
     const run: RunEdit = (op) => error.show(this.#session.edit(op));
-    const parts = [
+    this.root.replaceChildren(
       makeHeading('Deck'),
       ...this.#deckFields(d),
       ...wallControls(d, this.#session, run),
-      ...riserControls(d, run),
+      ...riserControls(d, this.#session, run),
       ...venueControls(d, run),
       error.root,
-    ];
-    for (const part of parts) this.root.appendChild(part);
+    );
   }
 
   #deckFields(d: StageDesign): HTMLElement[] {

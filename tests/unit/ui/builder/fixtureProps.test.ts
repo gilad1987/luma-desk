@@ -4,6 +4,7 @@
  * `PropertyPanel.test.ts`; the move rules by tests/unit/domain/stage/edit/fixtureMoves.test.ts.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { roundToMillimetre } from '../../../../src/domain/stage/edit/millimetres';
 import type { StageFixture } from '../../../../src/domain/stage/StageDesign';
 import { createTemplate } from '../../../../src/domain/stage/templates';
 import { EditorSession } from '../../../../src/ui/builder/EditorSession.ts';
@@ -33,8 +34,8 @@ describe('fixtureProps', () => {
     const moved = session.draft.fixtures.find((f) => f.id === 1201);
     const [x, y, z] = strip.pixel?.p ?? [0, 0, 0];
     expect([moved?.position, moved?.pixel?.p]).toEqual([
-      [strip.position[0] + 2, strip.position[1], strip.position[2]],
-      [x + 2, y, z],
+      roundToMillimetre([strip.position[0] + 2, strip.position[1], strip.position[2]]),
+      roundToMillimetre([x + 2, y, z]),
     ]);
   });
 

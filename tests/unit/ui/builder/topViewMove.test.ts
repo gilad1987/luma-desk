@@ -3,6 +3,7 @@
  * op that moves the selection. The pointer gesture that calls them is in `topView.test.ts`.
  */
 import { describe, expect, it } from 'vitest';
+import { roundToMillimetre } from '../../../../src/domain/stage/edit/millimetres';
 import { createTemplate } from '../../../../src/domain/stage/templates';
 import { FINE_SNAP_M, moveSelection, SNAP_M, snappedTarget } from '../../../../src/ui/builder/topViewMove';
 
@@ -33,7 +34,7 @@ describe('moveSelection', () => {
     if (!before) throw new Error('the fixture exists');
     expect([positionOf(next, firstOnFront), positionOf(next, loose.id)]).toEqual([
       [before[0] + 1, before[1], before[2] - 0.5],
-      [loose.position[0] + 1, loose.position[1], loose.position[2] - 0.5],
+      roundToMillimetre([loose.position[0] + 1, loose.position[1], loose.position[2] - 0.5]),
     ]);
   });
 
@@ -43,6 +44,6 @@ describe('moveSelection', () => {
     const before = pool.fixtures.find((f) => f.id === 1201)?.pixel?.p;
     if (!before) throw new Error('fixture 1201 has a pixel line');
     const next = moveSelection({ fixtures: [1201], trusses: [] }, [2, 0, 0])(pool);
-    expect(pixelOf(next)).toEqual([before[0] + 2, before[1], before[2]]);
+    expect(pixelOf(next)).toEqual(roundToMillimetre([before[0] + 2, before[1], before[2]]));
   });
 });

@@ -1,19 +1,25 @@
-import { addRiser, removeRiser } from '../../domain/stage/edit/deckOps';
+import { addRiser, moveRiser, removeRiser } from '../../domain/stage/edit/deckOps';
 import type { StageDesign, StageRiser } from '../../domain/stage/StageDesign';
 import type { Vec3 } from '../../domain/stage/types';
 import { he } from '../../i18n/he';
+import type { EditorSession } from './EditorSession';
 import type { RunEdit } from './ErrorText';
 import { makeButton, makeHeading } from './formControls';
+import { positionFields } from './positionFields';
 
 /** A new riser in metres: 2 x 2 m, 0.4 m high, the size of a standard stage platform. */
 const RISER_SIZE_M: Vec3 = [2, 0.4, 2];
 
 /**
- * The Risers section of the Stage tab: one row per riser with its Remove button, then Add riser. A new riser stands
- * on the deck centre; the top view (W4c) is where it is placed.
+ * The Risers section of the Stage tab: one row per riser with its Remove button and its X and Z fields, then Add
+ * riser. A new riser stands on the deck centre and the X and Z fields place it; it has no Y field, because it stands
+ * on the deck. The top view draws risers but does not move them.
  */
-export function riserControls(d: StageDesign, run: RunEdit): HTMLElement[] {
-  const rows = d.risers.map((riser) => riserRow(riser, run));
+export function riserControls(d: StageDesign, session: Pick<EditorSession, 'edit'>, run: RunEdit): HTMLElement[] {
+  const rows = d.risers.flatMap((riser) => [
+    riserRow(riser, run),
+    ...positionFields(riser.at, (_target, delta) => session.edit((draft) => moveRiser(draft, riser.id, delta)), [0, 2]),
+  ]);
   const add = makeButton('Add riser', he.builder.tools.addRiser, () =>
     run((draft) => addRiser(draft, deckCentreTop(draft), RISER_SIZE_M)),
   );

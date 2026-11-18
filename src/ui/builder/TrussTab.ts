@@ -5,7 +5,7 @@ import type { Vec3 } from '../../domain/stage/types';
 import { he } from '../../i18n/he';
 import type { EditorSession } from './EditorSession';
 import { ErrorText } from './ErrorText';
-import { clearChildren, makeButton, makeHeading } from './formControls';
+import { makeButton, makeHeading } from './formControls';
 import { trussSizeFields } from './trussSizeFields';
 
 const PRESETS: readonly { preset: TrussPreset; label: string }[] = [
@@ -15,8 +15,16 @@ const PRESETS: readonly { preset: TrussPreset; label: string }[] = [
   { preset: 'tower', label: 'Tower' },
 ];
 
-/** Where a new preset stands, in metres: hung trusses at hang height, a goalpost and a tower on the ground. */
-const PRESET_HEIGHT_M: Readonly<Record<TrussPreset, number>> = { straight: 6, circle: 8, goalpost: 0, tower: 0 };
+/**
+ * Where a new preset stands, in metres: hung trusses at hang height, a tower on the ground beside the deck, and a
+ * goalpost on the deck top (`'deck'`), because its posts stand on the stage it frames.
+ */
+const PRESET_HEIGHT_M: Readonly<Record<TrussPreset, number | 'deck'>> = {
+  straight: 6,
+  circle: 8,
+  goalpost: 'deck',
+  tower: 0,
+};
 /** A new tower stands this far outside the stage-left deck edge, so it does not stand on the deck. */
 const TOWER_GAP_M = 1;
 
@@ -35,7 +43,6 @@ export class TrussTab {
 
   /** Rebuilds the tab from the current draft and selection. */
   render(): void {
-    clearChildren(this.root);
     const d = this.#session.draft;
     const error = new ErrorText();
     const presets = document.createElement('div');
@@ -46,8 +53,7 @@ export class TrussTab {
     const selected = d.trusses.find((t) => t.id === this.#session.selection.trusses[0]);
     const sizes = selected ? trussSizeFields(this.#session, selected) : [];
     const list = d.trusses.map((truss) => this.#trussButton(truss, truss === selected));
-    const parts = [makeHeading('Add truss'), presets, error.root, makeHeading('Trusses'), ...list, ...sizes];
-    for (const part of parts) this.root.appendChild(part);
+    this.root.replaceChildren(makeHeading('Add truss'), presets, error.root, makeHeading('Trusses'), ...list, ...sizes);
   }
 
   #addPreset(preset: TrussPreset): string | null {
@@ -70,5 +76,6 @@ export class TrussTab {
 /** The position of a new preset: centred across the deck depth; see `PRESET_HEIGHT_M` and `TOWER_GAP_M`. */
 function presetSpot(deck: StageDeck, preset: TrussPreset): Vec3 {
   const x = preset === 'tower' ? deck.x0 - TOWER_GAP_M : (deck.x0 + deck.x1) / 2;
-  return [x, PRESET_HEIGHT_M[preset], (deck.z0 + deck.z1) / 2];
+  const height = PRESET_HEIGHT_M[preset];
+  return [x, height === 'deck' ? deck.height : height, (deck.z0 + deck.z1) / 2];
 }

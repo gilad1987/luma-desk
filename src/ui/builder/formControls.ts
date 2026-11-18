@@ -78,11 +78,6 @@ export function makeHeading(text: string): HTMLElement {
   return heading;
 }
 
-/** Removes every child of `root`, the first step of a panel re-render. */
-export function clearChildren(root: HTMLElement): void {
-  for (const child of Array.from(root.children)) child.remove();
-}
-
 /**
  * The member of `list` equal to `value`, typed as the list's union. Options are built from the same list, so a miss
  * is a bug in the markup.

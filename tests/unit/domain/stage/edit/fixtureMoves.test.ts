@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { moveFixtures } from '../../../../../src/domain/stage/edit/fixtureMoves.ts';
 import { setFixtureProps } from '../../../../../src/domain/stage/edit/itemOps.ts';
+import { roundToMillimetre } from '../../../../../src/domain/stage/edit/millimetres.ts';
 import type { StageDesign, StageFixture } from '../../../../../src/domain/stage/StageDesign.ts';
 import { createTemplate } from '../../../../../src/domain/stage/templates/index.ts';
 import { sampleDesign } from './sampleDesign.ts';
@@ -27,16 +28,23 @@ function countedDesign(): { d: StageDesign; reads: () => number } {
 const fixtureOf = (d: ReturnType<typeof sampleDesign>, id: number) => d.fixtures.find((f) => f.id === id);
 
 describe('moveFixtures', () => {
-  it('moves the pixel strip with the fixture (Sultan’s Pool 1201)', () => {
+  it('moves the pixel strip with the fixture, both stored on whole millimetres (Sultan’s Pool 1201)', () => {
     const pool = createTemplate('sultans-pool');
     const before = fixtureOf(pool, 1201);
     if (!before?.pixel) throw new Error('fixture 1201 of the Sultan’s Pool template has a pixel line');
     const after = fixtureOf(moveFixtures(pool, [1201], [1, 0, -2]), 1201);
     const [x, y, z] = before.pixel.p;
     expect([after?.position, after?.pixel?.p]).toEqual([
-      [before.position[0] + 1, before.position[1], before.position[2] - 2],
-      [x + 1, y, z - 2],
+      roundToMillimetre([before.position[0] + 1, before.position[1], before.position[2] - 2]),
+      roundToMillimetre([x + 1, y, z - 2]),
     ]);
+  });
+
+  it('stores a moved position as the typed value, not one ulp off it', () => {
+    // -39.528 + (5.473 + 39.528) is 5.472999999999999 in floats
+    const at = setFixtureProps(sampleDesign(), 301, { position: [-39.528, 1, 3] });
+    const moved = moveFixtures(at, [301], [5.473 + 39.528, 0, 0]);
+    expect(Object.is(fixtureOf(moved, 301)?.position[0], 5.473)).toBe(true);
   });
 
   it('moves many fixtures with one parse: an unmoved fixture is read as often as by a one-fixture edit', () => {
