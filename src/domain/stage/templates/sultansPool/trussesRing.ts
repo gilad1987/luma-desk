@@ -1,4 +1,5 @@
-import { ANG, DECK, DELAYS, RING, TOWERS } from '../../../venue';
+import { DELAY_TOWERS } from '../../../delayTowers';
+import { ANG, DECK, RING, TOWERS } from '../../../venue';
 import type { StageTruss } from '../../trussTypes';
 import { AT_ORIGIN } from './trussesMain';
 
@@ -25,7 +26,7 @@ function rings(): StageTruss[] {
 }
 
 function delayTowers(): StageTruss[] {
-  return DELAYS.map(([x, z], i) => ({
+  return DELAY_TOWERS.map(([x, z], i) => ({
     id: `delay-${i + 1}`,
     name: `Delay tower ${i + 1}`,
     role: 'front',

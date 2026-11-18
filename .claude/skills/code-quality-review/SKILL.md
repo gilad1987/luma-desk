@@ -108,7 +108,7 @@ moves, restructurings that keep behavior and make the code dramatically smaller,
 - Thin wrappers, identity abstractions, one-implementation interfaces that are not boundaries.
 - `any`, `!`, casts or optional params that muddy the contract.
 - Copy-paste instead of the canonical owner; a new `utils.ts`; deep imports past a shared `index.ts`.
-- "Temporary" branches likely to become permanent debt; new entries in `LEGACY_UNTIL_PHASE_6`.
+- "Temporary" branches likely to become permanent debt; any new lint exemption list or file-level rule switch-off.
 - Undisposed GPU resources, per-frame allocation, listeners that outlive their panel.
 - A changed localStorage key, show shape, golden file or screenshot baseline without a stated reason.
 
@@ -140,7 +140,7 @@ ordering. Report at most six nits inline; give the rest as a count.
 Anything `npm run typecheck`, `npm run lint` (ESLint, `check:lines`, `format:check`) or `npm test` already rejects
 is not a finding. Run them first and report their exit codes; a failing gate is reported once, as a blocker.
 
-**Skip**: `package-lock.json`, `dist/**`, `vendor/**`, `tests/golden/**`, `tests/fixtures/**`,
+**Skip**: `package-lock.json`, `dist/**`, `tests/golden/**`, `tests/fixtures/**`,
 `tests/e2e/__screenshots__/**`, `docs/screenshots/**`, `docs/plan/**`, and `src/main.ts` lines that only moved
 out unchanged (review what replaced them).
 

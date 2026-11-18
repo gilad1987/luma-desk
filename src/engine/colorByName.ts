@@ -8,8 +8,8 @@ export interface NamedColor {
 }
 
 /**
- * The preset colour with this name. Style palettes and the demo show name colours, so an unknown name is a data error and throws, as
- * the original lookup did when it read a field of a missing entry.
+ * The preset colour with this name. Style palettes and the demo show name colours, so an unknown name is a data error
+ * and throws, as the original lookup did when it read a field of a missing entry.
  */
 export function colorByName(name: string): NamedColor {
   const entry = COLORS.find((c) => c[0] === name);

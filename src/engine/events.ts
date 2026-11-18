@@ -20,8 +20,8 @@ export type EngineEvents = {
   /** Operator feedback, in the order the original code logged and toasted. */
   message: EngineMessage;
   /**
-   * A cue was recorded, with the executor index and the cue number. Nothing listens today: the repaint and the save come
-   * from `stateDirty` and `showChanged`, which Store Cue also emits.
+   * A cue was recorded, with the executor index and the cue number. Nothing listens today: the repaint and the save
+   * come from `stateDirty` and `showChanged`, which Store Cue also emits.
    */
   cueStored: { readonly exec: number; readonly num: number };
   /** The group or preset pools changed and must be repainted. */

@@ -11,7 +11,7 @@ import { Programmer } from '../../../src/engine/Programmer';
 import { Selection } from '../../../src/engine/Selection';
 import { Tempo } from '../../../src/engine/Tempo';
 import { DemoShow, ShowSerializer, ShowStorage } from '../../../src/show';
-import { MemoryStore } from './MemoryStore';
+import { MemoryStore } from '../../shared';
 
 /** A frozen executor clock; the show layer never reads time, playback only stamps it. */
 const clock: Clock = { nowMs: () => 0, nowSeconds: () => 0 };

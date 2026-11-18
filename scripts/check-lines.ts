@@ -1,4 +1,4 @@
-// `npm run check:lines`: fails when a .css or .glsl file under src/ or build/ is over the line limit.
+// `npm run check:lines`: fails when a .css, .scss or .glsl file under src/ or build/ is over the line limit.
 // Node runs this file directly (built-in type stripping), so the import keeps its .ts extension.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -19,4 +19,6 @@ for (const file of oversized) {
   console.error(`${file.path}: ${file.lines} lines (max ${MAX_FILE_LINES})`);
 }
 if (oversized.length > 0) process.exit(1);
-console.log(`check:lines: every .css and .glsl file under ${ROOTS.join('/ and ')}/ is within ${MAX_FILE_LINES} lines`);
+console.log(
+  `check:lines: every .css, .scss and .glsl file under ${ROOTS.join('/ and ')}/ is within ${MAX_FILE_LINES} lines`,
+);

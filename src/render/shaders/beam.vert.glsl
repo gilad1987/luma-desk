@@ -1,0 +1,2 @@
+varying float vT;varying vec3 vN;varying vec3 vV;varying vec3 vL;varying vec3 vW;
+void main(){vT=-position.y;vL=position;vW=(modelMatrix*vec4(position,1.)).xyz;vec4 mv=modelViewMatrix*vec4(position,1.);vV=-mv.xyz;vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*mv;}

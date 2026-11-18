@@ -1,18 +1,21 @@
 import type { Linter } from 'eslint';
+import { APP_WIRING, appWiringBlock } from './appWiring.ts';
 import { SHARED_INTERNALS } from './sharedInternals.ts';
 
 const FEATURES = ['command', 'show', 'autoshow', 'audio'] as const;
 const PRESENTATION = ['render', 'ui', 'io'] as const;
 /** Every layer, bottom up; the rules are built in this order. */
-const LAYERS = ['core', 'domain', 'engine', 'mvr', ...FEATURES, ...PRESENTATION] as const;
+const LAYERS = ['i18n', 'core', 'domain', 'engine', 'mvr', ...FEATURES, ...PRESENTATION] as const;
 type Layer = (typeof LAYERS)[number];
 
 /**
  * The layers each layer must not import, so dependencies point one way: core <- domain <- engine <- command, show,
  * autoshow, audio; render and ui sit on top of the engine, and ui drives render, never the reverse. mvr is a pure
  * parser on core and domain: it turns a file into data, so only the features and presentation above it may use it.
+ * i18n is plain text data that the engine, io and ui read, so it imports no layer.
  */
 const FORBIDDEN_LAYERS: Partial<Record<Layer, readonly Layer[]>> = {
+  i18n: ['core', 'domain', 'engine', 'mvr', ...FEATURES, ...PRESENTATION],
   core: ['domain', 'engine', 'mvr', ...FEATURES, ...PRESENTATION],
   domain: ['engine', 'mvr', ...FEATURES, ...PRESENTATION],
   engine: ['mvr', ...FEATURES, ...PRESENTATION],
@@ -58,7 +61,7 @@ const SHORTEST_PATH = {
  * Rules for the files of one layer that sit `depth` folders below `src/`. An import string does not say which folder
  * it reaches, but a file at a known depth reaches `src/` with exactly `depth` `../` steps. So only `../../mvr` from
  * `src/domain/stage/x.ts` is the mvr layer; `./stage/mvr` and `../domain/stage/mvr` are files inside a layer.
- * It repeats the shared-folder rule because a later no-restricted-imports entry replaces it.
+ * It repeats the shared-folder and wiring rules because a later no-restricted-imports entry replaces them.
  */
 function depthRules(layer: Layer, forbidden: readonly Layer[], depth: number): Linter.Config {
   const last = depth === MAX_DEPTH;
@@ -73,7 +76,7 @@ function depthRules(layer: Layer, forbidden: readonly Layer[], depth: number): L
     rules: {
       'no-restricted-imports': [
         'error',
-        { patterns: [SHARED_INTERNALS, SHORTEST_PATH, ...layers, ...(FORBIDDEN_THREE[layer] ?? [])] },
+        { patterns: [SHARED_INTERNALS, APP_WIRING, SHORTEST_PATH, ...layers, ...(FORBIDDEN_THREE[layer] ?? [])] },
       ],
     },
   };
@@ -81,8 +84,11 @@ function depthRules(layer: Layer, forbidden: readonly Layer[], depth: number): L
 
 const DEPTHS = Array.from({ length: MAX_DEPTH }, (_, index) => index + 1);
 
-/** The import rules of every layer, one config per layer and file depth. */
-export const layerRules: Linter.Config[] = LAYERS.flatMap((layer) => {
-  const forbidden = FORBIDDEN_LAYERS[layer];
-  return forbidden ? DEPTHS.map((depth) => depthRules(layer, forbidden, depth)) : [];
-});
+/** The wiring block, then the import rules of every layer that has limits, one config per layer and file depth. */
+export const layerRules: Linter.Config[] = [
+  appWiringBlock,
+  ...LAYERS.flatMap((layer) => {
+    const forbidden = FORBIDDEN_LAYERS[layer];
+    return forbidden ? DEPTHS.map((depth) => depthRules(layer, forbidden, depth)) : [];
+  }),
+];
