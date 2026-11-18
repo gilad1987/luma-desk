@@ -14,8 +14,9 @@ export const NEW_GROUPS: readonly string[] = ['LED Bars', 'Follow Spots', 'Profi
  * are part of the show format (the demo show and saved shows refer to groups by number), so groups are only ever
  * appended, never reordered. The rules are the domain's `STANDARD_GROUPS`, shared with every other stage; truss groups
  * are left out, so the pool stays the 37 slots saved shows were made with. For the current stage, any stage, use
- * `defaultPoolOf` with the StageService. The `(rig)` signature stays because main.ts calls it so (the show reset and
- * the help page) until it wires the StageService; after that wiring this function can go.
+ * `defaultPoolOf` with the StageService, as New Show and the help page do. It stays for the callers without a stage
+ * service: the `ShowSerializer` and demo-show fallbacks (no `stage` deps) and the unit tests that build the built-in
+ * rig alone.
  */
 export function defaultGroups(rig: Rig): GroupPool {
   return defaultGroupsOf(rig, BUILT_IN_DESIGN, { trussGroups: false });

@@ -1,4 +1,5 @@
 import { autoStyleTaglines } from './autoStyleTaglines';
+import { builder } from './builder';
 import { guide } from './guide';
 import { messages } from './messages';
 import { mvr } from './mvr';
@@ -19,4 +20,5 @@ export const he = {
   topBar,
   messages,
   mvr,
+  builder,
 } as const;

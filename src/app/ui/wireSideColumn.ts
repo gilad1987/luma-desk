@@ -40,8 +40,9 @@ export function wireSideColumn(deps: PanelsWithServices, topBar: Pick<TopBar, 's
     side,
     execs: engine.pool.execs,
     sideTabs,
-    fixtures: engine.rig.fixtures,
-    stageDesign: deps.stageDesign,
+    // the boot rig's rows; the sheet rebuilds them on a stage change once it listens to `rigChanged`
+    fixtures: engine.stage.rig.fixtures,
+    stageDesign: () => engine.stage.design,
   });
   return { sideTabs, pools, showLoaded, autoShowPanel, sequence, sheet };
 }

@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import type { StageFixturePatch } from '../deskApi';
+import type { StageFixturePatch } from '../mvrStageInfo';
 
 /**
  * Checks the patches after an export and a new import against the ones before. A fixture that had a patch keeps it.

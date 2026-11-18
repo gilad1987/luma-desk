@@ -1,4 +1,3 @@
-import type { Rig } from '../../domain/rig';
 import type { EngineBus } from '../../engine/events';
 import { downloadJson, stamp } from '../../io/download';
 import type { DemoShow, ShowSerializer, ShowStorage } from '../../show';
@@ -8,7 +7,7 @@ import { ShowFileDialog } from '../../ui/panels/showfile/ShowFileDialog';
 /** What the Show File dialog needs from the root, the show objects and the "ui" area. */
 export interface ShowFileDialogDeps {
   readonly bus: EngineBus;
-  readonly rig: Rig;
+  readonly stage: ShowFileDeps['stage'];
   /** The shared modal the "ui" area builds before this dialog. */
   readonly modal: ShowFileDeps['modal'];
   readonly serializer: Pick<ShowSerializer, 'serialize' | 'load'>;
@@ -32,7 +31,7 @@ export function wireShowFileDialog(deps: ShowFileDialogDeps): ShowFileDialog {
   return new ShowFileDialog({
     bus: deps.bus,
     modal: deps.modal,
-    rig: deps.rig,
+    stage: deps.stage,
     serializer,
     storage: deps.showStorage,
     demo: {

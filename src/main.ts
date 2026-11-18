@@ -19,9 +19,6 @@ import { FpsClock } from './app/ui/FpsClock';
 import { wirePanels } from './app/ui/wirePanels';
 import { createAutoShow } from './app/uix/createAutoShow';
 import { createShowFiles } from './app/uix/createShowFiles';
-import { BUILT_IN_DESIGN } from './domain/stage/templates/sultansPool/builtInDesign';
-import { StageService } from './engine/stage/StageService';
-import { he } from './i18n/he';
 import { restoreShow } from './show';
 import { byId } from './ui/dom';
 import { appShellMarkup } from './ui/layouts/appShellMarkup';
@@ -32,13 +29,11 @@ import { ViewportPicking } from './ui/panels/viewport/ViewportPicking';
 document.body.insertAdjacentHTML('afterbegin', appShellMarkup({ viewer: viewerMarkup, side: '', desk: '' }));
 
 const engine = wireEngine();
-const { rig, bus, pool } = engine;
+const { stage, bus, pool } = engine;
 const { execs } = pool;
 const render = wireRender(engine);
 const files = createShowFiles({ ...engine, execs });
 const auto = createAutoShow(engine);
-// temporary stand-in until Stage Builder's W2c wiring builds the one StageService the engine and render use
-const stage = new StageService(bus, { builtIn: BUILT_IN_DESIGN, tooManyFixtures: he.messages.stage.tooManyFixtures });
 const mvr = wireMvr({ bus, scene: render.scene, stage, modal: () => panels.modal });
 
 const panels = wirePanels({
@@ -49,14 +44,20 @@ const panels = wirePanels({
   layoutMode: () => layout.mode(),
   guideOrTourOpen: () => guide.isOpen() || tour.isActive(),
   mvr: mvr.actions,
-  stageDesign: () => stage.design,
 });
-new ViewportPicking({ ...engine, ...render, fixtures: rig.fixtures });
+// a getter: box selection reads the current rig at each drag, so it follows every stage change
+new ViewportPicking({
+  ...engine,
+  ...render,
+  get fixtures() {
+    return stage.rig.fixtures;
+  },
+});
 wireMidi(engine);
 render.stageRenderer.observeViewer();
 
 const { guide, tour } = wireGuide({
-  rig,
+  stage,
   sideTabs: panels.sideTabs,
   isMa: () => layout.mode() === 'ma',
   guideFlag: files.guideFlag,
@@ -87,11 +88,10 @@ new FrameLoop({ ...engine, ...render, ...auto, fps, ui }).start();
 installTestHook({
   ...engine,
   ...files,
-  fixtures: rig.fixtures,
   setView: render.setView,
+  renderer: render.renderer,
   execs,
   autoShow: auto.autoShow,
   deskMode: () => layout.mode(),
-  mvrStage: stage,
   mvrReady: mvr.ready,
 });

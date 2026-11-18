@@ -1,8 +1,10 @@
 import { PerspectiveCamera, Vector3 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FohRig } from './FohRig';
+import type { StageBounds } from '../../domain/stage/types';
+import { fitViews } from './fitViews';
 import { tweenCamera } from './tweenCamera';
-import { VIEWS, type CameraView, type ViewName } from './viewTable';
+import { VIEWS, type CameraView, type ViewName, type ViewTable } from './viewTable';
 
 /** What the camera needs from the UI, passed in so render never reads or writes UI DOM. */
 export interface CameraViewsOptions {
@@ -24,6 +26,8 @@ export class CameraViews {
   readonly fohRig = new FohRig();
   private readonly options: CameraViewsOptions;
   private current: ViewName = 'foh';
+  /** The views `setView` moves to: the built-in table, or a copy fitted by `fitTo`. */
+  private views: ViewTable = VIEWS;
 
   constructor(canvas: HTMLCanvasElement, options: CameraViewsOptions) {
     this.options = options;
@@ -44,12 +48,21 @@ export class CameraViews {
   }
 
   /**
+   * Fits the views to a stage's bounds (G7, rule in `fitViews`), or restores the built-in table for null. It only
+   * swaps the table: the camera stays where it is until the next `setView`, so a caller that wants the fitted
+   * framing at once calls `setView(currentView)`, and a call at boot moves nothing.
+   */
+  fitTo(bounds: StageBounds | null): void {
+    this.views = bounds ? fitViews(bounds) : VIEWS;
+  }
+
+  /**
    * Moves to a named view, at once or with a 700 ms tween. Only the animated path reports the change, as in the
    * legacy code where the instant path returned before the button update.
    */
   setView(view: ViewName, isInstant = false): void {
     const ma = view === 'foh' && this.options.isMaLayout();
-    const next: CameraView = VIEWS[ma ? 'fohMa' : view];
+    const next: CameraView = this.views[ma ? 'fohMa' : view];
     this.current = view;
     this.fohRig.setVisible(!ma);
     this.camera.fov = next.fov ?? 46;

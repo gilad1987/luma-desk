@@ -13,22 +13,24 @@ export type RenderHandles = StageHandles &
 
 /**
  * Builds the whole three.js side after the engine: stage, fixture visuals, then the renderer that draws them with
- * the fixture-id overlay. The page must already hold `#c`, `#ov` and `#viewer` (index.html).
+ * the fixture-id overlay, and subscribes the stage scene to `rigChanged` (after the engine listeners). The page must already hold `#c`, `#ov` and `#viewer` (index.html).
  */
-export function wireRender({
-  rig,
-  selection,
-  appState,
-}: Pick<EngineHandles, 'rig' | 'selection' | 'appState'>): RenderHandles {
-  const stage = wireStage();
-  const visuals = wireFixtureVisuals({ stage, fixtures: rig.fixtures, selection, appState });
+export function wireRender(engine: Pick<EngineHandles, 'stage' | 'selection' | 'appState' | 'bus'>): RenderHandles {
+  const { selection, appState, bus } = engine;
+  // the boot rig; on `rigChanged` the stage scene rebuilds the visuals and the overlay from the current rig
+  const { fixtures } = engine.stage.rig;
+  // a 2D canvas: it creates no three.js object, so building it first keeps the creation order of the scene
+  const overlay = new FixtureIdOverlay(byId('ov', HTMLCanvasElement), fixtures, (id) => selection.has(id));
+  const stage = wireStage(engine.stage.design);
+  const visuals = wireFixtureVisuals({ stage, fixtures, selection, appState, overlay });
   const stageRenderer = new StageRenderer({
     renderer: stage.renderer,
     scene: stage.scene,
     views: stage.views,
     postFx: stage.postFx,
-    overlay: new FixtureIdOverlay(byId('ov', HTMLCanvasElement), rig.fixtures, (id) => selection.has(id)),
+    overlay,
     viewer: byId('viewer'),
   });
+  bus.on('rigChanged', ({ design }) => stage.stageScene.rebuild(design, engine.stage.rig.fixtures));
   return { ...stage, ...visuals, stageRenderer };
 }

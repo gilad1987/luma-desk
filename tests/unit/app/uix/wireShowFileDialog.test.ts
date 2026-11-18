@@ -2,11 +2,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { wireShowFileDialog } from '../../../../src/app/uix/wireShowFileDialog';
 import { EventBus } from '../../../../src/core';
 import { buildRig } from '../../../../src/domain/rig';
+import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import { defaultGroups } from '../../../../src/engine/defaultGroups';
 import type { EngineEvents } from '../../../../src/engine/events';
 import { FakeButton, FakeDom, FakeElement } from '../../../shared/dom';
 
 const rig = buildRig();
+const stage = { rig, design: BUILT_IN_DESIGN, isBuiltIn: true };
 
 /** Opens the dialog with every collaborator writing its name into one call log, so the tests read the order. */
 function open() {
@@ -21,7 +23,7 @@ function open() {
   const serializer = { serialize: vi.fn(), load: record('load') };
   wireShowFileDialog({
     bus: new EventBus<EngineEvents>(),
-    rig,
+    stage,
     modal: { open: vi.fn(), close: record('close') },
     serializer,
     showStorage: { persist: record('persist') },

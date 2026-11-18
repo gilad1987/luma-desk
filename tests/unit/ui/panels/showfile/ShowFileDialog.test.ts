@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EventBus } from '../../../../../src/core';
 import { buildRig } from '../../../../../src/domain/rig';
+import { BUILT_IN_DESIGN } from '../../../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import { defaultGroups } from '../../../../../src/engine/defaultGroups';
 import type { EngineEvents, EngineMessage } from '../../../../../src/engine/events';
 import type { ShowFileV1 } from '../../../../../src/show/ShowFile';
@@ -36,7 +37,7 @@ function openDialog() {
     stamp: () => '20261117-2350',
     mvr: { importFile: vi.fn(), loadDemoRig: vi.fn(), exportMvr: vi.fn() },
   };
-  const deps: ShowFileDeps = { ...fakes, bus, rig };
+  const deps: ShowFileDeps = { ...fakes, bus, stage: { rig, design: BUILT_IN_DESIGN, isBuiltIn: true } };
   new ShowFileDialog(deps);
   dom.get('fileBtn').onclick?.({ target: null });
   const click = (id: string): void => dom.get(id).onclick?.({ target: null });

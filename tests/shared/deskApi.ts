@@ -1,3 +1,4 @@
+import type { MvrStageInfo } from './mvrStageInfo';
 import type { AttrValues, SavedShow } from './savedShow';
 
 /** The three console layouts; the layout select and lumadesk-layout2 use these names. */
@@ -40,26 +41,6 @@ export interface CommandResult {
 /** computeOutput() of one fixture; the id travels with the values so a diff names the fixture. */
 export type FixtureOutput = { id: number } & AttrValues;
 
-/** One fixture of the current rig and its DMX patch (null when unpatched), so a round trip can compare both. */
-export interface StageFixturePatch {
-  id: number;
-  /** The app's `DmxPatch` shape, written out: the suite reads the app only through this API, never from src. */
-  patch: { universe: number; address: number; mode: string } | null;
-}
-
-/**
- * The stage the rig is built from. MVR specs read it instead of the 3D view, because the scene is drawn only on
- * request in test mode and its meshes say nothing about ids or patch.
- */
-export interface MvrStageInfo {
-  kind: 'template' | 'builder' | 'mvr';
-  /** The `.mvr` file name an MVR stage came from; absent for templates and builder stages. */
-  fileName?: string;
-  fixtureCount: number;
-  /** In rig order. */
-  patches: StageFixturePatch[];
-}
-
 /**
  * window.__desk.test, the only door the suite uses into the app. Specs never reach into app internals, so the same
  * specs keep passing while later phases move the code.
@@ -85,13 +66,26 @@ export interface DeskTestApi {
   mvrReady(): Promise<void>;
 }
 
+/** window.__desk.stage(): the fixture count and the design's source and venue kinds. */
+export interface DeskStage {
+  count: number;
+  source: string;
+  venue: string;
+}
+
 declare global {
   interface Window {
     __desk: {
       /** Present only with ?test in the URL; waitForTestApi() narrows it once for every spec. */
       test?: DeskTestApi;
       setView(view: string, instant?: boolean): void;
+      /** The current rig's fixtures, read at each access. */
       fixtures: { id: number; out: AttrValues }[];
+      stage(): DeskStage;
+      /** Applies a template id (`empty`, `theatre`, `festival`, `sultans-pool`) or `built-in` as the builder would. */
+      applyTemplate(id: string): void;
+      /** The renderer's live GPU geometry and texture counts; equal counts after a repeated apply mean no leak. */
+      renderMemory(): { geometries: number; textures: number };
     };
   }
 }

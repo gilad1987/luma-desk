@@ -1,5 +1,6 @@
 import type { JSHandle } from '@playwright/test';
-import type { DeskTestApi, MvrStageInfo } from '../deskApi';
+import type { DeskTestApi } from '../deskApi';
+import type { MvrStageInfo } from '../mvrStageInfo';
 
 /**
  * Reads the stage the rig is built from through the MVR test hook. Specs read it here only, so the hook's name lives

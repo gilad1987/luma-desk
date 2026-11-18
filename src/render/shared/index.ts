@@ -7,3 +7,5 @@ export type { CanvasTextureOptions } from './createCanvasTexture';
 export { srgbCanvasTexture } from './srgbCanvasTexture';
 export { projectToScreen } from './projectToScreen';
 export type { ScreenPoint, ScreenRect } from './projectToScreen';
+export { Disposer } from './Disposer';
+export type { DisposableResource } from './Disposer';

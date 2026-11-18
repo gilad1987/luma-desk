@@ -2,11 +2,11 @@ import { SongPlayer } from '../../audio/SongPlayer';
 import { AutoShow } from '../../autoshow/AutoShow';
 import { LookGenerator } from '../../autoshow/LookGenerator';
 import type { Clock } from '../../core';
-import type { Rig } from '../../domain/rig';
 import type { AppState } from '../../engine/AppState';
 import type { EngineBus } from '../../engine/events';
 import type { ExecutorPool } from '../../engine/ExecutorPool';
 import type { Programmer } from '../../engine/Programmer';
+import type { RigSource } from '../../engine/stage/RigSource';
 import type { Tempo } from '../../engine/Tempo';
 import type { ShowStorage } from '../../show';
 import { AutoShowPanel } from '../../ui/panels/autoshow/AutoShowPanel';
@@ -14,7 +14,8 @@ import type { SideTab } from '../../ui/panels/side/sideTabsMarkup';
 
 /** The engine side of the auto-show, named as the composition root names it. */
 export interface AutoShowEngineDeps {
-  readonly rig: Rig;
+  /** The stage: the look generator draws from its current rig and regroups on every rig change. */
+  readonly stage: RigSource;
   readonly pool: ExecutorPool;
   readonly programmer: Pick<Programmer, 'hasContent'>;
   readonly tempo: Tempo;
@@ -51,7 +52,7 @@ export interface AutoShowHandles {
 export function createAutoShow(deps: AutoShowEngineDeps): AutoShowHandles {
   const { pool, programmer, tempo, clock, bus } = deps;
   let panel: AutoShowPanel | undefined;
-  const looks = new LookGenerator(deps.rig, Math.random);
+  const looks = new LookGenerator(deps.stage.rig, Math.random, deps.stage);
   const songPlayer = new SongPlayer(clock, () => panel?.songEnded());
   const autoShow = new AutoShow({
     pool,

@@ -1,4 +1,3 @@
-import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { LayoutMode } from '../../ui/panels/layoutMode';
 import type { MvrActions } from '../../ui/panels/mvr/MvrActions';
 import type { EngineHandles } from '../boot/wireEngine';
@@ -22,8 +21,6 @@ export interface PanelsDeps {
   readonly guideOrTourOpen: () => boolean;
   /** The MVR row of the Show File dialog; `wireMvr` builds it before the panels. */
   readonly mvr: MvrActions;
-  /** The current stage design; a getter, because an import or a stage edit replaces the design at runtime. */
-  readonly stageDesign: () => StageDesign;
 }
 
 /** {@link PanelsDeps} with the dialog and store-mode services that every panel after the top bar takes. */
