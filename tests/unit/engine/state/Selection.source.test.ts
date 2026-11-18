@@ -27,6 +27,14 @@ describe('Selection with a RigSource', () => {
     expect([selection.ids, selection.has(101), events]).toEqual([[], false, ['selectionChanged', 'rigChanged:empty']]);
   });
 
+  it('announces nothing on a rig change that keeps every selected fixture', () => {
+    const { service, selection, events } = setup();
+    selection.set([101, 102]);
+    events.length = 0;
+    service.apply(createTemplate('sultans-pool'), 'preview');
+    expect([selection.ids, events]).toEqual([[101, 102], ['rigChanged:sultans-pool']]);
+  });
+
   it('checks new ids against the current rig, not the rig it was built with', () => {
     const { service, selection } = setup();
     const theatre = createTemplate('theatre');

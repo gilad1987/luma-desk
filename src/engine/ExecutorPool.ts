@@ -83,11 +83,12 @@ export class ExecutorPool {
   }
 
   /**
-   * Calls `fn` with the executor's 0-based place in `all` whenever it starts a cue (GO, fader, flash, `goto`), so the
-   * missing-fixture notice can warn once per executor and cue. A later call replaces the observer.
+   * Calls `fn` with the 0-based place in `execs` whenever an operator executor starts a cue (GO, fader, flash, `goto`),
+   * so the missing-fixture notice warns once per executor and cue. The auto executor is left out: it builds its cues
+   * from the current rig, so they never name a missing fixture. A later call replaces the observer.
    */
   observeCues(fn: (execIndex: number, cue: Cue) => void): void {
-    this.all.forEach((e, i) => {
+    this.execs.forEach((e, i) => {
       e.onCue = (cue): void => fn(i, cue);
     });
   }

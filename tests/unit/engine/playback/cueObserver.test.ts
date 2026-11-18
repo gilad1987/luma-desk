@@ -1,6 +1,7 @@
 /**
- * Owns the cue observer: every way an executor starts a cue (GO, `goto`, a fader, a flash, the auto executor) reaches
- * `observeCues` with the executor index, and the MissingFixtureNotice wired to it logs once per cue. What the notice
+ * Owns the cue observer: every way an operator executor starts a cue (GO, `goto`, a fader, a flash) reaches
+ * `observeCues` with the executor index, the auto executor never does, and the MissingFixtureNotice wired to it logs
+ * once per cue. What the notice
  * counts is owned by `stage/MissingFixtureNotice.test.ts`; the playback itself by the parity tests.
  */
 import { describe, expect, it } from 'vitest';
@@ -30,7 +31,17 @@ describe('ExecutorPool.observeCues', () => {
     pool.setLevel(second, 0.5);
     pool.flashPress(third);
     pool.autoExec.goto(1);
-    expect(seen).toEqual(['1:1', '1:2', '1:1', '2:1', '10:2']);
+    expect(seen).toEqual(['1:1', '1:2', '1:1', '2:1']);
+  });
+
+  it('leaves the auto executor out: its cues come from the current rig', () => {
+    const pool = new ExecutorPool(clock, new EventBus<EngineEvents>());
+    pool.autoExec.cues = [cue(1), cue(2)];
+    const seen: number[] = [];
+    pool.observeCues((i) => seen.push(i));
+    pool.autoExec.goto(1);
+    pool.setLevel(pool.autoExec, 1);
+    expect(seen).toEqual([]);
   });
 
   it('lets the MissingFixtureNotice log once per cue on a stage without the fixtures', () => {

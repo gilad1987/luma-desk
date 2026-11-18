@@ -11,7 +11,8 @@ export type SelectMode = 'replace' | 'add' | 'sub' | 'toggle';
  * any number.
  *
  * With a `RigSource` (the StageService) it checks ids against the current rig and, on `rigChanged`, drops the ids the
- * new rig lacks (and emits `selectionChanged`). Without one it keeps the rig it was given, as before the Stage Builder.
+ * new rig lacks (and emits `selectionChanged` only when it dropped one). Without one it keeps the rig it was given, as
+ * before the Stage Builder.
  */
 export class Selection {
   #ids: number[] = [];
@@ -24,7 +25,7 @@ export class Selection {
     this.#rig = rig;
     this.#bus = bus;
     this.#source = source;
-    if (source) bus.on('rigChanged', () => this.set([...this.#ids]));
+    if (source) bus.on('rigChanged', () => this.#prune(source.rig));
   }
 
   /** The selected ids in selection order. A view: copy it before you keep it, the next change may alter it in place. */
@@ -59,5 +60,11 @@ export class Selection {
   /** Reverses the selection order, which reverses fans and phaser offsets across the same fixtures. */
   reverse(): void {
     this.set([...this.#ids].reverse());
+  }
+
+  /** Drops the ids `rig` lacks; a rig change that keeps every selected fixture announces nothing, so nothing repaints. */
+  #prune(rig: Rig): void {
+    const kept = this.#ids.filter((id) => rig.get(id) !== undefined);
+    if (kept.length !== this.#ids.length) this.set(kept);
   }
 }
