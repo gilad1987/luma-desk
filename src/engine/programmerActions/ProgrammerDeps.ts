@@ -26,7 +26,7 @@ export interface ProgrammerDeps {
   readonly bus: EngineBus;
   /**
    * The stage, for the cause of a `rigChanged`: a builder preview does not prune the programmer, so Cancel gives the
-   * operator's values back. Without it (a fixed rig in tests) every change prunes.
+   * operator's values back. Required, so no caller can wire a programmer that prunes on a preview by mistake.
    */
-  readonly source?: Pick<RigSource, 'cause'>;
+  readonly source: Pick<RigSource, 'cause'>;
 }

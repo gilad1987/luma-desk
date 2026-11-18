@@ -11,8 +11,9 @@ export type SelectMode = 'replace' | 'add' | 'sub' | 'toggle';
  * any number.
  *
  * With a `RigSource` (the StageService) it checks ids against the current rig and, on `rigChanged`, drops the ids the
- * new rig lacks (and emits `selectionChanged` only when it dropped one). Without one it keeps the rig it was given, as
- * before the Stage Builder.
+ * new rig lacks (and emits `selectionChanged` only when it dropped one). A builder `preview` is not committed, so it
+ * prunes nothing and Cancel gives the selection back, as the programmer keeps its values. Without a source it keeps the
+ * rig it was given, as before the Stage Builder.
  */
 export class Selection {
   #ids: number[] = [];
@@ -25,7 +26,10 @@ export class Selection {
     this.#rig = rig;
     this.#bus = bus;
     this.#source = source;
-    if (source) bus.on('rigChanged', () => this.#prune(source.rig));
+    if (!source) return;
+    bus.on('rigChanged', () => {
+      if (source.cause !== 'preview') this.#prune(source.rig);
+    });
   }
 
   /** The selected ids in selection order. A view: copy it before you keep it, the next change may alter it in place. */

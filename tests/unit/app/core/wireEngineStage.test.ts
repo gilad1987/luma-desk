@@ -51,6 +51,19 @@ describe('wireEngine after a stage change', () => {
     ]);
   });
 
+  it('keeps a programmed value over a theatre preview and prunes it when the builder commits', () => {
+    const { engine } = bootEngine();
+    const gone = [...engine.stage.rig.fixtures].find(
+      (f) => !createTemplate('theatre').fixtures.some((t) => t.id === f.id),
+    );
+    if (gone === undefined) throw new Error('the theatre rig removed no built-in fixture id');
+    engine.programmer.set(gone.id, 'dim', 50);
+    engine.stage.apply(createTemplate('theatre'), 'preview');
+    const previewed = engine.programmer.vals[gone.id]?.dim;
+    applyTheatre(engine);
+    expect([previewed, engine.programmer.vals[gone.id]]).toEqual([50, undefined]);
+  });
+
   it('saves the stage with the show, and the demo keeps it', () => {
     const { engine } = bootEngine();
     const { serializer, demo } = createShowFiles({ ...engine, execs: engine.pool.execs });

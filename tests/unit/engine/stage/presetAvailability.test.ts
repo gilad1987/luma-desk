@@ -41,7 +41,8 @@ const setup = () => {
   presets.replace(pools());
   const selection = new Selection(rig, bus);
   const state = new AppState(bus);
-  const programmer = new Programmer({ rig, selection, presets, pool: new ExecutorPool(clock, bus), state, clock, bus });
+  const pool = new ExecutorPool(clock, bus);
+  const programmer = new Programmer({ rig, selection, presets, pool, state, clock, bus, source: service });
   selection.set([201, 202]);
   return { service, presets, programmer, logs: recordEvents(bus) };
 };

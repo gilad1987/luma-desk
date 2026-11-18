@@ -15,24 +15,42 @@ const setup = () => {
   const bus = new EventBus<EngineEvents>();
   const service = new StageService(bus, { builtIn: createTemplate('sultans-pool'), tooManyFixtures: String });
   const selection = new Selection(service.rig, bus, service);
-  return { service, selection, events: recordEvents(bus) };
+  const events = recordEvents(bus);
+  // a committed apply also marks the show edited; that is the StageService's, not the selection's
+  const selectionEvents = (): string[] => events.filter((e) => e !== 'showChanged');
+  return { service, selection, events, selectionEvents };
 };
 
 describe('Selection with a RigSource', () => {
-  it('drops the ids the new rig lacks on a rig change and says so', () => {
+  it.each(['builder', 'showLoad', 'import'] as const)('drops the ids the new rig lacks on a %s apply', (cause) => {
+    const { service, selection, events, selectionEvents } = setup();
+    selection.set([101, 102]);
+    events.length = 0;
+    service.apply(createTemplate('empty'), cause);
+    expect([selection.ids, selection.has(101), selectionEvents()]).toEqual([
+      [],
+      false,
+      ['selectionChanged', 'rigChanged:empty'],
+    ]);
+  });
+
+  it('keeps the selection over a preview, so Cancel gives it back, and prunes on Done', () => {
     const { service, selection, events } = setup();
     selection.set([101, 102]);
     events.length = 0;
     service.apply(createTemplate('empty'), 'preview');
-    expect([selection.ids, selection.has(101), events]).toEqual([[], false, ['selectionChanged', 'rigChanged:empty']]);
+    const previewed = [[...selection.ids], selection.has(101), [...events]];
+    service.apply(createTemplate('empty'), 'builder');
+    expect(previewed).toEqual([[101, 102], true, ['rigChanged:empty']]);
+    expect(selection.ids).toEqual([]);
   });
 
   it('announces nothing on a rig change that keeps every selected fixture', () => {
-    const { service, selection, events } = setup();
+    const { service, selection, events, selectionEvents } = setup();
     selection.set([101, 102]);
     events.length = 0;
-    service.apply(createTemplate('sultans-pool'), 'preview');
-    expect([selection.ids, events]).toEqual([[101, 102], ['rigChanged:sultans-pool']]);
+    service.apply(createTemplate('sultans-pool'), 'builder');
+    expect([selection.ids, selectionEvents()]).toEqual([[101, 102], ['rigChanged:sultans-pool']]);
   });
 
   it('checks new ids against the current rig, not the rig it was built with', () => {
