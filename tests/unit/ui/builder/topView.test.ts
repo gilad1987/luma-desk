@@ -4,6 +4,7 @@
  * `topViewGeometry.test.ts` and `topViewMove.test.ts`.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { prop } from './toolsDom';
 import { mountTopView } from './topViewSetup';
 
 describe('TopView', () => {
@@ -33,10 +34,45 @@ describe('TopView', () => {
     ]);
   });
 
-  it('cancels its pending frame, stops following the session and removes the canvas on dispose', () => {
-    const { session, slot, view, frames, cancelled } = setup();
+  it('cancels its pending frame and removes the canvas on dispose', () => {
+    const { slot, view, cancelled } = setup();
+    view.dispose();
+    expect([cancelled, slot.children.length]).toEqual([[1], 0]);
+  });
+
+  it('asks for no frame after dispose, however the session changes', () => {
+    const { session, view, frames, runFrames } = setup();
+    runFrames();
     view.dispose();
     session.select({ fixtures: [101], trusses: [] });
-    expect([cancelled, frames.length, slot.children.length]).toEqual([[1], 1, 0]);
+    expect(frames.length).toBe(0);
+  });
+
+  it('draws the draft when the domain refuses the preview, and passes other errors on', () => {
+    const { view, runFrames } = setup();
+    runFrames();
+    view.preview(() => {
+      throw new RangeError('refused');
+    });
+    expect(() => runFrames()).not.toThrow();
+    view.preview(() => {
+      throw new TypeError('bug');
+    });
+    expect(() => runFrames()).toThrow(TypeError);
+  });
+
+  it('sizes the canvas and reads the CSS palette only when the canvas box changes', () => {
+    const { canvas, view, runFrames } = setup();
+    const style = vi.fn(() => ({ getPropertyValue: (name: string) => name }));
+    vi.stubGlobal('getComputedStyle', style);
+    runFrames();
+    Object.assign(canvas, { width: 1 });
+    view.preview(null);
+    runFrames();
+    const sameBox = [style.mock.calls.length, prop(canvas, 'width')];
+    Object.assign(canvas, { offsetWidth: 300 });
+    view.preview(null);
+    runFrames();
+    expect([sameBox, style.mock.calls.length, prop(canvas, 'width')]).toEqual([[1, 1], 2, 300]);
   });
 });

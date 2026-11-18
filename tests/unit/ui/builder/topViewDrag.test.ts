@@ -44,6 +44,17 @@ describe('TopView drag', () => {
     expect(session.draft.fixtures.find((f) => f.id === 101)?.position).toEqual([-4.7, 5.55, 2]);
   });
 
+  it('draws the drag as a preview of the moved selection before the drop', () => {
+    const { session, view, canvas, runFrames } = setup();
+    runFrames();
+    const preview = vi.spyOn(view, 'preview');
+    const [px, py] = view.transform.toCanvas(-5, 2);
+    canvas.onpointerdown?.(pointer(px, py));
+    canvas.onpointermove?.(pointer(px + view.transform.scale, py));
+    const op = preview.mock.calls[0]?.[0];
+    expect(op?.(session.draft).fixtures.find((f) => f.id === 101)?.position).toEqual([-4, 5.55, 2]);
+  });
+
   it('makes no edit for a click without a move', () => {
     const { session, view, canvas, runFrames } = setup();
     runFrames();

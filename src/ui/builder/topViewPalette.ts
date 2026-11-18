@@ -10,7 +10,7 @@ export interface TopViewPalette {
   readonly selected: string;
 }
 
-/** Reads the `--top-view-*` custom properties of `el` at draw time, so a theme change shows on the next draw. */
+/** Reads the `--top-view-*` custom properties of `el`; `TopViewCanvas` calls it only when the canvas box changes. */
 export function readPalette(el: Element): TopViewPalette {
   const style = getComputedStyle(el);
   const read = (name: string): string => style.getPropertyValue(`--top-view-${name}`).trim();

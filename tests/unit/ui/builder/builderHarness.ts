@@ -3,6 +3,7 @@ import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import type { BuilderDeps } from '../../../../src/ui/builder/BuilderDeps.ts';
 import type { KeyPress } from '../../../../src/ui/builder/builderKeys.ts';
 import type { EditorSession } from '../../../../src/ui/builder/EditorSession.ts';
+import type { TopViewDeps } from '../../../../src/ui/builder/TopView.ts';
 import { fakeStage } from './fakeStage.ts';
 
 type KeyListener = (ev: KeyPress) => void;
@@ -29,6 +30,7 @@ export class BuilderHarness {
   readonly emit = vi.fn();
   readonly deps: BuilderDeps;
   session: EditorSession | null = null;
+  view: TopViewDeps | null = null;
 
   constructor(design?: StageDesign) {
     this.stage = fakeStage(design);
@@ -41,8 +43,10 @@ export class BuilderHarness {
       },
       setConsoleHeight: (px) => this.calls.push(`height ${px}`),
       fitLayout: () => this.calls.push('fit'),
-      mountTools: (_slots, session) => {
+      frames: { nextFrame: () => 0, cancelFrame: () => undefined },
+      mountTools: (_slots, session, view) => {
         this.session = session;
+        this.view = view;
         this.calls.push('mount');
         return () => this.calls.push('unmount');
       },
