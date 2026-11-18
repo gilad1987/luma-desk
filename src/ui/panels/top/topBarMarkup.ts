@@ -19,7 +19,13 @@ const LAYOUTS = options([
 const text = he.panels;
 
 /**
- * The top bar, byte for byte as the original page had it. It holds controls other modules wire (layout selects,
+ * The "Build Stage" button that opens the Stage Builder: the one part of the bar the original page did not have. It
+ * is one constant, so the markup-parity test can name it and remove exactly this text before it compares the bar.
+ */
+export const buildStageButton = `<button id="buildBtn" title="${he.builder.openTitle}">Build Stage</button>`;
+
+/**
+ * The top bar, byte for byte as the original page had it, plus {@link buildStageButton}. It holds controls other modules wire (layout selects,
  * REC, fullscreen, install, MIDI, show file, guide, clock); the bar renders them all so the shell needs no header.
  */
 export const topBarMarkup =
@@ -40,6 +46,6 @@ export const topBarMarkup =
     `<div class="tbg"><button id="recBtn" title="${text.recTitle}">● REC</button>` +
       `<button id="fsBtn" title="${text.fullscreenTitle}">⛶</button>` +
       `<button id="installBtn" style="display:none">${text.install}</button><button id="midiBtn">MIDI</button>` +
-      `<button id="fileBtn">Show File</button><button id="helpBtn" class="on">${text.guide}</button></div>`,
+      `${buildStageButton}<button id="fileBtn">Show File</button><button id="helpBtn" class="on">${text.guide}</button></div>`,
     '<div id="clock"></div><div id="fps"></div>',
   ].join('\n    ') + '\n  </header>';

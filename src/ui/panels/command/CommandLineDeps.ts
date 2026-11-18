@@ -24,4 +24,6 @@ export interface CommandLineDeps {
   readonly fanToggled: () => void;
   /** The guide or the tour covers the page: page keys do nothing then. */
   readonly guideOrTourOpen: () => boolean;
+  /** The Stage Builder covers the desk: page keys do nothing then, so Space cannot fire GO+ on a hidden executor. */
+  readonly builderOpen: () => boolean;
 }

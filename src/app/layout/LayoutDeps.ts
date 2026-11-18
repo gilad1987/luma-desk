@@ -40,4 +40,6 @@ export interface LayoutDeps {
   readonly layoutPrefs: Pick<LayoutPrefs, 'load' | 'save'>;
   /** The old `setView`: it ignores names that are not views. */
   readonly setView: (view: string, instant: boolean) => void;
+  /** The Stage Builder is open: it owns the console height, so a refit passes 0 to the renderer. */
+  readonly builderOpen: () => boolean;
 }

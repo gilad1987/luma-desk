@@ -27,6 +27,8 @@ export interface CommandLineWiringDeps extends UiServices {
   readonly fanToggled: () => void;
   /** The guide (`#guide.show`) or the tour (`tIdx >= 0`) covers the page; from the io area. */
   readonly guideOrTourOpen: () => boolean;
+  /** The Stage Builder covers the desk; it is built after the panels. */
+  readonly builderOpen: () => boolean;
 }
 
 /**
@@ -48,6 +50,7 @@ export function wireCommandLine(deps: CommandLineWiringDeps): CommandLine {
     lightIds: () => deps.stage.rig.lightIds(),
     fanToggled: deps.fanToggled,
     guideOrTourOpen: deps.guideOrTourOpen,
+    builderOpen: deps.builderOpen,
   });
   showStoreMode(deps.bus);
   return commandLine;

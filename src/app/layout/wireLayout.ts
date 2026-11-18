@@ -21,6 +21,8 @@ export interface LayoutHandles {
   readonly restore: () => void;
   /** The MA part of the fast UI tick (the old `if (deskMode === 'ma') updateMaUI()`). */
   readonly fast: () => void;
+  /** Refits the console to the window; the Stage Builder calls it when it hides and shows the console. */
+  readonly fit: () => void;
 }
 
 /**
@@ -56,5 +58,6 @@ export function wireLayout(deps: LayoutDeps): LayoutHandles {
     fast: () => {
       if (layout.mode === 'ma') ma.update();
     },
+    fit: () => layout.fit(),
   };
 }

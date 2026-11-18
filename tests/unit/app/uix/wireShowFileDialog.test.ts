@@ -27,6 +27,7 @@ function open() {
     showStorage: { persist: record('persist') },
     demo: { load: record('demo') },
     showLoaded: record('repaint'),
+    cancelBuilder: record('cancelBuilder'),
   });
   dom.get('fileBtn').onclick?.({ target: null });
   const click = (id: string): void => dom.get(id).onclick?.({ target: null });
@@ -39,14 +40,14 @@ describe('wireShowFileDialog', () => {
   it('repaints after the demo loads, before the dialog closes', () => {
     const { calls, click } = open();
     click('fDemo');
-    expect(calls).toEqual(['demo', 'repaint', 'close']);
+    expect(calls).toEqual(['cancelBuilder', 'demo', 'repaint', 'close']);
   });
 
   it('loads a new show with the default groups, repaints, saves, then closes', () => {
     const { calls, click, serializer } = open();
     click('fNew');
     expect(serializer.load).toHaveBeenCalledWith({ groups: defaultGroups(rig) });
-    expect(calls).toEqual(['load', 'repaint', 'persist', 'close']);
+    expect(calls).toEqual(['cancelBuilder', 'load', 'repaint', 'persist', 'close']);
   });
 
   it('runs the same load and repaint for pasted JSON', () => {
@@ -54,6 +55,6 @@ describe('wireShowFileDialog', () => {
     dom.get('fTxt').value = '{"v":1,"bpm":128}';
     click('fImp');
     expect(serializer.load).toHaveBeenCalledWith({ v: 1, bpm: 128 });
-    expect(calls).toEqual(['load', 'repaint', 'persist', 'close']);
+    expect(calls).toEqual(['cancelBuilder', 'load', 'repaint', 'persist', 'close']);
   });
 });
