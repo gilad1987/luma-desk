@@ -67,7 +67,7 @@ function layerGroup(
     const matrices: Matrix4[] = placements.map((placement) => placementMatrix(placement, offset));
     const [first, ...others] = matrices;
     if (first && others.length === 0) singles.push({ parts: fileParts, matrix: first });
-    else group.add(...instancedMeshes(fileParts, matrices));
+    else instancedMeshes(fileParts, matrices).forEach((mesh) => group.add(mesh));
   }
   const merged = mergeStatic(singles);
   if (merged.length > 0) group.add(...merged);

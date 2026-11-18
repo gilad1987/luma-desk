@@ -42,7 +42,7 @@ export class MvrStage {
       return library.failures();
     }
     this.#layers = layers;
-    this.group.add(...layers.values());
+    if (layers.size > 0) this.group.add(...layers.values());
     this.setHiddenLayers([...this.#hidden]);
     return library.failures();
   }
