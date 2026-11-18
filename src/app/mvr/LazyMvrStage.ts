@@ -43,8 +43,9 @@ export class LazyMvrStage {
   async show(input: MvrStageInput): Promise<readonly MeshFailure[]> {
     this.#showing = true;
     try {
-      const failures = await (await this.#loaded()).show(input);
-      if (this.#showing) this.#fit.fit(input.design, input.geometry);
+      const stage = await this.#loaded();
+      const failures = await stage.show(input);
+      if (this.#showing) this.#fit.fit(input.design, input.geometry, stage.group);
       return failures;
     } catch (error) {
       this.#showing = false;

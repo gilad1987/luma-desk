@@ -18,7 +18,7 @@ describe('MvrStage.show of an exported template', () => {
     const stage = new MvrStage();
     const failures = await stage.show(result);
     expect([failures, stage.group.children.length]).toEqual([[], 0]);
-    expect(mvrSurfaces(result.design, result.geometry)).toStrictEqual(surfacesOf(result.design));
+    expect(mvrSurfaces(result.design)).toStrictEqual(surfacesOf(result.design));
     expect(surfacesOf(result.design)).toStrictEqual(surfacesOf(design));
     expect(result.design.fixtures).toHaveLength(design.fixtures.length);
   });
