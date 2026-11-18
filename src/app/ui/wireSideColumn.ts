@@ -40,8 +40,8 @@ export function wireSideColumn(deps: PanelsWithServices, topBar: Pick<TopBar, 's
     side,
     execs: engine.pool.execs,
     sideTabs,
-    // the boot rig's rows; the sheet rebuilds them on a stage change once it listens to `rigChanged`
-    fixtures: engine.stage.rig.fixtures,
   });
+  // a stage change can mark other presets unavailable (G10); a show load repaints the pools through `showLoaded`
+  engine.bus.on('rigChanged', () => pools.render());
   return { sideTabs, pools, showLoaded, autoShowPanel, sequence, sheet };
 }
