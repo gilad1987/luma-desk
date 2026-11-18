@@ -46,7 +46,12 @@ new ViewportPicking({ ...engine, ...render, fixtures: rig.fixtures });
 wireMidi(engine);
 render.stageRenderer.observeViewer();
 
-const { guide, tour } = wireGuide({ rig, isMa: () => layout.mode() === 'ma', guideFlag: files.guideFlag });
+const { guide, tour } = wireGuide({
+  rig,
+  sideTabs: panels.sideTabs,
+  isMa: () => layout.mode() === 'ma',
+  guideFlag: files.guideFlag,
+});
 byId('helpBtn').onclick = () => guide.open(0);
 wireAppFeatures({ ...engine, canvas: render.canvas, songPlayer: auto.songPlayer, guide });
 

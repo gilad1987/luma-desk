@@ -4,3 +4,4 @@ export { STORAGE_KEYS } from './storageKeys';
 export { TIMER_POLLING } from './timerPolling';
 export { jsonRoundTrip } from './jsonRoundTrip';
 export { readGolden } from './readGolden';
+export { MemoryStore } from './MemoryStore';

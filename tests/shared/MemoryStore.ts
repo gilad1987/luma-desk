@@ -1,4 +1,4 @@
-import type { KeyValueStore } from '../../../src/show';
+import type { KeyValueStore } from '../../src/show';
 
 /** An in-memory `KeyValueStore` that records writes and can fail like a full or blocked localStorage. */
 export class MemoryStore implements KeyValueStore {

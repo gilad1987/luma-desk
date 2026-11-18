@@ -40,6 +40,17 @@ export const codeRules: Linter.Config[] = [
     rules: { 'max-lines-per-function': 'off' },
   },
   {
+    // T20: a test that seems to need a module mock means the class should take the dependency in its constructor
+    files: ['tests/**/*.ts'],
+    rules: {
+      'no-restricted-properties': [
+        'error',
+        { object: 'vi', property: 'mock', message: 'T20: no vi.mock; inject the dependency instead.' },
+        { object: 'vi', property: 'doMock', message: 'T20: no vi.doMock; inject the dependency instead.' },
+      ],
+    },
+  },
+  {
     // oracles are the original desk code copied as is: the copy is the reference the parity tests compare against
     files: ['tests/**/oracle/**/*.ts'],
     rules: { 'no-nested-ternary': 'off', 'max-depth': 'off', '@typescript-eslint/max-params': 'off' },

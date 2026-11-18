@@ -1,6 +1,6 @@
 import type { Scene, WebGLRenderer } from 'three';
 import { CameraViews } from '../../render/camera/CameraViews';
-import { VIEWS, type ViewName } from '../../render/camera/viewTable';
+import { isViewName, type ViewName } from '../../render/camera/viewTable';
 import { addEnvironmentLights } from '../../render/lights/addEnvironmentLights';
 import { SceneLights } from '../../render/lights/SceneLights';
 import { createStageGraphics } from '../../render/stage/createStageGraphics';
@@ -22,8 +22,6 @@ export interface StageHandles {
   readonly venue: Venue;
   readonly sceneLights: SceneLights;
 }
-
-const isViewName = (view: string): view is ViewName => Object.hasOwn(VIEWS, view);
 
 /** Lights the `[data-view]` button of the current view, as the top bar showed it before any area owned it. */
 function markViewButtons(view: ViewName): void {

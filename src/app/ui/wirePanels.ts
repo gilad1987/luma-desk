@@ -15,8 +15,9 @@ export type Panels = SideColumn &
   };
 
 /**
- * Builds the DOM panels in the original page and listener order: top bar, dialog and toast services, the Show File
- * dialog, the side column, then the desk panels. The dialog wires `#fileBtn` before the pools it repaints exist, so
+ * Builds the DOM panels in the original page order and the same order for each kind of listener (listeners for
+ * different events do not depend on each other's order): top bar, dialog and toast services, the Show File dialog,
+ * the side column, then the desk panels. The dialog wires `#fileBtn` before the pools it repaints exist, so
  * it reaches the repaint through a closure; no show can load before boot ends.
  */
 export function wirePanels(deps: PanelsDeps): Panels {

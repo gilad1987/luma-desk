@@ -15,7 +15,7 @@ export function maReadout({
     fixture: (id) => {
       const fixture = rig.get(id);
       // the selection only holds rig ids; the old `FX[id]` had no fallback either
-      if (!fixture) throw new Error(`fixture ${id} is not in the rig`);
+      if (!fixture) throw new Error(`maReadout.fixture: fixture ${id} is not in the rig`);
       return fixture;
     },
     value: (fixture, attr) => programmer.vals[fixture.id]?.[attr] ?? fixture.base[attr] ?? NaN,

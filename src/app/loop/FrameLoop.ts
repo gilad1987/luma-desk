@@ -15,7 +15,10 @@ import type { Venue } from '../../render/venue/Venue';
 import type { FpsClock } from '../ui/FpsClock';
 import type { UiTickScheduler } from './UiTickScheduler';
 
-/** The longest step a frame simulates, in seconds: a frame after a stalled tab does not jump the fades. */
+/**
+ * The longest frame step, in seconds, so a frame after a stalled tab does not snap the moving heads. Only the pose
+ * smoothing (`visualSync.update`) and the frame-rate count read the capped step; the fades step on the absolute time.
+ */
 const MAX_DT = 0.1;
 
 /** What one frame steps and draws; names follow the legacy main.ts variables. */
