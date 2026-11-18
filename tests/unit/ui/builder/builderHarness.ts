@@ -3,7 +3,7 @@ import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import type { BuilderDeps } from '../../../../src/ui/builder/BuilderDeps.ts';
 import type { KeyPress } from '../../../../src/ui/builder/builderKeys.ts';
 import type { EditorSession } from '../../../../src/ui/builder/EditorSession.ts';
-import type { TopViewDeps } from '../../../../src/ui/builder/TopView.ts';
+import type { PlanViewDeps } from '../../../../src/ui/builder/plan/PlanView.ts';
 import { fakeStage } from './fakeStage.ts';
 
 type KeyListener = (ev: KeyPress) => void;
@@ -32,7 +32,7 @@ export class BuilderHarness {
   readonly deskInert: boolean[] = [];
   readonly deps: BuilderDeps;
   session: EditorSession | null = null;
-  view: TopViewDeps | null = null;
+  view: PlanViewDeps | null = null;
 
   constructor(design?: StageDesign) {
     this.stage = fakeStage(design);

@@ -1,6 +1,6 @@
-import type { StageBounds } from '../../domain/stage/types';
+import type { StageBounds } from '../../../domain/stage/types';
 
-/** A point of the top view: `[x, z]` in world metres or `[px, py]` in canvas pixels. */
+/** A point of the plan:`[x, z]` in world metres or `[px, py]` in canvas pixels. */
 export type Point2 = readonly [number, number];
 
 /** The pixel size of the canvas the stage is fitted into. */
@@ -10,11 +10,11 @@ export interface CanvasSize {
 }
 
 /**
- * World x/z to canvas pixels and back for the builder top view. One scale serves both axes, so a circle truss stays
+ * World x/z to canvas pixels and back for the builder plan view. One scale serves both axes, so a circle truss stays
  * round: the focus pad stretches its map, but the builder must not, because the user places items by eye. Upstage
  * (-z) is at the top, the audience at the bottom, as on the focus pad.
  */
-export interface TopTransform {
+export interface PlanTransform {
   /** Canvas pixels per metre. */
   readonly scale: number;
   toCanvas(x: number, z: number): Point2;
@@ -29,7 +29,7 @@ const MIN_SPAN_M = 1;
 const MIN_SCALE_PX_PER_M = 1;
 
 /** The transform that fits `bounds` (the whole design, see `boundsOf`) into `size`, centred, with a margin. */
-export function fitTransform(bounds: StageBounds, size: CanvasSize): TopTransform {
+export function fitTransform(bounds: StageBounds, size: CanvasSize): PlanTransform {
   const [x0, , z0] = bounds.min;
   const [x1, , z1] = bounds.max;
   const fitX = (size.width - 2 * MARGIN_PX) / Math.max(x1 - x0, MIN_SPAN_M);

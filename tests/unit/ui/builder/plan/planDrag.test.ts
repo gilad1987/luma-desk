@@ -1,14 +1,14 @@
 /**
- * Owns the drag on the top view: a press picks, a move previews without touching the stage, and the drop makes one
- * edit (one undo step) on the 0.5 m grid, or 0.1 m with Alt. Where the snap lands is pinned in `topViewMove.test.ts`.
+ * Owns the drag on the plan view: a press picks, a move previews without touching the stage, and the drop makes one
+ * edit (one undo step) on the 0.5 m grid, or 0.1 m with Alt. Where the snap lands is pinned in `planMove.test.ts`.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { pointer } from '../../../shared/dom';
-import { mountTopView } from './topViewSetup';
+import { pointer } from '../../../../shared/dom';
+import { mountPlanView } from './planSetup';
 
-describe('TopView drag', () => {
+describe('PlanView drag', () => {
   afterEach(() => vi.unstubAllGlobals());
-  const setup = mountTopView;
+  const setup = mountPlanView;
 
   it('moves the dragged fixture on the grid with one edit on drop and no stage apply before it', () => {
     const { stage, session, view, canvas, runFrames } = setup();

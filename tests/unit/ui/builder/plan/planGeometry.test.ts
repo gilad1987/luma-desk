@@ -1,13 +1,13 @@
 /**
- * Owns the pure geometry of the builder top view: the world/canvas transform, the truss footprints, the nearest pick
- * and the selection a click makes. The canvas, the frame throttle and the drag gesture are in `topView.test.ts`.
+ * Owns the pure geometry of the builder plan view: the world/canvas transform, the truss footprints, the nearest pick
+ * and the selection a click makes. The canvas, the frame throttle and the drag gesture are in `PlanView.test.ts`.
  */
 import { describe, expect, it } from 'vitest';
-import { createTemplate } from '../../../../src/domain/stage/templates';
-import { NO_SELECTION } from '../../../../src/ui/builder/selection';
-import { pickAt, selectionAfterPick, type TopPick } from '../../../../src/ui/builder/topViewPick';
-import { trussFootprint } from '../../../../src/ui/builder/topViewShapes';
-import { fitTransform } from '../../../../src/ui/builder/topViewTransform';
+import { createTemplate } from '../../../../../src/domain/stage/templates';
+import { pickAt, selectionAfterPick, type TopPick } from '../../../../../src/ui/builder/plan/planPick';
+import { trussFootprint } from '../../../../../src/ui/builder/plan/planShapes';
+import { fitTransform } from '../../../../../src/ui/builder/plan/planTransform';
+import { NO_SELECTION } from '../../../../../src/ui/builder/selection';
 
 /** 20 m square bounds in a 448 px canvas: (448 - 2 * 24 margin) / 20 = 20 px per metre, centre at pixel 224. */
 const view = fitTransform({ min: [-10, 0, -10], max: [10, 3, 10] }, { width: 448, height: 448 });

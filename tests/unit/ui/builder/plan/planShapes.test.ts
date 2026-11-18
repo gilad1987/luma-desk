@@ -1,12 +1,12 @@
 /**
- * Owns the truss geometry edge cases the panels and the top view share: a tower grows upwards when its height is set
+ * Owns the truss geometry edge cases the panels and the plan view share: a tower grows upwards when its height is set
  * (`withDimension`), and a vertical tower draws as one point, not two equal ones (`trussFootprint`). The common
- * straight and circle cases are in `topViewGeometry.test.ts` and `TrussTab.test.ts`.
+ * straight and circle cases are in `planGeometry.test.ts` and `TrussTab.test.ts`.
  */
 import { describe, expect, it } from 'vitest';
-import { trussFootprint } from '../../../../src/ui/builder/topViewShapes';
-import { withDimension } from '../../../../src/ui/builder/trussDimensions';
-import { LEFT_TOWER } from '../../domain/stage/edit/sampleDesign.ts';
+import { trussFootprint } from '../../../../../src/ui/builder/plan/planShapes';
+import { withDimension } from '../../../../../src/ui/builder/trussDimensions';
+import { LEFT_TOWER } from '../../../domain/stage/edit/sampleDesign.ts';
 
 describe('truss shapes', () => {
   it('stretches a tower along its own axis, so a new height moves the top up', () => {

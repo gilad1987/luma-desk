@@ -1,16 +1,16 @@
 /**
- * Owns the top view component: the canvas in the view slot, one draw per frame however many changes come, the
- * selection colour, and dispose. The drag is in `topViewDrag.test.ts`; the pure transform, pick and snap are in
- * `topViewGeometry.test.ts` and `topViewMove.test.ts`.
+ * Owns the plan view component: the canvas in the view slot, one draw per frame however many changes come, the
+ * selection colour, and dispose. The drag is in `planDrag.test.ts`; the pure transform, pick and snap are in
+ * `planGeometry.test.ts` and `planMove.test.ts`.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { FakeResizeObserver } from '../../../shared/dom';
-import { prop } from './toolsDom';
-import { mountTopView } from './topViewSetup';
+import { FakeResizeObserver } from '../../../../shared/dom';
+import { prop } from '../toolsDom';
+import { mountPlanView } from './planSetup';
 
-describe('TopView', () => {
+describe('PlanView', () => {
   afterEach(() => vi.unstubAllGlobals());
-  const setup = mountTopView;
+  const setup = mountPlanView;
 
   it('draws once per frame however many changes come in that frame', () => {
     const { session, frames, calls, runFrames } = setup();
@@ -18,9 +18,7 @@ describe('TopView', () => {
     session.select({ fixtures: [], trusses: ['front'] });
     const pending = frames.length;
     runFrames();
-    const backgrounds = calls
-      .filter(([name]) => name === 'fillStyle=')
-      .filter(([, v]) => v === '--top-view-background');
+    const backgrounds = calls.filter(([name]) => name === 'fillStyle=').filter(([, v]) => v === '--plan-background');
     expect([pending, backgrounds.length]).toEqual([1, 1]);
   });
 
@@ -29,9 +27,9 @@ describe('TopView', () => {
     session.select({ fixtures: [], trusses: ['front'] });
     runFrames();
     expect(calls.filter(([name]) => name === 'strokeStyle=').map(([, v]) => v)).toEqual([
-      '--top-view-grid',
-      '--top-view-truss',
-      '--top-view-selected',
+      '--plan-grid',
+      '--plan-truss',
+      '--plan-selected',
     ]);
   });
 

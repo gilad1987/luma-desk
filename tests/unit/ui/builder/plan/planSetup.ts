@@ -1,9 +1,9 @@
 import { vi } from 'vitest';
-import { createTemplate } from '../../../../src/domain/stage/templates';
-import { EditorSession } from '../../../../src/ui/builder/EditorSession';
-import { TopView } from '../../../../src/ui/builder/TopView';
-import { asReal, FakeDom, FakeElement } from '../../../shared/dom';
-import { fakeStage } from './fakeStage';
+import { createTemplate } from '../../../../../src/domain/stage/templates';
+import { EditorSession } from '../../../../../src/ui/builder/EditorSession';
+import { PlanView } from '../../../../../src/ui/builder/plan/PlanView';
+import { asReal, FakeDom, FakeElement } from '../../../../shared/dom';
+import { fakeStage } from '../fakeStage';
 
 /** A 2D context that records every call and property write, so a test can read what was drawn. */
 export function recordingContext(): { ctx: object; calls: unknown[][] } {
@@ -18,11 +18,11 @@ export function recordingContext(): { ctx: object; calls: unknown[][] } {
 }
 
 /**
- * A top view over the theatre template in a 448 px canvas, with the frames, the CSS palette and the 2D context faked:
+ * A plan view over the theatre template in a 448 px canvas, with the frames, the CSS palette and the 2D context faked:
  * a palette colour reads as its custom property name, and `runFrames` runs the pending frame by hand. Call
  * `vi.unstubAllGlobals()` after each test.
  */
-export function mountTopView() {
+export function mountPlanView() {
   new FakeDom();
   vi.stubGlobal('getComputedStyle', () => ({ getPropertyValue: (name: string) => name }));
   const stage = fakeStage(createTemplate('theatre'));
@@ -35,7 +35,7 @@ export function mountTopView() {
     cancelFrame: (h: number) => void cancelled.push(h),
     report: vi.fn(),
   };
-  const view = new TopView(asReal<HTMLElement>(slot), session, deps);
+  const view = new PlanView(asReal<HTMLElement>(slot), session, deps);
   const [canvas] = slot.children;
   if (!canvas) throw new Error('the view appends its canvas');
   const { ctx, calls } = recordingContext();

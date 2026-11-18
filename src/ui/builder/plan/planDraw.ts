@@ -1,15 +1,15 @@
-import type { StageDesign } from '../../domain/stage/StageDesign';
-import type { BuilderSelection } from './selection';
-import { drawFixtures, drawTrusses } from './topViewDrawItems';
-import type { TopViewPalette } from './topViewPalette';
-import type { CanvasSize, Point2, TopTransform } from './topViewTransform';
+import type { StageDesign } from '../../../domain/stage/StageDesign';
+import type { BuilderSelection } from '../selection';
+import { drawFixtures, drawTrusses } from './planDrawItems';
+import type { PlanPalette } from './planPalette';
+import type { CanvasSize, PlanTransform, Point2 } from './planTransform';
 
-/** Everything one draw of the top view reads; the view builds it per frame, the draw keeps no state. */
-export interface TopScene {
+/** Everything one draw of the plan reads; the view builds it per frame, the draw keeps no state. */
+export interface PlanScene {
   readonly design: StageDesign;
   readonly selection: BuilderSelection;
-  readonly view: TopTransform;
-  readonly palette: TopViewPalette;
+  readonly view: PlanTransform;
+  readonly palette: PlanPalette;
   readonly size: CanvasSize;
 }
 
@@ -19,7 +19,7 @@ const GRID_M = 0.5;
 const SCREEN_LINE_PX = 3;
 
 /** Paints the design from above: grid, deck, risers, LED walls, trusses and fixtures, the selection highlighted. */
-export function drawTopView(ctx: CanvasRenderingContext2D, scene: TopScene): void {
+export function drawPlan(ctx: CanvasRenderingContext2D, scene: PlanScene): void {
   const { size, palette } = scene;
   ctx.fillStyle = palette.background;
   ctx.fillRect(0, 0, size.width, size.height);
@@ -31,7 +31,7 @@ export function drawTopView(ctx: CanvasRenderingContext2D, scene: TopScene): voi
 }
 
 /** Grid lines over the whole canvas, by index, so the lines do not drift from adding 0.5 many times. */
-function drawGrid(ctx: CanvasRenderingContext2D, { view, size, palette }: TopScene): void {
+function drawGrid(ctx: CanvasRenderingContext2D, { view, size, palette }: PlanScene): void {
   const [x0, z0] = view.toWorld(0, 0);
   const [x1, z1] = view.toWorld(size.width, size.height);
   ctx.strokeStyle = palette.grid;
@@ -50,7 +50,7 @@ function drawGrid(ctx: CanvasRenderingContext2D, { view, size, palette }: TopSce
   ctx.stroke();
 }
 
-function drawDeck(ctx: CanvasRenderingContext2D, { design, view, palette }: TopScene): void {
+function drawDeck(ctx: CanvasRenderingContext2D, { design, view, palette }: PlanScene): void {
   const { deck } = design;
   ctx.fillStyle = palette.deck;
   fillBox(ctx, view, [deck.x0, deck.z0], [deck.x1, deck.z1]);
@@ -61,7 +61,7 @@ function drawDeck(ctx: CanvasRenderingContext2D, { design, view, palette }: TopS
 }
 
 /** LED walls and their side screens; hidden with the `ledWall` scenery part, as in 3D and in the camera fit. */
-function drawScreens(ctx: CanvasRenderingContext2D, { design, view, palette }: TopScene): void {
+function drawScreens(ctx: CanvasRenderingContext2D, { design, view, palette }: PlanScene): void {
   if (!design.scenery.ledWall) return;
   ctx.strokeStyle = palette.screen;
   ctx.lineWidth = SCREEN_LINE_PX;
@@ -78,7 +78,7 @@ function drawScreens(ctx: CanvasRenderingContext2D, { design, view, palette }: T
   ctx.stroke();
 }
 
-function fillBox(ctx: CanvasRenderingContext2D, view: TopTransform, lo: Point2, hi: Point2): void {
+function fillBox(ctx: CanvasRenderingContext2D, view: PlanTransform, lo: Point2, hi: Point2): void {
   const [px0, py0] = view.toCanvas(...lo);
   const [px1, py1] = view.toCanvas(...hi);
   ctx.fillRect(px0, py0, px1 - px0, py1 - py0);

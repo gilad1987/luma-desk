@@ -1,12 +1,12 @@
 /**
- * Owns the canvas box cache of the top view: the box is read once at mount and then only when the resize observer
+ * Owns the canvas box cache of the plan view: the box is read once at mount and then only when the resize observer
  * reports a change, never on a drag frame, and dispose stops the observer. That a resize refits the drawn canvas is in
- * `topView.test.ts`.
+ * `PlanView.test.ts`.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { TopViewCanvas } from '../../../../src/ui/builder/TopViewCanvas';
-import { asReal, FakeCanvas, FakeDom, FakeResizeObserver } from '../../../shared/dom';
-import { prop } from './toolsDom';
+import { PlanCanvas } from '../../../../../src/ui/builder/plan/PlanCanvas';
+import { asReal, FakeCanvas, FakeDom, FakeResizeObserver } from '../../../../shared/dom';
+import { prop } from '../toolsDom';
 
 /** A 448 px canvas whose `offsetWidth` reads are counted, with the CSS palette faked. */
 function mountCanvas() {
@@ -16,11 +16,11 @@ function mountCanvas() {
   const reads = vi.fn(() => 448);
   Object.defineProperty(element, 'offsetWidth', { get: reads });
   Object.assign(element, { offsetHeight: 448 });
-  const canvas = new TopViewCanvas(asReal<HTMLCanvasElement>(element), () => undefined);
+  const canvas = new PlanCanvas(asReal<HTMLCanvasElement>(element), () => undefined);
   return { element, canvas, reads };
 }
 
-describe('TopViewCanvas', () => {
+describe('PlanCanvas', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it('reads the canvas box once at mount and not again on the following drag frames', () => {

@@ -1,11 +1,11 @@
 /**
- * Owns the drag result of the top view: the snap of the grabbed item to the 0.5 m (Alt 0.1 m) grid and the one edit
- * op that moves the selection. The pointer gesture that calls them is in `topView.test.ts`.
+ * Owns the drag result of the plan view: the snap of the grabbed item to the 0.5 m (Alt 0.1 m) grid and the one edit
+ * op that moves the selection. The pointer gesture that calls them is in `PlanView.test.ts`.
  */
 import { describe, expect, it } from 'vitest';
-import { roundToMillimetre } from '../../../../src/domain/stage/edit/millimetres';
-import { createTemplate } from '../../../../src/domain/stage/templates';
-import { FINE_SNAP_M, moveSelection, SNAP_M, snappedTarget } from '../../../../src/ui/builder/topViewMove';
+import { roundToMillimetre } from '../../../../../src/domain/stage/edit/millimetres';
+import { createTemplate } from '../../../../../src/domain/stage/templates';
+import { FINE_SNAP_M, moveSelection, SNAP_M, snappedTarget } from '../../../../../src/ui/builder/plan/planMove';
 
 const theatre = createTemplate('theatre');
 const positionOf = (d: typeof theatre, id: number): unknown => d.fixtures.find((f) => f.id === id)?.position;

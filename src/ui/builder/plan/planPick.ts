@@ -1,9 +1,9 @@
-import { isHiddenWallFixture } from '../../domain/stage/hiddenWall';
-import type { StageDesign, StageFixture } from '../../domain/stage/StageDesign';
-import type { StageTruss } from '../../domain/stage/trussTypes';
-import { NO_SELECTION, type BuilderSelection } from './selection';
-import { trussFootprint, type TrussFootprint } from './topViewShapes';
-import type { Point2, TopTransform } from './topViewTransform';
+import { isHiddenWallFixture } from '../../../domain/stage/hiddenWall';
+import type { StageDesign, StageFixture } from '../../../domain/stage/StageDesign';
+import type { StageTruss } from '../../../domain/stage/trussTypes';
+import { NO_SELECTION, type BuilderSelection } from '../selection';
+import { trussFootprint, type TrussFootprint } from './planShapes';
+import type { PlanTransform, Point2 } from './planTransform';
 
 /** The item under the pointer; `anchor` is its world x/z, which a drag snaps to the grid. */
 export type TopPick =
@@ -24,7 +24,7 @@ const TOWER_MARK_PX = 12;
  * every truss on a dense rig; a fixture off the trusses still gets the full touch target. The screen fixture of a
  * hidden LED wall is not drawn, so it is not picked (`isHiddenWallFixture`).
  */
-export function pickAt(d: StageDesign, view: TopTransform, at: Point2): TopPick | null {
+export function pickAt(d: StageDesign, view: PlanTransform, at: Point2): TopPick | null {
   const fixtures = d.fixtures.filter((f) => !isHiddenWallFixture(d, f.id));
   const fixtureDistance = (f: StageFixture): number => distance(view.toCanvas(f.position[0], f.position[2]), at);
   const onMark = nearest(fixtures, fixtureDistance, FIXTURE_MARK_PX);
@@ -74,7 +74,7 @@ function nearest<T>(items: readonly T[], distanceOf: (item: T) => number, radius
 }
 
 /** Pixel distance from `at` to the drawn line of a footprint: the ring, or the outline edges. */
-function footprintDistance(fp: TrussFootprint, view: TopTransform, at: Point2): number {
+function footprintDistance(fp: TrussFootprint, view: PlanTransform, at: Point2): number {
   if (fp.kind === 'ring') return Math.abs(distance(view.toCanvas(...fp.centre), at) - fp.radius * view.scale);
   const points = fp.points.map(([x, z]) => view.toCanvas(x, z));
   return Math.min(...points.map((p, i) => segmentDistance(p, points[(i + 1) % points.length] ?? p, at)));

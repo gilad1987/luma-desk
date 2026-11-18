@@ -54,7 +54,7 @@ describe('mountTools', () => {
       tabs.map((t) => t.textContent),
       props.length,
       view.children.map((el) => el.className),
-    ]).toEqual([1, 'builder-panel', ['Stage', 'Trusses', 'Fixtures'], 1, ['top-view']]);
+    ]).toEqual([1, 'builder-panel', ['Stage', 'Trusses', 'Fixtures'], 1, ['plan-view']]);
   });
 
   it('re-renders every panel on the next task after a change made in one of them', () => {

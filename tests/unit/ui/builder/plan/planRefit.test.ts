@@ -1,17 +1,17 @@
 /**
- * Owns when the top view fits its transform and repaints for its size: the fit is reused while the draft and the
+ * Owns when the plan view fits its transform and repaints for its size: the fit is reused while the draft and the
  * canvas size stay the same (every drag frame), and a canvas resize asks for a frame. The drawing is in
- * `topView.test.ts`.
+ * `PlanView.test.ts`.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { FakeResizeObserver } from '../../../shared/dom';
-import { mountTopView } from './topViewSetup';
+import { FakeResizeObserver } from '../../../../shared/dom';
+import { mountPlanView } from './planSetup';
 
-describe('TopView refit', () => {
+describe('PlanView refit', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it('keeps the transform over the frames of one draft and fits again after an edit or a resize', () => {
-    const { session, view, canvas, runFrames } = mountTopView();
+    const { session, view, canvas, runFrames } = mountPlanView();
     runFrames();
     const first = view.transform;
     view.preview(null);
@@ -27,7 +27,7 @@ describe('TopView refit', () => {
   });
 
   it('asks for a frame when the canvas box changes size, and none when the observer fires with the same size', () => {
-    const { canvas, frames, runFrames } = mountTopView();
+    const { canvas, frames, runFrames } = mountPlanView();
     runFrames();
     FakeResizeObserver.resizeAll();
     const sameSize = frames.length;

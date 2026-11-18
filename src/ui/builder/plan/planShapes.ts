@@ -1,6 +1,6 @@
-import { trussPoints } from '../../domain/stage/bounds';
-import type { StageTruss } from '../../domain/stage/trussTypes';
-import type { Point2 } from './topViewTransform';
+import { trussPoints } from '../../../domain/stage/bounds';
+import type { StageTruss } from '../../../domain/stage/trussTypes';
+import type { Point2 } from './planTransform';
 
 /**
  * What a truss looks like from above, in world metres. A circle is a ring; every other kind is the outline around its
@@ -20,7 +20,7 @@ const SAME_POINT_M = 1e-6;
  */
 const footprints = new WeakMap<StageTruss, TrussFootprint>();
 
-/** The top-view footprint of `t`; see `TrussFootprint`. Made once per truss object. */
+/** The plan footprint of `t`; see `TrussFootprint`. Made once per truss object. */
 export function trussFootprint(t: StageTruss): TrussFootprint {
   let fp = footprints.get(t);
   if (!fp) {

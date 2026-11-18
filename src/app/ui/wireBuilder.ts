@@ -20,7 +20,7 @@ export interface BuilderWiringDeps {
 }
 
 /**
- * The browser side of {@link BuilderDeps}: the builder hears its keys on `document`, draws its top view at most once
+ * The browser side of {@link BuilderDeps}: the builder hears its keys on `document`, draws its plan at most once
  * per animation frame and mounts the real tool tabs, property panel and top view. Kept apart from
  * {@link wireBuilder} so a test can check each binding without a DOM that can host the tools.
  */

@@ -2,13 +2,13 @@ import type { EngineBus } from '../../engine/events';
 import type { KeySource } from './builderKeys';
 import type { EditorSession } from './EditorSession';
 import type { EditorSessionDeps } from './LivePreview';
-import type { TopViewDeps } from './TopView';
+import type { PlanViewDeps } from './plan/PlanView';
 
 /** The two panels the builder screen leaves to the tool tabs (W4b) and the top view (W4c). */
 export interface BuilderSlots {
   /** The inline-start panel: Stage, Trusses and Fixtures tabs and the property panel. */
   readonly tools: HTMLElement;
-  /** The inline-end panel: the 2D top view. */
+  /** The inline-end panel: the 2D plan. */
   readonly view: HTMLElement;
 }
 
@@ -36,10 +36,10 @@ export interface BuilderDeps extends EditorSessionDeps {
    * The frame clock of the top view: the app passes `requestAnimationFrame` and `cancelAnimationFrame`, so the view
    * draws at most once per frame; tests pass a queue they run by hand.
    */
-  readonly frames: Pick<TopViewDeps, 'nextFrame' | 'cancelFrame'>;
+  readonly frames: Pick<PlanViewDeps, 'nextFrame' | 'cancelFrame'>;
   /**
    * Mounts the tool tabs and the top view on enter; returns their disposer, called on exit. `view` is `frames` with
    * the report sink, which shows a refused drag as a toast through `bus.emit('message', ...)`.
    */
-  readonly mountTools: (slots: BuilderSlots, session: EditorSession, view: TopViewDeps) => () => void;
+  readonly mountTools: (slots: BuilderSlots, session: EditorSession, view: PlanViewDeps) => () => void;
 }

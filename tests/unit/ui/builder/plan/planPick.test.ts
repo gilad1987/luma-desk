@@ -1,14 +1,14 @@
 /**
- * Owns the pick order of the builder top view on a dense rig: a fixture's own mark, then a tower, then a truss line,
- * then a fixture within the touch radius. The basic nearest pick and its radius are in `topViewGeometry.test.ts`.
+ * Owns the pick order of the builder plan view on a dense rig: a fixture's own mark, then a tower, then a truss line,
+ * then a fixture within the touch radius. The basic nearest pick and its radius are in `planGeometry.test.ts`.
  */
 import { describe, expect, it } from 'vitest';
-import { boundsOf } from '../../../../src/domain/stage/bounds';
-import { setLedWall } from '../../../../src/domain/stage/edit/ledWall';
-import { createTemplate } from '../../../../src/domain/stage/templates';
-import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
-import { pickAt } from '../../../../src/ui/builder/topViewPick';
-import { fitTransform } from '../../../../src/ui/builder/topViewTransform';
+import { boundsOf } from '../../../../../src/domain/stage/bounds';
+import { setLedWall } from '../../../../../src/domain/stage/edit/ledWall';
+import { createTemplate } from '../../../../../src/domain/stage/templates';
+import { BUILT_IN_DESIGN } from '../../../../../src/domain/stage/templates/sultansPool/builtInDesign';
+import { pickAt } from '../../../../../src/ui/builder/plan/planPick';
+import { fitTransform } from '../../../../../src/ui/builder/plan/planTransform';
 
 /** Every truss id that some point of a 2 px grid over the canvas picks. */
 function pickableTrusses(width: number, height: number): Set<string> {

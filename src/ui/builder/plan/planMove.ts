@@ -1,11 +1,11 @@
-import { moveFixtures } from '../../domain/stage/edit/fixtureMoves';
-import { moveTruss } from '../../domain/stage/edit/trussOps';
-import type { Vec3 } from '../../domain/stage/types';
-import type { EditOp } from './EditorSession';
-import type { BuilderSelection } from './selection';
-import type { Point2 } from './topViewTransform';
+import { moveFixtures } from '../../../domain/stage/edit/fixtureMoves';
+import { moveTruss } from '../../../domain/stage/edit/trussOps';
+import type { Vec3 } from '../../../domain/stage/types';
+import type { EditOp } from '../EditorSession';
+import type { BuilderSelection } from '../selection';
+import type { Point2 } from './planTransform';
 
-/** The grid step of a drag, in metres: the 0.5 m grid the top view draws. */
+/** The grid step of a drag, in metres: the 0.5 m grid the plan view draws. */
 export const SNAP_M = 0.5;
 /** The grid step with Alt held, for fine placement. */
 export const FINE_SNAP_M = 0.1;

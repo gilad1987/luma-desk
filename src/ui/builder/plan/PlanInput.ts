@@ -1,12 +1,12 @@
-import { boxMap, pointerDrag, type BoxMap } from '../shared';
-import type { EditOp, EditorSession } from './EditorSession';
-import { FINE_SNAP_M, moveSelection, pastDragThreshold, SNAP_M, snappedTarget } from './topViewMove';
-import { pickAt, selectionAfterPick } from './topViewPick';
-import type { Point2, TopTransform } from './topViewTransform';
+import type { EditOp, EditorSession } from '../EditorSession';
+import { boxMap, pointerDrag, type BoxMap } from '../../shared';
+import { FINE_SNAP_M, moveSelection, pastDragThreshold, SNAP_M, snappedTarget } from './planMove';
+import { pickAt, selectionAfterPick } from './planPick';
+import type { Point2, PlanTransform } from './planTransform';
 
 /** What the input needs from the view: the transform it draws with, and the drag preview. */
-export interface TopViewSurface {
-  readonly transform: TopTransform;
+export interface PlanSurface {
+  readonly transform: PlanTransform;
   preview(op: EditOp | null): void;
 }
 
@@ -20,19 +20,19 @@ interface Drag {
 }
 
 /**
- * The pointer on the top view: a click picks the nearest item (Shift adds), a drag moves the selection on the 0.5 m
+ * The pointer on the plan view: a click picks the nearest item (Shift adds), a drag moves the selection on the 0.5 m
  * grid (Alt: 0.1 m). A press becomes a drag only past `DRAG_THRESHOLD_PX`, so a click never moves an item. The drag
  * shows as a preview only and becomes one `session.edit` on drop, so one drag is one undo step and the rig is not
  * rebuilt per pointer move.
  */
-export class TopViewInput {
+export class PlanInput {
   readonly #canvas: HTMLCanvasElement;
   readonly #session: EditorSession;
-  readonly #surface: TopViewSurface;
+  readonly #surface: PlanSurface;
   readonly #report: (text: string) => void;
   #drag: Drag | null = null;
 
-  constructor(canvas: HTMLCanvasElement, session: EditorSession, surface: TopViewSurface, report: (t: string) => void) {
+  constructor(canvas: HTMLCanvasElement, session: EditorSession, surface: PlanSurface, report: (t: string) => void) {
     this.#canvas = canvas;
     this.#session = session;
     this.#surface = surface;

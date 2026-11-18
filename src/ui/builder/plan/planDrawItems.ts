@@ -1,8 +1,8 @@
-import { isHiddenWallFixture } from '../../domain/stage/hiddenWall';
-import type { BuilderSelection } from './selection';
-import type { TopScene } from './topViewDraw';
-import { trussFootprint, type TrussFootprint } from './topViewShapes';
-import type { TopTransform } from './topViewTransform';
+import { isHiddenWallFixture } from '../../../domain/stage/hiddenWall';
+import type { BuilderSelection } from '../selection';
+import type { PlanScene } from './planDraw';
+import { trussFootprint, type TrussFootprint } from './planShapes';
+import type { PlanTransform } from './planTransform';
 
 /** The width of a truss line. */
 const TRUSS_LINE_PX = 3;
@@ -26,14 +26,14 @@ interface PickedIds {
 const pickedBySelection = new WeakMap<BuilderSelection, PickedIds>();
 
 /** Strokes every truss footprint; picked trusses go last, in the selection colour, so they stay on top. */
-export function drawTrusses(ctx: CanvasRenderingContext2D, scene: TopScene): void {
+export function drawTrusses(ctx: CanvasRenderingContext2D, scene: PlanScene): void {
   ctx.lineWidth = TRUSS_LINE_PX;
   strokeTrusses(ctx, scene, false);
   strokeTrusses(ctx, scene, true);
 }
 
 /** Fills a square per fixture; picked fixtures go last, in the selection colour. */
-export function drawFixtures(ctx: CanvasRenderingContext2D, scene: TopScene): void {
+export function drawFixtures(ctx: CanvasRenderingContext2D, scene: PlanScene): void {
   ctx.fillStyle = scene.palette.fixture;
   fillFixtures(ctx, scene, false);
   ctx.fillStyle = scene.palette.selected;
@@ -50,7 +50,7 @@ function pickedIds(selection: BuilderSelection): PickedIds {
 }
 
 /** One pass over the fixtures whose pick state is `picked`, but a hidden wall's, with no array or closure per frame. */
-function fillFixtures(ctx: CanvasRenderingContext2D, { design, selection, view }: TopScene, picked: boolean): void {
+function fillFixtures(ctx: CanvasRenderingContext2D, { design, selection, view }: PlanScene, picked: boolean): void {
   const ids = pickedIds(selection).fixtures;
   for (const f of design.fixtures) {
     if (ids.has(f.id) !== picked || isHiddenWallFixture(design, f.id)) continue;
@@ -60,7 +60,7 @@ function fillFixtures(ctx: CanvasRenderingContext2D, { design, selection, view }
 }
 
 /** One pass over the trusses whose pick state is `picked`, in the truss or the selection colour. */
-function strokeTrusses(ctx: CanvasRenderingContext2D, scene: TopScene, picked: boolean): void {
+function strokeTrusses(ctx: CanvasRenderingContext2D, scene: PlanScene, picked: boolean): void {
   const { design, selection, view, palette } = scene;
   const ids = pickedIds(selection).trusses;
   const colour = picked ? palette.selected : palette.truss;
@@ -72,7 +72,7 @@ function strokeTrusses(ctx: CanvasRenderingContext2D, scene: TopScene, picked: b
 }
 
 /** A ring, a tower square or a closed outline; the outline points are read in place, not copied. */
-function strokeFootprint(ctx: CanvasRenderingContext2D, view: TopTransform, fp: TrussFootprint): void {
+function strokeFootprint(ctx: CanvasRenderingContext2D, view: PlanTransform, fp: TrussFootprint): void {
   ctx.beginPath();
   if (fp.kind === 'ring') {
     const [cx, cy] = view.toCanvas(fp.centre[0], fp.centre[1]);

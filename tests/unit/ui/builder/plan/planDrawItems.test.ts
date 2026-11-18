@@ -1,19 +1,19 @@
 /**
  * Owns the per-frame cost of drawing trusses and fixtures: a drag draws every frame with one selection, so the picked
  * ids are made into sets once per selection, and no array is made from the design on a frame. Which items get the
- * selection colour is in `topView.test.ts`.
+ * selection colour is in `PlanView.test.ts`.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { boundsOf } from '../../../../src/domain/stage/bounds';
-import { setLedWall } from '../../../../src/domain/stage/edit/ledWall';
-import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
-import { createTemplate } from '../../../../src/domain/stage/templates';
-import type { BuilderSelection } from '../../../../src/ui/builder/selection';
-import { drawFixtures, drawTrusses } from '../../../../src/ui/builder/topViewDrawItems';
-import { readPalette } from '../../../../src/ui/builder/topViewPalette';
-import { fitTransform } from '../../../../src/ui/builder/topViewTransform';
-import { asReal } from '../../../shared/dom';
-import { recordingContext } from './topViewSetup';
+import { boundsOf } from '../../../../../src/domain/stage/bounds';
+import { setLedWall } from '../../../../../src/domain/stage/edit/ledWall';
+import type { StageDesign } from '../../../../../src/domain/stage/StageDesign';
+import { createTemplate } from '../../../../../src/domain/stage/templates';
+import { drawFixtures, drawTrusses } from '../../../../../src/ui/builder/plan/planDrawItems';
+import { readPalette } from '../../../../../src/ui/builder/plan/planPalette';
+import { fitTransform } from '../../../../../src/ui/builder/plan/planTransform';
+import type { BuilderSelection } from '../../../../../src/ui/builder/selection';
+import { asReal } from '../../../../shared/dom';
+import { recordingContext } from './planSetup';
 
 let built = 0;
 /** A `Set` that counts how many are made. */
@@ -77,14 +77,14 @@ describe('drawTrusses and drawFixtures', () => {
     const styles = calls
       .filter(([name]) => String(name).endsWith('Style='))
       .map(([name, v]) => `${String(name)}${String(v)}`);
-    const picked = calls.slice(calls.findIndex(([name, v]) => name === 'strokeStyle=' && v === '--top-view-selected'));
+    const picked = calls.slice(calls.findIndex(([name, v]) => name === 'strokeStyle=' && v === '--plan-selected'));
     expect(styles).toEqual([
-      'strokeStyle=--top-view-truss',
-      'fillStyle=--top-view-truss',
-      'strokeStyle=--top-view-selected',
-      'fillStyle=--top-view-selected',
-      'fillStyle=--top-view-fixture',
-      'fillStyle=--top-view-selected',
+      'strokeStyle=--plan-truss',
+      'fillStyle=--plan-truss',
+      'strokeStyle=--plan-selected',
+      'fillStyle=--plan-selected',
+      'fillStyle=--plan-fixture',
+      'fillStyle=--plan-selected',
     ]);
     expect([picked.filter(([name]) => name === 'stroke').length, calls.at(-2)?.[0], calls.at(-1)?.[0]]).toEqual([
       1,

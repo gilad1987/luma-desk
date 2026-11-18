@@ -1,19 +1,19 @@
-import { readPalette, type TopViewPalette } from './topViewPalette';
+import { readPalette, type PlanPalette } from './planPalette';
 
 /**
- * The top view canvas with its backing size kept equal to its CSS box, and the palette read with it. Both run only
+ * The plan view canvas with its backing size kept equal to its CSS box, and the palette read with it. Both run only
  * when the box size changes: writing `width` clears the canvas and reallocates its buffer, and `getComputedStyle`
  * forces a style pass, and the view draws on every drag frame. So a theme change shows after the next resize.
  * The box is read once on the first frame and then only when the `ResizeObserver` fires, because `offsetWidth` on a
  * drag frame forces a layout; the observer runs after a layout, where the read costs nothing.
  */
-export class TopViewCanvas {
+export class PlanCanvas {
   readonly #element: HTMLCanvasElement;
   readonly #observer: ResizeObserver;
   #measured = false;
   #width = 0;
   #height = 0;
-  #palette: TopViewPalette | null = null;
+  #palette: PlanPalette | null = null;
 
   /** `onResize` asks the view for a frame: a resize alone changes no draft, so nothing else would repaint. */
   constructor(element: HTMLCanvasElement, onResize: () => void) {
@@ -25,7 +25,7 @@ export class TopViewCanvas {
   }
 
   /** The palette for this frame; first resizes the canvas to its box when the box changed since the last frame. */
-  fit(): TopViewPalette {
+  fit(): PlanPalette {
     if (!this.#measured) this.#measure();
     if (this.#palette) return this.#palette;
     const element = this.#element;

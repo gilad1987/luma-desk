@@ -1,0 +1,18 @@
+// The builder plan view (src/ui/builder/plan/PlanView.ts): one canvas that fills the view panel. The canvas draws with
+// the `--plan-*` colours, read when the canvas size changes (PlanCanvas), so the palette stays in CSS.
+// `touch-action: none` keeps a finger drag on iPad a drag of the selection instead of a page scroll.
+.plan-view {
+  --plan-background: var(--bg);
+  --plan-grid: #16161a;
+  --plan-deck: var(--p3);
+  --plan-riser: var(--line2);
+  --plan-screen: var(--blue);
+  --plan-truss: var(--mut);
+  --plan-fixture: var(--txt);
+  --plan-selected: var(--acc);
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
