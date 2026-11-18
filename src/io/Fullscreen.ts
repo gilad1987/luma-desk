@@ -53,7 +53,7 @@ export class Fullscreen {
    */
   handleKey(event: FullscreenKey): void {
     const tag = this.#deps.document.activeElement?.tagName;
-    // Quirk kept: a SELECT, an open modal or the tour do not block F (03-ui.md §8.1, Q5)
+    // quirk Q5 (orig:2911): a SELECT, an open modal or the tour do not block F (03-ui.md §8.1)
     const isTyping = tag === 'INPUT' || tag === 'TEXTAREA';
     const isShortcut = (event.key === 'f' || event.key === 'F') && !event.ctrlKey && !event.metaKey;
     if (!isShortcut || isTyping || this.#deps.isGuideOpen()) return;

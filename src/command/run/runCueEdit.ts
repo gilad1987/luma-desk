@@ -43,6 +43,6 @@ export function runLabel({ target, num, name }: StatementOf<'label'>, deps: Comm
 export function runCueFade({ seconds }: StatementOf<'cueFade'>, { pool, state, bus }: CommandDeps): void {
   const executor = executorAt(pool, state.selExec, 'reading', 'cur');
   if (executor.cur < 0) return;
-  cueAt(executor.cues, executor.cur).fade = seconds;
+  cueAt(executor.cues, executor.cur).fade = seconds; // quirk C4 (orig:1937): not saved until the next save
   log(bus, `Cue fade = ${seconds}s`, 'ok');
 }

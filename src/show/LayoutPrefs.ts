@@ -23,13 +23,13 @@ export class LayoutPrefs {
     try {
       this.#store.setItem(STORAGE_KEYS.layout, JSON.stringify({ deskMode, deskZoom, maSize }));
     } catch {
-      // storage full or blocked: the layout is not kept
+      // quirk D6 (orig:2941): storage full or blocked, so the layout is not kept
     }
   }
 
   /**
    * The saved layout, or null when none is saved or it cannot be read. A saved size equal to `adaptiveSize` reads as
-   * adaptive: older versions saved that default without a grip drag (known quirk). Other sizes are clamped to 0.3-0.7.
+   * adaptive: older versions saved that default without a grip drag (quirk D7). Other sizes are clamped to 0.3-0.7.
    */
   load(adaptiveSize: number): DeskLayout | null {
     try {
@@ -37,9 +37,9 @@ export class LayoutPrefs {
       if (!saved) return null;
       const { deskMode, deskZoom, maSize } = isRecord(saved) ? saved : {};
       const size = Number(maSize);
-      const custom = Number.isFinite(size) && size > 0 && size !== adaptiveSize;
+      const custom = Number.isFinite(size) && size > 0 && size !== adaptiveSize; // quirk D7, quirk Q33 (orig:3082)
       return {
-        deskMode: textOr(deskMode, 'ma'),
+        deskMode: textOr(deskMode, 'ma'), // quirk D9 (orig:3080): an unknown name is kept
         deskZoom: textOr(deskZoom, 'auto'),
         maSize: custom ? clamp(size, 0.3, 0.7) : undefined,
       };

@@ -17,7 +17,7 @@ const FEATURE_ENCODERS: Readonly<Record<FeatureTab, readonly EncoderAttr[]>> = {
 /** The MA console keeps all five encoders live: current feature first, then the others in this fixed order. */
 const MA_FILL: readonly AttrName[] = ['dim', 'pan', 'tilt', 'r', 'g', 'b', 'zoom', 'strobe', 'gobo', 'grot'];
 
-/** The encoders a feature tab shows; the MA layout pads the row to at least five (quirk Q20). */
+/** The encoders a feature tab shows; the MA layout pads the row to at least five (quirk Q20, orig:1996). */
 export function encoderList(feat: FeatureTab, mode: LayoutMode): readonly EncoderAttr[] {
   const list = FEATURE_ENCODERS[feat];
   if (mode !== 'ma') return list;

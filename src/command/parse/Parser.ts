@@ -21,7 +21,7 @@ export class Parser {
 
   /**
    * Whether the line should end with "N fixtures selected": something selected it (or `+`/`-` appeared) and no
-   * At/Full/Zero appears anywhere in it (quirk C5).
+   * At/Full/Zero appears anywhere in it (quirk C5, orig:1941).
    */
   get reportsSelection(): boolean {
     return this.#selected && !mentionsLevel(this.#line);

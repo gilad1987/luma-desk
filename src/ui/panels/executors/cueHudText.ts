@@ -2,7 +2,7 @@ import { SECTION_NAMES } from '../../../autoshow/sections';
 import type { Executor } from '../../../engine/Executor';
 import type { HudAutoShow } from './ExecutorsDeps';
 
-/** The HUD's three lines; `cueHtml` is HTML because names are not escaped (quirk Q11). */
+/** The HUD's three lines; `cueHtml` is HTML because names are not escaped (quirk Q11, orig:2182). */
 export interface CueHudText {
   readonly exec: string;
   readonly cueHtml: string;

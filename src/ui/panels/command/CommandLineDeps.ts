@@ -20,7 +20,7 @@ export interface CommandLineDeps {
   readonly runCommand: (raw: string) => void;
   /** Every light fixture id (not the screens): what ALL selects. */
   readonly lightIds: () => number[];
-  /** FAN changed: the encoders repaint their Fan button when the Position feature shows (quirk Q9). */
+  /** FAN changed: the encoders repaint their Fan button when the Position feature shows (quirk Q9, orig:2238). */
   readonly fanToggled: () => void;
   /** The guide or the tour covers the page: page keys do nothing then. */
   readonly guideOrTourOpen: () => boolean;

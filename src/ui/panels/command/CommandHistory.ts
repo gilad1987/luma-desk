@@ -1,6 +1,6 @@
 /**
  * The typed-command history that Up/Down walk, newest first. Shared by the input and the keypad ENTER, which pushes
- * without restarting the walk (quirk Q6).
+ * without restarting the walk (quirk Q6, orig:2933).
  */
 export class CommandHistory {
   readonly #entries: string[] = [];
@@ -8,7 +8,7 @@ export class CommandHistory {
 
   /**
    * Adds the newest entry. The input passes `resetIndex` so the next ArrowUp starts again from it; the keypad ENTER
-   * does not, which is the old behaviour (quirk Q6).
+   * does not, which is the old behaviour (quirk Q6, quirk G4, orig:2933).
    */
   push(entry: string, resetIndex: boolean): void {
     this.#entries.unshift(entry);

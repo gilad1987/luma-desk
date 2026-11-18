@@ -21,7 +21,7 @@ export class Modal {
     this.#backdrop.onclick = (ev) => {
       if (hitsId(ev.target, 'modal')) this.close();
     };
-    // close buttons come and go with the dialog markup, so one document listener serves them all (quirk Q26)
+    // close buttons come and go with the dialog markup, so one document listener serves them all (quirk Q26, orig:2290)
     document.addEventListener('click', (ev) => {
       if (hitsId(ev.target, 'hClose')) this.close();
     });
@@ -44,7 +44,7 @@ export class Modal {
     return this.#backdrop.classList.contains('show');
   }
 
-  /** Asks for a new name; a blank answer keeps `value` (quirk Q22). */
+  /** Asks for a new name; a blank answer keeps `value` (quirk Q22, orig:2281). */
   rename(title: string, value: string, done: (name: string) => void): void {
     this.open(renameMarkup(title, value));
     const input = byId('mIn', HTMLInputElement);

@@ -47,7 +47,7 @@ export class Selection {
         this.#ids = this.#ids.includes(id) ? this.#ids.filter((x) => x !== id) : [...this.#ids, id];
     }
     this.#members = new Set(this.#ids);
-    this.#bus.emit('selectionChanged', undefined);
+    this.#bus.emit('selectionChanged', undefined); // quirk Q2 (orig:1802): no listener reads it
   }
 
   /** Reverses the selection order, which reverses fans and phaser offsets across the same fixtures. */

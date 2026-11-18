@@ -20,7 +20,7 @@ export function buildRoofGrid(scene: Object3D, kit: TrussKit): void {
       const x = sx * 23.6 + sx * 0.4;
       kit.addSection(scene, [x, DECK, z], [x, 19.5, z], 0.4);
     }
-  // the legacy code passed this material as an argument, so it exists before the slab geometry
+  // quirk F7 (orig:1032): the legacy code passed this material as an argument, so it exists before the slab geometry
   const roof = new MeshStandardMaterial({ color: 0x0a0a0c, roughness: 0.9 });
   addMesh(scene, new BoxGeometry(54, 0.3, 27), roof, { position: [0, ROOF + 0.7, -7.9] });
 }

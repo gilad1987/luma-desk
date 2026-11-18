@@ -27,7 +27,7 @@ export function applyPhasers(
       o.pan += sample.dp;
       o.tilt += sample.dt;
     }
-    if (ft === 'dim' && f.has('dim')) o.dim = sample.dim * s.lv;
+    if (ft === 'dim' && f.has('dim')) o.dim = sample.dim * s.lv; // quirk A9 (orig:1686): replaces, no HTP
     if (ft === 'color' && f.has('r')) {
       o.r = sample.r;
       o.g = sample.g;

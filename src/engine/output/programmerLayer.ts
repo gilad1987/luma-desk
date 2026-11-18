@@ -24,7 +24,7 @@ export function mergeProgrammer(f: Fixture, o: AttrOutput, slots: PhaserSlots, p
     for (const key in pv) {
       const a = attrName(key);
       o[a] = pv[a] as number;
-      slots[ATTR[a].feat] = null;
+      slots[ATTR[a].feat] = null; // quirk A8 (orig:1680): also for features that have no phaser
     }
   for (const ft of PHASER_FEATURES) {
     const r = programmer.fx[fxKey(f.id, ft)];

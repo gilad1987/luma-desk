@@ -2,7 +2,11 @@
 
 > "Source" lines refer to the original single-file app: `index.html` at commit `48a3b63` (3,096 lines) and
 > `sw.js` at the same commit. "Lives in" names the TypeScript file that keeps the quirk today. Code that keeps a
-> quirk cites its id (for example `quirk C2`), so `grep -rn "quirk C2" src` finds every place.
+> quirk cites its id (for example `quirk C2`), so `grep -rn "quirk C2" src` finds every place. The citation also
+> gives the original line: `// quirk A1 (orig:1689)` as a line comment, `(quirk C2, orig:1921)` inside a sentence.
+> `orig:` is a line of `tests/shared/legacy/original-index.html`, the frozen copy of `index.html@48a3b63`. The
+> service worker entries (I) are cited in `sw.ts`. `tests/unit/knownQuirks.test.ts` fails when an entry is not
+> cited; it lists the entries whose code is gone, with the reason.
 
 ## Why this file exists
 
@@ -415,8 +419,8 @@ Groups:
 ### C8. `Off Exec n` writes `e.on = false` before `e.off()`
 
 - Source: `index.html:1925` (`execOff(execs[ex])`)
-- Lives in: `src/main.ts` (`case 'off'` in the command runner that `main.ts` still holds; Phase 6 removes it),
-  `src/command/run/runPlayback.ts` (`executorAt(..., 'setting', 'on')`)
+- Lives in: `src/command/run/runPlayback.ts` (`runOff`: `executorAt(..., 'setting', 'on')`, then
+  `executor.on = false` before `executor.off()`)
 - What it does: the extra write has no effect on a real executor, because `off()` also clears `on`. On an unknown
   executor it is the write that fails, so the log shows the C2 text `Cannot set properties of undefined (setting
 'on')`, as the original `execOff` did.
@@ -776,7 +780,7 @@ Groups:
 ### G8. The MA colour marker computes its hue inline
 
 - Source: `index.html:3025-3026` (`updateMaUI`)
-- Lives in: `src/ui/layouts/ma/colorMarker.ts` (and inline in `src/main.ts` until Phase 6)
+- Lives in: `src/ui/layouts/ma/colorMarker.ts` (`hueSixths`)
 - What it does: the marker position uses `((g - b) / dl + 6) % 6` instead of `core` `rgb2hsv`. The two are equal in
   exact arithmetic, but in floating point they differ in the last digits of `style.left` for about 177,000 of
   1.03 million tested inputs (about 17%).
@@ -930,8 +934,8 @@ The refactor keeps this logic (see ADR 0003). Only the shell list and the cache 
   the app folder.
 - Why kept: parity. `playwright.config.ts` blocks service workers (`serviceWorkers: 'block'`); the worker specs
   `tests/e2e/swOffline.spec.ts` and `tests/e2e/swCaching.spec.ts` allow them with `test.use`.
-- Lives in: `src/main.ts` today; the page-side registration moves to `src/io/` (in progress at the time of
-  writing).
+- Lives in: `src/io/serviceWorkerRegistration.ts` (`registerServiceWorker`, called from
+  `src/app/io/wireAppFeatures.ts`).
 - Future fix: log the failure in dev builds.
 
 ### I11. Shell URLs are not passed through `encodeURI`
