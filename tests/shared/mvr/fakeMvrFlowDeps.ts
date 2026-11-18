@@ -1,6 +1,9 @@
 import { vi, type Mock } from 'vitest';
 import type { MvrFlowDeps } from '../../../src/app/mvr/MvrFlowDeps';
+import type { Rig } from '../../../src/domain/rig/Rig';
+import { rigFromDesign } from '../../../src/domain/stage/deriveRig';
 import type { StageDesign } from '../../../src/domain/stage/StageDesign';
+import { frameOf, type StageFrame } from '../../../src/domain/stage/StageFrame';
 import { BUILT_IN_DESIGN } from '../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import type { RigChangeCause } from '../../../src/engine/stage/rigChanged';
 import type { MeshFailure } from '../../../src/render/mvr/MeshLibrary';
@@ -16,6 +19,8 @@ export interface FakeMvrFlow {
     design: StageDesign;
     cause: RigChangeCause;
     readonly builtIn: StageDesign;
+    readonly rig: Rig;
+    readonly frame: StageFrame;
     readonly apply: Mock;
     readonly updateMeta: Mock;
   };
@@ -24,6 +29,7 @@ export interface FakeMvrFlow {
   readonly prompt: { readonly show: Mock<(name: string) => void>; readonly hide: Mock };
   readonly modal: { readonly open: Mock; readonly close: Mock; isOpen: Mock<() => boolean> };
   readonly store: { get: Mock<() => Promise<Uint8Array | null>>; put: Mock<() => Promise<string | null>> };
+  readonly firstLook: Mock; // `applyFirstLook`, kept out of `calls` so the recorded flow orders stay as they are
 }
 
 /** A store that keeps every file under the hash `hash` and holds nothing. */
@@ -33,18 +39,18 @@ const emptyStore = () => ({
   delete: vi.fn(() => Promise.resolve(true)),
 });
 
-/**
- * `MvrFlowDeps` over spies, for the MVR flow tests. The stage starts on `design`, a closed modal, a store that keeps
- * every file under the hash `hash` and holds nothing, and a scenery that loads and draws every mesh.
- */
-export function fakeMvrFlowDeps(design: StageDesign = BUILT_IN_DESIGN): FakeMvrFlow {
-  const calls: string[] = [];
-  const toasts: string[] = [];
-  const named = (name: string): Mock => vi.fn(() => void calls.push(name));
+/** A stage on `design` whose apply and updateMeta record into `calls`; rig and frame follow the current design. */
+function fakeStage(design: StageDesign, calls: string[]): FakeMvrFlow['stage'] {
   const stage = {
     design,
     builtIn: BUILT_IN_DESIGN,
     cause: 'boot' as RigChangeCause,
+    get rig(): Rig {
+      return rigFromDesign(stage.design);
+    },
+    get frame(): StageFrame {
+      return frameOf(stage.design);
+    },
     apply: vi.fn((next: StageDesign, cause: RigChangeCause) => {
       calls.push('apply');
       stage.design = next;
@@ -55,6 +61,18 @@ export function fakeMvrFlowDeps(design: StageDesign = BUILT_IN_DESIGN): FakeMvrF
       stage.design = next;
     }),
   };
+  return stage;
+}
+
+/**
+ * `MvrFlowDeps` over spies, for the MVR flow tests. The stage starts on `design`, a closed modal, a store that keeps
+ * every file under the hash `hash` and holds nothing, and a scenery that loads and draws every mesh.
+ */
+export function fakeMvrFlowDeps(design: StageDesign = BUILT_IN_DESIGN): FakeMvrFlow {
+  const calls: string[] = [];
+  const toasts: string[] = [];
+  const named = (name: string): Mock => vi.fn(() => void calls.push(name));
+  const stage = fakeStage(design, calls);
   const scenery = {
     load: vi.fn(() => {
       calls.push('load');
@@ -75,6 +93,8 @@ export function fakeMvrFlowDeps(design: StageDesign = BUILT_IN_DESIGN): FakeMvrF
   };
   const fullScenery = { ...scenery, setHiddenLayers: sceneryHide, dispose: named('dispose') };
   const cancelBuilder = named('cancelBuilder');
-  const deps: MvrFlowDeps = { stage, store, scenery: fullScenery, prompt, toast, modal: () => modal, cancelBuilder };
-  return { deps, calls, toasts, stage, scenery, sceneryHide, prompt, modal, store };
+  const firstLook = vi.fn();
+  const flowParts = { stage, store, scenery: fullScenery, prompt, toast, modal: () => modal, cancelBuilder };
+  const deps: MvrFlowDeps = { ...flowParts, applyFirstLook: firstLook };
+  return { deps, calls, toasts, stage, scenery, sceneryHide, prompt, modal, store, firstLook };
 }

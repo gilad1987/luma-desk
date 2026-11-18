@@ -19,4 +19,9 @@ export interface MvrFlowDeps {
    * file that is not a usable MVR keeps the session, and a load queued before the builder opened still cancels it.
    */
   readonly cancelBuilder: MvrImportDeps['cancelBuilder'];
+  /**
+   * Plays the MVR first look on the stage just applied. Only a picked import calls it: a boot restore or a reload
+   * reads a saved show that already holds the cue.
+   */
+  readonly applyFirstLook: () => void;
 }

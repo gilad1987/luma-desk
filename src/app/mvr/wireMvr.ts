@@ -1,11 +1,14 @@
 import type { Scene } from 'three';
+import { rigFromDesign } from '../../domain/stage/deriveRig';
 import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { EngineBus } from '../../engine/events';
 import type { StageService } from '../../engine/stage/StageService';
 import { downloadBlob } from '../../io/download';
+import type { FirstLookDeps } from '../../show/mvrLook/placeMvrFirstLook';
 import type { TestHookDeps } from '../testHook/TestHookDeps';
 import type { MvrActions } from '../../ui/panels/mvr/MvrActions';
 import { MvrMissingPrompt } from '../../ui/panels/mvr/MvrMissingPrompt';
+import { applyFirstLook } from './applyFirstLook';
 import { exportStageMvr, type MvrExportOut } from './exportStageMvr';
 import { followStage } from './followStage';
 import { importPickedMvr } from './importPickedMvr';
@@ -20,8 +23,10 @@ import { restoreStoredMvr } from './restoreStoredMvr';
 export interface MvrWiringDeps {
   readonly bus: Pick<EngineBus, 'emit' | 'on'>;
   readonly scene: Pick<Scene, 'add'>;
-  /** The flows' stage; the stage follower also reads the cause of the last apply. */
-  readonly stage: MvrFlowDeps['stage'] & Pick<StageService, 'cause'>;
+  /** The flows' stage; the stage follower also reads the cause of the last apply, the first look rig and frame. */
+  readonly stage: MvrFlowDeps['stage'] & Pick<StageService, 'cause' | 'rig' | 'frame'>;
+  /** The operator's executors; an import puts its first look on one of them. */
+  readonly execs: FirstLookDeps['execs'];
   /** The shared modal; the panels build it after `wireMvr`, so it is read when a flow runs. */
   readonly modal: MvrFlowDeps['modal'];
   /** The Stage Builder's cancel; the builder is built after the panels, so it is read when a flow applies. */
@@ -57,6 +62,7 @@ export function wireMvr({
   bus,
   scene,
   stage,
+  execs,
   modal,
   cancelBuilder,
   download = downloadBlob,
@@ -70,7 +76,10 @@ export function wireMvr({
   };
   const prompt = new MvrMissingPrompt(actions);
   const scenery = new LazyMvrStage(scene);
-  const deps: MvrFlowDeps = { stage, store: openMvrStore(), scenery, prompt, toast, modal, cancelBuilder };
+  const firstLook = (): void =>
+    applyFirstLook({ source: stage, builtInRig: rigFromDesign(stage.builtIn), execs, bus }, toast);
+  const store = openMvrStore();
+  const deps: MvrFlowDeps = { stage, store, scenery, prompt, toast, modal, cancelBuilder, applyFirstLook: firstLook };
   const restore = (design: StageDesign): void => queue.run(() => restoreStoredMvr(deps, design));
   followStage({ bus, stage, scenery, prompt, restore });
   return {

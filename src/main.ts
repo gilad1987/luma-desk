@@ -37,7 +37,7 @@ const files = createShowFiles({ ...engine, execs });
 const auto = createAutoShow(engine);
 // a show load and an MVR load cancel the same builder session; the builder is built after the panels
 const cancelBuilder = (): void => builder.exit(false);
-const mvr = wireMvr({ bus, scene: render.scene, stage, modal: () => panels.modal, cancelBuilder });
+const mvr = wireMvr({ bus, scene: render.scene, stage, execs, modal: () => panels.modal, cancelBuilder });
 
 const panels = wirePanels({
   engine,

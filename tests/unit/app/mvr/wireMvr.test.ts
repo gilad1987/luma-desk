@@ -38,7 +38,8 @@ function wired(design?: StageDesign) {
   const download = vi.fn();
   const scene = { add: vi.fn() };
   const { modal, cancelBuilder } = flow.deps;
-  const mvr = wireMvr({ bus: { emit, on: vi.fn() }, scene, stage: flow.stage, modal, cancelBuilder, download });
+  const bus = { emit, on: vi.fn() };
+  const mvr = wireMvr({ bus, scene, stage: flow.stage, execs: [], modal, cancelBuilder, download });
   return { mvr, flow, emit, download };
 }
 
