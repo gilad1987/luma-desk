@@ -60,6 +60,7 @@ export class TopView {
     this.#unsubscribe();
     if (this.#pending !== null) this.#deps.cancelFrame(this.#pending);
     this.#input.dispose();
+    this.#box.dispose();
     this.#canvas.remove();
   }
 
