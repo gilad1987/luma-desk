@@ -11,7 +11,14 @@ afterEach(() => vi.restoreAllMocks());
 
 const INPUT: MvrStageInput = {
   design: createTemplate('theatre'),
-  geometry: { placements: [], offset: [0, 0, 0], bounds: { min: [0, 0, 0], max: [1, 1, 1] }, surfaces: [] },
+  geometry: {
+    placements: [],
+    offset: [0, 0, 0],
+    bounds: { min: [0, 0, 0], max: [1, 1, 1] },
+    surfaces: [],
+    layers: [],
+    hallLayers: [],
+  },
   meshes: new Map(),
   meshResources: new Map(),
 };

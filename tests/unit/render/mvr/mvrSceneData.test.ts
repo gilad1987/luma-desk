@@ -14,6 +14,8 @@ const geometry: MvrGeometry = {
   placements: [],
   offset: [0, 0, 0],
   bounds: { min: [-1, -2, -3], max: [30, 1, 25] },
+  layers: [],
+  hallLayers: [],
   surfaces: [table],
 };
 

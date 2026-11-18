@@ -17,9 +17,14 @@ export function fitOffset(box: Aabb, warn: (warning: MvrWarning) => void): Vec3 
   if (isEmpty(box)) return [0, 0, STAGE_CENTRE_Z];
   const width = box.max[0] - box.min[0];
   const depth = box.max[2] - box.min[2];
-  if (width > STAGE.x1 - STAGE.x0 || depth > STAGE.z1 - STAGE.z0) {
-    const size = `${width.toFixed(1)} m x ${depth.toFixed(1)} m`;
-    warn({ code: 'oversize', message: `The file covers ${size}, which is larger than the stage.` });
+  const stageWidth = STAGE.x1 - STAGE.x0;
+  const stageDepth = STAGE.z1 - STAGE.z0;
+  if (width > stageWidth || depth > stageDepth) {
+    const size = (w: number, d: number): string => `${Math.round(w)} m x ${Math.round(d)} m`;
+    const message =
+      `The stage in the file is ${size(width, depth)}, larger than the desk's stage ` +
+      `(${size(stageWidth, stageDepth)}). It keeps its real size and is centred on the desk's stage.`;
+    warn({ code: 'oversize', message });
   }
   return [-(box.min[0] + box.max[0]) / 2, 0, STAGE_CENTRE_Z - (box.min[2] + box.max[2]) / 2];
 }
