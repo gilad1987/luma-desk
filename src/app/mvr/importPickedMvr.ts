@@ -28,8 +28,9 @@ function presentSummary(result: MvrImport, failures: readonly MeshFailure[], dep
  * Imports a picked `.mvr` file: load the scenery chunk, store and apply the file (`importMvrFile`), draw its
  * scenery, then show the summary with the mesh files three.js could not draw. The scenery chunk loads first, so a
  * chunk that does not load rejects before the stage changes. A file that is not a usable MVR keeps the stage, toasts
- * and fills `#mvrImportError`. A stage change after the apply wins: the import then draws and opens nothing. The
- * import result is not kept after the summary, so its mesh bytes can be freed.
+ * and fills `#mvrImportError`. A stage change after the apply wins: before the draw the import then draws nothing,
+ * and during the draw it opens no summary, whose layer toggles would write this file's layers into the new design.
+ * The import result is not kept after the summary, so its mesh bytes can be freed.
  */
 export async function importPickedMvr(file: File, deps: MvrFlowDeps): Promise<void> {
   setMvrImportError('');
@@ -44,6 +45,7 @@ export async function importPickedMvr(file: File, deps: MvrFlowDeps): Promise<vo
   if (deps.stage.design !== outcome.result.design) return;
   deps.prompt.hide();
   const failures = await deps.scenery.show(outcome.result);
+  if (deps.stage.design !== outcome.result.design) return;
   presentSummary(outcome.result, failures, deps);
   if (!outcome.stored) deps.toast(he.mvr.notStored);
 }

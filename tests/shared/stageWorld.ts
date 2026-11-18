@@ -1,9 +1,9 @@
-import type { StageDesign } from '../../../src/domain/stage/StageDesign';
-import { createTemplate } from '../../../src/domain/stage/templates';
-import type { EngineMessage } from '../../../src/engine/events';
-import { StageService } from '../../../src/engine/stage/StageService';
-import { DemoShow, ShowSerializer } from '../../../src/show';
-import type { StageFieldDeps } from '../../../src/show/stageField';
+import type { StageDesign } from '../../src/domain/stage/StageDesign';
+import { createTemplate } from '../../src/domain/stage/templates';
+import type { EngineMessage } from '../../src/engine/events';
+import { StageService } from '../../src/engine/stage/StageService';
+import { DemoShow, ShowSerializer } from '../../src/show';
+import type { StageFieldDeps } from '../../src/show/stageField';
 import { showWorld } from './showWorld';
 
 /** The built-in design of every stage world; `isBuiltIn` compares with this object by identity. */

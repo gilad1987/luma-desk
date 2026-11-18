@@ -26,10 +26,15 @@ export class LazyMvrStage {
     await this.#loaded();
   }
 
-  /** Builds the scenery of `input` (see `MvrStage.show`), after `load`. */
+  /** Builds the scenery of `input` (see `MvrStage.show`), after `load`; a show that rejects leaves no scenery. */
   async show(input: MvrStageInput): Promise<readonly MeshFailure[]> {
     this.#showing = true;
-    return (await this.#loaded()).show(input);
+    try {
+      return await (await this.#loaded()).show(input);
+    } catch (error) {
+      this.#showing = false;
+      throw error;
+    }
   }
 
   /** Shows every layer except these uuids; nothing to do before the first load. */

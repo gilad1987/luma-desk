@@ -3,9 +3,7 @@
  * real show save and load: the stage parser keeps only known keys, so a field it does not read is lost on reload.
  */
 import { describe, expect, it } from 'vitest';
-import { jsonRoundTrip } from '../../shared';
-import { importedDesign } from './importedDesign';
-import { BAD_STAGE, stageWorld } from './stageWorld';
+import { BAD_STAGE, importedDesign, jsonRoundTrip, stageWorld } from '../../shared';
 
 /** A complete MVR fixture entry, so only its missing fixture can reject it. */
 const ORPHAN = { uuid: 'F-9', layer: 'L-1', gdtfName: 'Spot', gdtfMode: 'Mode 1', type: 'spot' };

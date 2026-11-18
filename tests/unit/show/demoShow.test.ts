@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { readGolden, type SavedShow } from '../../shared';
-import { readSavedShow, showWorld } from './showWorld';
+import { readGolden, readSavedShow, showWorld, type SavedShow } from '../../shared';
 
 afterEach(() => vi.restoreAllMocks());
 

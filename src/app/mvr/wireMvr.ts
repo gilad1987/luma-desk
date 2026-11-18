@@ -1,5 +1,7 @@
 import type { Scene } from 'three';
+import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { EngineBus } from '../../engine/events';
+import type { StageService } from '../../engine/stage/StageService';
 import { downloadBlob } from '../../io/download';
 import type { MvrActions } from '../../ui/panels/mvr/MvrActions';
 import { MvrMissingPrompt } from '../../ui/panels/mvr/MvrMissingPrompt';
@@ -17,7 +19,8 @@ import { restoreStoredMvr } from './restoreStoredMvr';
 export interface MvrWiringDeps {
   readonly bus: Pick<EngineBus, 'emit' | 'on'>;
   readonly scene: Pick<Scene, 'add'>;
-  readonly stage: MvrFlowDeps['stage'];
+  /** The flows' stage; the stage follower also reads the cause of the last apply. */
+  readonly stage: MvrFlowDeps['stage'] & Pick<StageService, 'cause'>;
   /** The shared modal; the panels build it after `wireMvr`, so it is read when a flow runs. */
   readonly modal: MvrFlowDeps['modal'];
   /** Saves an exported file; defaults to the browser download, tests pass a recorder (the page has no download). */
@@ -30,7 +33,7 @@ export interface MvrWiring {
   readonly actions: MvrActions;
   /** The test hook's `mvrReady()`: resolves after the latest MVR load or export ended. */
   readonly ready: () => Promise<void>;
-  /** Queues the boot restore of a saved MVR stage; call it after the show restore. */
+  /** Queues the boot restore of the stage as it is now; call it after the show restore. */
   readonly restore: () => void;
   /** The test hook's `mvrScenery()`: true while the scenery shows the layers of a file. */
   readonly hasScenery: () => boolean;
@@ -57,7 +60,12 @@ export function wireMvr({ bus, scene, stage, modal, download = downloadBlob }: M
   const prompt = new MvrMissingPrompt(actions);
   const scenery = new LazyMvrStage(scene);
   const deps: MvrFlowDeps = { stage, store: openMvrStore(), scenery, prompt, toast, modal };
-  const restore = (): void => queue.run(() => restoreStoredMvr(deps));
+  const restore = (design: StageDesign): void => queue.run(() => restoreStoredMvr(deps, design));
   followStage({ bus, stage, scenery, prompt, restore });
-  return { actions, ready: () => queue.ready(), restore, hasScenery: () => scenery.hasScenery };
+  return {
+    actions,
+    ready: () => queue.ready(),
+    restore: () => restore(stage.design),
+    hasScenery: () => scenery.hasScenery,
+  };
 }

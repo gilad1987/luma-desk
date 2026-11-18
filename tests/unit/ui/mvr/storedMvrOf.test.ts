@@ -1,8 +1,10 @@
 /**
- * Owns the boot decision for an imported design: only an `mvr` design with a `fileHash` looks in the store, and it is
- * `missing` when the store has no bytes and `found` (with the bytes) when it has them.
+ * Owns the boot decision for an imported design: only a design with a `fileHash` (an MVR import, or a builder edit of
+ * one) looks in the store, and it is `missing` when the store has no bytes and `found` (with the bytes) when it has
+ * them.
  */
 import { describe, expect, it } from 'vitest';
+import { markBuilt } from '../../../../src/domain/stage/edit/source';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { createTemplate } from '../../../../src/domain/stage/templates';
 import { storedMvrOf } from '../../../../src/ui/panels/mvr/storedMvrOf';
@@ -25,7 +27,7 @@ function storeWith() {
 }
 
 describe('storedMvrOf', () => {
-  it('is none for a design that is not an MVR import, without a lookup', async () => {
+  it('is none for a design without a stored file, without a lookup', async () => {
     const { store, lookups } = storeWith();
     expect(await storedMvrOf(theatre, store)).toEqual({ kind: 'none' });
     expect(await storedMvrOf(mvrDesign(), store)).toEqual({ kind: 'none' });
@@ -41,5 +43,12 @@ describe('storedMvrOf', () => {
     const { store, lookups } = storeWith();
     expect(await storedMvrOf(mvrDesign('known'), store)).toEqual({ kind: 'found', bytes: BYTES });
     expect(lookups).toEqual(['known']);
+  });
+
+  it('looks up the file of an MVR stage the builder edited, as the builder keeps the file hash', async () => {
+    const { store } = storeWith();
+    const built = (fileHash: string): StageDesign => markBuilt(mvrDesign(fileHash), 'My stage');
+    expect(await storedMvrOf(built('known'), store)).toEqual({ kind: 'found', bytes: BYTES });
+    expect(await storedMvrOf(built('gone'), store)).toEqual({ kind: 'missing', fileName: 'My stage' });
   });
 });
