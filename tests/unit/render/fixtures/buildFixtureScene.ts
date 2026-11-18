@@ -1,6 +1,7 @@
 import { Mesh, Object3D, Scene, type BufferGeometry, type Material, type Texture } from 'three';
 import type { Fixture } from '../../../../src/domain/Fixture';
 import { buildRig } from '../../../../src/domain/rig';
+import { FohRig } from '../../../../src/render/camera/FohRig';
 import * as fx from '../../../../src/render/fixtures';
 import { KeyLights } from '../../../../src/render/lights/KeyLights';
 
@@ -37,7 +38,7 @@ export function buildFixtureScene({ scene, screenMesh, fixtures }: FixtureStage 
   const builder = new fx.FixtureVisualBuilder({ scene, prims, beam, gobo, models, lensTextures, screenMesh, picker });
   const visuals = fixtures.map((f) => builder.build(f));
   const state = { haze: 0.5 };
-  const props = new fx.Props({ scene, kit, fohRig: [], state, beamHaze: beam.haze });
+  const props = new fx.Props({ scene, kit, fohRig: new FohRig(), state, beamHaze: beam.haze });
   const { panel, vent, alu } = kit.materials;
   const { cylinderGeo, boxGeo, circleGeo, planeGeo, poolGeo, sphereGeo, torusGeo } = prims;
   const resources: (Texture | BufferGeometry | Material)[] = [...gobo.textures, gobo.glow, beam.geometry, trim];

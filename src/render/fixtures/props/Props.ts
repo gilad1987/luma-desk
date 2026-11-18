@@ -1,6 +1,7 @@
 import type { Object3D } from 'three';
 import { DECK } from '../../../domain/venue';
 import type { AppState } from '../../../engine/AppState';
+import type { FohRig } from '../../camera/FohRig';
 import type { SharedUniform } from '../BeamMaterial';
 import type { ModelKit } from '../models/ModelContext';
 import { buildHazers, type HazePuff } from './hazers';
@@ -10,8 +11,8 @@ import { buildRoboSpotStation } from './roboSpotStation';
 export interface PropsDeps {
   readonly scene: Object3D;
   readonly kit: ModelKit;
-  /** Render core's FOH group list (the MA view hides it). */
-  readonly fohRig: Object3D[];
+  /** The camera views' FOH rig (the MA view hides it); the riser must be in it already, the station joins after it. */
+  readonly fohRig: Pick<FohRig, 'add'>;
   readonly state: Pick<AppState, 'haze'>;
   /** The beams' shared haze uniform; the props copy the Haze master into it each frame. */
   readonly beamHaze: SharedUniform;
