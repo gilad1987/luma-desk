@@ -1,10 +1,10 @@
-import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { he } from '../../../src/i18n/he';
 import type { GuideMarkup } from '../../../src/i18n/he/guideChapter';
+import { legacyPage } from '../../shared/legacy';
 
 /** The single-file page before the refactor: the source of truth for every Hebrew string. */
-const legacy = execFileSync('git', ['show', '48a3b63:index.html'], { encoding: 'utf8' });
+const legacy = legacyPage();
 
 /**
  * The plain strings of `node`, grouped by the object or array that holds them (siblings in declaration order);

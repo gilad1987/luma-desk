@@ -2,13 +2,13 @@
 // It runs the original rig build (index.html at 48a3b63, lines 686-828) with three r160 and writes, per fixture, the
 // build order, position, rigged pan/tilt, pixel strip, two aimAt targets and one dirFrom result. The new rig code must
 // reproduce this file, so run it only to re-record from the original, never to accept a change in the new code.
-import { execFileSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import type { Vector3 } from 'three';
 import { format } from 'prettier';
 import prettierConfig from '../prettier.config.ts';
 
-const ORIGINAL_COMMIT = '48a3b63';
+/** The frozen copy of index.html at 48a3b63; a checked-in file, so recording does not need the git history. */
+const ORIGINAL_PAGE = new URL('../tests/shared/legacy/original-index.html', import.meta.url);
 /** The 1-based, inclusive line range of the original script that defines the venue, the rig, aimAt and dirFrom. */
 const RIG_LINES = { first: 686, last: 828 };
 const OUTPUT = 'tests/golden/rig-build.json';
@@ -33,7 +33,7 @@ interface OriginalRig {
 
 /** Loads the original lines as a module, with the `THREE` global they expect and an export of what we record. */
 async function loadOriginalRig(): Promise<OriginalRig> {
-  const html = execFileSync('git', ['show', `${ORIGINAL_COMMIT}:index.html`], { encoding: 'utf8' });
+  const html = readFileSync(ORIGINAL_PAGE, 'utf8');
   const code = html
     .split('\n')
     .slice(RIG_LINES.first - 1, RIG_LINES.last)
