@@ -1,7 +1,8 @@
 import type { Quaternion, Vector3 } from 'three';
 import type { AttrName, AttrValues } from './attributes';
+import { fixtureTypeOf } from './fixtureProducts/fixtureTypeOf';
+import type { ProductId } from './fixtureProducts';
 import type { FixtureType, FixtureTypeId } from './FixtureType';
-import { TYPES } from './fixtureTypes';
 
 /** Every mount; the stage parser reads a stored mount against this list, so it cannot drift from `Mount`. */
 export const MOUNTS = ['hang', 'floor', 'wall'] as const;
@@ -25,6 +26,11 @@ export interface PixelStrip {
   readonly len: number;
 }
 
+/** What a fixture is built from: its identity and place, plus the catalogue product it is, if any. */
+export interface FixtureInit extends Pick<Fixture, 'id' | 'type' | 'pos' | 'mount' | 'fixed'> {
+  readonly product?: ProductId | undefined;
+}
+
 /**
  * One fixture of the rig: its identity, type and place in the venue, plus the engine's output for the current frame.
  * Render and UI state (`vis`, `vo`, `sel`, `dom`) is not part of it.
@@ -32,7 +38,10 @@ export interface PixelStrip {
 export class Fixture {
   readonly id: number;
   readonly type: FixtureTypeId;
-  /** The type record, kept on the fixture because the engine and renderer read it once per fixture per frame. */
+  /**
+   * The type record, or for a product the merged record `fixtureTypeOf` gives; kept on the fixture because the
+   * engine and renderer read it once per fixture per frame. A product is not stored twice: `T.model` names it.
+   */
   readonly T: FixtureType;
   readonly pos: Vector3;
   readonly mount: Mount;
@@ -63,10 +72,10 @@ export class Fixture {
    */
   declare bodyScale?: number;
 
-  constructor({ id, type, pos, mount, fixed }: Pick<Fixture, 'id' | 'type' | 'pos' | 'mount' | 'fixed'>) {
+  constructor({ id, type, pos, mount, fixed, product }: FixtureInit) {
     this.id = id;
     this.type = type;
-    this.T = TYPES[type];
+    this.T = fixtureTypeOf({ type, product });
     this.pos = pos;
     this.mount = mount;
     this.fixed = fixed;

@@ -1,9 +1,10 @@
 import { MOUNTS, type PanTilt } from '../../Fixture';
+import { isProductId, PRODUCTS, type ProductId } from '../../fixtureProducts';
 import type { FixtureTypeId } from '../../FixtureType';
 import { TYPES } from '../../fixtureTypes';
 import type { StageFixture } from '../StageDesign';
 import { FIXTURE_ROLES } from '../types';
-import type { Choices, Key } from './fieldReader';
+import type { Choices, FieldReader, Key } from './fieldReader';
 import { parsePatch } from './parsePatch';
 import { allDefined, type Raw } from './rawValues';
 import type { Reader } from './readers';
@@ -53,6 +54,7 @@ function parseFields(
     position: r.vec3(o, 'position', path),
     mount: r.oneOf(o, 'mount', path, { options: MOUNTS, what: 'mount' }),
   };
+  const product = r.optional(o, 'product', path, productReader(r, fixture.type));
   const rotation = r.optional(o, 'rotation', path, r.quat);
   const fixed = r.optional(o, 'fixed', path, (c, k, p) => parseFixed(r, c, k, p));
   const pixel = r.optional(o, 'pixel', path, (c, k, p) => parsePixel(r, c, k, p));
@@ -60,10 +62,22 @@ function parseFields(
   if (!allDefined(fixture)) return undefined;
   return {
     ...fixture,
+    ...(product === undefined ? {} : { product }),
     ...(rotation === undefined ? {} : { rotation }),
     ...(fixed === undefined ? {} : { fixed }),
     ...(pixel === undefined ? {} : { pixel }),
     ...(patch === undefined ? {} : { patch }),
+  };
+}
+
+/**
+ * A non-string is an error; an id this catalogue does not know, or whose `base` is not `type`, is dropped without one,
+ * so a newer desk's design still loads with the base type, which stays the stored truth.
+ */
+function productReader(r: Reader, type: FixtureTypeId | undefined): FieldReader<ProductId> {
+  return (o, key, at) => {
+    const id = r.str(o, key, at);
+    return id !== undefined && isProductId(id) && PRODUCTS[id].base === type ? id : undefined;
   };
 }
 

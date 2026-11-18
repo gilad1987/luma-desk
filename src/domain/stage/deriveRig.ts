@@ -21,7 +21,14 @@ export function rigFromDesign(d: StageDesign): Rig {
 
 function addFixture(rig: RigBuilder, f: StageFixture, mvr: MvrDesignInfo | undefined): void {
   const scale = bodyScale(f, mvr);
-  const fixture = rig.add({ id: f.id, type: f.type, at: f.position, mount: f.mount, fixed: f.fixed });
+  const fixture = rig.add({
+    id: f.id,
+    type: f.type,
+    at: f.position,
+    mount: f.mount,
+    fixed: f.fixed,
+    product: f.product,
+  });
   if (f.pixel) fixture.pix = { p: new Vector3(...f.pixel.p), tan: new Vector3(...f.pixel.tan), len: f.pixel.len };
   if (f.rotation) fixture.rotation = new Quaternion(...f.rotation).normalize();
   // set only when it differs, so every fixture without a sized GDTF keeps no such key, as `pix` and `rotation` do
