@@ -1,5 +1,6 @@
 import type { Texture } from 'three';
 import type { GLTFLoaderPlugin, GLTFParser } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MissingTexture } from './MissingTexture';
 import type { OfflineLoadingManager } from './OfflineLoadingManager';
 
 /** The parts of a glTF document that say which image a texture shows. */
@@ -8,12 +9,8 @@ interface GltfImageRefs {
   readonly images?: readonly { readonly uri?: string }[];
 }
 
-/**
- * "No texture" as a plugin result. GLTFLoader takes a texture that resolves to null as no map (GLTFParser
- * `assignTexture`: `if ( ! texture ) return null;`); the three.js types declare only `Promise<Texture>`, so the
- * value is typed to that.
- */
-const NO_TEXTURE = Promise.resolve(null) as unknown as Promise<Texture>;
+/** "No texture" as a plugin result: one shared empty texture that `styleScenery` reads as untextured. */
+const NO_TEXTURE: Promise<Texture> = Promise.resolve(new MissingTexture());
 
 /** The URI of the file that texture `index` shows, when it names one rather than a buffer view. */
 function imageUriOf(json: GltfImageRefs, index: number): string | undefined {
