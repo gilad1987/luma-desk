@@ -2,7 +2,7 @@ import type { Vector3 } from 'three';
 import type { Rgb01 } from '../../../core';
 import type { AttrValues } from '../../../domain/attributes';
 import type { LightVisual } from '../FixtureVisual';
-import type { SurfaceHit } from '../../surface/SurfaceHit';
+import type { BeamHit } from '../../surface/SurfaceHit';
 
 /** One lit fixture in the current frame, as the beam, pool and glow updates read it. */
 export interface BeamFrame {
@@ -19,7 +19,7 @@ export interface BeamFrame {
   readonly zoom: number;
   /** tan(zoom / 2): beam radius per unit length. */
   readonly tz: number;
-  readonly hit: SurfaceHit | null;
+  readonly hit: BeamHit | null;
   /** Beam length: to the hit, or 85 when it hits nothing. */
   readonly length: number;
 }

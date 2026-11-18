@@ -5,12 +5,12 @@
 import type { Vector3 } from 'three';
 import { TERRACE_NORMAL, AUDIENCE_TERRAIN } from '../../../../src/domain/audienceTerrain';
 import { DECK, SCREEN, STAGE, UP } from '../../../../src/domain/venue';
-import { SCREEN_NORMAL as NZ, type SurfaceHit } from '../../../../src/render/surface/SurfaceHit';
+import { SCREEN_NORMAL as NZ, type BeamHit } from '../../../../src/render/surface/SurfaceHit';
 
 type Hit = { t: number; n: Readonly<Vector3> } | null;
 
 /** Runs the legacy maths and returns its result in the new shape. */
-export function legacyHitSurface(o: Vector3, d: Vector3): SurfaceHit | null {
+export function legacyHitSurface(o: Vector3, d: Vector3): BeamHit | null {
   let best: Hit = null;
   {
     const den = d.y - (AUDIENCE_TERRAIN.RISE / AUDIENCE_TERRAIN.RUN) * d.z;

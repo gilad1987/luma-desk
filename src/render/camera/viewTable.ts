@@ -36,6 +36,9 @@ export const VIEWS = {
  */
 export type ViewName = keyof typeof VIEWS;
 
+/** A full set of camera views by name: the built-in `VIEWS` or a copy fitted to another stage. */
+export type ViewTable = Readonly<Record<ViewName, CameraView>>;
+
 /**
  * Whether a plain string from a view button or the test hook names a camera view. It asks for an own key, so an
  * inherited name such as `toString` is not a view and moves no camera.
