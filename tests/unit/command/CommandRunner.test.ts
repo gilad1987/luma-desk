@@ -47,7 +47,8 @@ describe('CommandRunner', () => {
     const world = commandWorld();
     world.pool.execs[0]?.cues.push(bareCue(99));
     expect(world.run('Goto Cue 99').log.filter(([level]) => level === 'er')).toEqual([]);
-    expect(world.pool.execs[0]?.on).toBe(true);
+    const exec = world.pool.execs[0];
+    expect(exec?.cur).toBe((exec?.cues.length ?? 0) - 1);
   });
 
   it('Delete re-tracks a running executor whose current cue is a saved cue without vals', () => {
