@@ -1,13 +1,29 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import type { AttrName } from '../../../../src/domain/attributes';
 import { buildRig } from '../../../../src/domain/rig';
 import { resetOutput } from '../../../../src/engine/output';
 
 afterEach(() => vi.restoreAllMocks());
 
 /** The order in which the legacy reset created the keys; serialised output and the goldens show it. */
-const LEGACY_KEY_ORDER = ['dim', 'pan', 'tilt', 'b', 'g', 'r', 'zoom', 'gobo', 'grot', 'strobe'];
+const LEGACY_KEY_ORDER = [
+  'dim',
+  'pan',
+  'tilt',
+  'b',
+  'g',
+  'r',
+  'zoom',
+  'gobo',
+  'grot',
+  'strobe',
+] as const satisfies readonly AttrName[];
 
 describe('resetOutput', () => {
+  it('lists every attribute, so a new AttrName fails the type check until the reset writes it', () => {
+    expectTypeOf<Exclude<AttrName, (typeof LEGACY_KEY_ORDER)[number]>>().toBeNever();
+  });
+
   it('writes the resting look into the fixture output itself, in the legacy key order', () => {
     const { fixtures } = buildRig();
     const profile = fixtures.find((f) => f.type === 'profile'),
@@ -36,7 +52,7 @@ describe('resetOutput', () => {
 
   // The per-frame cost the review named was a temporary object literal copied in with Object.assign. A literal is
   // not observable from a test, but the copy is: no Object.assign call means the values went straight into f.out.
-  it('copies no temporary object into the output, since it runs per fixture per frame', () => {
+  it('writes the fields directly, not through Object.assign', () => {
     const { fixtures } = buildRig();
     const assign = vi.spyOn(Object, 'assign');
     for (const f of fixtures) resetOutput(f);

@@ -26,6 +26,6 @@ export function resetOutput(f: Fixture): AttrOutput {
   o.gobo = f.type === 'screen' ? 1 : 0;
   o.grot = 0;
   o.strobe = 0;
-  // every AttrName was just written, so the output is complete
+  // every AttrName was just written, so the output is complete; resetOutput.test.ts guards the list against new names
   return o as AttrOutput;
 }
