@@ -39,7 +39,7 @@ export function commandWorld() {
   const groups = new GroupLibrary(bus);
   const presets = new PresetLibrary(bus);
   const pool = new ExecutorPool(clock, bus);
-  const programmer = new Programmer({ rig, selection, presets, pool, state, clock, bus });
+  const programmer = new Programmer({ rig, selection, presets, pool, state, clock, bus, source: { cause: 'boot' } });
   const runner = new CommandRunner({ rig, selection, programmer, pool, state, groups, presets, bus });
 
   const demo = jsonClone(readGolden('demo-show') as DemoShow);

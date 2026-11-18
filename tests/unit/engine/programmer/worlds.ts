@@ -44,7 +44,7 @@ function engineSide() {
   const presets = new PresetLibrary(bus);
   presets.replace(defaultPresets());
   const pool = new ExecutorPool(clock, bus);
-  const programmer = new Programmer({ rig, selection, presets, pool, state, clock, bus });
+  const programmer = new Programmer({ rig, selection, presets, pool, state, clock, bus, source: { cause: 'boot' } });
   const tempo = { bpm: 120, beatOrigin: 0 };
   const merger = new OutputMerger({ rig, pool, programmer, master: state, selection, tempo });
   return { rig, clock, messages, state, selection, presets, pool, programmer, merger };

@@ -32,6 +32,7 @@ export function engineParts() {
     state: appState,
     clock: stillClock,
     bus,
+    source: stage,
   });
   return { stage, bus, appState, selection, tempo, groupLibrary, presetLibrary, pool, programmer };
 }

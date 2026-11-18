@@ -4,8 +4,11 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EventBus } from '../../../../../src/core';
-import { BUILT_IN_DESIGN } from '../../../../../src/domain/stage/templates/sultansPool/builtInDesign';
+import { createTemplate } from '../../../../../src/domain/stage/templates';
 import type { EngineEvents } from '../../../../../src/engine/events';
+import { GroupLibrary } from '../../../../../src/engine/GroupLibrary';
+import { StageGroups } from '../../../../../src/engine/stage/StageGroups';
+import { StageService } from '../../../../../src/engine/stage/StageService';
 import { PoolsPanel } from '../../../../../src/ui/panels/pools/PoolsPanel';
 import type { PoolsDeps } from '../../../../../src/ui/panels/pools/PoolsDeps';
 import { asReal, FakeDom, FakeHost } from '../../../../shared/dom';
@@ -28,9 +31,19 @@ describe('PoolsPanel repaint', () => {
     expect(render).toHaveBeenCalledOnce();
   });
 
-  it('repaints after a stage change, so unavailable presets are evaluated against the new stage', () => {
+  it('repaints once on a template apply, through the poolsChanged that StageGroups emits', () => {
     const { bus, render } = setup();
-    bus.emit('rigChanged', { design: BUILT_IN_DESIGN });
+    const service = new StageService(bus, { builtIn: createTemplate('sultans-pool'), tooManyFixtures: String });
+    new StageGroups(bus, service, new GroupLibrary(bus));
+    service.apply(createTemplate('theatre'), 'builder');
     expect(render).toHaveBeenCalledOnce();
+  });
+
+  it('does not repaint on a show load stage change, which the app repaints through showLoaded', () => {
+    const { bus, render } = setup();
+    const service = new StageService(bus, { builtIn: createTemplate('sultans-pool'), tooManyFixtures: String });
+    new StageGroups(bus, service, new GroupLibrary(bus));
+    service.apply(createTemplate('theatre'), 'showLoad');
+    expect(render).not.toHaveBeenCalled();
   });
 });

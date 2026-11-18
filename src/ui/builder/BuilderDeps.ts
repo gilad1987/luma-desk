@@ -28,6 +28,11 @@ export interface BuilderDeps extends EditorSessionDeps {
    */
   readonly fitLayout: () => void;
   /**
+   * Makes the desk areas the builder screen leaves on show (in the classic layout the encoders and executors under its
+   * open middle cell) inert while it is open, so no click or Tab key reaches the desk; the app picks the areas.
+   */
+  readonly setDeskInert: (inert: boolean) => void;
+  /**
    * The frame clock of the top view: the app passes `requestAnimationFrame` and `cancelAnimationFrame`, so the view
    * draws at most once per frame; tests pass a queue they run by hand.
    */

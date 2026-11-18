@@ -4,6 +4,12 @@ import { BuilderMode } from '../../ui/builder/BuilderMode';
 import { mountTools } from '../../ui/builder/mountTools';
 import { byId } from '../../ui/dom';
 
+/**
+ * The desk areas made inert while the builder is open: the side panes, the encoders and the executor desk. In the
+ * classic layout they stay on show under the builder's open middle cell; in the other layouts they are hidden anyway.
+ */
+const DESK_AREA_IDS = ['side', 'enc', 'desk'] as const;
+
 /** What the Stage Builder takes from the engine, the renderer and the layout. */
 export interface BuilderWiringDeps {
   readonly stage: BuilderDeps['stage'];
@@ -25,6 +31,9 @@ export function builderDepsOf(deps: BuilderWiringDeps): BuilderDeps {
     keys: document,
     setConsoleHeight: (px) => deps.stageRenderer.setConsoleHeight(px),
     fitLayout: deps.fitLayout,
+    setDeskInert: (inert) => {
+      for (const id of DESK_AREA_IDS) byId(id).inert = inert;
+    },
     frames: { nextFrame: (paint) => requestAnimationFrame(paint), cancelFrame: (id) => cancelAnimationFrame(id) },
     mountTools,
   };

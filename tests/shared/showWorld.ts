@@ -33,7 +33,7 @@ export function showWorld() {
   const groups = new GroupLibrary(bus);
   const presets = new PresetLibrary(bus);
   const pool = new ExecutorPool(clock, bus);
-  const programmer = new Programmer({ rig, selection, presets, pool, state, clock, bus });
+  const programmer = new Programmer({ rig, selection, presets, pool, state, clock, bus, source: { cause: 'boot' } });
   const { execs } = pool;
   const serializer = new ShowSerializer({ rig, groups, presets, execs, tempo, state, programmer, selection });
   const demo = new DemoShow({ rig, serializer, execs, state, bus });

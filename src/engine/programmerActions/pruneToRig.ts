@@ -9,7 +9,7 @@ import type { ProgrammerDeps } from './ProgrammerDeps';
  * the programmer keeps its values, which have no output on fixtures the preview rig lacks, and Cancel gives them back.
  */
 export function pruneToRig(p: Programmer, { rig, bus, source }: ProgrammerDeps): void {
-  if (source?.cause === 'preview') return;
+  if (source.cause === 'preview') return;
   const absent = (id: number): boolean => rig.get(id) === undefined;
   const goneVals = Object.keys(p.vals).map(Number).filter(absent);
   const goneFx = [...new Set(p.fxList.flatMap((inst) => inst.ids))].filter(absent);

@@ -53,12 +53,13 @@ export class BuilderMode {
     this.#open = { host, session, unmount: mountBuilder(host, session, this.#deps) };
     this.#deps.fitLayout();
     this.#deps.setConsoleHeight(0);
+    this.#deps.setDeskInert(true);
   }
 
   /**
    * Closes the builder: `keep` commits the draft (Done), otherwise the start design comes back (Cancel). The DOM, the
-   * body class and the layout come back in `finally`: a throwing `rigChanged` listener must not leave the console
-   * hidden under a dead builder screen.
+   * body class, the live desk and the layout come back in `finally`: a throwing `rigChanged` listener must not leave
+   * the console hidden or the desk inert under a dead builder screen.
    */
   exit(keep: boolean): void {
     const open = this.#open;
@@ -71,6 +72,7 @@ export class BuilderMode {
     } finally {
       open.host.remove();
       document.body.classList.remove(BODY_CLASS);
+      this.#deps.setDeskInert(false);
       this.#deps.fitLayout();
     }
   }

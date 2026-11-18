@@ -5,8 +5,9 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { builderDepsOf, wireBuilder } from '../../../../src/app/ui/wireBuilder';
+import { BuilderMode } from '../../../../src/ui/builder/BuilderMode';
 import { mountTools } from '../../../../src/ui/builder/mountTools';
-import { FakeButton, FakeDom } from '../../../shared/dom';
+import { asReal, FakeButton, FakeDom } from '../../../shared/dom';
 import { BuilderHarness } from '../../ui/builder/builderHarness';
 
 function setup() {
@@ -40,10 +41,33 @@ describe('wireBuilder', () => {
       document,
       mountTools,
     ]);
-    deps.setConsoleHeight(0);
+    deps.setConsoleHeight(120);
     deps.fitLayout();
-    expect(setConsoleHeight).toHaveBeenCalledWith(0);
+    expect(setConsoleHeight).toHaveBeenCalledWith(120);
     expect(fitLayout).toHaveBeenCalledOnce();
+  });
+
+  it('opens Builder mode from a #buildBtn click', () => {
+    const { dom, wiring } = setup();
+    // the real enter mounts the tool panels, which need a real DOM (e2e); here it only has to be the click's target
+    const enter = vi.spyOn(BuilderMode.prototype, 'enter').mockImplementation(() => undefined);
+    const builder = wireBuilder(wiring);
+    dom.get('buildBtn').onclick?.({ target: null });
+    expect(enter.mock.contexts).toEqual([builder]);
+    enter.mockRestore();
+  });
+
+  it('makes the side panes, the encoders and the executor desk inert, and live again', () => {
+    const { dom, wiring } = setup();
+    const areas = ['side', 'enc', 'desk'].map((id) => asReal<HTMLElement>(dom.add(id)));
+    const deps = builderDepsOf(wiring);
+    deps.setDeskInert(true);
+    const building = areas.map((area) => area.inert);
+    deps.setDeskInert(false);
+    expect([building, areas.map((area) => area.inert)]).toEqual([
+      [true, true, true],
+      [false, false, false],
+    ]);
   });
 
   it('draws the top view through the animation frame clock', () => {
