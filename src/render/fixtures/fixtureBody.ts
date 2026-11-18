@@ -12,7 +12,8 @@ export interface FixtureBody extends ModelContext {
  * Creates the group at the fixture position scaled by `size`, its body and lens materials (own per fixture: the
  * frame update colours them) and the pivot. Statics also get the `aim` group in the pivot and the `st` stand: the
  * pivot gets the shortest-arc rotation from straight down to the beam each frame, which rolls the head by -pan,
- * and `aim.rotation.y = pan` undoes it.
+ * and `aim.rotation.y = pan` undoes it. A fixture with a `rotation` (G2) takes it as the group quaternion and gets
+ * no floor flip: its body is built in the hang pose and the quaternion turns it, as `dirFrom` turns its beam.
  */
 export function createFixtureBody(
   f: Fixture,
@@ -21,12 +22,13 @@ export function createFixtureBody(
   scene: Object3D,
 ): FixtureBody {
   const spec = f.T,
-    floor = f.mount === 'floor',
+    floor = f.mount === 'floor' && !f.rotation,
     g = new Group();
   g.position.copy(f.pos);
   g.scale.setScalar(size);
   scene.add(g);
-  if (spec.moving && floor) g.rotation.z = Math.PI; // floor movers stand on their base
+  if (f.rotation) g.quaternion.copy(f.rotation);
+  else if (spec.moving && floor) g.rotation.z = Math.PI; // floor movers stand on their base
   const bodyMat = new MeshStandardMaterial({ color: 0x232328, metalness: 0.55, roughness: 0.38, emissive: 0x000000 });
   const lensMat = new MeshBasicMaterial({ color: 0x050505, side: DoubleSide, toneMapped: false, map: lensMap });
   const pivot = new Group();

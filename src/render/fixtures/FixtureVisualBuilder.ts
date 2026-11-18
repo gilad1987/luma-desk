@@ -1,4 +1,4 @@
-import type { Object3D } from 'three';
+import { Object3D } from 'three';
 import type { Fixture } from '../../domain/Fixture';
 import type { FixturePicker } from '../picking/FixturePicker';
 import { createFixtureBody } from './fixtureBody';
@@ -7,12 +7,17 @@ import type { FixtureModelTable } from './FixtureModels';
 import type { FixtureVisual } from './FixtureVisual';
 import type { LensTextureSet } from './LensTextures';
 
-/** What the builder adds to and reads from; `screenMesh` belongs to the venue, `picker` to render core. */
+/**
+ * The LED screen meshes, each the visual and pick target of its screen fixture: one mesh used by every screen
+ * fixture (the boot wiring of the built-in rig, which has one screen), or a mesh per screen fixture id (a rebuild).
+ */
+export type ScreenMeshes = Object3D | ReadonlyMap<number, Object3D>;
+
+/** What the builder adds to and reads from; `screenMesh` belongs to the stage, `picker` to render core. */
 export interface FixtureVisualDeps extends LightObjectKit {
   readonly models: FixtureModelTable;
   readonly lensTextures: LensTextureSet;
-  /** The venue's LED screen: the screen fixture's visual and pick target. */
-  readonly screenMesh: Object3D;
+  readonly screenMesh: ScreenMeshes;
   /** Registered in build order, the order the picker tests hits. */
   readonly picker: Pick<FixturePicker, 'register'>;
 }
@@ -32,7 +37,7 @@ export class FixtureVisualBuilder {
     const deps = this.#deps,
       spec = f.T;
     if (spec.shape === 'screen') {
-      deps.picker.register(deps.screenMesh, f);
+      deps.picker.register(this.#screenMeshOf(f), f);
       return { kind: 'screen', fixture: f };
     }
     const s = spec.size;
@@ -58,5 +63,14 @@ export class FixtureVisualBuilder {
       flip: body.floor,
       pose: { pan: f.fixed?.pan ?? 0, tilt: f.fixed?.tilt ?? 0, gang: 0 },
     };
+  }
+
+  /** @throws Error when a per-id map has no mesh for this screen fixture. */
+  #screenMeshOf(f: Fixture): Object3D {
+    const meshes = this.#deps.screenMesh;
+    if (meshes instanceof Object3D) return meshes;
+    const mesh = meshes.get(f.id);
+    if (!mesh) throw new Error(`Fixture ${f.id}: no screen mesh for this screen fixture`);
+    return mesh;
   }
 }

@@ -44,7 +44,21 @@ export function buildFixtureScene({ scene, screenMesh, fixtures }: FixtureStage 
   const resources: (Texture | BufferGeometry | Material)[] = [...gobo.textures, gobo.glow, beam.geometry, trim];
   resources.push(...Object.values(lensTextures), cylinderGeo, boxGeo, circleGeo, planeGeo, poolGeo, sphereGeo);
   resources.push(torusGeo, panel, vent, alu);
-  return { fixtures, scene, screenMesh, picks, gobo, beam, visuals, props, state, resources };
+  return {
+    fixtures,
+    scene,
+    screenMesh,
+    picks,
+    gobo,
+    beam,
+    visuals,
+    props,
+    state,
+    resources,
+    prims,
+    models,
+    lensTextures,
+  };
 }
 
 const isMesh = (o: Object3D): o is Mesh<BufferGeometry, Material | Material[]> => o instanceof Mesh;
