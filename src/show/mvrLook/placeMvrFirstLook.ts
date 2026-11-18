@@ -1,4 +1,3 @@
-import type { Rig } from '../../domain/rig/Rig';
 import { isSameData } from '../../domain/stage/sameData';
 import type { EngineBus } from '../../engine/events';
 import type { Executor } from '../../engine/Executor';
@@ -17,29 +16,27 @@ export type FirstLookPlacement =
 
 /** What placing the look needs: the stage just imported, the executors and the bus that triggers the save. */
 export interface FirstLookDeps {
-  readonly source: Pick<RigSource, 'rig' | 'design' | 'frame'>;
-  /** The built-in rig, to recognise the demo song a first visit leaves on executor 1. */
-  readonly builtInRig: Rig;
+  /** The stage just applied; its demo song on executor 1 is the starting show the import built. */
+  readonly source: RigSource;
   readonly execs: readonly Executor[];
   readonly bus: Pick<EngineBus, 'emit'>;
 }
 
 /**
  * True when executor 1 holds nothing the operator made: no cues, an earlier MVR first look, or the demo song exactly
- * as the built-in demo loads it. The demo is written for the built-in fixture ids, so on an imported rig it would
- * drive whichever MVR fixtures share those ids.
+ * as the demo of `source` loads it, which is what the starting show of an import leaves there.
  */
-function isExecOneReplaceable(exec: Executor, builtInRig: Rig): boolean {
+function isExecOneReplaceable(exec: Executor, source: RigSource): boolean {
   if (exec.cues.length === 0) return true;
   if (exec.name === MVR_FIRST_LOOK_NAME && exec.cues.length === 1) return true;
-  const song = buildDemoShowFile(builtInRig).execs?.[0];
+  const song = buildDemoShowFile(source.rig, source).execs?.[0];
   return song?.cues !== undefined && exec.name === song.name && isSameData(exec.cues, song.cues);
 }
 
 /** The executor index for the look: 0 when executor 1 is replaceable, else the first empty executor, else -1. */
-function chooseExecIndex(execs: readonly Executor[], builtInRig: Rig): number {
+function chooseExecIndex(execs: readonly Executor[], source: RigSource): number {
   const first = execs[0];
-  if (first !== undefined && isExecOneReplaceable(first, builtInRig)) return 0;
+  if (first !== undefined && isExecOneReplaceable(first, source)) return 0;
   return execs.findIndex((e) => e.cues.length === 0);
 }
 
@@ -52,7 +49,7 @@ function chooseExecIndex(execs: readonly Executor[], builtInRig: Rig): number {
 export function placeMvrFirstLook(deps: FirstLookDeps): FirstLookPlacement {
   const cue = buildMvrFirstLook(deps.source);
   if (cue === null) return { kind: 'noLook' };
-  const execIndex = chooseExecIndex(deps.execs, deps.builtInRig);
+  const execIndex = chooseExecIndex(deps.execs, deps.source);
   const exec = deps.execs[execIndex];
   if (exec === undefined) return { kind: 'noFreeExecutor' };
   exec.name = MVR_FIRST_LOOK_NAME;

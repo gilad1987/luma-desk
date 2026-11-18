@@ -13,6 +13,7 @@ export const mvr = {
     `יובא ${name}: ${fixtures} גופים, ${warnings} אזהרות`,
   notStored: 'הקובץ לא נשמר בדפדפן. אחרי טעינה מחדש יש לייבא אותו שוב',
   firstLookOn: (exec: number): string => `המראה הראשון של ה-MVR נוסף ל-Executor ${exec}`,
+  cuesKept: 'הקיוז שלך נשמרו, בלי ערכים של גופים שאינם במתקן החדש. אפשר לבנות במקומם מופע פתיחה למתקן',
   firstLookNoExec: 'אין Executor פנוי: המראה הראשון של ה-MVR לא נוסף',
   exported: (count: number): string => `יוצא קובץ MVR עם ${count} גופים. קובצי GDTF יש להוריד מ-GDTF-Share`,
   meshFailed: (files: string): string => `לא ניתן להציג את קובצי התלת־ממד: ${files}`,

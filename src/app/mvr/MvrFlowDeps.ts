@@ -3,6 +3,7 @@ import type { MvrImportDeps } from '../../ui/panels/mvr/importMvrFile';
 import type { MvrMissingPrompt } from '../../ui/panels/mvr/MvrMissingPrompt';
 import type { Modal } from '../../ui/shared';
 import type { LazyMvrStage } from './LazyMvrStage';
+import type { MvrShow } from './mvrShow';
 import type { MvrBytesStore } from './openMvrStore';
 
 /** What the MVR import, restore, demo-rig and export flows share; `wireMvr` builds it once. */
@@ -20,8 +21,8 @@ export interface MvrFlowDeps {
    */
   readonly cancelBuilder: MvrImportDeps['cancelBuilder'];
   /**
-   * Plays the MVR first look on the stage just applied. Only a picked import calls it: a boot restore or a reload
-   * reads a saved show that already holds the cue.
+   * The show steps of a picked import and of Load demo rig. A boot restore or a reload does not call it: it reads a
+   * saved show that was written for its stage.
    */
-  readonly applyFirstLook: () => void;
+  readonly show: MvrShow;
 }

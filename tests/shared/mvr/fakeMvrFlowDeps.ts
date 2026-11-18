@@ -1,35 +1,25 @@
 import { vi, type Mock } from 'vitest';
 import type { MvrFlowDeps } from '../../../src/app/mvr/MvrFlowDeps';
-import type { Rig } from '../../../src/domain/rig/Rig';
-import { rigFromDesign } from '../../../src/domain/stage/deriveRig';
+import type { ShowAfterImport } from '../../../src/app/mvr/mvrShow';
+import { Rig } from '../../../src/domain/rig/Rig';
 import type { StageDesign } from '../../../src/domain/stage/StageDesign';
-import { frameOf, type StageFrame } from '../../../src/domain/stage/StageFrame';
 import { BUILT_IN_DESIGN } from '../../../src/domain/stage/templates/sultansPool/builtInDesign';
-import type { RigChangeCause } from '../../../src/engine/stage/rigChanged';
 import type { MeshFailure } from '../../../src/render/mvr/MeshLibrary';
 import type { MvrStageInput } from '../../../src/render/mvr/MvrStage';
+import { fakeMvrStage, type FakeMvrStage } from './fakeMvrStage';
 
 /** The spies of `fakeMvrFlowDeps`; `calls` names each stage, scenery, prompt, modal and toast call in order. */
 export interface FakeMvrFlow {
   readonly deps: MvrFlowDeps;
   readonly calls: string[];
   readonly toasts: string[];
-  /** The fake stage; it also reads as the wiring's stage, which adds the cause of the last apply. */
-  readonly stage: {
-    design: StageDesign;
-    cause: RigChangeCause;
-    readonly builtIn: StageDesign;
-    readonly rig: Rig;
-    readonly frame: StageFrame;
-    readonly apply: Mock;
-    readonly updateMeta: Mock;
-  };
+  readonly stage: FakeMvrStage;
   readonly scenery: { load: Mock<() => Promise<void>>; show: Mock<(input: MvrStageInput) => Promise<MeshFailure[]>> };
   readonly sceneryHide: Mock<(uuids: readonly string[]) => void>;
   readonly prompt: { readonly show: Mock<(name: string) => void>; readonly hide: Mock };
   readonly modal: { readonly open: Mock; readonly close: Mock; isOpen: Mock<() => boolean> };
   readonly store: { get: Mock<() => Promise<Uint8Array | null>>; put: Mock<() => Promise<string | null>> };
-  readonly firstLook: Mock; // `applyFirstLook`, kept out of `calls` so the recorded flow orders stay as they are
+  readonly firstLook: Mock; // `show.afterImport`, kept out of `calls` so the recorded flow orders stay as they are
 }
 
 /** A store that keeps every file under the hash `hash` and holds nothing. */
@@ -39,30 +29,14 @@ const emptyStore = () => ({
   delete: vi.fn(() => Promise.resolve(true)),
 });
 
-/** A stage on `design` whose apply and updateMeta record into `calls`; rig and frame follow the current design. */
-function fakeStage(design: StageDesign, calls: string[]): FakeMvrFlow['stage'] {
-  const stage = {
-    design,
-    builtIn: BUILT_IN_DESIGN,
-    cause: 'boot' as RigChangeCause,
-    get rig(): Rig {
-      return rigFromDesign(stage.design);
-    },
-    get frame(): StageFrame {
-      return frameOf(stage.design);
-    },
-    apply: vi.fn((next: StageDesign, cause: RigChangeCause) => {
-      calls.push('apply');
-      stage.design = next;
-      stage.cause = cause;
-    }),
-    updateMeta: vi.fn((next: StageDesign) => {
-      calls.push('updateMeta');
-      stage.design = next;
-    }),
-  };
-  return stage;
-}
+/** A scenery that loads and draws every mesh and records each call into `calls`. */
+const fakeScenery = (calls: string[]) => ({
+  load: vi.fn(() => Promise.resolve(void calls.push('load'))),
+  show: vi.fn((_input: MvrStageInput) => {
+    calls.push('show');
+    return Promise.resolve<MeshFailure[]>([]);
+  }),
+});
 
 /**
  * `MvrFlowDeps` over spies, for the MVR flow tests. The stage starts on `design`, a closed modal, a store that keeps
@@ -72,17 +46,8 @@ export function fakeMvrFlowDeps(design: StageDesign = BUILT_IN_DESIGN): FakeMvrF
   const calls: string[] = [];
   const toasts: string[] = [];
   const named = (name: string): Mock => vi.fn(() => void calls.push(name));
-  const stage = fakeStage(design, calls);
-  const scenery = {
-    load: vi.fn(() => {
-      calls.push('load');
-      return Promise.resolve();
-    }),
-    show: vi.fn((_input: MvrStageInput) => {
-      calls.push('show');
-      return Promise.resolve<MeshFailure[]>([]);
-    }),
-  };
+  const stage = fakeMvrStage(design, calls);
+  const scenery = fakeScenery(calls);
   const sceneryHide = vi.fn((_uuids: readonly string[]) => void calls.push('setHiddenLayers'));
   const prompt = { show: vi.fn((_name: string) => void calls.push('prompt.show')), hide: named('prompt.hide') };
   const modal = { open: named('modal.open'), close: named('modal.close'), isOpen: vi.fn(() => false) };
@@ -92,9 +57,13 @@ export function fakeMvrFlowDeps(design: StageDesign = BUILT_IN_DESIGN): FakeMvrF
     toasts.push(text);
   };
   const fullScenery = { ...scenery, setHiddenLayers: sceneryHide, dispose: named('dispose') };
-  const cancelBuilder = named('cancelBuilder');
-  const firstLook = vi.fn();
-  const flowParts = { stage, store, scenery: fullScenery, prompt, toast, modal: () => modal, cancelBuilder };
-  const deps: MvrFlowDeps = { ...flowParts, applyFirstLook: firstLook };
+  const firstLook = vi.fn((): ShowAfterImport => 'built');
+  const show = { before: vi.fn(() => ({ rig: new Rig([]), starting: true })), afterDemoRig: vi.fn(), build: vi.fn() };
+  const flowParts = { stage, store, scenery: fullScenery, prompt, toast, modal: () => modal };
+  const deps: MvrFlowDeps = {
+    ...flowParts,
+    cancelBuilder: named('cancelBuilder'),
+    show: { ...show, afterImport: firstLook },
+  };
   return { deps, calls, toasts, stage, scenery, sceneryHide, prompt, modal, store, firstLook };
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { rigFromDesign } from '../../../src/domain/stage/deriveRig';
 import { frameOf } from '../../../src/domain/stage/StageFrame';
 import { createTemplate, type TemplateId } from '../../../src/domain/stage/templates';
+import { buildDemoShowFile } from '../../../src/show/demo/demoShowFile';
 import { MVR_FIRST_LOOK_NAME } from '../../../src/show/mvrLook/mvrFirstLook';
 import { placeMvrFirstLook } from '../../../src/show/mvrLook/placeMvrFirstLook';
 import { showWorld } from '../../shared';
@@ -10,17 +11,23 @@ import { showWorld } from '../../shared';
 function placing(id: TemplateId = 'theatre') {
   const world = showWorld();
   const design = createTemplate(id);
-  const source = { rig: rigFromDesign(design), design, frame: frameOf(design) };
-  const deps = { source, builtInRig: world.rig, execs: world.execs, bus: world.bus };
-  return { world, place: () => placeMvrFirstLook(deps) };
+  const source = {
+    rig: rigFromDesign(design),
+    design,
+    frame: frameOf(design),
+    cause: 'import',
+    isBuiltIn: false,
+  } as const;
+  const deps = { source, execs: world.execs, bus: world.bus };
+  return { world, source, place: () => placeMvrFirstLook(deps) };
 }
 
 const userCue = { num: 1, name: 'Mine', fade: 0, vals: { 1: { dim: 50 } }, fx: [] };
 
 describe('placeMvrFirstLook', () => {
-  it('replaces the untouched demo song on executor 1, plays it at full and asks for a save', () => {
-    const { world, place } = placing();
-    world.demo.load();
+  it('replaces the untouched demo song of the imported stage on executor 1, plays it at full and asks for a save', () => {
+    const { world, source, place } = placing();
+    world.serializer.load(buildDemoShowFile(source.rig, source));
     world.events.length = 0;
     expect(place()).toEqual({ kind: 'placed', execIndex: 0 });
     const [exec] = world.execs;
