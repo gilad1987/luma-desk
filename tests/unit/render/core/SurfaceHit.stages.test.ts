@@ -1,6 +1,7 @@
 /**
  * SurfaceHit on other stage designs (G6): beams land on the theatre and festival decks, risers and LED walls from
- * `surfacesOf`, a hidden LED wall catches nothing, and `setSurfaces` replaces the boxes instead of adding to them.
+ * `surfacesOf`, a hidden LED wall catches nothing, and `setSurfaces` replaces the boxes instead of adding to them. The pool floor
+ * reaches under the built-in deck's outline wherever no top box covers it.
  */
 import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
@@ -34,11 +35,12 @@ describe('SurfaceHit on other stages', () => {
     expect(described(theatre.hit(...upstage))).toBeNull();
   });
 
-  it('lands on the festival deck edge, its LED wall front and a riser before the deck', () => {
+  it('lands on the festival deck edge, the floor beside it, its LED wall front and a riser before the deck', () => {
     const festival = createTemplate('festival');
     const plain = surfacesFor(festival);
     expect(described(plain.hit(...down(14, -10)))).toEqual([10 - 1.8, 'up']);
     expect(described(plain.hit(...upstage))).toEqual([15.5 - 0.05, 'screen']);
+    expect(described(plain.hit(...down(20, -10)))).toEqual([10, 'up']);
     const risers = [{ id: 'r1', at: [0, 2.5, -5], size: [4, 0.5, 2] }] as const;
     expect(described(surfacesFor({ ...festival, risers }).hit(...down(0, -5)))).toEqual([7.5, 'up']);
   });
@@ -53,8 +55,8 @@ describe('SurfaceHit on other stages', () => {
     const surfaces = surfacesFor(BUILT_IN_DESIGN);
     expect(described(surfaces.hit(...down(15, -10)))).toEqual([10 - 1.8, 'up']);
     surfaces.setSurfaces(surfacesOf(createTemplate('theatre')));
-    expect([surfaces.hit(...down(15, -10)), surfaces.hit(...upstage)]).toEqual([null, null]);
+    expect([described(surfaces.hit(...down(15, -10))), surfaces.hit(...upstage)]).toEqual([[10, 'up'], null]);
     surfaces.setSurfaces([]);
-    expect(surfaces.hit(...down(0, -4))).toBeNull();
+    expect(described(surfaces.hit(...down(0, -10)))).toEqual([10, 'up']);
   });
 });

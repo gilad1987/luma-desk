@@ -7,12 +7,9 @@ import { SurfaceHit, type BeamHit } from './SurfaceHit';
 const builtInSurfaces = new SurfaceHit();
 builtInSurfaces.setSurfaces(surfacesOf(BUILT_IN_DESIGN));
 
-/**
- * Where a fixture beam lands on the built-in stage: `SurfaceHit.hit` over `surfacesOf(BUILT_IN_DESIGN)`.
- *
- * Transitional (Stage Builder W3a): FixtureVisualSync still calls this free function. W3b injects a `SurfaceHit`
- * instance that follows the stage design, and W3c deletes this file.
- */
+// TODO(W3c-cleanup): Stage Builder W3c (plan section 6, writer W3, DEP 4) deletes this file. FixtureVisualSync still
+// calls this free function until W3b injects a `SurfaceHit` instance that follows the stage design.
+/** Where a fixture beam lands on the built-in stage: `SurfaceHit.hit` over `surfacesOf(BUILT_IN_DESIGN)`. */
 export function hitSurface(origin: Vector3, direction: Vector3): BeamHit | null {
   return builtInSurfaces.hit(origin, direction);
 }

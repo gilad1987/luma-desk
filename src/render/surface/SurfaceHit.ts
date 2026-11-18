@@ -1,7 +1,7 @@
 import { Vector3 } from 'three';
 import type { SurfaceBox } from '../../domain/stage/types';
 import { UP } from '../../domain/venue';
-import { nearestBoxT } from './boxHit';
+import { nearestFrontT, nearestTopT } from './boxHit';
 import { PARALLEL_EPSILON, hitPoolFloor, hitTerraces } from './surfacePlanes';
 
 /** Where a beam ray meets a surface: the ray distance `t` and the surface normal, compared by identity. */
@@ -20,7 +20,7 @@ export const SCREEN_NORMAL: Readonly<Vector3> = new Vector3(0, 0, 1);
 
 /**
  * Where fixture beams land (G6): the stage's surface boxes from `setSurfaces`, plus the venue's audience terraces and
- * pool floor, which are not stage data. A `top` box hit carries the `UP` normal and a `front` box hit `SCREEN_NORMAL`,
+ * pool floor, which are not stage data (the floor skips what lies under a top box). A `top` box hit carries the `UP` normal and a `front` box hit `SCREEN_NORMAL`,
  * both by identity, because the fixture sync sorts hits into stage, audience and key-light contributions by
  * `normal ===`. Each instance holds its own boxes, so a stage rebuild replaces them with ONE `setSurfaces` call.
  *
@@ -31,7 +31,10 @@ export class SurfaceHit {
   private tops: readonly SurfaceBox[] = [];
   private fronts: readonly SurfaceBox[] = [];
 
-  /** Replaces the boxes beams land on (never adds to them); a new stage design passes `surfacesOf(design)`. */
+  /**
+   * Replaces the boxes beams land on (never adds to them); a new stage design passes `surfacesOf(design)`. The face
+   * is checked here once, so the per-frame box tests never check it again.
+   */
   setSurfaces(boxes: readonly SurfaceBox[]): void {
     this.tops = boxes.filter((box) => box.face === 'top');
     this.fronts = boxes.filter((box) => box.face === 'front');
@@ -41,15 +44,15 @@ export class SurfaceHit {
   hit(origin: Vector3, direction: Vector3): BeamHit | null {
     const tier = hitTerraces(origin, direction);
     const best = this.hitGround(origin, direction, tier !== null) ?? tier;
-    const front = nearestBoxT(this.fronts, origin, direction);
+    const front = nearestFrontT(this.fronts, origin, direction);
     return front !== null && front < (best ? best.t : Infinity) ? { t: front, normal: SCREEN_NORMAL } : best;
   }
 
   /** The ground hit of a downward ray: the nearest top box, else the pool floor when no terrace was hit either. */
   private hitGround(origin: Vector3, direction: Vector3, hasTierHit: boolean): BeamHit | null {
     if (!(direction.y < -PARALLEL_EPSILON)) return null;
-    const top = nearestBoxT(this.tops, origin, direction);
+    const top = nearestTopT(this.tops, origin, direction);
     if (top !== null) return { t: top, normal: UP };
-    return hasTierHit ? null : hitPoolFloor(origin, direction);
+    return hasTierHit ? null : hitPoolFloor(origin, direction, this.tops);
   }
 }

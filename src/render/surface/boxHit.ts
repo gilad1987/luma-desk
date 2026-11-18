@@ -1,6 +1,9 @@
 import type { Vector3 } from 'three';
 import type { SurfaceBox } from '../../domain/stage/types';
-import { PARALLEL_EPSILON } from './surfacePlanes';
+import { PARALLEL_EPSILON, isOverBox } from './surfacePlanes';
+
+/** The ray distance to one box, or null when the ray misses it. */
+type BoxDistance = (box: SurfaceBox, origin: Vector3, direction: Vector3) => number | null;
 
 /**
  * The ray distance to a `top` box: its plane `y = max.y`, met from above strictly inside the box's x/z outline. For
@@ -10,9 +13,7 @@ function topT(box: SurfaceBox, origin: Vector3, direction: Vector3): number | nu
   const top = box.max[1];
   const t = (top - origin.y) / direction.y;
   if (!(t > 0)) return null;
-  const x = origin.x + direction.x * t;
-  const z = origin.z + direction.z * t;
-  const isInside = x > box.min[0] && x < box.max[0] && z > box.min[2] && z < box.max[2];
+  const isInside = isOverBox(box, origin.x + direction.x * t, origin.z + direction.z * t);
   return isInside && origin.y > top ? t : null;
 }
 
@@ -30,14 +31,29 @@ function frontT(box: SurfaceBox, origin: Vector3, direction: Vector3): number | 
 }
 
 /**
- * The nearest ray distance over the `top` or the `front` boxes, or null when the ray meets none. A plain loop, since
- * it runs for every fixture on every frame; on equal distances the first box wins.
+ * The nearest ray distance over the boxes, or null when the ray meets none. A plain loop, since it runs for every
+ * fixture on every frame; on equal distances the first box wins.
  */
-export function nearestBoxT(boxes: readonly SurfaceBox[], origin: Vector3, direction: Vector3): number | null {
+function nearestT(
+  boxes: readonly SurfaceBox[],
+  origin: Vector3,
+  direction: Vector3,
+  distance: BoxDistance,
+): number | null {
   let nearest: number | null = null;
   for (const box of boxes) {
-    const t = box.face === 'top' ? topT(box, origin, direction) : frontT(box, origin, direction);
+    const t = distance(box, origin, direction);
     if (t !== null && (nearest === null || t < nearest)) nearest = t;
   }
   return nearest;
+}
+
+/** The nearest `top` box distance. The caller passes only `top` boxes: `SurfaceHit` splits them by face once. */
+export function nearestTopT(tops: readonly SurfaceBox[], origin: Vector3, direction: Vector3): number | null {
+  return nearestT(tops, origin, direction, topT);
+}
+
+/** The nearest `front` box distance. The caller passes only `front` boxes: `SurfaceHit` splits them by face once. */
+export function nearestFrontT(fronts: readonly SurfaceBox[], origin: Vector3, direction: Vector3): number | null {
+  return nearestT(fronts, origin, direction, frontT);
 }
