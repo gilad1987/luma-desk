@@ -10,13 +10,13 @@ const WRITTEN = { major: 1, minor: 6 };
 
 /**
  * The application that wrote the file before the desk: the root's own `provider` when it is not the desk, else the
- * one the desk's data of the original already carries, so a second export from a desk export still names it.
+ * one the desk's data of the original already carries, so a second export from a desk export still names it. A root
+ * that names no provider gives empty strings: the field also marks a file another program wrote (review R2-3).
  */
 export function originalProviderOf(doc: Document): OriginalProvider | undefined {
   const provider = attr(doc.documentElement, 'provider');
   if (provider === LUMA_PROVIDER) return readLumaData(doc)?.originalProvider;
-  if (provider === undefined || provider === '') return undefined;
-  return { provider, providerVersion: attr(doc.documentElement, 'providerVersion') ?? '' };
+  return { provider: provider ?? '', providerVersion: attr(doc.documentElement, 'providerVersion') ?? '' };
 }
 
 /**

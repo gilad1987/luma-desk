@@ -39,7 +39,8 @@ function importNow(bytes: Uint8Array, options: MvrImportOptions): MvrImport {
   const rig = resolveFixtures(archive, bare.fixtures);
   const lean = withoutLightGeometry(bare, rig.fixtures);
   const budget = gdtfBudget();
-  const bodies = fixtureBodies(archive, rig, luma !== undefined, budget);
+  // Only a file the desk made keeps desk-size bodies; a pass-through export names its first writer (R2-3).
+  const bodies = fixtureBodies(archive, rig, luma !== undefined && luma.originalProvider === undefined, budget);
   const meshWarnings: MvrWarning[] = [...lean.warnings, ...bodies.warnings];
   const meshBoxes = readMeshBoxes(archive, lean.scene.placements, (warning) => meshWarnings.push(warning));
   const scene = withScreenEvidence(lean.scene, meshBoxes, archive);
