@@ -3,9 +3,7 @@ import { awaitMvrChain, bootApp, collectErrors, mvrFile, pickMvrFile } from '../
 import { measureFrames, RENDER_RIG_FIXTURES, renderStageMvr } from '../shared';
 import { movingPeak } from './mvrMovingPeak';
 
-// SwiftShader draws a frame in about a second when the machine is idle and far slower under load; every wait here is on
-// a state (mvrReady, frozen-clock frames), so only the time budget grows, never a result.
-test.describe.configure({ timeout: 360_000 });
+// The time budget is the `render-stats` project's in playwright.config.ts: this spec draws far more frames than most.
 const FRAMES = 60;
 const WARM_UP_FRAMES = 40;
 // a run of frames that always holds one surface-buffer draw while a fixture moves (every second frame at most)

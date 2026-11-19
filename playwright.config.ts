@@ -7,9 +7,10 @@ const PORT = 4173;
 const requestedURL = process.env['BASE_URL'] ?? `http://127.0.0.1:${PORT}/`;
 const baseURL = requestedURL.endsWith('/') ? requestedURL : `${requestedURL}/`;
 const buildAndPreview = `npm run build && npm run preview -- --host 127.0.0.1 --port ${PORT} --strictPort`;
-// The render-stats spec draws more than 60 frames of the lit MVR stage. On the CI runner SwiftShader takes one to two
-// seconds per frame, so it passed or hit 120 s by chance. Its waits are all on states (frozen-clock frames), so a
-// larger budget changes no result; a config project gives it one, as Playwright has no timeout per file.
+// The render-stats spec draws 40 warm-up and 60 measured frames of the lit MVR stage, then the moving peak. SwiftShader
+// takes about a second per frame on an idle machine, one to two on the CI runner and far more under load, so the spec
+// passed or hit 120 s by chance. Its waits are all on states (mvrReady, frozen-clock frames), so a larger budget
+// changes no result; this config project is the one place that gives it one, as Playwright has no timeout per file.
 const RENDER_STATS = /mvr-render-stats\.spec\.ts$/;
 
 export default defineConfig({
