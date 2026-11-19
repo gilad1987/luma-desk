@@ -6,6 +6,7 @@
 export class MvrLoadQueue {
   #latest: Promise<void> = Promise.resolve();
   readonly #onError: (error: unknown) => void;
+  #waiting = 0;
 
   /** `onError` reports a failed load; the queue itself never rejects, so later loads still run. */
   constructor(onError: (error: unknown) => void) {
@@ -14,7 +15,16 @@ export class MvrLoadQueue {
 
   /** Runs `load` after the latest load ended, with success or failure. */
   run(load: () => Promise<void>): void {
-    this.#latest = this.#latest.then(load).catch((error: unknown) => this.#report(error));
+    this.#waiting += 1;
+    this.#latest = this.#latest
+      .then(load)
+      .catch((error: unknown) => this.#report(error))
+      .finally(() => void (this.#waiting -= 1));
+  }
+
+  /** True while a load runs or waits for its turn: the stage shown may still get the scenery of its file. */
+  get isBusy(): boolean {
+    return this.#waiting > 0;
   }
 
   /** Resolves after the latest load ended, with success or failure; resolved at once before the first load. */

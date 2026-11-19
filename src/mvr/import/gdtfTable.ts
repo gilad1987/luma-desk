@@ -53,7 +53,8 @@ export function readGdtfTable(archive: MvrArchive, specs: readonly string[]): Gd
   const warnings: MvrWarning[] = [];
   let missingCount = 0;
   for (const [spec, count] of countSpecs(specs)) {
-    const match = findGdtfMatch(archive.names, spec);
+    // the other reading of a name comes last: a Latin-1 name reads as code page 437 first, which no spec matches
+    const match = findGdtfMatch(archive.names, spec) ?? findGdtfMatch(archive.altNames, spec);
     if (match && match.ties.length > 0) warnings.push(ambiguousWarning(spec, match));
     const file = match?.file;
     const bytes = file === undefined ? undefined : archive.file(file);

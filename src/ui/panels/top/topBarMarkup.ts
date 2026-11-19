@@ -18,6 +18,9 @@ const LAYOUTS = options([
 ]);
 const text = he.panels;
 
+/** The stage title of the demo show; an imported MVR stage shows its file name instead (`showTitle`). */
+export const DEMO_TITLE = "Demo Show — Sultan's Pool, Jerusalem";
+
 /**
  * The "Build Stage" button that opens the Stage Builder: the one part of the bar the original page did not have. It
  * is one constant, so the markup-parity test can name it and remove exactly this text before it compares the bar. It
@@ -34,7 +37,7 @@ export const topBarMarkup =
   [
     '<header id="top">',
     '<div class="brand"><i></i>LUMA<b>DESK</b></div>',
-    `<div class="showname" id="showName">Demo Show — Sultan's Pool, Jerusalem</div>`,
+    `<div class="showname" id="showName">${DEMO_TITLE}</div>`,
     `<div class="tbg"><label>View</label>\n      ${viewButtons}\n    </div>`,
     '<div class="tbg"><label>House</label><input type="range" id="house" min="0" max="100" value="30" ' +
       'style="width:70px" title="Audience house lights"></div>',

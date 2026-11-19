@@ -2,10 +2,11 @@ import { FakeConnection } from './idb/FakeConnection';
 import { FakeRequest } from './idb/FakeRequest';
 
 /**
- * A small in-memory IndexedDB for `MvrStore` tests: versioned open with upgrade, object stores, put, get, delete,
- * `versionchange` and a browser-side close. Requests settle in a later microtask and transactions end in a later
- * macrotask, as in a browser. The repo has no fake-indexeddb dependency; this covers only the calls the store makes.
- * The public fields are the test controls: the stored records, the number of opens, and switches for later calls.
+ * A small in-memory IndexedDB for `MvrStore` tests: versioned open with upgrade, object stores, put, get, count,
+ * delete, `versionchange` and a browser-side close. Requests settle in a later microtask and transactions end in a
+ * later macrotask, as in a browser. The repo has no fake-indexeddb dependency; this covers only the calls the store
+ * makes. The public fields are the test controls: the stored records, the number of opens, and switches for later
+ * calls.
  */
 export class FakeIndexedDb {
   readonly records = new Map<string, unknown>();

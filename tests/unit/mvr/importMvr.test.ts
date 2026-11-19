@@ -38,7 +38,7 @@ const SCENE = sceneXml(
 
 const MVR = makeMvr(SCENE, {
   'Acme@Spot.gdtf': makeGdtf({ geometries: BEAM, modes: SPOT_MODE }),
-  'Acme@Box.gdtf': makeGdtf({ geometries: '<Geometry Name="Body"/>', modes: gdtfMode('Std', []) }),
+  'Acme@Box.gdtf': makeGdtf({ name: 'Box', geometries: '<Geometry Name="Body"/>', modes: gdtfMode('Std', []) }),
   'box.glb': GLB,
   'speaker.glb': GLB,
   truss: make3ds([
@@ -48,26 +48,28 @@ const MVR = makeMvr(SCENE, {
 });
 
 describe('importMvr', () => {
-  it('turns lights into desk fixtures and counts objects, patches and missing GDTFs', async () => {
+  it('turns every Fixture into a desk fixture and counts objects, patches and missing GDTFs', async () => {
     const { summary, design } = await importMvr(MVR, { name: 'Show.mvr', fileHash: 'abc' });
-    const { bodyLines, ...counts } = summary;
+    const { bodyLines, opticsLines, ...counts } = summary;
+    expect(opticsLines?.reduce((sum, line) => sum + line.count, 0)).toBe(5);
     expect(counts).toEqual({
-      fixtureCount: 4,
+      fixtureCount: 5,
       unpatchedCount: 2,
       missingGdtfCount: 2,
-      objectCount: 4,
+      objectCount: 3,
       placementCount: 4,
       layerCount: 1,
       noGeometry: false,
     });
-    expect(bodyLines.reduce((sum, line) => sum + line.count, 0)).toBe(4);
+    expect(bodyLines.reduce((sum, line) => sum + line.count, 0)).toBe(5);
     expect(design.source).toEqual({ kind: 'mvr', name: 'Show.mvr', fileHash: 'abc' });
-    expect(design.fixtures.map((f) => f.type)).toEqual(['spot', 'spot', 'wash', 'wash']);
+    expect(design.fixtures.map((f) => f.type)).toEqual(['spot', 'spot', 'wash', 'wash', 'par']);
     expect(design.fixtures.map((f) => f.patch)).toEqual([
       { universe: 2, address: 1, mode: 'Std' },
       undefined,
       { universe: 1, address: 1, mode: '' },
       undefined,
+      { universe: 1, address: 20, mode: 'Std' },
     ]);
   });
 
@@ -80,7 +82,13 @@ describe('importMvr', () => {
 
   it('orders warnings by step and gives one missing-gdtf warning per spec', async () => {
     const { warnings } = await importMvr(MVR, { name: 'Show.mvr' });
-    expect(warnings.map((w) => w.code)).toEqual(['missing-symdef', 'missing-gdtf', 'unknown-mode', 'multi-break']);
+    expect(warnings.map((w) => w.code)).toEqual([
+      'missing-symdef',
+      'missing-gdtf',
+      'unknown-mode',
+      'placeholder-gdtf',
+      'multi-break',
+    ]);
     expect(warnings[1]?.ref).toBe('Ghost@Wash');
     expect(warnings[1]?.message).toContain('2 fixture');
   });

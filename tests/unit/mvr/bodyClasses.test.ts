@@ -81,20 +81,20 @@ describe('fixture body classes of an import', () => {
   it('writes one summary line per product and class; the counts add up to the fixture count', async () => {
     const { summary } = await load();
     const lines = summary.bodyLines;
-    expect(lines.reduce((sum, line) => sum + line.count, 0)).toBe(summary.fixtureCount);
-    expect(summary.fixtureCount).toBe(USED.length);
-    expect(lines.map((line) => [line.product, line.bodyClass, line.count])).toEqual([
-      ['Mover', 'mesh', 2],
-      ['Symbol', 'meshVendorSymbol', 1],
-      ['Posed', 'suspect', 1],
-      ['Boxes', 'boxes', 1],
-      ['Huge', 'suspect', 1],
-      ['Stub', 'none', 1],
-      ['Zenith@Gone', 'none', 1],
+    expect([lines.reduce((sum, line) => sum + line.count, 0), summary.fixtureCount]).toEqual([8, USED.length]);
+    expect(lines.map((line) => [line.product, line.bodyClass, line.draw, line.count])).toEqual([
+      ['Mover', 'mesh', 'gdtf', 2],
+      ['Symbol', 'meshVendorSymbol', 'gdtf', 1],
+      ['Posed', 'suspect', 'deskAtSize', 1],
+      ['Boxes', 'boxes', 'deskAtBox', 1],
+      ['Huge', 'suspect', 'desk', 1],
+      ['Stub', 'none', 'desk', 1],
+      ['Zenith@Gone', 'none', 'desk', 1],
     ]);
-    expect(lines[0]?.message).toBe('2 fixtures of "Mover": the GDTF holds a 3D model.');
-    expect(lines[2]?.message).toBe('1 fixture of "Posed": the GDTF model has a baked pose.');
-    expect(lines[3]?.message).toBe('1 fixture of "Boxes": the GDTF holds model sizes but no mesh files.');
-    expect(lines[6]?.message).toBe('1 fixture of "Zenith@Gone": no GDTF file in the archive.');
+    const shown = (index: number): string | undefined => lines[index]?.message.split('; ')[1];
+    expect(lines[0]?.message).toBe('2 fixtures of "Mover": the GDTF holds a 3D model; it is shown.');
+    expect(shown(2)).toBe('the desk model is shown, scaled to the largest GDTF size.');
+    expect(shown(3)).toBe('the desk model is shown at the GDTF size.');
+    expect(shown(6)).toBe('the desk model is shown at its own size.');
   });
 });

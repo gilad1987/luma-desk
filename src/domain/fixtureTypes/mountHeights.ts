@@ -26,4 +26,5 @@ export const MOUNT_HEIGHTS: Readonly<Record<FixtureTypeId, MountHeight>> = {
   follow: { hang: 0.785, floor: 0.785 },
   profile: { hang: 0.498, floor: 0.498 },
   screen: { hang: 0, floor: 0 },
+  device: { hang: 0, floor: 0 },
 };

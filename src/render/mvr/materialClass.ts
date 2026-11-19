@@ -9,8 +9,8 @@ import { wordClass } from './classWords';
  */
 export type SceneryClass = 'truss' | 'scaffold' | 'deck' | 'cloth' | 'wall' | 'speaker' | 'figure' | 'default';
 
-/** What a placement says about itself: the owning element's tag, its name and its layer's name. */
-export type PlacementEvidence = Pick<MeshPlacement, 'kind' | 'name' | 'layerName'>;
+/** What a placement says about itself: the owning element's tag, its name, its layer's name and its class's name. */
+export type PlacementEvidence = Pick<MeshPlacement, 'kind' | 'name' | 'layerName' | 'className'>;
 
 /** MVR element tags that say what the object is, whatever its name. */
 const KIND_CLASSES: ReadonlyMap<string, SceneryClass> = new Map([
@@ -33,7 +33,9 @@ export function hasFileLook(material: Material): boolean {
  * 1. The MVR element tag: `Truss` and `Support` are aluminium truss; a tag that names a speaker (Vectorworks speaker
  *    elements) is a black speaker.
  * 2. The mesh's own material, when `hasFileLook`: `file`, so its base colour, roughness and metalness stay.
- * 3. Words in the object's name, then in its layer's name, in English or Hebrew (`wordClass`).
+ * 3. Words in the object's name, then in the name of its MVR class (`Classing`), then in its layer's name, in
+ *    English or Hebrew (`wordClass`). The object's own name comes first: a class sorts by trade ("LED", "Video"),
+ *    and a truss the designer put in such a class is still a truss.
  * 4. `default`, a neutral matte.
  *
  * It cannot tell a black-painted truss from a silver one (the file colour's lightness does that, see `classMaterial`),
@@ -45,5 +47,6 @@ export function materialClass(evidence: PlacementEvidence, material: Material): 
   const byKind = KIND_CLASSES.get(kind) ?? (kind.includes('speaker') ? 'speaker' : undefined);
   if (byKind) return byKind;
   if (hasFileLook(material)) return 'file';
-  return wordClass(evidence.name) ?? wordClass(evidence.layerName) ?? 'default';
+  const byName = wordClass(evidence.name) ?? wordClass(evidence.className ?? '');
+  return byName ?? wordClass(evidence.layerName) ?? 'default';
 }

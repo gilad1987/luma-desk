@@ -30,6 +30,11 @@
   font-size: 11px;
   border-left: 1px solid var(--line);
   padding-left: 12px;
+  /* a long MVR file name is cut here, so it cannot push the View and House groups; the tooltip holds it all */
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .tbg {
   display: flex;

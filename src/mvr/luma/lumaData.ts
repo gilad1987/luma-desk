@@ -41,6 +41,18 @@ export type FixtureLink = Pick<
   'id' | 'type' | 'role' | 'trussId' | 'mount' | 'product' | 'fixed' | 'pixel'
 > & {
   readonly footprint?: LinkFootprint;
+  /**
+   * The fixture has a `rotation`: its `<Matrix>` is its real body orientation. Without the flag a matrix in the rest
+   * pose of the mount is the desk's own pose and gives no `rotation` (a desk floor unit, and every older export).
+   */
+  readonly ownRotation?: true;
+  /**
+   * The `<Fixture uuid>` and its `occurrence` (absent for 0) of a fixture with MVR facts. The import pairs the link
+   * with the fixture by them, because the desk id can change on the way: a pass-through keeps the file's own empty
+   * `FixtureID`, so the next import numbers again. A link without one (a desk fixture, an older export) pairs by id.
+   */
+  readonly uuid?: string;
+  readonly occurrence?: number;
 };
 
 /**
@@ -54,11 +66,22 @@ export type LumaStageData = Pick<StageDesign, 'venue' | 'scenery' | 'deck' | 'sc
   readonly offset: Vec3;
   readonly links: readonly FixtureLink[];
   readonly hiddenLayers?: readonly string[];
+  /**
+   * Only in an export made from another program's file: who wrote that file (empty strings when its root named no
+   * one), as the root now names the desk. Its absence marks a file the desk made, whose bodies keep the desk size.
+   */
+  readonly originalProvider?: OriginalProvider;
 };
+
+/** The root `provider` and `providerVersion` of the file the desk exported from. */
+export interface OriginalProvider {
+  readonly provider: string;
+  readonly providerVersion: string;
+}
 
 /** The link of a fixture; optional fields stay absent when the fixture has none, so the JSON never holds `null`s. */
 export function linkOf(fixture: StageFixture): FixtureLink {
-  const { id, type, role, trussId, mount, product, fixed, pixel } = fixture;
+  const { id, type, role, trussId, mount, product, fixed, pixel, rotation } = fixture;
   return {
     id,
     type,
@@ -68,5 +91,6 @@ export function linkOf(fixture: StageFixture): FixtureLink {
     ...(product ? { product } : {}),
     ...(fixed ? { fixed } : {}),
     ...(pixel ? { pixel } : {}),
+    ...(rotation ? { ownRotation: true as const } : {}),
   };
 }

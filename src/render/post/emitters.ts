@@ -7,8 +7,8 @@ import { toBufferUnits } from './mvrTone';
 export const emitters = { isHdr: false };
 
 /**
- * Radiance of a full white lens in the HDR model, in exposure-adjusted units where the bloom threshold is 1. A lens
- * at full is then 32 times above the threshold and a lens at 5 % is at 1.6, at the low end of the bloom knee.
+ * Radiance of a full white lens in the HDR model, in exposure-adjusted units where the bloom threshold is 1, before
+ * the bound of `lensBound`: the linear law of a dim lens, so a lens at 5 % is at 1.6, at the low end of the bloom knee.
  */
 export const LENS_PEAK = 32;
 

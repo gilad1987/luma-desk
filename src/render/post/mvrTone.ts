@@ -7,7 +7,10 @@ import { ACESFilmicToneMapping, type ToneMapping } from 'three';
  */
 export const MVR_TONE_MAPPING: ToneMapping = ACESFilmicToneMapping;
 
-/** Fixed manual exposure: an auto exposure would lift a blackout to grey. */
+/**
+ * The base exposure. The show camera (`showExposure.ts`) moves the exposure of a frame around it, by at most one
+ * stop down and half a stop up; a free auto exposure would lift a blackout to grey.
+ */
 export const MVR_EXPOSURE = 1.2;
 
 /**

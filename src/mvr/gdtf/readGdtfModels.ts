@@ -23,7 +23,7 @@ function dimension(model: Element, name: string): number {
 function locate(file: string, entries: ReadonlyMap<string, string>): Pick<GdtfModel, 'path' | 'format' | 'details'> {
   if (file === '') return { details: [] };
   const entry = (folder: string, extension: string): string | undefined =>
-    entries.get(`models/${folder}/${file}.${extension}`.toLowerCase());
+    entries.get(`models/${folder}/${file}.${extension}`.normalize('NFC').toLowerCase());
   const details = FOLDERS.flatMap(([folder, extension]) =>
     DETAILS.map((ending) => folder + ending).filter((name) => entry(name, extension) !== undefined),
   );
@@ -39,7 +39,8 @@ function locate(file: string, entries: ReadonlyMap<string, string>): Pick<GdtfMo
  * names of the GDTF archive. Without entry names (a size-only read) no model gets a path.
  */
 export function readModels(fixtureType: Element, entryNames: readonly string[]): Map<string, GdtfModel> {
-  const entries = new Map(entryNames.map((name) => [name.toLowerCase(), name] as const));
+  // composed characters too: macOS stores a model file name decomposed, the GDTF XML names it composed
+  const entries = new Map(entryNames.map((name) => [name.normalize('NFC').toLowerCase(), name] as const));
   const collect = childElement(fixtureType, 'Models');
   const models = new Map<string, GdtfModel>();
   for (const el of collect ? childElements(collect, 'Model') : []) {

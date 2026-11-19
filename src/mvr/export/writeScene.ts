@@ -3,9 +3,11 @@ import { exportContext, type ExportContext } from './ExportContext';
 import { planLayers, type LayerPlan } from './exportLayers';
 import { LUMA_PROVIDER } from '../luma/lumaData';
 import { planPatches, type PatchPlan } from './autoPatch';
+import { auxNameNodes } from './fixtureFileData';
 import { fixtureXml } from './fixtureXml';
-import { gdtfIdentity } from './gdtfIdentity';
+import { gdtfIdentity, isStandInSpec } from './gdtfIdentity';
 import { writeLumaData } from './lumaUserData';
+import { LUMA_PROVIDER_VERSION } from './passThrough/rootAttributes';
 import { stageObjects, type StageObject } from './stageObjects';
 import { writeSymdefs } from './symdefs';
 import { xmlElement } from './xmlWriter';
@@ -19,10 +21,13 @@ export interface WrittenScene {
   readonly layers: number;
   /** Every GDTF file name the fixtures refer to, once each, in first-use order. */
   readonly gdtfSpecs: readonly string[];
+  /** Fixtures that name a desk stand-in GDTF (`isStandInSpec`), which is no file anywhere. */
+  readonly standIns: number;
 }
 
-const DECLARATION = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>';
-const ROOT = { verMajor: '1', verMinor: '6', provider: LUMA_PROVIDER, providerVersion: '1' };
+/** MVR 1.6: "The first XML node is always the XML description node: `<?xml version="1.0" encoding="UTF-8"?>`". */
+const DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>';
+const ROOT = { verMajor: '1', verMinor: '6', provider: LUMA_PROVIDER, providerVersion: LUMA_PROVIDER_VERSION };
 
 /** Appends the fixtures to their layers; units count per truss in design order. Gives the patch plan. */
 function addFixtures(context: ExportContext, layers: LayerPlan, children: Map<string, string[]>): PatchPlan {
@@ -51,12 +56,18 @@ export function writeScene(design: StageDesign): WrittenScene {
   for (const object of objects) children.get(layers.partLayer(object.part))?.push(object.xml);
   const layerXml = layers.all.map((layer) => {
     const childList = xmlElement('ChildList', {}, children.get(layer.uuid) ?? []);
-    return xmlElement('Layer', { uuid: layer.uuid, name: layer.name }, [childList]);
+    return xmlElement('Layer', { uuid: layer.fileUuid ?? layer.uuid, name: layer.name }, [childList]);
   });
-  const scene = xmlElement('Scene', {}, [...writeSymdefs(objects, context), xmlElement('Layers', {}, layerXml)]);
-  const root = xmlElement('GeneralSceneDescription', ROOT, [writeLumaData(design, context.offset), scene]);
+  const aux = writeSymdefs(objects, context, auxNameNodes(design.mvr));
+  const scene = xmlElement('Scene', {}, [...aux, xmlElement('Layers', {}, layerXml)]);
+  // the hidden layers by the keys the next import gives the layers as written, so it hides the same ones
+  const hiddenLayers = design.mvr?.hiddenLayers.map((key) => layers.keyAfter.get(key) ?? key) ?? [];
+  const written = design.mvr ? { ...design, mvr: { ...design.mvr, hiddenLayers } } : design;
+  const root = xmlElement('GeneralSceneDescription', ROOT, [writeLumaData(written, context.offset), scene]);
   const specs = design.fixtures.map((fixture) => gdtfIdentity(fixture, design.mvr).spec);
   const gdtfSpecs = [...new Set(specs)].filter(Boolean);
   const fixtures = design.fixtures.length;
-  return { xml: `${DECLARATION}\n${root}\n`, fixtures, patchPlan, objects, layers: layers.all.length, gdtfSpecs };
+  const standIns = specs.filter(isStandInSpec).length;
+  const xml = `${DECLARATION}\n${root}\n`;
+  return { xml, fixtures, patchPlan, objects, layers: layers.all.length, gdtfSpecs, standIns };
 }

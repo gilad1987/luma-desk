@@ -18,4 +18,5 @@ export const TYPES = {
   follow: MOVING_TYPES.follow,
   profile: STATIC_TYPES.profile,
   screen: STATIC_TYPES.screen,
+  device: STATIC_TYPES.device,
 } as const satisfies Record<FixtureTypeId, FixtureType>;

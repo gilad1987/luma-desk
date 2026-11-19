@@ -21,6 +21,7 @@ export class InstanceBuilder {
   readonly #meshes: TriangleMesh[] = [];
   readonly #inverse: number[] = [];
   readonly #layer: number[] = [];
+  readonly #kind: number[] = [];
   readonly #boxes: number[] = [];
   readonly #corner = new Vector3();
 
@@ -33,8 +34,11 @@ export class InstanceBuilder {
     return mesh;
   }
 
-  /** Adds `mesh` placed by `world` in a layer. It inverts `world` in place: the caller refills it per instance. */
-  add(mesh: TriangleMesh, world: Matrix4, layerIndex: number): void {
+  /**
+   * Adds `mesh` placed by `world` in a layer, as a `RIG_KIND`. It inverts `world` in place: the caller refills it
+   * per instance.
+   */
+  add(mesh: TriangleMesh, world: Matrix4, layerIndex: number, kind: number): void {
     const bounds = mesh.bvh.bounds;
     const low = [Infinity, Infinity, Infinity];
     const high = [-Infinity, -Infinity, -Infinity];
@@ -57,6 +61,7 @@ export class InstanceBuilder {
     for (const k of ROWS) this.#inverse.push(elements[k] ?? 0);
     this.#meshes.push(mesh);
     this.#layer.push(layerIndex);
+    this.#kind.push(kind);
     this.triangleCount += mesh.triangleCount;
   }
 
@@ -66,6 +71,7 @@ export class InstanceBuilder {
       inverse: Float64Array.from(this.#inverse),
       layer: Uint16Array.from(this.#layer),
       boxes: Float32Array.from(this.#boxes),
+      kind: Uint8Array.from(this.#kind),
     };
   }
 }

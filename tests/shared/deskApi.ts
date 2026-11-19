@@ -1,4 +1,5 @@
 import type { MvrStageInfo } from './mvrStageInfo';
+import type { ViewFitInfo } from './viewFitInfo';
 import type { AttrValues, SavedShow } from './savedShow';
 
 /** The three console layouts; the layout select and lumadesk-layout2 use these names. */
@@ -58,21 +59,21 @@ export interface DeskTestApi {
   /** Named for MVR, as Stage Builder's hook has `__desk.stage()` with another shape. */
   mvrStage(): MvrStageInfo;
   /**
-   * Resolves after the latest MVR load ended, with success or failure: a picked file, or the restore from IndexedDB
-   * at boot. Both run off the frame loop, so a spec cannot see the end in frames or the DOM. The app queues the load
-   * in the input's change handler before its first await, so a spec that picks a file and then calls this waits for
-   * that file, not an older load. Resolved at once when no load ran.
+   * Resolves after the latest MVR load ended, with success or failure: a picked file, or the boot restore from
+   * IndexedDB (both run off the frame loop). The app queues the load in the change handler before its first await,
+   * so a spec that picks a file and then calls this waits for that file. Resolved at once when no load ran.
    */
   mvrReady(): Promise<void>;
+  /** The projected rig box of an imported stage (null without one) and the free part of the 3D view, CSS pixels. */
+  viewFit(): ViewFitInfo;
   /** True while the MVR scenery shows the layers of a file; the 3D view itself says nothing a spec can read. */
   mvrScenery(): boolean;
-}
-
-/** window.__desk.stage(): the fixture count and the design's source and venue kinds. */
-export interface DeskStage {
-  count: number;
-  source: string;
-  venue: string;
+  /** True once the lazy MVR post chain draws the frames of an MVR stage. */
+  mvrPostChain(): boolean;
+  /** Each drawn fixture body: the import's plan, the GDTF box (X, Y, Z) and the measured width, depth, height. */
+  mvrBodies(): Promise<
+    readonly { id: number; product: string; draw: string; box: readonly number[] | null; size: readonly number[] }[]
+  >;
 }
 
 declare global {
@@ -83,7 +84,8 @@ declare global {
       setView(view: string, instant?: boolean): void;
       /** The current rig's fixtures, read at each access. */
       fixtures: { id: number; out: AttrValues }[];
-      stage(): DeskStage;
+      /** The fixture count and the design's source and venue kinds. */
+      stage(): { count: number; source: string; venue: string };
       /** Applies a template id (`empty`, `theatre`, `festival`, `sultans-pool`) or `built-in` as the builder would. */
       applyTemplate(id: string): void;
       /** The renderer's live GPU geometry and texture counts; equal counts after a repeated apply mean no leak. */

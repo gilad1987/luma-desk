@@ -1,5 +1,6 @@
 import type { AttrName } from '../../domain/attributes';
 import type { GdtfBody } from './GdtfBody';
+import type { GdtfOpticsSource } from './optics/GdtfOpticsSource';
 
 /**
  * One DMX channel of a fixture, placed at its final DMX position. The importer needs only what to patch (break and
@@ -87,4 +88,6 @@ export interface GdtfInfo {
   readonly sizes: readonly GdtfTreeSize[];
   /** The geometry tree of each DMX mode, in the order of `modes`: what a fixture body is drawn from. */
   readonly bodies: readonly GdtfBody[];
+  /** Channel functions, wheels, emitters and beams as written: what `gdtfOptics` reads. Absent on hand-built infos. */
+  readonly optics?: GdtfOpticsSource;
 }

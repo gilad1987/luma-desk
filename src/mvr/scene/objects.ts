@@ -1,5 +1,6 @@
 import { multiply, type Mat4 } from '../math/Mat4';
 import { attr, childElement, childText } from '../xml/elements';
+import { auxNamesOf, uuidKey } from './auxNames';
 import type { MeshPlacement, MvrLayerInfo } from './MvrScene';
 import type { SymbolExpander } from './symbols';
 
@@ -16,6 +17,8 @@ export function placementsOf(el: Element, world: Mat4, layer: MvrLayerInfo, symb
   const uuid = attr(el, 'uuid') ?? '';
   // MVR lets a scene object, truss, support, video screen or projector name a GDTF (`GDTFSpec`, 0 or 1)
   const gdtfSpec = childText(el, 'GDTFSpec') ?? '';
+  // MVR `Classing`: "The Class the object belongs to." The name of that class is evidence of what the object is.
+  const className = auxNamesOf(el).classes.get(uuidKey(childText(el, 'Classing') ?? ''));
   return symbols.meshesOf(geometries).map((mesh) => ({
     file: mesh.file,
     matrix: multiply(world, mesh.matrix),
@@ -26,5 +29,6 @@ export function placementsOf(el: Element, world: Mat4, layer: MvrLayerInfo, symb
     uuid,
     ...(mesh.symdef === undefined ? {} : { symdef: mesh.symdef }),
     ...(gdtfSpec === '' ? {} : { gdtfSpec }),
+    ...(className ? { className } : {}),
   }));
 }

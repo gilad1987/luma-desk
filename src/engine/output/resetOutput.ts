@@ -7,14 +7,14 @@ export type AttrOutput = Record<AttrName, number>;
 const WHITE = [100, 100, 100] as const;
 
 /**
- * Resets `f.out` in place to the fixture's resting look (dark, rigged position, its default colour, open beam) and
- * returns it typed as complete. The object is reused, not replaced, because the renderer and the UI hold it; the
+ * Resets `f.out` in place to the fixture's resting look (dark, rigged position, its gel or default colour, open beam)
+ * and returns it typed as complete. The object is reused, not replaced, because the renderer and the UI hold it; the
  * values go straight into it because this runs for every fixture in every frame.
  */
 export function resetOutput(f: Fixture): AttrOutput {
   const T = f.T,
     o = f.out,
-    color = T.defColor ?? WHITE;
+    color = f.gel ?? T.defColor ?? WHITE;
   o.dim = 0;
   o.pan = f.fixed ? f.fixed.pan : 0;
   o.tilt = f.fixed ? f.fixed.tilt : 0;

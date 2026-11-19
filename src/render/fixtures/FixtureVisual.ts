@@ -9,6 +9,7 @@ import type {
   ShaderMaterial,
   Sprite,
   Texture,
+  Vector3,
 } from 'three';
 import type { Fixture } from '../../domain/Fixture';
 import type { BeamUniforms } from './BeamMaterial';
@@ -27,6 +28,22 @@ export interface ScreenVisual {
   readonly fixture: Fixture;
 }
 
+/** A device that is no light (a hoist, a hazer): a neutral box that marks its place; nothing lights it. */
+export interface DeviceVisual {
+  readonly kind: 'device';
+  readonly fixture: Fixture;
+  readonly g: Group;
+  readonly box: Mesh<BoxGeometry, MeshStandardMaterial>;
+  /** The visible body's material: the selection tints it, as a light's `bodyMat`. */
+  readonly bodyMat: MeshStandardMaterial;
+  readonly lensMat: MeshBasicMaterial;
+  /**
+   * The meshes of its GDTF body; empty when the box is the body. Taking the GDTF source away rebuilds a device with
+   * a GDTF body, as the source frees the geometry these meshes draw.
+   */
+  readonly pick: readonly Mesh[];
+}
+
 /** A light's three.js objects and the render-only state the frame update keeps for it. */
 export interface LightVisual {
   readonly kind: 'light';
@@ -38,6 +55,14 @@ export interface LightVisual {
   readonly lens: Mesh;
   /** Lens distance from the fixture position in world units (model offset x size). */
   readonly lensOff: number;
+  /** Only on a GDTF body: the world offset from the fixture position to its real tilt axis, where the beam turns. */
+  readonly axisAt?: Vector3;
+  /** Only on a GDTF body: `lensOff` ends on the origin of the GDTF Beam geometry, where the cone must start. */
+  readonly beamAtLens?: true;
+  /** Only on a GDTF body with an axis: the Beam origin `at` in the frame of `holder`; the cone starts there. */
+  readonly beamFrom?: { readonly holder: Group; readonly at: Vector3 };
+  /** Only from a trusted GDTF: its `BeamRadius` in metres, the radius the beam starts with. */
+  readonly beamRadius?: number;
   readonly bodyMat: MeshStandardMaterial;
   readonly lensMat: MeshBasicMaterial;
   readonly beam: Mesh<CylinderGeometry, ShaderMaterial>;
@@ -57,4 +82,4 @@ export interface LightVisual {
 }
 
 /** The visual of one rig fixture, in fixture array order (decision 10). */
-export type FixtureVisual = ScreenVisual | LightVisual;
+export type FixtureVisual = ScreenVisual | LightVisual | DeviceVisual;

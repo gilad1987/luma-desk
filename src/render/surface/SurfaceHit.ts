@@ -39,6 +39,11 @@ export class SurfaceHit {
   /** The real meshes of an imported stage, or null for a stage that has only boxes. */
   private scenery: SceneryHit | null = null;
 
+  /** The mesh hit test of the shown stage, read-only: the shadow caster test traces its own rays through it. */
+  get sceneryHit(): SceneryHit | null {
+    return this.scenery;
+  }
+
   /**
    * Sets the venue ground around the boxes. Kept apart from {@link setSurfaces} so that call keeps the contract's
    * one-argument form (§9); the stage calls it at boot and before `setSurfaces` when the venue kind changes.

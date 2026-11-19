@@ -1,6 +1,7 @@
 import type { AttrName } from '../../domain/attributes';
 import type { FixtureTypeId } from '../../domain/FixtureType';
 import type { GdtfChannel, GdtfInfo } from './GdtfInfo';
+import { isLightChannel } from './isLightChannel';
 
 /** Beam types whose soft edge reads as a wash on stage. */
 const WASH_BEAMS: ReadonlySet<string> = new Set(['Wash', 'PC', 'Fresnel']);
@@ -20,15 +21,16 @@ function movingHeadType(info: GdtfInfo): FixtureTypeId {
 }
 
 /**
- * The desk fixture type that draws and drives an MVR fixture, or `'object'` for a GDTF without beam and dimmer (a
- * speaker or a motor), which the scene shows as geometry only. Rules, in order: no GDTF gives `par` (the caller warns
- * `missing-gdtf`); no beam and no dimmer gives `object`; pan and tilt give a moving head; tilt without pan gives `bar`
+ * The desk fixture type that draws and drives an MVR fixture, or `'object'` for a GDTF without beam and light channel (a
+ * speaker or a motor). The element stays a fixture all the same: `classifyFixture` gives it a desk type, because an
+ * MVR `<Fixture>` with a patch must never be lost. Rules, in order: no GDTF gives `par` (the caller warns
+ * `missing-gdtf`); no beam and no light channel (`isLightChannel`) gives `object`; pan and tilt give a moving head; tilt without pan gives `bar`
  * (a tilting batten); else `par`.
  */
 export function classifyType(info: GdtfInfo | undefined, channels: readonly GdtfChannel[]): FixtureTypeId | 'object' {
   if (info === undefined) return 'par';
   const has = (attr: AttrName): boolean => channels.some((channel) => channel.attr === attr);
-  if (!info.hasBeam && !has('dim')) return 'object';
+  if (!info.hasBeam && !channels.some(isLightChannel)) return 'object';
   if (has('pan') && has('tilt')) return movingHeadType(info);
   if (has('tilt')) return 'bar';
   return 'par';

@@ -25,6 +25,8 @@ export interface FakeMvrFlow {
 /** A store that keeps every file under the hash `hash` and holds nothing. */
 const emptyStore = () => ({
   get: vi.fn(() => Promise.resolve<Uint8Array | null>(null)),
+  hashOf: vi.fn(() => Promise.resolve<string | null>('hash')),
+  has: vi.fn(() => Promise.resolve<boolean | undefined>(false)),
   put: vi.fn(() => Promise.resolve<string | null>('hash')),
   delete: vi.fn(() => Promise.resolve(true)),
 });
@@ -62,6 +64,7 @@ export function fakeMvrFlowDeps(design: StageDesign = BUILT_IN_DESIGN): FakeMvrF
   const flowParts = { stage, store, scenery: fullScenery, prompt, toast, modal: () => modal };
   const deps: MvrFlowDeps = {
     ...flowParts,
+    bodies: { show: vi.fn(() => Promise.resolve([])) },
     cancelBuilder: named('cancelBuilder'),
     show: { ...show, afterImport: firstLook },
   };

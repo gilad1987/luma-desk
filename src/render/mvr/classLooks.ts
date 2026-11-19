@@ -1,4 +1,6 @@
-import { Color, MeshStandardMaterial, SRGBColorSpace, type Material, type Texture } from 'three';
+import { Color, MeshStandardMaterial, SRGBColorSpace, type Material } from 'three';
+import { followHall } from '../lighting/hallReflection';
+import { MIN_ALBEDO } from '../lighting/surfacePhotometry';
 import type { SceneryClass } from './materialClass';
 import type { Tone } from './sceneryTone';
 
@@ -32,38 +34,28 @@ const LOOKS: Readonly<Record<SceneryClass, ClassLook>> = {
 /** Saturation of the file hue in a class colour: enough to tell a red deck from a blue one, never a CAD glare. */
 const TINT = 0.12;
 
+const held = (channel: number): number => Math.max(channel, MIN_ALBEDO);
+
 /** The draw settings a class look keeps from the file material. */
 export type Surface = Pick<Material, 'side' | 'transparent' | 'opacity'>;
 
-/** Whether a class look reflects the hall, so the hall texture is made only when such a look exists. */
-export function reflects(sceneryClass: SceneryClass): boolean {
-  return LOOKS[sceneryClass].reflection > 0;
-}
-
 /**
  * A new material for `sceneryClass` in the file colour's `tone`: the class lightness span picked by the tone's level,
- * the tone's hue at a low tint, and `environment` as its reflection when the class reflects.
+ * the tone's hue at a low tint, and the hall map of the stage as its reflection when the class reflects
+ * (`followHall`: the one map that the fixture bodies mirror too).
  */
-export function classMaterial(
-  sceneryClass: SceneryClass,
-  tone: Tone,
-  surface: Surface,
-  environment: Texture | null,
-): MeshStandardMaterial {
+export function classMaterial(sceneryClass: SceneryClass, tone: Tone, surface: Surface): MeshStandardMaterial {
   const look = LOOKS[sceneryClass];
   const lightness = look.dark + (tone.level / 2) * (look.light - look.dark);
   const color = new Color().setHSL(tone.hue ?? 0, tone.hue === undefined ? 0 : TINT, lightness, SRGBColorSpace);
+  // One rule for both passes: the light pass holds a base colour at `MIN_ALBEDO`, so the deck, where the pools of
+  // the rig meet the house light, has that floor under the hall light too. Else the key stood 10 to 37 times over
+  // the house on a deck (the balance says 2.83, `keyToHouse`) and the deck was near black at House 30.
+  if (sceneryClass === 'deck') color.setRGB(held(color.r), held(color.g), held(color.b));
   const { side, transparent, opacity } = surface;
   const { roughness, metalness, reflection } = look;
-  const envMap = reflection > 0 ? environment : null;
-  return new MeshStandardMaterial({
-    color,
-    roughness,
-    metalness,
-    envMap,
-    envMapIntensity: reflection,
-    side,
-    transparent,
-    opacity,
-  });
+  const material = new MeshStandardMaterial({ color, roughness, metalness, side, transparent, opacity });
+  // the reflection follows the house level and the lit rig (`hallLevel`): a dark hall gives nothing to mirror
+  if (reflection > 0) followHall(material, reflection);
+  return material;
 }

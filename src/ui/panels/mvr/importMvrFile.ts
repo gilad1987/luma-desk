@@ -11,7 +11,7 @@ type MvrParser = Pick<typeof MvrModule, 'importMvr' | 'MvrError'>;
  * lazy chunk; tests pass one that rejects, to prove a chunk that does not load stores nothing.
  */
 export interface MvrImportDeps {
-  readonly store: Pick<MvrStore, 'put' | 'delete'>;
+  readonly store: Pick<MvrStore, 'hashOf' | 'has' | 'put' | 'delete'>;
   readonly stage: Pick<StageService, 'apply'>;
   /**
    * Cancels an open Stage Builder session; a no-op when it is closed. It runs right before the apply, as for a show
@@ -37,20 +37,26 @@ export type MvrImportOutcome =
  * `import`. The parser is a lazy chunk (`import()`), so the boot bundle does not grow; it loads first, so a chunk that
  * does not load (offline, a new deploy) rejects before any bytes are stored. The bytes are stored before the apply,
  * because the apply saves the show, and a reload must never find a show whose file is not in IndexedDB. A file the
- * parser rejects is taken out of the store again; other errors are code bugs and reject.
+ * parser rejects is taken out of the store again, only when the store said they were new; other errors are code bugs
+ * and reject, also after the bytes go.
  */
 export async function importMvrFile(
   file: { readonly name: string; readonly bytes: Uint8Array<ArrayBuffer> },
   deps: MvrImportDeps,
 ): Promise<MvrImportOutcome> {
   const { importMvr, MvrError } = await (deps.loadParser ?? loadMvrChunk)();
-  const hash = await deps.store.put(file.bytes);
+  const known = await deps.store.hashOf(file.bytes);
+  // The key is the content hash, so a saved show may point to bytes imported earlier (review R2-6). Only bytes the
+  // store said were not there may go again; `undefined` (it could not tell) keeps them.
+  const isNew = known !== null && (await deps.store.has(known)) === false;
+  const hash = known === null ? null : await deps.store.put(file.bytes, known);
   let result: MvrImport;
   try {
     result = await importMvr(file.bytes, hash === null ? { name: file.name } : { name: file.name, fileHash: hash });
   } catch (error) {
+    // A failed import takes out the bytes it newly stored: no show points to them, and a code bug must not leave them.
+    if (hash !== null && isNew) await deps.store.delete(hash);
     if (!(error instanceof MvrError)) throw error;
-    if (hash !== null) await deps.store.delete(hash);
     return { kind: 'failed', message: error.message };
   }
   deps.cancelBuilder();

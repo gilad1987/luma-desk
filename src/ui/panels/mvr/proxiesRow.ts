@@ -3,14 +3,15 @@ import { createElement } from '../../shared';
 /**
  * The "Show proxies" row of the layer list: one box, checked at first, as proxies are drawn by default. Proxies are
  * shapes the import inferred for objects without geometry, so the user can take them all out of the picture at once
- * and still hide single layers below. The label is English inline, like the other summary labels.
+ * and still hide single layers below. The label is English inline, like the other summary labels. `shown` is the
+ * state of a list that opens later, when the user may have turned the proxies off.
  */
-export function proxiesRow(host: HTMLElement, onChange: (shown: boolean) => void): HTMLInputElement {
+export function proxiesRow(host: HTMLElement, onChange: (shown: boolean) => void, shown = true): HTMLInputElement {
   const row = createElement('label', 'mvrLayer');
   const box = createElement('input');
   box.type = 'checkbox';
   box.id = 'mvrShowProxies';
-  box.checked = true;
+  box.checked = shown;
   box.onchange = () => onChange(box.checked);
   const name = createElement('span');
   name.textContent = 'Show proxies';
