@@ -21,8 +21,8 @@ float goboAt(vec2 q) {
   if (vGobo.x < 0.5) return 1.0;
   vec2 turned = vec2(vGobo.y * q.x - vGobo.z * q.y, vGobo.z * q.x + vGobo.y * q.y);
   vec2 cell = vec2(mod(vGobo.x, 4.0), floor(vGobo.x * 0.25));
-  // the clamp keeps the filter inside the cell
-  return textureLod(tGobo, (cell + clamp(turned * 0.5 + 0.5, 0.01, 0.99)) / vec2(4.0, 2.0), 0.0).r;
+  // the clamp keeps the filter inside the cell; a mask is white with its shape in alpha (`GoboAtlas.ts`)
+  return textureLod(tGobo, (cell + clamp(turned * 0.5 + 0.5, 0.01, 0.99)) / vec2(4.0, 2.0), 0.0).a;
 }
 
 const vec2 TILES = vec2(4.0, 2.0); // the tiles of the shadow atlas: `shadowTile.ts`
