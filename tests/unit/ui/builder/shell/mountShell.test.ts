@@ -57,7 +57,7 @@ describe('mountShell', () => {
       'builder-library',
       'builder-centre',
       'builder-inspector',
-      'inspector-drawer',
+      'inspector-drawer-frame',
     ]);
   });
 

@@ -59,6 +59,27 @@ describe('ViewportPicking', () => {
     expect(selection.set.mock.calls).toEqual([[[7], 'replace']]);
   });
 
+  // Bug: the desk's Shift+drag box showed over the builder's 3D pane; its inline display beat the hiding rule
+  it('while the builder is open a Shift+drag draws no box and leaves the camera free', () => {
+    const { dom, win, canvas, at, controls, flags } = mount();
+    flags.building = true;
+    canvas.fire('pointerdown', at(80, 90, { shiftKey: true, button: 0 }));
+    win.fire('pointermove', at(40, 30));
+    expect([dom.get('selRect').style.display, controls.enabled]).toEqual(['', true]);
+  });
+
+  // Bug: the desk's fixture hover tip showed over the builder's 3D pane; its inline display beat the hiding rule
+  it('while the builder is open hover shows no tooltip; on the desk it does', () => {
+    const building = mount();
+    building.flags.building = true;
+    building.canvas.fire('pointermove', building.at(20, 30));
+    const shown = [building.dom.get('tip').style.display, asReal<InlineStyle>(building.canvas.style).cursor];
+    vi.unstubAllGlobals();
+    const desk = mount();
+    desk.canvas.fire('pointermove', desk.at(20, 30));
+    expect([...shown, desk.dom.get('tip').style.display]).toEqual(['none', '', 'block']);
+  });
+
   it('hover shows the tooltip beside the pointer, and hides it over empty space', () => {
     const hit = mount();
     hit.canvas.fire('pointermove', hit.at(20, 30));

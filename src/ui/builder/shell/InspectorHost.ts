@@ -1,4 +1,4 @@
-import { setWaOpen } from './setWaOpen';
+import { InspectorDrawer } from './InspectorDrawer';
 
 /**
  * The narrow-screen query as the builder needs it: whether it matches now and its `change` event. The app passes
@@ -10,7 +10,7 @@ export type NarrowScreen = Pick<MediaQueryList, 'matches' | 'addEventListener' |
 export interface InspectorParts {
   /** `.builder-inspector`, the third column on a wide screen. */
   readonly column: HTMLElement;
-  /** `.inspector-drawer`, the `wa-drawer` the inspector lives in on a narrow screen. */
+  /** `.inspector-drawer`, the body of the drawer (`InspectorDrawer`) the inspector lives in on a narrow screen. */
   readonly drawer: HTMLElement;
   /** `[data-builder="inspector"]`, the bar button that opens the drawer (shown only on a narrow screen). */
   readonly button: HTMLElement;
@@ -24,14 +24,15 @@ export interface InspectorParts {
  */
 export class InspectorHost {
   readonly #parts: InspectorParts;
+  readonly #drawer: InspectorDrawer;
   readonly #onScreenChange = (): void => this.#follow();
   #isNarrow: boolean;
 
   constructor(parts: InspectorParts) {
     this.#parts = parts;
     this.#isNarrow = parts.narrow.matches;
+    this.#drawer = new InspectorDrawer(parts.drawer, parts.button);
     parts.narrow.addEventListener('change', this.#onScreenChange);
-    parts.button.onclick = () => this.open();
   }
 
   /** Where the tools panel goes now: `BuilderSlots.tools` at mount time. */
@@ -39,15 +40,10 @@ export class InspectorHost {
     return this.#isNarrow ? this.#parts.drawer : this.#parts.column;
   }
 
-  /** Opens the drawer (the Inspector button). */
-  open(): void {
-    setWaOpen(this.#parts.drawer, true);
-  }
-
-  /** Stops following the screen width and lets go of the button (U6). */
+  /** Stops following the screen width and lets go of the drawer's buttons and keys (U6). */
   dispose(): void {
     this.#parts.narrow.removeEventListener('change', this.#onScreenChange);
-    this.#parts.button.onclick = null;
+    this.#drawer.dispose();
   }
 
   #follow(): void {
@@ -55,7 +51,10 @@ export class InspectorHost {
     this.#isNarrow = this.#parts.narrow.matches;
     const to = this.slot;
     if (to === from) return;
+    // a moved field loses its focus without a `change`, so a typed, uncommitted value would be lost; a blur commits it
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && from.contains(active)) active.blur();
     to.append(...Array.from(from.children));
-    if (!this.#isNarrow) setWaOpen(this.#parts.drawer, false);
+    if (!this.#isNarrow) this.#drawer.setOpen(false);
   }
 }

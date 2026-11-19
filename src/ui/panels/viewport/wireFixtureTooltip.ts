@@ -8,9 +8,13 @@ const TIP_OFFSET_PX = 12;
 
 /**
  * Shows `#tip` with the id and type of the fixture under the pointer, and a pointer cursor over it. Nothing updates
- * while a button is down (`isPressed`), so a drag never fights the tooltip.
+ * while a button is down (`isPressed`), so a drag never fights the tooltip. While the builder is open (`isBuilding`)
+ * the tip stays hidden: it is the desk's HUD, and its inline `display` would beat the builder's hiding rule.
  */
-export function wireFixtureTooltip({ canvas, picker, clock }: ViewportDeps, isPressed: () => boolean): void {
+export function wireFixtureTooltip(
+  { canvas, picker, clock, isBuilding }: ViewportDeps,
+  isPressed: () => boolean,
+): void {
   const viewer = byId('viewer'),
     tip = byId('tip');
   let pickedAt = 0;
@@ -19,7 +23,7 @@ export function wireFixtureTooltip({ canvas, picker, clock }: ViewportDeps, isPr
     const t = clock.nowMs();
     if (t - pickedAt < TIP_INTERVAL_MS) return;
     pickedAt = t;
-    const f = picker.pickAt(ev.clientX, ev.clientY);
+    const f = isBuilding() ? null : picker.pickAt(ev.clientX, ev.clientY);
     if (f) {
       const r = viewer.getBoundingClientRect();
       tip.style.display = 'block';

@@ -103,7 +103,8 @@ Notes:
 
 - Every bar button except Cancel and Done hides its label (`::part(label)` display none) and becomes 44 × 44; icons
   and tooltips stay. The title shortens to the builder icon with the tooltip "Stage Builder" only below 820 px.
-- The Inspector button appears (icon + tooltip) and opens the `wa-drawer`; its `aria-expanded` follows the drawer.
+- The Inspector button appears (icon + tooltip) and opens and closes the inspector drawer (the builder's own panel,
+  not a `wa-drawer`); its `aria-expanded` follows the drawer.
 - Width budget at 1024: 16 padding + title 100 + edit 236 + dividers 34 + modes 140 + badge 88 + inspector 44 +
   Cancel 80 + Done 88 + gaps 56 = 882 px. Fits without wrapping; the bar never wraps to two rows.
 

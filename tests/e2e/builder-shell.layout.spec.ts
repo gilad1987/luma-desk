@@ -53,23 +53,17 @@ test('narrow (1024 px): a 56 px library rail, Plan first, and the inspector in a
   expect(await width(page, '.builder-library')).toBe(56);
   await expect(page.locator('.builder-inspector')).toBeHidden();
   await expect(page.locator('.builder-centre')).toHaveClass(/\bis-mode-plan\b/);
-  // a class: the drawer is the only wa-drawer, but its role (dialog) and name ("Inspector") exist only while open
-  const drawer = page.locator('wa-drawer.inspector-drawer');
+  const drawer = page.getByRole('complementary', { name: 'Inspector' });
   await page.getByRole('button', { name: 'Inspector', exact: true }).click();
-  await expect(drawer).toHaveAttribute('open', '');
-  // the open host covers the window out of the grid flow, so it is visible and the grid keeps its two rows
+  // the open drawer is fixed under the bar, out of the grid flow, so it is visible and the grid keeps its two rows
   await expect(drawer).toBeVisible();
   const rows = await page.locator('section.builder').evaluate((host) => getComputedStyle(host).gridTemplateRows);
   expect(rows.split(' ')).toHaveLength(2);
   await expect(drawer.getByRole('tab', { name: 'Trusses' })).toBeVisible();
-  // Escape asks the drawer to close (`wa-hide`). The close itself is not awaited: Web Awesome ends its hide animation
-  // on a requestAnimationFrame, and under `?test` the page's animation frames do not run, so `open` would never go.
-  // The handle resolves once the listener is attached, so the Escape below cannot go by before it.
-  const hide = await drawer.evaluateHandle((el) => ({
-    fired: new Promise<string>((resolve) => el.addEventListener('wa-hide', (e) => resolve(e.type), { once: true })),
-  }));
+  // the drawer's own close and focus are owned by builder-shell.drawer
   await page.keyboard.press('Escape');
-  expect([await hide.evaluate((h) => h.fired), errors]).toEqual(['wa-hide', []]);
+  await expect(drawer).toBeHidden();
+  expect(errors).toEqual([]);
 });
 
 // Bug: at 768 px the bar's items shrank to fit, so the mode group stacked its three buttons in a 76 px column and the

@@ -48,7 +48,8 @@
   color: var(--acc);
 }
 /* While the builder is open (#viewer moves into its 3D pane), only the two canvases show: the selection chips, the
-   help text, the tip and the cue card are the desk's HUD. */
+   help text and the cue card are the desk's HUD. An inline `display` beats this rule, so the hover tip and the
+   selection box (#tip, #selRect) are kept hidden by their scripts while building (wireFixtureTooltip, ViewportPicking). */
 body.is-building #viewer > :not(canvas) {
   display: none;
 }

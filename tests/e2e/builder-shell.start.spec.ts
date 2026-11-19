@@ -7,7 +7,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { bootApp, collectErrors } from '../shared/e2e';
 
 // classes: the start cards are buttons whose names are Hebrew help texts; the columns have no role or name
-const COVERED = '.builder-library, .builder-centre, .builder-inspector, wa-drawer';
+const COVERED = '.builder-library, .builder-centre, .builder-inspector, .inspector-drawer-frame';
 const lastCard = (page: Page) => page.locator('.start-screen .start-card').last();
 
 /** Where the focus is: `covered` under the start screen, `bar`, `start`, or the tag name of anything else. */
@@ -44,16 +44,15 @@ test('the Inspector button is hidden before a choice and opens the drawer after 
   const errors = collectErrors(page);
   await page.setViewportSize({ width: 1024, height: 768 });
   await openStart(page);
-  // a class: the drawer's role (dialog) and name exist only while it is open
-  const drawer = page.locator('wa-drawer.inspector-drawer');
+  const drawer = page.getByRole('complementary', { name: 'Inspector' });
   const inspector = page.getByRole('button', { name: 'Inspector', exact: true });
   await expect(inspector).toBeHidden();
   // a click at its place, past the visibility check, must not open the drawer either
   await page.getByRole('button', { name: 'Inspector', exact: true, includeHidden: true }).click({ force: true });
-  await expect(drawer).not.toHaveAttribute('open');
+  await expect(drawer).toBeHidden();
   await page.locator('[data-template="theatre"]').click();
   await page.locator('[data-venue="sultans-pool"]').click();
   await inspector.click();
-  await expect(drawer).toHaveAttribute('open', '');
+  await expect(drawer).toBeVisible();
   expect(errors).toEqual([]);
 });

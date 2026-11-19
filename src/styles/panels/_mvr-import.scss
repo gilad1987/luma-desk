@@ -53,7 +53,8 @@
   left: 50%;
   bottom: 16px;
   transform: translateX(-50%);
-  z-index: 40;
+  // above the Stage Builder (40), which comes later in body; below the modal (50), toasts, guide and tour
+  z-index: 45;
   max-width: min(640px, 92vw);
   padding: 8px 12px;
   background: var(--p2);

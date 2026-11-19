@@ -27,9 +27,10 @@ export const builder = {
     delete: 'מחיקת הפריטים הנבחרים (Delete)',
     mirror: 'העתקת הצד השמאלי של הבמה לצד הימני',
   },
-  /** The tooltips of the shell: the Inspector button, the three view modes and the library rail. */
+  /** The tooltips of the shell: the Inspector button, the drawer's Close, the three view modes and the library rail. */
   shell: {
     inspector: 'פתיחת המאפיינים של הפריט הנבחר',
+    inspectorClose: 'סגירת חלונית המאפיינים',
     modePlan: 'תצוגת תוכנית בלבד',
     modeSplit: 'תוכנית ותצוגה תלת-ממדית יחד',
     mode3d: 'תצוגה תלת-ממדית בלבד',
