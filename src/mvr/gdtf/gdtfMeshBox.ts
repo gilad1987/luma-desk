@@ -40,9 +40,21 @@ type Size = readonly [number, number, number];
 export interface MeshCache {
   readonly shapes: Map<Uint8Array, MeshShape | undefined>;
   readonly sizes: Map<GdtfBody, Size | undefined>;
+  /** The model files that did not parse (a damaged GLB JSON chunk), so the import can warn about each one. */
+  readonly bad: Set<Uint8Array>;
 }
 
-export const meshCache = (): MeshCache => ({ shapes: new Map(), sizes: new Map() });
+export const meshCache = (): MeshCache => ({ shapes: new Map(), sizes: new Map(), bad: new Set() });
+
+/** The shape of a model file, or none when it does not parse: one damaged model must not fail the whole import. */
+function safeShape(path: string, bytes: Uint8Array, cache: MeshCache): MeshShape | undefined {
+  try {
+    return gdtfMeshShape(path, bytes);
+  } catch {
+    cache.bad.add(bytes);
+    return undefined;
+  }
+}
 
 /**
  * The overall size of a body measured on its real meshes (`treeSize`); `meshOf` gives the bytes of a model file by
@@ -58,7 +70,7 @@ export function meshTreeSize(
   const shapeOf = ({ path }: GdtfModel): MeshShape | undefined => {
     const bytes = path === undefined ? undefined : meshOf(path);
     if (!bytes || path === undefined) return undefined;
-    if (!cache.shapes.has(bytes)) cache.shapes.set(bytes, gdtfMeshShape(path, bytes));
+    if (!cache.shapes.has(bytes)) cache.shapes.set(bytes, safeShape(path, bytes, cache));
     return cache.shapes.get(bytes);
   };
   const size = body.root ? treeSize(body.root, shapeOf) : undefined;

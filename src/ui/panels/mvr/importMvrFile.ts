@@ -37,7 +37,7 @@ export type MvrImportOutcome =
  * `import`. The parser is a lazy chunk (`import()`), so the boot bundle does not grow; it loads first, so a chunk that
  * does not load (offline, a new deploy) rejects before any bytes are stored. The bytes are stored before the apply,
  * because the apply saves the show, and a reload must never find a show whose file is not in IndexedDB. A file the
- * parser rejects is taken out of the store again; other errors are code bugs and reject.
+ * parser rejects is taken out of the store again; other errors are code bugs and reject, also after the bytes go.
  */
 export async function importMvrFile(
   file: { readonly name: string; readonly bytes: Uint8Array<ArrayBuffer> },
@@ -49,8 +49,9 @@ export async function importMvrFile(
   try {
     result = await importMvr(file.bytes, hash === null ? { name: file.name } : { name: file.name, fileHash: hash });
   } catch (error) {
-    if (!(error instanceof MvrError)) throw error;
+    // Any failed import takes its bytes out: no show points to them, and a code bug must not leave them stored.
     if (hash !== null) await deps.store.delete(hash);
+    if (!(error instanceof MvrError)) throw error;
     return { kind: 'failed', message: error.message };
   }
   deps.cancelBuilder();

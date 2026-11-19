@@ -7,6 +7,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 import { MvrStore } from '../../../../src/io/mvrStore';
+import { MvrError } from '../../../../src/mvr/MvrWarning';
 import { importMvrFile, type MvrImportDeps } from '../../../../src/ui/panels/mvr/importMvrFile';
 import { FakeIndexedDb, makeMvr, makeZip, sceneXml } from '../../../shared';
 
@@ -36,6 +37,14 @@ describe('importMvrFile edges', () => {
     const { db, deps, deleted, applies } = setup();
     const outcome = await importMvrFile({ name: 'x.mvr', bytes }, deps);
     expect([outcome.kind, applies(), db.records.size, deleted.length]).toEqual(['failed', 0, 0, 1]);
+  });
+
+  it('takes the stored bytes out on an error that is no MvrError, and rejects with it (R2-6)', async () => {
+    const { db, deps, deleted, applies } = setup();
+    const broken = new SyntaxError('Unexpected token b in JSON');
+    const loadParser = () => Promise.resolve({ importMvr: () => Promise.reject(broken), MvrError });
+    await expect(importMvrFile({ name: 'a.mvr', bytes: mvrBytes() }, { ...deps, loadParser })).rejects.toBe(broken);
+    expect([applies(), db.records.size, deleted.length]).toEqual([0, 0, 1]);
   });
 
   it('deletes nothing for a rejected file the store had refused', async () => {
