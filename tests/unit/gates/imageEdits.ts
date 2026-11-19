@@ -1,5 +1,6 @@
+import { ditherAt } from '../../../src/render/post/ditherOutput';
 import type { RgbaImage } from '../../shared';
-import { fromOklab, level, toLinear, toOklab, type Rgb } from './oklabPair';
+import { gamutFitted, level, toLinear, toOklab, type Rgb } from './oklabPair';
 
 // Edits that model a real render change (exposure, white balance, a dimmed lamp) or a harmless one (noise). Each one
 // is built in code from an image; gateImages.ts draws and moves lines.
@@ -20,12 +21,19 @@ const gained = (rgb: Rgb, gain: number): Rgb => each(rgb, (v) => level(toLinear(
 /** Every pixel's linear light times `gain`, as an exposure change would (bright pixels clip at 255). */
 export const exposed = (src: RgbaImage, gain: number): RgbaImage => mapPixels(src, (rgb) => gained(rgb, gain));
 
-/** Every pixel's hue turned by `degrees` in the Oklab a-b plane, at the same lightness and chroma. */
+/**
+ * Every pixel's hue turned by `degrees` in the Oklab a-b plane at the same lightness and chroma, as lights of another
+ * colour would draw it. A turned colour outside sRGB keeps its hue and loses only the chroma it must (gamutFitted).
+ * The 8-bit write adds the renderer's own dither (ditherAt, as the MVR output pass does), so the sub-step turn of a
+ * dim, near-grey pixel shows as a fine mix of two levels and does not round back to the old colour. Turned by 0°,
+ * almost no pixel moves (at most one byte of a baseline): the dither spans half a step either way.
+ */
 export function hueTurned(src: RgbaImage, degrees: number): RgbaImage {
   const [cos, sin] = [Math.cos((degrees * Math.PI) / 180), Math.sin((degrees * Math.PI) / 180)];
-  return mapPixels(src, (rgb) => {
+  return mapPixels(src, (rgb, p) => {
     const [l, a, b] = toOklab(rgb);
-    return fromOklab([l, a * cos - b * sin, a * sin + b * cos]);
+    const dither = ditherAt(p % src.width, Math.floor(p / src.width)) * 255;
+    return each(gamutFitted([l, a * cos - b * sin, a * sin + b * cos]), (v) => level(v, dither));
   });
 }
 
