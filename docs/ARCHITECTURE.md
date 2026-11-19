@@ -239,19 +239,31 @@ the output goldens and the screenshots by design.
 A catalogue product (a real fixture such as the Robe Esprite) is a layer over a fixture type, not a new type (ADR
 0007). The goldens and the screenshots stay unchanged.
 
-1. The brand file in `src/domain/fixtureProducts/` (for example `robe.ts`): add a record with `id`, `brand`, `name`,
-   `category`, `base`, `optics`, `body`, `span`, `mountHeight`, `dataSheet` and `unmodelled`. The `id` is show
-   format: a saved design stores it, so it never changes. A new brand file must also be spread into `PRODUCTS` in
+1. A brand data file under `src/domain/fixtureProducts/<brand>/` (for example `robe/robeSpots.ts`): add a record
+   with `id`, `brand`, `name`, `category`, `base`, `optics`, `body`, `dimensions`, `span`, `mountHeight`,
+   `dataSheet` and `unmodelled` (and `discontinued: true` only when the manufacturer says so). The `id` is show
+   format: a saved design stores it, so it never changes. The brand's joiner (for example `robe.ts`) spreads the data
+   files in catalogue order. A new brand's joiner must also be spread into `PRODUCTS` in
    `src/domain/fixtureProducts/index.ts`, or the desk does not know its products.
-2. `body.family` picks the parametric body family in `src/render/fixtures/families/` (`mover` in C1). A new family is
-   a new member of `ProductBody` and a new case in the family switch.
-3. Add the id to the expected id list of the first test in
-   `tests/unit/domain/fixtureProducts/catalogueRules.test.ts` (it compares `PRODUCT_IDS` to a literal list). Run `catalogueRules.test.ts`, `lazyProducts.test.ts`
-   and `productSpans.test.ts`. Pin `span` and `mountHeight` to the values measured from the built model, as
-   `BODY_SPANS` and `MOUNT_HEIGHTS` are.
-4. Never add a product to `createLensTextures` or `createModelMaterials`: everything for a product is made when the
+2. Cite the manufacturer data sheet in `dataSheet` and in the row comment, and check every optical number against
+   it. `dimensions` is the sheet's height, width and depth in millimetres, as the sheet states them.
+3. Pick a body family in `src/render/fixtures/families/` with `body.family`: `mover` (moving head on the Robe base;
+   `ref` picks the native head lathe, `face` is `'rings'`, `'hotspot'` or `{ cells }`), `tiltBar` (bar head on a
+   panning yoke with its own base) or `yokedCan` (static dish in an arch yoke). The fields are in
+   `src/domain/fixtureProducts/bodies/`. A new family is a new member of `ProductBody` and a new case in the family
+   switch (`familyModels.ts`).
+4. Size: tune `body.size` until the hung span is within 2 % of the size-rule target
+   `BODY_SPANS[base] * product largest sheet dimension / base product largest dimension` (ADR 0007, decision 4).
+   Three generic tests cover every product:
+   `productSizes.test.ts` (the size rule), `productSpans.test.ts` (pin `span` and `mountHeight` to the values
+   measured from the built model, as `BODY_SPANS` and `MOUNT_HEIGHTS` are) and `productProportions.test.ts` (width /
+   height within 10 % of the sheet).
+5. Add the id to the literal id list in `tests/unit/domain/fixtureProducts/catalogueRules.test.ts` (it compares
+   `PRODUCT_IDS` to it).
+6. Never add a product to `createLensTextures` or `createModelMaterials`: everything for a product is made when the
    first fixture of that product is built, so the boot draws no new `Math.random` (`random-calls.json`).
-5. Cite the manufacturer data sheet in `dataSheet`, and check every optical number against it.
+7. Check the product next to its native base in the dev gallery (`src/render/fixtures/gallery/gallery.html`; shots
+   with `npx playwright test -c playwright.gallery.config.ts`).
 
 ### A phaser
 

@@ -271,3 +271,22 @@ after C2 merges.
 ## Open questions
 
 Open questions: none.
+
+## Departures during implementation
+
+Recorded 2026-11-19. The tree at this point holds 5 of the 15 products (Esprite, Pointe, LEDBeam 150, TetraX,
+onePATT); Steps 4 and 5 are not done.
+
+- TetraX draws its own base. `tiltBarParts.ts` draws a low rectangular base and a box crossbar yoke, because the
+  TetraX has no round Robe base. So `FamilyShared` has no `robeBase`; it passes the model table's `product` factory
+  next to `robe` instead (`FixtureModels.ts`, `familyModels.ts`).
+- No `uBracket` and no ParFect refactor. The onePATT hangs in its own two-tube arch yoke (`archYoke.ts`), not in a
+  U-bracket, so `parfectModel.ts` did not change.
+- LEDBeam 350 cell layout: 4 inner + 8 outer cells (UM drawing), not 3 + 9. The LEDBeam 350 row is not in the tree
+  yet (Step 4), so this is the layout for that row.
+- The proportion test measures a static product head-forward: its head turned level to the front, as the data sheet
+  draws it (`productProportions.test.ts`). Moving heads are measured hung at rest.
+- The gallery page is `src/render/fixtures/gallery/gallery.html`, with no npm script (as corrections 7 and 8 said).
+  Run the shots with `npx playwright test -c playwright.gallery.config.ts`.
+- `tests/e2e/stage-product.spec.ts` moved its show helper to `tests/e2e/stageProductShow.ts`.
+- The mover extension pilots (Pointe, LEDBeam 150; Step 3) ran before G0 was answered. The orchestrator allowed it.
