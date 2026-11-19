@@ -1,9 +1,10 @@
 /**
  * Owns the lazy-creation rule of the product families: the boot-time sets (lens textures, materials, model table)
  * stay the 9 natives' and draw no `Math.random` for a product until its first fixture is built, so `random-calls.json`
- * and the fixture-scene golden cannot move. The product body shape is owned by `mover.test.ts`.
+ * and the fixture-scene golden cannot move; later fixtures of the product reuse that first geometry and lens face.
+ * The product body shape is owned by `mover.test.ts`.
  */
-import { CanvasTexture, Scene, Vector3 } from 'three';
+import { CanvasTexture, Mesh, Scene, Vector3 } from 'three';
 import { afterEach, expect, it, vi } from 'vitest';
 import { Fixture } from '../../../../../src/domain/Fixture';
 import { PRODUCT_IDS } from '../../../../../src/domain/fixtureProducts';
@@ -74,6 +75,20 @@ it('draws the product geometry and lens face on the first fixture only', () => {
   };
   const [first, second, third] = [draws(), draws(), draws()];
   expect([first > 0, second < first, third]).toStrictEqual([true, true, second]);
+});
+
+it('reuses one product geometry for every fixture of that product', () => {
+  const { builder, esprite } = bootThenSpy();
+  const [a, b] = [builder.build(esprite()), builder.build(esprite())];
+  if (a.kind !== 'light' || b.kind !== 'light') throw new Error('an Esprite builds a light visual');
+  // The yoke holds the yoke mesh first; the tilt group holds the head, then the head trim (`buildRobeMover`).
+  const yokeOf = (v: fx.LightVisual) => (v.joints?.yoke.children[0] as Mesh).geometry;
+  const trimOf = (v: fx.LightVisual) => (v.joints?.tiltG.children[1] as Mesh).geometry;
+  expect([a.head.geometry === b.head.geometry, yokeOf(a) === yokeOf(b), trimOf(a) === trimOf(b)]).toStrictEqual([
+    true,
+    true,
+    true,
+  ]);
 });
 
 it('shares one painted lens face between two fixtures of the same product', () => {
