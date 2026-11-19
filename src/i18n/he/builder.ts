@@ -13,8 +13,11 @@ export const builder = {
   tooManyFixtures: (n: number): string => `בבמה ${n} גופי תאורה, יותר מ-500. ייתכן שהתצוגה תאט.`,
   /** The toast when a show file's `stage` key does not parse; the rest of the show still loads. */
   badStage: 'נתוני הבמה בקובץ ההופעה פגומים. נטענה במת ברירת המחדל.',
-  /** The toast when the builder's code chunk does not load, as after a deploy that removed the chunk an open tab needs. */
-  loadFailed: 'טעינת בונה הבמה נכשלה. בדקו את החיבור לרשת ונסו שוב.',
+  /**
+   * The toast when the builder's code chunk does not load. It asks for a reload, not a network check: after a deploy
+   * the service worker deletes the old caches, so an open tab cannot get the old chunk again until it reloads.
+   */
+  loadFailed: 'לא ניתן לטעון את בונה הבמה. טענו מחדש את הדף ונסו שוב.',
   done: 'שמירת הבמה וחזרה לקונסולה',
   cancel: 'ביטול כל השינויים וחזרה לקונסולה',
   edit: {

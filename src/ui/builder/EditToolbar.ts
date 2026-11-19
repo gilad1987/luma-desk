@@ -13,12 +13,15 @@ export type EditAction = KeyAction | 'mirror';
 /** The session members the toolbar uses. */
 type ToolbarSession = Pick<EditorSession, 'undo' | 'redo' | 'edit' | 'selection' | 'canUndo' | 'canRedo' | 'onChange'>;
 
+/** Which actions have nothing to act on, from one paint. */
+type OffState = Readonly<Record<EditAction, boolean>>;
+
 const ACTIONS: readonly EditAction[] = ['undo', 'redo', 'duplicate', 'delete', 'mirror'];
 
 /**
  * Undo, Redo, Duplicate, Delete and Mirror for the draft. The keyboard shortcuts call `run` too, so a key and its
  * button can never do different things. A button that has nothing to act on gets `is-disabled` and the Web Awesome
- * `disabled` state, so it neither looks live nor takes a click or the focus.
+ * `disabled` state, so it neither looks live nor takes a click or the focus; if it had the focus, a neighbour takes it.
  */
 export class EditToolbar {
   readonly #session: ToolbarSession;
@@ -68,16 +71,29 @@ export class EditToolbar {
 
   #paint(): void {
     const isEmpty = isEmptySelection(this.#session.selection);
-    const isOff: Readonly<Record<EditAction, boolean>> = {
+    const isOff: OffState = {
       undo: !this.#session.canUndo,
       redo: !this.#session.canRedo,
       duplicate: isEmpty,
       delete: isEmpty,
       mirror: false,
     };
+    const focused = ACTIONS.find((action) => this.#buttons.get(action)?.contains(document.activeElement));
     for (const [action, button] of this.#buttons) {
       button.classList.toggle('is-disabled', isOff[action]);
       setWaDisabled(button, isOff[action]);
     }
+    if (focused !== undefined && isOff[focused]) this.#focusNear(focused, isOff);
+  }
+
+  /**
+   * Gives the focus to the next enabled button after `from`, else the nearest one before it: Delete, or the last Undo,
+   * turns its own focused button off, which would drop a keyboard user's focus to `<body>`. It runs after the paint,
+   * so a button that turned on in the same paint (Redo after Undo) can take it. Mirror is never off.
+   */
+  #focusNear(from: EditAction, isOff: OffState): void {
+    const at = ACTIONS.indexOf(from);
+    const target = [...ACTIONS.slice(at + 1), ...ACTIONS.slice(0, at).reverse()].find((action) => !isOff[action]);
+    if (target !== undefined) this.#buttons.get(target)?.focus();
   }
 }
