@@ -14,7 +14,7 @@ const MOVE = 1;
  * The audience on the seats of one layer: per body of the library one instanced mesh for the near level and one for
  * the far level. The people are sorted into the two by their distance to the camera, at a low rate. The sort runs in
  * `updateMatrixWorld`, which the renderer calls before it uploads instance buffers: buffers and counts so change in
- * the same frame. The camera is the one that last drew a mesh.
+ * the same frame. The camera is the last one that drew a mesh and has no `userData.passCamera` (see `see`).
  */
 export class AudienceLayer extends Group {
   readonly #people: People;
