@@ -37,6 +37,8 @@ describe('CameraViews with frame-fitted views', () => {
     v.fitTo(RIG, mvrViews(RIG, []));
     v.setView('front', true);
     v.controls.dispatchEvent({ type: 'start' });
+    v.camera.position.x += 0.5;
+    v.controls.dispatchEvent({ type: 'end' });
     const moved = v.camera.position.clone();
     resize(v, 1024, 768);
     v.updateControls();

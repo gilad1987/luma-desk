@@ -4,6 +4,7 @@ import { FohRig } from './FohRig';
 import type { StageBounds } from '../../domain/stage/types';
 import { FittedTable } from './FittedTable';
 import { tweenCamera } from './tweenCamera';
+import { watchUserMove } from './userMove';
 import type { ViewFitter } from './viewFrame';
 import { applyViewRange, followFloor } from './viewRange';
 import type { CameraView, ViewName, ViewTable } from './viewTable';
@@ -41,9 +42,7 @@ export class CameraViews {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
     this.controls.maxPolarAngle = Math.PI * 0.495;
-    this.controls.addEventListener('start', () => {
-      this.isOnView = false;
-    });
+    watchUserMove(this.camera, this.controls, () => (this.isOnView = false));
   }
 
   /** The last view set by name (`foh` also in the MA layout); the layout switch re-applies FOH with it. */
