@@ -81,6 +81,9 @@ Costs and risks:
 - A product fixture has no imported GDTF facts (`importedGdtfInfo`), because in C1 those facts always describe the
   file's product, not the catalogue's. So `bodyScale` is 1 for it, and the export and the Sheet name the base type's
   GDTF, also when the user gives an imported fixture a product. C5 revisits this with the products' own `gdtfSpec`.
+- An MVR from a desk with a product this catalogue does not know (a newer desk) loads the fixture as its base type,
+  and it lands shifted by the difference of the two mount heights (about 0.1 m for an Esprite-like product), because
+  the export placed it by the product's mount height. No fix is possible without the catalogue entry.
 - The builder property panel shows the base type name until lane `ui` Phase 5 replaces the panels.
 - One more table to keep honest: each product needs its data sheet, and its drawn `span` and `mountHeight` must be
   measured again when its body changes.

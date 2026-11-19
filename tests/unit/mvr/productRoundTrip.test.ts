@@ -6,6 +6,8 @@
  */
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
+import { PRODUCTS } from '../../../src/domain/fixtureProducts/index.ts';
+import { MOUNT_HEIGHTS } from '../../../src/domain/fixtureTypes/mountHeights.ts';
 import type { StageDesign, StageFixture } from '../../../src/domain/stage/StageDesign.ts';
 import { createTemplate } from '../../../src/domain/stage/templates/index.ts';
 import { exportMvr, importMvr } from '../../../src/mvr/index.ts';
@@ -42,13 +44,25 @@ describe('MVR round trip of a product', () => {
     const { design } = await importMvr(zipSync({ ...entries, [SCENE]: strToU8(scene) }), { name: 'x' });
     const fixture = design.fixtures[0];
     // The role and the truss count come from the luma link, so a rejected link block fails here, not only the product.
+    // The hung spot lands lower by the two mount heights' difference: the export placed it by the product's height.
+    const shift = MOUNT_HEIGHTS.spot.hang - PRODUCTS['robe-esprite'].mountHeight.hang;
+    const y = (value: number | undefined): number => Number((value ?? NaN).toFixed(6));
     const facts = [
       scene.includes('acme-x'),
       fixture?.type,
       fixture?.role,
       design.trusses.length,
       fixture && Object.hasOwn(fixture, 'product'),
+      y(fixture?.position[1]),
     ];
-    expect(facts).toStrictEqual([true, 'spot', 'front', exported.trusses.length, false]);
+    const expected = [
+      true,
+      'spot',
+      'front',
+      exported.trusses.length,
+      false,
+      y((exported.fixtures[0]?.position[1] ?? NaN) - shift),
+    ];
+    expect(facts).toStrictEqual(expected);
   });
 });
