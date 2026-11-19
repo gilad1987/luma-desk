@@ -39,6 +39,8 @@ describe('product catalogue', () => {
         'robe-gigapointe',
         'robe-ibolt',
         'robe-ledbeam-150',
+        'robe-ledbeam-350',
+        'robe-tarrantula',
         'robe-spikie',
         'robe-tetrax',
         'robe-patt-2013',

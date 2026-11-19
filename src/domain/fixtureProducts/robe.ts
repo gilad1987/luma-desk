@@ -6,6 +6,7 @@ import { ROBE_LED_HEADS } from './robe/robeLedHeads';
 import { ROBE_PROFILES } from './robe/robeProfiles';
 import { ROBE_RETRO } from './robe/robeRetro';
 import { ROBE_SPOTS } from './robe/robeSpots';
+import { ROBE_TARRANTULA } from './robe/robeTarrantula';
 
 /**
  * The Robe products of the catalogue, checked against the Robe data sheets, joined from the data files in catalogue
@@ -19,6 +20,7 @@ export const ROBE_PRODUCTS = {
   ...ROBE_BEAMS,
   ...ROBE_BOLTS,
   ...ROBE_LED_HEADS,
+  ...ROBE_TARRANTULA,
   ...ROBE_EFFECTS,
   ...ROBE_RETRO,
 } as const satisfies Record<string, FixtureProduct>;
