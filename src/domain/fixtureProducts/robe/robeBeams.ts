@@ -51,4 +51,47 @@ export const ROBE_BEAMS = {
     ],
     discontinued: true,
   },
+  // Robe "GigaPointe" data sheet 10/20/2026: zoom 1.8°-21° beam mode, 3°-42° spot mode, lens 150 mm, "fixture total
+  // lumen output" 23,400 lm integrating sphere (19,000 lm goniophotometer), 500 W, 671 x 403 x 257 mm, 26.5 kg.
+  'robe-gigapointe': {
+    id: 'robe-gigapointe',
+    brand: 'Robe',
+    name: 'GigaPointe',
+    category: 'hybrid',
+    base: 'beam',
+    // zoom from beam-mode min to spot-mode max; power = TYPES.beam.power 1.2 * GigaPointe 23,400 lm / MegaPointe
+    // 20,375 lm = 1.378: the MegaPointe sheet states no method, so the ratio may mix measures
+    optics: { zr: [1.8, 42], power: 1.378 },
+    // model units; a MegaPointe-class head with side vents (robe.cz/gigapointe photos) and the MegaPointe's 150 mm
+    // lens, sunk as deep (0.085). ax, barrel radius and front are tuned so the hung span meets the size rule (0.94 *
+    // 671 / 640 = 0.986 m) and the hung width / height meets 403 / 671, as the sheet gives no head size.
+    body: {
+      family: 'mover',
+      ref: 'megapointe',
+      size: 0.551,
+      ax: 0.43,
+      barrel: { r: 0.35, rear: 0.38, front: -0.7 },
+      lens: { r: 0.27, y: 0.615, off: 0.7 },
+      vents: true,
+      face: 'hotspot',
+    },
+    dimensions: { h: 671, w: 403, d: 257 },
+    // measured from the built model and pinned by tests/unit/render/fixtures/productSpans.test.ts
+    span: 0.986,
+    mountHeight: { hang: 0.601, floor: 0.601 },
+    dataSheet:
+      'https://www.robe.cz/gigapointe (Robe data sheet "GigaPointe" 10/20/2026, https://www.robe.cz/api/robe/pdfs/en/product/6800)',
+    unmodelled: [
+      'CMY and virtual CTO',
+      'colour wheel',
+      'rotating gobo wheel',
+      'static gobo wheel',
+      'beam reducers',
+      'animation wheel',
+      'multi-level prisms',
+      'SpektraBeam',
+      'frost',
+      'beam / spot mode switch',
+    ],
+  },
 } as const satisfies Record<string, FixtureProduct>;
