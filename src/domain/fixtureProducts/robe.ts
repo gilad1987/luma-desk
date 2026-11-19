@@ -18,15 +18,15 @@ export const ROBE_PRODUCTS = {
     base: 'spot',
     // zoom from the sheet; power = Esprite 34,000 lm / FORTE 50,000 lm (both integrating sphere, HP engines) = 0.68
     optics: { zr: [5.5, 50], power: 0.68 },
-    // model units; the FORTE head (src/render/fixtures/models/forteHead.ts) is the reference, lens 150/180 of the
-    // FORTE's; size = TYPES.spot.size 0.72 * 733 / 843 = 0.626 (drawn at the desk's scale relative to the base
-    // model, see ADR 0007). The barrel is slimmer than the FORTE's by the sheets' depth-to-height ratios
-    // (264/733 over 335/843 = 0.91): 0.335 * 0.91 = 0.305. Barrel length, ax and ribs stay the FORTE's.
+    // model units; the FORTE head (src/render/fixtures/models/forteHead.ts) is the reference. The barrel radius and
+    // length, ax and the ribs are the FORTE's, because the sheets give no barrel diameter; the lens is 150/180 of the
+    // FORTE's; size = TYPES.spot.size 0.72 * 733 / 843 = 0.626 from the height ratio (drawn at the desk's scale
+    // relative to the base model, see ADR 0007).
     body: {
       family: 'mover',
       size: 0.626,
       ax: 0.43,
-      barrel: { r: 0.305, rear: 0.45, front: -0.78 },
+      barrel: { r: 0.335, rear: 0.45, front: -0.78 },
       lens: { r: 0.196, y: 0.772, off: 0.78 },
       ribs: [0.12, 0.17, 0.22, 0.27],
       face: 'rings',
