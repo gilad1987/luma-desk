@@ -16,6 +16,7 @@ import { UiTickScheduler } from './app/loop/UiTickScheduler';
 import { wireMvr } from './app/mvr/wireMvr';
 import { installTestHook } from './app/testHook/installTestHook';
 import { FpsClock } from './app/ui/FpsClock';
+import { loadBuilderShell } from './app/ui/loadBuilderShell';
 import { wireBuilder } from './app/ui/wireBuilder';
 import { wirePanels } from './app/ui/wirePanels';
 import { createAutoShow } from './app/uix/createAutoShow';
@@ -28,7 +29,6 @@ import { ViewportPicking } from './ui/panels/viewport/ViewportPicking';
 
 // the side column and the desk footer start empty: their panels render into them
 document.body.insertAdjacentHTML('afterbegin', appShellMarkup({ viewer: viewerMarkup, side: '', desk: '' }));
-
 const engine = wireEngine();
 const { stage, bus, pool } = engine;
 const { execs } = pool;
@@ -75,7 +75,7 @@ const layout = wireLayout({
   builderOpen: () => builder.isOpen,
 });
 // before restore: the restore refits the console, and the refit asks whether the builder is open
-const builder = wireBuilder({ ...engine, ...render, fitLayout: () => layout.fit() });
+const builder = wireBuilder({ ...engine, ...render, fitLayout: () => layout.fit(), loadShell: loadBuilderShell });
 layout.restore();
 
 const fps = new FpsClock();

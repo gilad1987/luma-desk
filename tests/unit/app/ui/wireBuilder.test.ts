@@ -1,11 +1,11 @@
 /**
- * The app wiring of the Stage Builder: each browser binding of `BuilderDeps`, and `#buildBtn` as the only thing built
- * at boot. Builder mode itself is owned by tests/unit/ui/builder/BuilderMode.test.ts; opening it for real (the tool
- * panels need a real DOM) is owned by tests/e2e/builder-*.spec.ts.
+ * The app wiring of the Stage Builder: each browser binding of `BuilderDeps` (the narrow-screen query included),
+ * and `#buildBtn` as the only thing built at boot. Its click (the chunk load) is owned by wireBuilder.load.test.ts,
+ * Builder mode by ui/builder/BuilderMode.test.ts, and opening it for real by tests/e2e/builder-*.spec.ts.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { attachViewer } from '../../../../src/app/ui/viewerHost';
 import { builderDepsOf, wireBuilder } from '../../../../src/app/ui/wireBuilder';
-import { BuilderMode } from '../../../../src/ui/builder/BuilderMode';
 import { mountTools } from '../../../../src/ui/builder/mountTools';
 import { asReal, FakeButton, FakeDom } from '../../../shared/dom';
 import { BuilderHarness } from '../../ui/builder/builderHarness';
@@ -14,47 +14,43 @@ function setup() {
   const dom = new FakeDom();
   dom.add('buildBtn', new FakeButton());
   const h = new BuilderHarness();
+  const matchMedia = vi.fn((_query: string) => h.narrow);
+  vi.stubGlobal('matchMedia', matchMedia);
   const setConsoleHeight = vi.fn<(px: number) => void>();
   const fitLayout = vi.fn();
-  const wiring = { stage: h.deps.stage, bus: h.deps.bus, stageRenderer: { setConsoleHeight }, fitLayout };
-  return { dom, h, wiring, setConsoleHeight, fitLayout };
+  const loadShell = vi.fn(() => Promise.resolve());
+  const wiring = { stage: h.deps.stage, bus: h.deps.bus, stageRenderer: { setConsoleHeight }, fitLayout, loadShell };
+  return { dom, h, wiring, setConsoleHeight, fitLayout, loadShell };
 }
 
 describe('wireBuilder', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('builds nothing but the Build Stage click until it is clicked', () => {
-    const { dom, wiring, fitLayout } = setup();
+  // catches a boot that loads the Web Awesome chunk eagerly, which puts it back on the desk's start-up path
+  it('builds nothing but the Build Stage click and loads no shell until it is clicked', () => {
+    const { dom, wiring, fitLayout, loadShell } = setup();
     const builder = wireBuilder(wiring);
     expect(builder.isOpen).toBe(false);
     expect(dom.body.children).toHaveLength(0);
     expect(dom.get('buildBtn').onclick).toBeTypeOf('function');
-    expect(fitLayout).not.toHaveBeenCalled();
+    expect([fitLayout.mock.calls, loadShell.mock.calls]).toEqual([[], []]);
   });
 
-  it('binds the stage, bus, document keys, the real tools, the console height and the layout fit', () => {
+  // catches a viewer the builder cannot move (binding forgotten) or a narrow query off the desk's 1100 px line
+  it('binds stage, bus, document keys, real tools, viewer move, narrow query, console height and layout fit', () => {
     const { h, wiring, setConsoleHeight, fitLayout } = setup();
     const deps = builderDepsOf(wiring);
-    expect([deps.stage, deps.bus, deps.keys, deps.mountTools]).toEqual([
+    expect([deps.stage, deps.bus, deps.keys, deps.mountTools, deps.attachViewer]).toEqual([
       h.deps.stage,
       h.deps.bus,
       document,
       mountTools,
+      attachViewer,
     ]);
+    expect([deps.narrow, vi.mocked(matchMedia).mock.calls]).toEqual([h.narrow, [['(max-width: 1099px)']]]);
     deps.setConsoleHeight(120);
     deps.fitLayout();
-    expect(setConsoleHeight).toHaveBeenCalledWith(120);
-    expect(fitLayout).toHaveBeenCalledOnce();
-  });
-
-  it('opens Builder mode from a #buildBtn click', () => {
-    const { dom, wiring } = setup();
-    // the real enter mounts the tool panels, which need a real DOM (e2e); here it only has to be the click's target
-    const enter = vi.spyOn(BuilderMode.prototype, 'enter').mockImplementation(() => undefined);
-    const builder = wireBuilder(wiring);
-    dom.get('buildBtn').onclick?.({ target: null });
-    expect(enter.mock.contexts).toEqual([builder]);
-    enter.mockRestore();
+    expect([setConsoleHeight.mock.calls, fitLayout.mock.calls.length]).toEqual([[[120]], 1]);
   });
 
   it('makes the side panes, the encoders and the executor desk inert, and live again', () => {
@@ -70,7 +66,7 @@ describe('wireBuilder', () => {
     ]);
   });
 
-  it('draws the top view through the animation frame clock', () => {
+  it('draws the plan view through the animation frame clock', () => {
     const raf = vi.fn(() => 7),
       caf = vi.fn();
     vi.stubGlobal('requestAnimationFrame', raf);

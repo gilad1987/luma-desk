@@ -18,7 +18,7 @@ type SendPatch = (patch: FixturePatch) => string | null;
 /**
  * The property fields of one fixture: its id, position, the fixed pan and tilt of a static type (a moving head aims
  * through the programmer, so it has none) and its role. A position field moves the fixture through `moveFixtures`, the
- * same op as a top view drag, so its pixel line moves with it; the other fields patch it through `setFixtureProps`.
+ * same op as a plan drag, so its pixel line moves with it; the other fields patch it through `setFixtureProps`.
  * The 'screen' fixture of an LED wall has no position or aim fields: the wall places it, and it casts no beam.
  */
 export function fixtureProps(session: Pick<EditorSession, 'edit'>, fixture: StageFixture): HTMLElement[] {

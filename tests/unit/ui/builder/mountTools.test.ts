@@ -1,8 +1,8 @@
 /**
- * Owns the mount contract of the tool panel: it builds the tabs and the property panel into the tools slot and the top
+ * Owns the mount contract of the tool panel: it builds the tabs and the property panel into the tools slot and the plan
  * view into the view slot, every panel follows session changes once per burst on the next task (so Tab after an edit
  * keeps the focus on the next field), and the one disposer removes the DOM, the session subscriptions, the pending
- * panel render and the pending top view frame (U6).
+ * panel render and the pending plan view frame (U6).
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTemplate } from '../../../../src/domain/stage/templates';
@@ -45,7 +45,7 @@ describe('mountTools', () => {
     descendants(panel()).filter((el) => el.children[0]?.textContent === 'Length (m)');
   const propPanel = (): FakeElement => descendants(panel()).find((el) => el.className === 'prop-panel') ?? panel();
 
-  it('mounts the three tabs and the property panel into the tools slot and the top view into the view slot', () => {
+  it('mounts the three tabs and the property panel into the tools slot and the plan view into the view slot', () => {
     const tabs = descendants(panel()).filter((el) => prop(el, 'role') === 'tab');
     const props = descendants(panel()).filter((el) => el.className === 'prop-panel');
     expect([
@@ -54,7 +54,7 @@ describe('mountTools', () => {
       tabs.map((t) => t.textContent),
       props.length,
       view.children.map((el) => el.className),
-    ]).toEqual([1, 'builder-panel', ['Stage', 'Trusses', 'Fixtures'], 1, ['top-view']]);
+    ]).toEqual([1, 'builder-panel', ['Stage', 'Trusses', 'Fixtures'], 1, ['plan-view']]);
   });
 
   it('re-renders every panel on the next task after a change made in one of them', () => {
@@ -81,7 +81,7 @@ describe('mountTools', () => {
     expect([session.draft.trusses[0]?.transform.position[0], keys]).toEqual([2, ['Y (m)']]);
   });
 
-  it('removes its DOM, the top view, its pending render and frame, and stops following the session on dispose', () => {
+  it('removes its DOM, the plan view, its pending render and frame, and stops following the session on dispose', () => {
     const before = panel();
     click(button(before, 'Straight'));
     dispose();
