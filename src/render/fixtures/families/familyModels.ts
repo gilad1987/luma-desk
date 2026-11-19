@@ -1,15 +1,19 @@
 import { PRODUCT_IDS, PRODUCTS, type ProductId } from '../../../domain/fixtureProducts';
 import type { FixtureModelTable, ModelBuilder } from '../FixtureModels';
+import type { FixtureModel } from '../models/ModelContext';
 import type { RobeHead } from '../models/robeMover';
 import { LazyLensTextures } from './LazyLensTextures';
 import { moverBuilder } from './moverFamily';
+import { yokedCanBuilder } from './yokedCanFamily';
 
 /**
  * The native builder factories the families reuse, from the model table: `robe` caches the head and yoke geometry
- * `once` per call and draws on the table's one Robe base cache, so a product is built exactly like a native head.
+ * `once` per call and draws on the table's one Robe base cache, so a product is built exactly like a native head;
+ * `product` does the same for a static model, with the table's kit.
  */
 export interface FamilyShared {
   readonly robe: (head: RobeHead, fs: boolean) => ModelBuilder;
+  readonly product: <G extends object>(model: FixtureModel<G>) => ModelBuilder;
 }
 
 /** What every family builder closes over: the shared factories and the one lazy lens set of the table. */
@@ -33,5 +37,7 @@ function familyBuilder(scope: FamilyScope, id: ProductId): ModelBuilder {
   switch (body.family) {
     case 'mover':
       return moverBuilder(scope, id, body);
+    case 'yokedCan':
+      return yokedCanBuilder(scope, id, body);
   }
 }
