@@ -39,6 +39,9 @@
     border: 0;
     block-size: auto;
     inline-size: auto;
+    // Plan mode collapses the pane to 0 px; a 0 px viewer gives WebGL a zero-size framebuffer on every frame
+    // (GL_INVALID_FRAMEBUFFER_OPERATION). 2 px keeps the renderer valid; the pane's overflow hides them.
+    min-block-size: 2px;
   }
   // Hidden, not removed: the split panel places its panes in a fixed `start divider end` grid, and a divider with
   // `display: none` would shift the end pane into the divider's track. Hidden also takes it out of the tab order.
