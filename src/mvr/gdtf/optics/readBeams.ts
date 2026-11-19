@@ -10,11 +10,11 @@ const MAX_REFERENCE_DEPTH = 8;
  * geometry it names; the spec: "Only top level geometries are allowed to be referenced."
  */
 function beamsUnder(el: Element, tops: ReadonlyMap<string, Element>, depth: number): Element[] {
-  if (el.tagName === 'GeometryReference') {
+  if (el.localName === 'GeometryReference') {
     const target = depth < MAX_REFERENCE_DEPTH ? tops.get(attr(el, 'Geometry') ?? '') : undefined;
     return target ? beamsUnder(target, tops, depth + 1) : [];
   }
-  const own = el.tagName === 'Beam' ? [el] : [];
+  const own = el.localName === 'Beam' ? [el] : [];
   return [...own, ...childElements(el).flatMap((child) => beamsUnder(child, tops, depth))];
 }
 
