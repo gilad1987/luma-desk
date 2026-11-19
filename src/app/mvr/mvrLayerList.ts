@@ -60,19 +60,18 @@ function keyedLayers(layers: readonly MvrLayer[]): MvrLayer[] {
 }
 
 /** Opens the layer list from the design the stage has now, so it shows the hidden and marked layers of this moment. */
-async function openLayerList(
-  deps: MvrFlowDeps,
-  parts: LayerListParts,
-  ledNow: LayerListLoads['ledNow'],
-): Promise<void> {
-  const { mvr } = deps.stage.design;
+async function openLayerList(deps: MvrFlowDeps, parts: LayerListParts, loads: LayerListLoads): Promise<void> {
+  const { mvr, source } = deps.stage.design;
   if (!mvr) return;
   if (!mayOpenMvrLayers(deps.modal())) return deps.toast(he.mvr.layersBusy);
   // a failed LED load still opens the list, without the LED rows, and says why they are missing
-  const ledWalls = await ledNow(mvr.ledLayers ?? []).catch(() => {
+  const ledWalls = await loads.ledNow(mvr.ledLayers ?? []).catch(() => {
     deps.toast(he.mvr.ledLayersFailed);
     return undefined;
   });
+  // a stage change during the load wins: the list would bind this file's layers to the new stage
+  if (deps.stage.design.source !== source) return;
+  if (!mayOpenMvrLayers(deps.modal())) return deps.toast(he.mvr.layersBusy);
   const { hiddenLayers } = mvr;
   const { showProxies, audience, hall, shown } = parts;
   const layers = keyedLayers(mvr.layers);
@@ -90,7 +89,7 @@ export function offerLayerList(deps: MvrFlowDeps, geometry: MvrGeometry, loads =
   const failed = (error: unknown): void =>
     deps.toast(he.mvr.layerControlFailed(error instanceof Error ? error.message : String(error)));
   const parts = layerListParts(geometry, failed, loads.proxies);
-  showLayersButton(() => void openLayerList(deps, parts, loads.ledNow));
+  showLayersButton(() => void openLayerList(deps, parts, loads));
   return parts;
 }
 
