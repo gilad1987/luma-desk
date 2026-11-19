@@ -36,18 +36,24 @@ the range over those five images:
 | Change                                                | Measured                                 | Result                 |
 | ----------------------------------------------------- | ---------------------------------------- | ---------------------- |
 | Exposure × 1.02 and ÷ 1.02                            | \|exposure\| 0.009 to 0.019              | pass                   |
-| Exposure × 1.05 and × 0.95                            | \|exposure\| 0.048 to 0.055              | fail (exposure)        |
-| Hue turned 3° (same lightness and chroma)             | \|hue\| 1.6° to 2.8°                     | pass                   |
-| Hue turned 10° and -10°                               | \|hue\| 5.3° to 10.0°                    | fail (hue)             |
-| Brightest 1 % of the pixels 30 % dimmer               | share 0.00092 to 0.045, 16 to 180 blocks | fail (share, exposure) |
+| Exposure × 1.05 and × 0.95                            | \|exposure\| 0.048 to 0.056              | fail (exposure)        |
+| Hue turned 3° and -3° (same lightness and hue)        | \|hue\| 1.84° to 2.98°                   | pass                   |
+| Hue turned 10° and -10° (same lightness and hue)      | \|hue\| 6.16° to 9.95°                   | fail (hue)             |
+| Brightest 1 % of the pixels 30 % dimmer               | share 0.00087 to 0.045, 15 to 180 blocks | fail (share, exposure) |
 | Lost 240 px grey truss line, 2 px or 1 px wide        | share 0.0035 to 0.015, 60 blocks         | fail (share)           |
 | 1 px white line on the darkest 10-row band moved 1 px | worst 0.011 or less, 0 blocks            | pass                   |
 | Whole shot moved 1 px (x, or x and y)                 | worst 0.055 or less, 0 or 1 block        | pass                   |
 
-Gamut clipping keeps a real hue turn from showing in full, so 10° measures 5.3° to 10°. The mean alone cannot see a
-5 % exposure change (0.0021 to 0.0055), which is why exposure has its own limit. The dimmed pixels are ranked by
+The hue case turns every colour as the renderer would draw it. A turned colour outside sRGB keeps its lightness and
+hue and loses only the chroma it must (the gamut mapping of CSS Color 4). The 8-bit write adds the dither of the MVR
+output pass, so the small turn of a dim, near-grey pixel shows as a mix of two levels and does not round back. With
+clipping per channel and plain rounding instead, 10° measured 2.2° on the Front view, a pass. The FOH and Front views
+are almost grey, so the metric's neutral floor (a chroma of 0.004) still damps a turn there to about two thirds of
+its size: 10° measures 6.16°.
+
+The mean alone cannot see a 5 % exposure change (0.0021 to 0.0055), which is why exposure has its own limit. The dimmed pixels are ranked by
 Oklab lightness, as the lamps of a real stage are spread hot spots; they also break the exposure limit. The dark wide
-view is the closest case: 16 changed blocks against a limit of 5. The earlier case, the brightest 53x53 square 30 %
+view is the closest case: 15 changed blocks against a limit of 5.2. The earlier case, the brightest 53x53 square 30 %
 dimmer, now passes every limit on the wide view (worst 0.049): the gate cannot see a 30 % dim of one mid-dark
 region of that size, only of the lamps' hot spots. On the synthetic stage the beam pixels tie at the cut, so the
 whole beam (4.5 % of the pixels) is dimmed. A lost thin structure fails when it changes 6 blocks
