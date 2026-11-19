@@ -6,6 +6,7 @@ import { REST_ROTATION, restRotation } from '../math/restRotation';
 import type { MvrWarning } from '../MvrWarning';
 import { linkFootprint } from './linkFootprint';
 import { pairLinks } from './pairLinks';
+import { relinkScreens } from './relinkScreens';
 
 /** One link split once: its desk fields go onto the fixture, its footprint (MVR data) into the MVR facts. */
 interface SplitLink {
@@ -82,15 +83,7 @@ export interface LumaApplied {
 export function applyLumaData(design: StageDesign, luma: LumaStageData): LumaApplied {
   const links = pairLinks(design.fixtures, design.mvr, luma.links.map(splitLink));
   const fixtures = design.fixtures.map((fixture) => relink(fixture, links));
-  const drivers = new Set(fixtures.filter((fixture) => fixture.type === 'screen').map((fixture) => fixture.id));
-  const screens = luma.screens.filter((screen) => drivers.has(screen.fixtureId));
-  const warnings = luma.screens
-    .filter((screen) => !drivers.has(screen.fixtureId))
-    .map((screen): MvrWarning => ({
-      code: 'missing-screen-driver',
-      message: `LED wall ${screen.id} was dropped: its driver fixture ${screen.fixtureId} is not in the file.`,
-      ref: screen.id,
-    }));
+  const { screens, warnings } = relinkScreens(luma.screens, fixtures, links);
   const { venue, scenery, deck, risers, trusses } = luma;
   const hidden = luma.hiddenLayers && { hiddenLayers: luma.hiddenLayers };
   const mvr = design.mvr && { mvr: { ...retype(design.mvr, fixtures, links), ...hidden } };
