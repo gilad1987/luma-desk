@@ -22,6 +22,7 @@ export class LazyMvrChain {
   #session: object | undefined;
   /** The latest load; it settles with success or failure, so a wait on it never rejects. */
   #pending: Promise<void> = Promise.resolve();
+  #failed = false;
   #width = 0;
   #height = 0;
 
@@ -37,6 +38,11 @@ export class LazyMvrChain {
   /** The chain that draws now; undefined for a built-in stage and while the chunk loads. */
   get current(): MvrChain | undefined {
     return this.#chain;
+  }
+
+  /** True when the load for the MVR stage shown now failed: this stage stays on the built-in chain and its decals. */
+  get hasFailed(): boolean {
+    return this.#failed;
   }
 
   /** Keeps the size for a chain that is created later. */
@@ -74,12 +80,16 @@ export class LazyMvrChain {
       },
       // a chunk that does not load (offline, a new deploy) or a chain that cannot be made leaves this stage on the
       // built-in chain; the warning keeps the cause visible, as the stage still draws and nothing else reports it
-      (error: unknown) => console.warn('MVR post chain not created; the built-in chain stays', error),
+      (error: unknown) => {
+        if (this.#session === session) this.#failed = true;
+        console.warn('MVR post chain not created; the built-in chain stays', error);
+      },
     );
   }
 
   #free(): void {
     this.#session = undefined;
+    this.#failed = false;
     this.#chain?.dispose();
     this.#chain = undefined;
     emitters.isHdr = false;

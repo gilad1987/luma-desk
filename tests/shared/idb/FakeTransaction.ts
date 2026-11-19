@@ -35,6 +35,7 @@ export class FakeTransaction {
     return {
       put: (value: unknown, key: string) => write(() => records.set(key, value)),
       get: (key: string) => new FakeRequest<unknown>().settle(false, () => records.get(key)),
+      count: (key: string) => new FakeRequest<number>().settle(false, () => (records.has(key) ? 1 : 0)),
       delete: (key: string) => write(() => records.delete(key)),
     };
   }

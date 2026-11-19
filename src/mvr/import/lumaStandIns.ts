@@ -33,6 +33,23 @@ export function linkFootprints(raw: object): (readonly [unknown, unknown])[] {
     .map((link) => [field(link, 'id'), field(link, 'footprint')] as const);
 }
 
+/** The raw id of every link whose `ownRotation` is `true`; any other value reads as absent, as in an older export. */
+export function ownRotations(raw: object): ReadonlySet<unknown> {
+  const own = objects(field(raw, 'links')).filter((link) => field(link, 'ownRotation') === true);
+  return new Set(own.map((link) => field(link, 'id')));
+}
+
+/** The uuid key of a link, by its raw id: a non-text uuid or a bad occurrence reads as absent, so it pairs by id. */
+export function linkKeys(raw: object): ReadonlyMap<unknown, { readonly uuid: string; readonly occurrence?: number }> {
+  const keyed = objects(field(raw, 'links')).flatMap((link) => {
+    const uuid = field(link, 'uuid');
+    const occurrence = field(link, 'occurrence');
+    const counted = Number.isInteger(occurrence) && Number(occurrence) > 0 ? { occurrence: Number(occurrence) } : {};
+    return typeof uuid === 'string' ? [[field(link, 'id'), { uuid, ...counted }] as const] : [];
+  });
+  return new Map(keyed);
+}
+
 /**
  * Raw fixtures for checking the luma data with the stored-show parser: one per `links` entry (id, type, role, truss
  * id, mount, product, fixed, pixel) and one per LED wall driver id. The real fixtures travel as `<Fixture>`

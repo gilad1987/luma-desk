@@ -7,6 +7,7 @@ import type { LocalMesh } from './LocalMesh';
 import { localMatrix } from './localMatrix';
 import type { MeshLimit } from './MeshLimit';
 import { NO_EXPANSION, type Expansion } from './proxySeed';
+import { symdefsOf } from './symdefList';
 
 /** The deepest Symbol-in-Symdef nesting followed: real files nest 2 levels, so 16 only stops a runaway file. */
 const MAX_DEPTH = 16;
@@ -38,9 +39,7 @@ export class SymbolExpander {
     this.limit = limit;
     this.bad = bad;
     this.empty = new EmptySymdefs(warnings);
-    for (const symdef of auxData ? childElements(auxData, 'Symdef') : []) {
-      this.symdefs.set(attr(symdef, 'uuid') ?? '', symdef);
-    }
+    for (const symdef of symdefsOf(auxData, warnings)) this.symdefs.set(attr(symdef, 'uuid') ?? '', symdef);
   }
 
   /**

@@ -81,4 +81,17 @@ export const STATIC_TYPES = {
     moving: false,
     shape: 'screen',
   },
-} as const satisfies Record<'par' | 'blinder' | 'strobe' | 'profile' | 'screen', FixtureType>;
+  // A patched device that is no light (a hoist, a hazer, a speaker): no attribute, so nothing drives or lights it.
+  device: {
+    name: 'Device',
+    // The desk's own name, as for the screen: no real product is copied. An imported device keeps its file's GDTF.
+    gdtfSpec: 'LUMA DESK@Device.gdtf',
+    gdtfMode: 'Default',
+    attrs: [],
+    zr: [0, 0],
+    z0: 0,
+    power: 0,
+    moving: false,
+    shape: 'device',
+  },
+} as const satisfies Record<'par' | 'blinder' | 'strobe' | 'profile' | 'screen' | 'device', FixtureType>;

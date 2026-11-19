@@ -1,3 +1,4 @@
+export { awaitMvrChain } from './awaitMvrChain';
 export { bootApp } from './bootApp';
 export { waitForTestApi } from './waitForTestApi';
 export { stepFrames } from './stepFrames';
@@ -19,3 +20,4 @@ export { deadFixtureIds } from './deadFixtureIds';
 export { UNUSABLE_MVR_FILES, type UnusableMvrFile } from './unusableMvrFiles';
 export { countStoredMvrFiles } from './countStoredMvrFiles';
 export { SAMPLES_DIR, readSample, sampleFiles } from '../mvr/localSamples';
+export { showShadowStage } from './shadowStage';

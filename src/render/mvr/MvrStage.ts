@@ -1,9 +1,12 @@
-import { Group, InstancedMesh, type Object3D } from 'three';
+import { Group } from 'three';
 import type { StageDesign } from '../../domain/stage/StageDesign';
 import type { MvrGeometry } from '../../mvr/index';
 import { buildLayers, type MvrProgress } from './buildLayers';
-import { isMesh } from './isMesh';
+import { disposeOwnMeshes } from './disposeOwnMeshes';
+import { drawAsLed, followLedLayers, freeLedMaterials } from './led/ledLayerLook';
+import { syncWallLights } from './led/ledLightPool';
 import { MeshLibrary, type MeshFailure } from './MeshLibrary';
+import { MVR_LAYER_KEY } from './mvrLayerKey';
 
 /**
  * What one imported stage draws from: its design, the import's scenery, the mesh bytes (`MvrImport.meshes`) and the
@@ -27,7 +30,10 @@ export class MvrStage {
   #library: MeshLibrary | undefined;
   #layers = new Map<string, Group>();
   #hidden: ReadonlySet<string> = new Set();
+  #led: ReadonlySet<string> = new Set();
   #build = 0;
+  /** Ends the stage's part in the user's LED layer choice; set while the stage holds scenery. */
+  #unfollow: (() => void) | undefined;
 
   /**
    * Replaces the scenery with that of `input`. The design's hidden layers start hidden. A later `show` or `dispose`
@@ -37,18 +43,22 @@ export class MvrStage {
    */
   async show(input: MvrStageInput, onProgress?: MvrProgress): Promise<readonly MeshFailure[]> {
     this.dispose();
+    this.#unfollow = followLedLayers((uuids) => this.setLedLayers(uuids));
     const build = this.#build;
     const library = new MeshLibrary(input.meshes, input.meshResources);
     this.#library = library;
     this.#hidden = new Set(input.design.mvr?.hiddenLayers ?? []);
+    this.#led = new Set(input.design.mvr?.ledLayers ?? []);
     const layers = await buildLayers(input.geometry, library, onProgress);
     if (build !== this.#build) {
       layers.forEach(disposeOwnMeshes);
       return library.failures();
     }
     this.#layers = layers;
+    layers.forEach((layer, uuid) => (layer.userData[MVR_LAYER_KEY] = uuid)); // the test hook's scenery boxes read it
     if (layers.size > 0) this.group.add(...layers.values());
     this.setHiddenLayers([...this.#hidden]);
+    this.setLedLayers([...this.#led]);
     return library.failures();
   }
 
@@ -58,24 +68,27 @@ export class MvrStage {
     for (const [uuid, layer] of this.#layers) layer.visible = !this.#hidden.has(uuid);
   }
 
+  /** Draws the file meshes of the layers with these uuids as LED walls, and every other layer as the file gives it. */
+  setLedLayers(uuids: readonly string[]): void {
+    this.#led = new Set(uuids);
+    const panel = this.#library?.screens.panel;
+    if (!panel) return;
+    for (const [uuid, layer] of this.#layers) drawAsLed(layer, panel, this.#led.has(uuid));
+    // The wall lights start here, with the layers in place: after this their own frame mesh keeps them in step.
+    syncWallLights();
+  }
+
   /** Removes and frees all scenery and cancels a build still running; the group stays usable for a later `show`. */
   dispose(): void {
     this.#build += 1;
+    this.#unfollow?.();
+    this.#unfollow = undefined;
     this.group.clear();
+    // the LED materials and wall lights made per mesh are not the library's, so they are freed here
+    this.#layers.forEach(freeLedMaterials);
     this.#layers.forEach(disposeOwnMeshes);
     this.#layers = new Map();
     this.#library?.dispose();
     this.#library = undefined;
   }
-}
-
-/**
- * Frees what the stage's meshes own: an instanced mesh its instance buffers, a merged mesh its merged geometry.
- * Shared geometries and all materials belong to the library.
- */
-function disposeOwnMeshes(layer: Object3D): void {
-  layer.traverse((node) => {
-    if (node instanceof InstancedMesh) node.dispose();
-    else if (isMesh(node)) node.geometry.dispose();
-  });
 }

@@ -4,8 +4,8 @@ import type { MvrFixtureRecord, MvrScene } from '../scene/MvrScene';
 import type { FixedFit } from './fitScene';
 
 /**
- * A scene fixture after the GDTF and patch steps: what the design step needs to make a desk fixture. Objects and
- * speakers are already filtered out, so every resolved fixture becomes one desk fixture.
+ * A scene fixture after the GDTF and patch steps: what the design step needs to make a desk fixture. Every MVR
+ * `<Fixture>` element gives one, also a device that is no light, so none loses its id or patch.
  */
 export interface ResolvedFixture {
   readonly record: MvrFixtureRecord;
@@ -16,6 +16,8 @@ export interface ResolvedFixture {
   readonly mode: string;
   /** The channels the patched break of `mode` takes, when the GDTF file was read (see `MvrFixtureInfo.footprint`). */
   readonly footprint?: number;
+  /** Set when the GDTF did not type the fixture as a light (`FixtureClass.standIn`); stored with the design. */
+  readonly standIn?: 'placeholder' | 'device';
   /** The first DMX break decoded; absent when the fixture is not patched. */
   readonly patch?: { readonly universe: number; readonly address: number };
 }

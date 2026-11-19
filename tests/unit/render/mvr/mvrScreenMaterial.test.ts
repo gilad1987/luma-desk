@@ -1,7 +1,7 @@
 /**
- * The MVR screen materials. A screen part without an image draws as a dark neutral panel with a low glow: the file
- * does not say what the wall shows, so no colour is invented. A part with its own image keeps it and shows it unlit,
- * so it reads on a dark stage. Both ignore fog, so the far upstage screen keeps its look.
+ * The MVR screen materials. A screen part without an image draws as an LED wall: a dark neutral mask that takes the
+ * stage light, with the desk's generated content added by the wall shader at the wall level. A part with its own
+ * image shows that image as the wall's content. Both ignore fog, so the far upstage screen keeps its look.
  */
 import { Color, DoubleSide, MeshBasicMaterial, MeshStandardMaterial, Texture } from 'three';
 import { describe, expect, it } from 'vitest';
@@ -17,12 +17,10 @@ describe('createMvrScreenMaterial', () => {
     expect(hsl(material.color).s).toBeLessThan(0.2);
   });
 
-  it('glows low and without a strong colour, clear of fog', () => {
+  it('has no glow of its own, so a wall that is off is the black mask, and is clear of fog', () => {
     const material = createMvrScreenMaterial();
-    const glow = hsl(material.emissive);
-    expect(glow.l).toBeGreaterThan(0);
-    expect(glow.l).toBeLessThan(0.15);
-    expect(glow.s).toBeLessThan(0.25);
+    expect(hsl(material.emissive).l).toBe(0);
+    expect(material.roughness).toBeLessThan(0.6);
     expect(material.fog).toBe(false);
   });
 });
@@ -34,13 +32,13 @@ describe('MvrScreenMaterials', () => {
     expect(screens.of(new MeshBasicMaterial())).toBe(screens.panel);
   });
 
-  it('keeps the image of a textured part and shows it unlit', () => {
+  it('shows the image of a textured part as the content of the wall', () => {
     const screens = new MvrScreenMaterials();
     const map = new Texture();
     const banner = new MeshStandardMaterial({ map, side: DoubleSide });
     const look = screens.of(banner);
-    expect(look).toBeInstanceOf(MeshBasicMaterial);
-    expect(look).toMatchObject({ map, side: DoubleSide, fog: false });
+    expect(look).toBeInstanceOf(MeshStandardMaterial);
+    expect(look).toMatchObject({ emissiveMap: map, map: null, side: DoubleSide, fog: false });
     expect(look).not.toBe(screens.panel);
     expect(screens.of(banner)).toBe(look);
   });

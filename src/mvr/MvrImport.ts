@@ -2,7 +2,9 @@ import type { StageDesign } from '../domain/stage/StageDesign';
 import type { StageBounds, SurfaceBox, Vec3 } from '../domain/stage/types';
 import type { LayerBox } from './design/layerBoxes';
 import type { BodyLine } from './import/bodyWarnings';
+import type { FileDataLine } from './import/fileDataLine';
 import type { FixtureBody } from './import/fixtureBodies';
+import type { OpticsLine } from './import/opticsLines';
 import type { MeshPlacement } from './scene/MvrScene';
 import type { MvrProxy } from './scene/ProxyPlacement';
 import type { MvrWarning } from './MvrWarning';
@@ -48,6 +50,10 @@ export interface MvrSummary {
   readonly noGeometry: boolean;
   /** How the fixtures get their body: one line per product and body class; the counts add up to `fixtureCount`. */
   readonly bodyLines: readonly BodyLine[];
+  /** Where the fixtures get their optical data from: one line per product; the counts add up to `fixtureCount`. */
+  readonly opticsLines?: readonly OpticsLine[];
+  /** What the desk took from the fixtures' file data (colour, custom commands), and what it kept without using it. */
+  readonly fileDataLines?: readonly FileDataLine[];
 }
 
 /** The result of one MVR import: the stage to apply, the scenery to draw, and what the user should be told. */
@@ -68,9 +74,14 @@ export interface MvrImport {
    * The model files of the GDTFs the fixtures use, by GDTF file name and the path inside that GDTF
    * (`Acme@Spot.gdtf/models/gltf/Head.glb`), each held once. `bodies` says which fixture uses which GDTF.
    */
-  readonly gdtfMeshes: ReadonlyMap<string, Uint8Array>;
+  readonly gdtfMeshes: Map<string, Uint8Array>;
   /** By MVR fixture uuid: the GDTF geometry tree of the fixture and what its body can be drawn from. */
   readonly bodies: ReadonlyMap<string, FixtureBody>;
+  /**
+   * The wheel slot images (PNG) of the GDTFs the fixtures use, by `goboImageKey`: the GDTF file name, `wheels/` and
+   * `OpticsSlot.image`. The consumer clears the map when the images are decoded. `importMvr` always sets it.
+   */
+  readonly goboImages?: Map<string, Uint8Array>;
   readonly summary: MvrSummary;
   /** Every problem the import survived, in the order the steps met them. */
   readonly warnings: readonly MvrWarning[];

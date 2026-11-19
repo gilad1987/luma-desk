@@ -12,6 +12,7 @@ import { createTemplate } from '../../../../src/domain/stage/templates';
 import { he } from '../../../../src/i18n/he';
 import { fakeMvrFlowDeps } from '../../../shared';
 import { FakeDom } from '../../../shared/dom';
+import { cameraViews } from '../../render/core/fohFrame';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -37,10 +38,18 @@ function wired(design?: StageDesign) {
   const emit = vi.fn();
   const download = vi.fn();
   const render = {
-    scene: { add: vi.fn() },
-    views: { fitTo: vi.fn(), setView: vi.fn(), currentView: 'foh' as const },
+    scene: { add: vi.fn(), traverse: vi.fn() },
+    // a real camera for the view-fit hook, with the two calls the MVR fit makes replaced by spies
+    views: Object.assign(cameraViews(), { fitTo: vi.fn(), setView: vi.fn() }),
     surfaceHit: { setSurfaces: vi.fn(), setVenue: vi.fn(), setScenery: vi.fn() },
-    postFx: { followMvr: vi.fn(), mvrChainReady: vi.fn(() => Promise.resolve()) },
+    postFx: {
+      followMvr: vi.fn(),
+      mvrChainReady: vi.fn(() => Promise.resolve()),
+      sceneDepth: undefined,
+      hasMvrChainFailed: false,
+    },
+    fixtureVisuals: { setGdtf: vi.fn(), visuals: [] },
+    sceneLights: { hall: { show: vi.fn(), hide: vi.fn(), place: vi.fn() } },
   };
   const { modal, cancelBuilder } = flow.deps;
   const bus = { emit, on: vi.fn() };

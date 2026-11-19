@@ -10,8 +10,9 @@ export interface GdtfMatch {
 
 const EXTENSION = '.gdtf';
 
+/** Without case and with composed characters: macOS writers store `ü` as two code points, the XML as one. */
 function sameText(a: string, b: string): boolean {
-  return a.toLowerCase() === b.toLowerCase();
+  return a.normalize('NFC').toLowerCase() === b.normalize('NFC').toLowerCase();
 }
 
 /** The spec as written and with the extension, as writers may leave it out. */

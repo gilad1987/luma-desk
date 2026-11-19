@@ -1,13 +1,15 @@
 import { DepthTexture, HalfFloatType, Vector2, WebGLRenderTarget } from 'three';
 import type { Camera, IUniform, Scene, WebGLRenderer } from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import type { Pass } from 'three/addons/postprocessing/Pass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { TexturePass } from 'three/addons/postprocessing/TexturePass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { createDitheredOutputPass } from './ditherOutput';
+import { guardFinite } from './finiteGuard';
 import type { MvrChain } from './LazyMvrChain';
 import { BLOOM, MVR_EXPOSURE, MVR_TONE_MAPPING, toBufferUnits } from './mvrTone';
+import { createPreBloom } from './preBloom';
 import type { SceneDepth } from './SceneDepth';
 
 const MSAA_SAMPLES = 4;
@@ -20,6 +22,8 @@ const MSAA_SAMPLES = 4;
  */
 export class MvrPostChain implements MvrChain {
   readonly sceneDepth: SceneDepth;
+  /** The edge smoothing pass; its lookup images load after it exists (`createMvrPostChain` waits for them). */
+  readonly edges = new SMAAPass(1, 1);
   private readonly renderer: WebGLRenderer;
   private readonly scene: Scene;
   private readonly camera: Camera;
@@ -50,7 +54,11 @@ export class MvrPostChain implements MvrChain {
     // the pass has a hard 0.01 step by default; a wide step is the soft knee
     const knee = (this.bloom.highPassUniforms as Record<string, IUniform<number>>)['smoothWidth'];
     if (knee) knee.value = toBufferUnits(BLOOM.knee);
-    this.passes = [new TexturePass(this.sceneTarget.texture), this.bloom, new OutputPass(), new SMAAPass(1, 1)];
+    const lights = createPreBloom({ camera, scene, sceneDepth: this.sceneDepth });
+    const scenePass = new TexturePass(this.sceneTarget.texture);
+    // no non-finite pixel may reach a blur: the scene copy and the bloom's bright pass replace it by 0
+    [scenePass.material, this.bloom.materialHighPassFilter].forEach(guardFinite);
+    this.passes = [scenePass, ...lights, this.bloom, createDitheredOutputPass(), this.edges];
     this.passes.forEach((pass) => this.composer.addPass(pass));
   }
 

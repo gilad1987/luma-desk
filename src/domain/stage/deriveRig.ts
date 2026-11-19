@@ -3,6 +3,7 @@ import type { Rig } from '../rig/Rig';
 import { RigBuilder } from '../rig/RigBuilder';
 import { bodyScale } from '../fixtureTypes/bodyScale';
 import type { MvrDesignInfo } from './mvr';
+import { fileGelOf } from './mvrGel';
 import type { StageDesign, StageFixture } from './StageDesign';
 
 /**
@@ -33,4 +34,6 @@ function addFixture(rig: RigBuilder, f: StageFixture, mvr: MvrDesignInfo | undef
   if (f.rotation) fixture.rotation = new Quaternion(...f.rotation).normalize();
   // set only when it differs, so every fixture without a sized GDTF keeps no such key, as `pix` and `rotation` do
   if (scale !== 1) fixture.bodyScale = scale;
+  const gel = mvr && fileGelOf(mvr, mvr.fixtures[String(f.id)]);
+  if (gel) fixture.gel = gel;
 }

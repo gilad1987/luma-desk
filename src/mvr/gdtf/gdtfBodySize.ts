@@ -32,7 +32,11 @@ export function gdtfTreeSize(info: GdtfInfo, modeName: string): readonly [number
  * outside 0.05 m to 3 m, which is a file in another unit): the fixture then keeps the desk's own size.
  */
 export function gdtfBodySize(info: GdtfInfo, modeName: string): number | undefined {
-  const size = gdtfTreeSize(info, modeName);
+  return largestTrusted(gdtfTreeSize(info, modeName));
+}
+
+/** The largest dimension of `size` when it is a usable body size (0.05 m to 3 m); `undefined` for any other. */
+export function largestTrusted(size: readonly number[] | undefined): number | undefined {
   const largest = size ? Math.max(...size) : 0;
   return largest >= MIN_SIZE && largest <= MAX_SIZE ? largest : undefined;
 }

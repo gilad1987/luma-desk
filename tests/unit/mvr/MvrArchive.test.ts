@@ -23,9 +23,10 @@ describe('MvrArchive', () => {
     expect(archive.text('ROBE SPIIDER.GDTF')).toBe('gdtf');
   });
 
-  it('keeps the first of two names that differ only in case', () => {
+  it('uses neither of two names that differ only in case when the name asked for is a third form', () => {
     const archive = MvrArchive.open(makeZip({ 'A.txt': 'first', 'a.txt': 'second' }));
-    expect(archive.text('a.TXT')).toBe('first');
+    expect(archive.text('a.TXT')).toBeUndefined();
+    expect(archive.ties('a.TXT')).toEqual(['A.txt', 'a.txt']);
   });
 
   it('returns the stored bytes unchanged', () => {

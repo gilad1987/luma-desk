@@ -1,7 +1,7 @@
 import { BAND_PTS } from '../venue';
 import { deckFitOf, isIdentityFit, onDeck, type DeckFit } from './deckFit';
 import type { StageDeck, StageDesign, StageScreen } from './StageDesign';
-import type { VenueKind } from './types';
+import type { StageBounds, VenueKind } from './types';
 
 /** A band member mark as [x, z, extra height above the deck]; the same shape as `BAND_PTS`. */
 export type BandPoint = (typeof BAND_PTS)[number];
@@ -22,6 +22,8 @@ export interface StageFrame {
   readonly venue: VenueKind;
   /** How the built-in deck maps onto this deck; position presets move their venue-fixed deck targets with it. */
   readonly fit: DeckFit;
+  /** The box around the drawn seats of an imported file (`MvrDesignInfo.seatArea`); absent on every other stage. */
+  readonly seats?: StageBounds;
 }
 
 /** The focus targets of a design; see `StageFrame`. */
@@ -34,6 +36,7 @@ export function frameOf(d: StageDesign): StageFrame {
     bandPoints: bandPointsOf(d, fit),
     venue: d.venue.kind,
     fit,
+    ...(d.mvr?.seatArea ? { seats: d.mvr.seatArea } : {}),
   };
 }
 

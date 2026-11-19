@@ -4,6 +4,7 @@ import { isFiniteBox, type Aabb } from '../math/Aabb';
 import type { MvrWarning } from '../MvrWarning';
 import { glbBounds } from './glbBounds';
 import { meshFormatOf } from './meshFormatOf';
+import { missingMesh } from './missingMesh';
 import { tdsBounds } from './tdsBounds';
 
 /** Results per archive and file name, so a mesh that 500 symbols share is read and warned about once. */
@@ -27,7 +28,7 @@ function readBounds(bytes: Uint8Array, file: string): Aabb | undefined {
 function load(archive: MvrArchive, file: string, warn: (warning: MvrWarning) => void): Aabb | undefined {
   const bytes = archive.file(file);
   if (!bytes) {
-    warn({ code: 'missing-mesh', message: `The mesh file ${file} is not in the archive.`, ref: file });
+    warn(missingMesh(file, archive.ties(file)));
     return undefined;
   }
   let box: Aabb | undefined;

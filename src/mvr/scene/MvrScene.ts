@@ -1,5 +1,7 @@
 import type { Mat4 } from '../math/Mat4';
 import type { MvrWarning } from '../MvrWarning';
+import type { AuxNames } from './auxNames';
+import type { FixtureFileData } from './fixtureFileData';
 import type { ProxyPlacement } from './ProxyPlacement';
 
 /**
@@ -25,6 +27,8 @@ export interface MeshPlacement {
   readonly uuid: string;
   /** The owning object's `<GDTFSpec>`, when it names one; its GDTF can say the object is a display. */
   readonly gdtfSpec?: string;
+  /** The name of the `<Class>` the owning object's `<Classing>` names, when it has one: evidence of what it is. */
+  readonly className?: string;
   /** Whether the GDTF that `gdtfSpec` names holds a `Display` geometry. Absent until the import has read the GDTFs. */
   readonly display?: boolean;
   /** Whether the mesh is a standing panel here (`isPanelShape`). Absent until the import has read the mesh bounds. */
@@ -40,13 +44,19 @@ export interface MvrAddress {
 }
 
 /** A `<Fixture>` as the scene states it, before GDTF lookup and design mapping turn it into a desk fixture. */
-export interface MvrFixtureRecord {
+export interface MvrFixtureRecord extends FixtureFileData {
   readonly uuid: string;
   readonly name: string;
   /** `<FixtureID>`: free text the user typed, may be empty. */
   readonly fixtureId: string;
   /** `<FixtureIDNumeric>` when present and numeric; the preferred desk fixture id. */
   readonly fixtureIdNumeric?: number;
+  /** `<CustomId>` when above 0: the id in the pool `customIdType` names. */
+  readonly customId?: number;
+  /** `<CustomIdType>` when above 0 (MVR "CustomID Types": 5 NonDim, 7 Fog, 9 Pyro...). */
+  readonly customIdType?: number;
+  /** `<FixtureTypeId>` when above 0: the pool id of MVR versions before `CustomIdType`. */
+  readonly fixtureTypeId?: number;
   /** `<GDTFSpec>`: the GDTF file name, often without `.gdtf` or with other case; the GDTF step resolves it. */
   readonly gdtfSpec: string;
   /** `<GDTFMode>`: the DMX mode name inside the GDTF. */
@@ -63,8 +73,11 @@ export interface MvrFixtureRecord {
 
 /** A `<Layer>` of the scene, listed so the UI can name layers that placements and fixtures refer to by uuid. */
 export interface MvrLayerInfo {
+  /** The layer's key, unique in the file (`layerKeys`): its uuid, unless another layer has it first or it has none. */
   readonly uuid: string;
   readonly name: string;
+  /** The uuid text of the file, present only when it differs from the key: shared with another layer, or empty. */
+  readonly fileUuid?: string;
 }
 
 /**
@@ -80,6 +93,8 @@ export interface MvrScene {
   readonly proxies: readonly ProxyPlacement[];
   /** `<FocusPoint>` world matrices by uuid, so a fixture's `focus` resolves to a point to aim at. */
   readonly focusPoints: ReadonlyMap<string, Mat4>;
+  /** The `<Position>` and `<Class>` names of `<AUXData>`; absent in a scene that was not read from a file. */
+  readonly auxNames?: AuxNames;
   /** Problems the walk survived, in the order it met them. */
   readonly warnings: readonly MvrWarning[];
 }

@@ -1,5 +1,6 @@
 import type { Mat4 } from '../math/Mat4';
 import { attr, childElement, childElements, childRawText, childText } from '../xml/elements';
+import { readFixtureFileData } from './fixtureFileData';
 import type { MvrAddress, MvrFixtureRecord } from './MvrScene';
 
 /** A whole number, or `undefined` for missing, empty or other text (`Number('')` would give 0). */
@@ -7,6 +8,24 @@ function parseInteger(text: string | undefined): number | undefined {
   if (text === undefined || text.trim() === '') return undefined;
   const value = Number(text);
   return Number.isInteger(value) ? value : undefined;
+}
+
+/** The value of a child that holds an id above 0; 0 and no element both mean "none", so neither is kept. */
+function idOf(fixture: Element, name: string): number | undefined {
+  const value = parseInteger(childText(fixture, name));
+  return value !== undefined && value > 0 ? value : undefined;
+}
+
+/** `CustomId`, `CustomIdType` and `FixtureTypeId`, each only when the file gives a value: kept so none is lost. */
+function readPoolIds(fixture: Element): Pick<MvrFixtureRecord, 'customId' | 'customIdType' | 'fixtureTypeId'> {
+  const [customId, customIdType, fixtureTypeId] = ['CustomId', 'CustomIdType', 'FixtureTypeId'].map((name) =>
+    idOf(fixture, name),
+  );
+  return {
+    ...(customId === undefined ? {} : { customId }),
+    ...(customIdType === undefined ? {} : { customIdType }),
+    ...(fixtureTypeId === undefined ? {} : { fixtureTypeId }),
+  };
 }
 
 /** The `<Addresses>` of a fixture in file order; a missing or unreadable `break` is break 0, as the spec defaults. */
@@ -32,10 +51,12 @@ export function readFixture(fixture: Element, world: Mat4, layer: string): MvrFi
     name: attr(fixture, 'name') ?? '',
     fixtureId: childText(fixture, 'FixtureID') ?? '',
     ...(fixtureIdNumeric === undefined ? {} : { fixtureIdNumeric }),
+    ...readPoolIds(fixture),
     gdtfSpec: childRawText(fixture, 'GDTFSpec') ?? '',
     gdtfMode: childRawText(fixture, 'GDTFMode') ?? '',
     addresses: readAddresses(fixture),
     ...(focus ? { focus } : {}),
+    ...readFixtureFileData(fixture),
     layer,
     matrix: world,
   };

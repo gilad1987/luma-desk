@@ -1,23 +1,13 @@
 import type { Object3D } from 'three';
 import type { Fixture } from '../../domain/Fixture';
-import type { FixturePicker } from '../picking/FixturePicker';
+import { createDeviceBody } from './deviceBody';
 import { createFixtureBody } from './fixtureBody';
-import { createFixtureLightObjects, type LightObjectKit } from './fixtureLightObjects';
+import { createFixtureLightObjects } from './fixtureLightObjects';
 import type { FixtureModelTable } from './FixtureModels';
 import type { FixtureVisual } from './FixtureVisual';
-import type { LensTextureSet } from './LensTextures';
+import type { FixtureVisualDeps } from './FixtureVisualDeps';
 
-/** The LED screen meshes by screen fixture id; each is the visual and pick target of its screen fixture. */
-export type ScreenMeshes = ReadonlyMap<number, Object3D>;
-
-/** What the builder adds to and reads from; `screenMesh` belongs to the stage, `picker` to render core. */
-export interface FixtureVisualDeps extends LightObjectKit {
-  readonly models: FixtureModelTable;
-  readonly lensTextures: LensTextureSet;
-  readonly screenMesh: ScreenMeshes;
-  /** Registered in build order, the order the picker tests hits. */
-  readonly picker: Pick<FixturePicker, 'register'>;
-}
+export type { FixtureVisualDeps, ScreenMeshes } from './FixtureVisualDeps';
 
 /**
  * Builds the visual of each fixture (legacy `buildVis`). Call {@link build} for every fixture in fixture array
@@ -36,7 +26,7 @@ export class FixtureVisualBuilder {
    */
   assertBuildable(f: Fixture): void {
     if (f.T.shape === 'screen') this.#screenMeshOf(f);
-    else this.#modelOf(f);
+    else if (f.T.shape !== 'device') this.#modelOf(f);
   }
 
   build(f: Fixture): FixtureVisual {
@@ -46,10 +36,17 @@ export class FixtureVisualBuilder {
       deps.picker.register(this.#screenMeshOf(f), f);
       return { kind: 'screen', fixture: f };
     }
+    if (spec.shape === 'device') return this.#device(f);
     const [s, buildModel] = this.#modelOf(f);
-    const body = createFixtureBody(f, s, deps.lensTextures[spec.model ?? ''], deps.scene);
-    const b = buildModel(body);
+    const real = deps.gdtf?.modelOf(f);
+    // a GDTF body is in metres, so its group is not scaled; `s` still sizes the glow
+    const body = createFixtureBody(f, real ? 1 : s, deps.lensTextures[spec.model ?? ''], deps.scene);
+    const gdtf = real?.(body);
+    const b = gdtf ?? buildModel(body);
+    const axisAt = gdtf?.axisAt ?? deps.gdtf?.fitDesk(f, body.g);
+    const beamRadius = deps.gdtf?.beamRadiusOf(f);
     for (const m of b.pick) deps.picker.register(m, f);
+    deps.gdtf?.drawAfterScenery(body.g);
     return {
       kind: 'light',
       fixture: f,
@@ -57,7 +54,11 @@ export class FixtureVisualBuilder {
       pivot: body.pivot,
       head: b.head,
       lens: b.lens,
-      lensOff: b.lensOff * s,
+      lensOff: b.lensOff * (gdtf ? 1 : body.g.scale.y),
+      ...(axisAt ? { axisAt } : {}),
+      ...(gdtf ? { beamAtLens: true as const } : {}),
+      ...(gdtf?.beamFrom ? { beamFrom: gdtf.beamFrom } : {}),
+      ...(beamRadius ? { beamRadius } : {}),
       bodyMat: body.bodyMat,
       lensMat: body.lensMat,
       ...createFixtureLightObjects(f, deps),
@@ -67,6 +68,15 @@ export class FixtureVisualBuilder {
       flip: body.floor,
       pose: { pan: f.fixed?.pan ?? 0, tilt: f.fixed?.tilt ?? 0, gang: 0 },
     };
+  }
+
+  /** A device has no desk model: its GDTF body when it has one, else a box, marks the place; both are pick targets. */
+  #device(f: Fixture): FixtureVisual {
+    const gdtf = this.#deps.gdtf;
+    const device = createDeviceBody(f, this.#deps.scene, gdtf?.modelOf(f));
+    for (const m of [device.box, ...device.pick]) this.#deps.picker.register(m, f);
+    gdtf?.drawAfterScenery(device.g);
+    return { kind: 'device', fixture: f, ...device };
   }
 
   /**

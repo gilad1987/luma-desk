@@ -4,6 +4,7 @@ import { archiveTexturePlugin } from './archiveTexturePlugin';
 import type { MeshPart } from './MeshPart';
 import { meshPartsOf } from './meshPartsOf';
 import { OfflineLoadingManager } from './OfflineLoadingManager';
+import { parse3ds } from './parse3ds';
 
 /**
  * Drops the texture maps of a 3DS material. They name image files the archive does not hand to render, so they never
@@ -47,8 +48,7 @@ export async function loadMeshParts(
     case 'glb':
       return parseGlb(buffer, manager);
     case '3ds': {
-      const { TDSLoader } = await import('three/examples/jsm/loaders/TDSLoader.js');
-      const root = new TDSLoader(new OfflineLoadingManager(new Map())).parse(buffer, '');
+      const root = await parse3ds(buffer, new OfflineLoadingManager(new Map()));
       const parts = meshPartsOf(root, new Matrix4().fromArray(mvrToThreeMatrix()));
       parts.forEach((part) => removeTextures(part.material));
       return parts;

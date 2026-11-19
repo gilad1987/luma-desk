@@ -1,8 +1,10 @@
 import { multiply, type Mat4 } from '../math/Mat4';
 import { MvrError, type MvrWarning } from '../MvrWarning';
 import { attr, childElement, childElements } from '../xml/elements';
+import { readAuxNames } from './auxNames';
 import { readFixture } from './fixtures';
 import { BadMatrices } from './BadMatrices';
+import { layerInfos } from './layerKeys';
 import { localMatrix } from './localMatrix';
 import { MeshLimit } from './MeshLimit';
 import type { MeshPlacement, MvrFixtureRecord, MvrLayerInfo, MvrScene } from './MvrScene';
@@ -15,7 +17,7 @@ import { SymbolExpander } from './symbols';
  * The deepest `<ChildList>` nesting that is followed. Real files nest groups a few levels; a hostile file nesting
  * thousands would overflow the stack of this recursive walk, so 256 only stops a runaway file.
  */
-const MAX_SCENE_DEPTH = 256;
+export const MAX_SCENE_DEPTH = 256;
 
 /** The lists one walk fills; every level of the recursion appends to them, so file order is kept. */
 interface Walk {
@@ -81,15 +83,16 @@ export function walkScene(doc: Document): MvrScene {
     throw new MvrError('no-scene', 'GeneralSceneDescription.xml has no <Scene>, so there is nothing to import.');
   const warnings: MvrWarning[] = [];
   const bad = new BadMatrices(warnings);
-  const symbols = new SymbolExpander(childElement(scene, 'AUXData'), warnings, new MeshLimit(warnings), bad);
+  const aux = childElement(scene, 'AUXData');
+  const symbols = new SymbolExpander(aux, warnings, new MeshLimit(warnings), bad);
   const walk: Walk = { symbols, bad, fixtures: [], placements: [], proxies: [], focusPoints: new Map(), warnings };
-  const layers: MvrLayerInfo[] = [];
   const layerList = childElement(scene, 'Layers');
-  for (const layer of layerList ? childElements(layerList, 'Layer') : []) {
-    const info = { uuid: attr(layer, 'uuid') ?? '', name: attr(layer, 'name') ?? '' };
-    layers.push(info);
-    walkChildren(layer, { parent: localMatrix(layer, bad), layer: info, depth: 0 }, walk);
-  }
+  const elements = layerList ? childElements(layerList, 'Layer') : [];
+  const layers = layerInfos(elements, warnings);
+  elements.forEach((layer, index) => {
+    const info = layers[index];
+    if (info) walkChildren(layer, { parent: localMatrix(layer, bad), layer: info, depth: 0 }, walk);
+  });
   const { fixtures, placements, proxies, focusPoints } = walk;
-  return { layers, fixtures, placements, proxies, focusPoints, warnings };
+  return { layers, fixtures, placements, proxies, focusPoints, auxNames: readAuxNames(aux), warnings };
 }

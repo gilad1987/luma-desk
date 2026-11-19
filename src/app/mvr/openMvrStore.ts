@@ -1,11 +1,13 @@
 import { MvrStore } from '../../io/mvrStore';
 
 /** The calls the MVR flows make on the store of original `.mvr` bytes. */
-export type MvrBytesStore = Pick<MvrStore, 'get' | 'put' | 'delete'>;
+export type MvrBytesStore = Pick<MvrStore, 'get' | 'hashOf' | 'has' | 'put' | 'delete'>;
 
 /** The store of a browser that refuses IndexedDB: nothing is kept, so a reload asks for the file again. */
 const NO_MVR_STORE: MvrBytesStore = {
   get: () => Promise.resolve(null),
+  hashOf: () => Promise.resolve(null),
+  has: () => Promise.resolve(undefined),
   put: () => Promise.resolve(null),
   delete: () => Promise.resolve(false),
 };

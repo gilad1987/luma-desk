@@ -1,24 +1,26 @@
-import { MvrArchive } from './archive/MvrArchive';
+import { foldWarnings } from './foldWarnings';
 import { toStageDesign } from './design/toStageDesign';
+import { gdtfBudget } from './gdtf/gdtfEntries';
+import { withHiddenLayers } from './import/farLine';
+import { withFileData } from './import/fileDataStep';
 import { fixtureBodies } from './import/fixtureBodies';
+import { withoutLightGeometry } from './import/fixtureGeometry';
 import { placeBodies } from './import/placeBodies';
 import { importProxies } from './import/importProxies';
+import { lumaDesign } from './import/lumaDesign';
 import { meshBytes } from './import/meshBytes';
+import { openScene } from './import/openScene';
+import { readMeshBoxes } from './import/readMeshBoxes';
 import { readLumaData } from './import/readLumaData';
 import { resolveFixtures } from './import/resolveFixtures';
+import { rigOptics } from './import/rigOptics';
 import { summarize } from './import/summarize';
-import { withLumaData, withoutLumaMeshes } from './import/withLumaData';
+import { versionWarnings } from './import/versionWarnings';
+import { withoutLumaMeshes } from './import/withLumaData';
 import { withScreenEvidence } from './import/withScreenEvidence';
-import type { Aabb } from './math/Aabb';
-import { meshBounds } from './mesh/meshBounds';
 import type { MvrImport } from './MvrImport';
-import { MvrError, type MvrWarning } from './MvrWarning';
-import type { MeshPlacement } from './scene/MvrScene';
+import type { MvrWarning } from './MvrWarning';
 import { walkScene } from './scene/walkScene';
-import { parseXml } from './xml/parseXml';
-
-/** The scene file every MVR holds at its root (MVR spec); the archive finds it in any case. */
-const SCENE_FILE = 'GeneralSceneDescription.xml';
 
 /** What the caller knows about the file that the bytes do not hold. */
 export interface MvrImportOptions {
@@ -28,55 +30,47 @@ export interface MvrImportOptions {
   readonly fileHash?: string;
 }
 
-/** Local bounds of every distinct mesh file; a file that cannot be read gets no entry and a warning. */
-function readMeshBoxes(
-  archive: MvrArchive,
-  placements: readonly MeshPlacement[],
-  warn: (warning: MvrWarning) => void,
-): ReadonlyMap<string, Aabb> {
-  const boxes = new Map<string, Aabb>();
-  for (const file of new Set(placements.map((placement) => placement.file))) {
-    const box = meshBounds(archive, file, warn);
-    if (box) boxes.set(file, box);
-  }
-  return boxes;
-}
-
 /** The synchronous import; `importMvr` wraps it so a thrown `MvrError` becomes a rejected promise. */
 function importNow(bytes: Uint8Array, options: MvrImportOptions): MvrImport {
-  const archive = MvrArchive.open(bytes);
-  const text = archive.text(SCENE_FILE);
-  if (text === undefined) throw new MvrError('no-scene', `The file has no ${SCENE_FILE}, so it is not an MVR file.`);
-  const doc = parseXml(text);
+  const { archive, doc } = openScene(bytes);
   const luma = readLumaData(doc);
   const walked = walkScene(doc);
   const bare = withoutLumaMeshes(walked, luma);
   const rig = resolveFixtures(archive, bare.fixtures);
-  const bodies = fixtureBodies(archive, rig);
-  const meshWarnings: MvrWarning[] = [...bodies.warnings];
-  const meshBoxes = readMeshBoxes(archive, bare.placements, (warning) => meshWarnings.push(warning));
-  const scene = withScreenEvidence(bare, meshBoxes, archive);
+  const lean = withoutLightGeometry(bare, rig.fixtures);
+  const budget = gdtfBudget();
+  // Only a file the desk made keeps desk-size bodies; a pass-through export names its first writer (R2-3).
+  const bodies = fixtureBodies(archive, rig, luma !== undefined && luma.originalProvider === undefined, budget);
+  const meshWarnings: MvrWarning[] = [...lean.warnings, ...bodies.warnings];
+  const meshBoxes = readMeshBoxes(archive, lean.scene.placements, (warning) => meshWarnings.push(warning));
+  const scene = withScreenEvidence(lean.scene, meshBoxes, archive);
   const meshFiles = meshBytes(archive, scene.placements, (warning) => meshWarnings.push(warning));
   const fixed = luma ? { fixed: { offset: luma.offset, deck: luma.deck } } : {};
   const result = toStageDesign({ ...options, scene, fixtures: rig.fixtures, meshBoxes, ...fixed });
-  const design = withLumaData(result, luma);
+  const design = lumaDesign(result, luma, doc, walked.fixtures);
   const noGeometry = design.warnings.some((warning) => warning.code === 'no-geometry');
-  const proxied = importProxies(scene.proxies, design.design, result.geometry);
+  // A file with the desk's own data brings the user's layer choice, which the outside rule must not change.
+  const proxied = importProxies(scene.proxies, design.design, result.geometry, luma?.hiddenLayers === undefined);
+  const placed = placeBodies(withHiddenLayers(design.design, proxied.hidden), bodies.bodySizes);
+  const optics = withFileData(rigOptics(archive, rig, placed, budget), rig, walked.auxNames, luma !== undefined);
   return {
-    design: placeBodies(design.design, rig.bodySizes),
+    design: optics.design,
     geometry: proxied.geometry,
     ...meshFiles,
     gdtfMeshes: bodies.gdtfMeshes,
     bodies: bodies.bodies,
-    summary: summarize(walked, rig, noGeometry, bodies.lines),
-    warnings: [
+    goboImages: optics.images,
+    summary: { ...summarize(walked, rig, optics.design, { noGeometry, bodyLines: bodies.lines }), ...optics.summary },
+    warnings: foldWarnings([
+      ...versionWarnings(doc),
       ...scene.warnings,
       ...proxied.warnings,
       ...rig.gdtfWarnings,
       ...rig.patchWarnings,
       ...meshWarnings,
+      ...optics.warnings,
       ...design.warnings,
-    ],
+    ]),
   };
 }
 

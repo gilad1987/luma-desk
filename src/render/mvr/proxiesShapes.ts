@@ -1,5 +1,6 @@
 import { BoxGeometry, MeshStandardMaterial, type BufferGeometry } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { createLedMaterial } from './led/ledMaterial';
 
 /** The kinds of proxy that are drawn. */
 export type DrawnProxyKind = 'panel' | 'seat';
@@ -27,11 +28,11 @@ export function proxyGeometry(kind: DrawnProxyKind): BufferGeometry {
 }
 
 /**
- * The look of a kind: a dark neutral panel face, which a later LED look replaces, and a dark matte seat. Both are
- * plain on purpose, so a proxy never passes for geometry the file holds.
+ * The look of a kind: the LED wall look for a panel, whose instances bring wall coordinates, and a dark matte seat.
+ * The seat is plain on purpose, so a proxy never passes for geometry the file holds.
  */
 export function proxyMaterial(kind: DrawnProxyKind): MeshStandardMaterial {
   return kind === 'panel'
-    ? new MeshStandardMaterial({ color: 0x14161a, roughness: 0.55, metalness: 0.1 })
+    ? createLedMaterial({ proxy: true })
     : new MeshStandardMaterial({ color: 0x1d1e22, roughness: 1, metalness: 0 });
 }

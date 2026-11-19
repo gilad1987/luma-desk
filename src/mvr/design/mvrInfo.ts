@@ -4,6 +4,8 @@ import { pointToThree } from '../math/axes';
 import { transformPoint } from '../math/Mat4';
 import type { MvrScene } from '../scene/MvrScene';
 import type { ResolvedFixture } from './DesignInput';
+import { FileDataTables } from './fileData';
+import { fixtureKey, occurrences } from './fixtureKey';
 
 /** The world position of a fixture's focus point after the fit, or `undefined` when it has none or it is unknown. */
 function focusOf(fixture: ResolvedFixture, scene: MvrScene, offset: Vec3): Vec3 | undefined {
@@ -24,8 +26,16 @@ export function mvrInfo(
   offset: Vec3,
 ): MvrDesignInfo {
   const byId: Record<string, MvrFixtureInfo> = {};
+  const counted = occurrences(scene.fixtures);
+  const imported: string[] = [];
+  const fileData = new FileDataTables(scene.auxNames);
   fixtures.forEach((fixture, index) => {
-    const { uuid, layer } = fixture.record;
+    const { uuid, layer, customId, customIdType, fixtureTypeId } = fixture.record;
+    const facts = { customId, customIdType, fixtureTypeId, standIn: fixture.standIn };
+    // only the facts the file gave: an absent key keeps old shows and new shows the same shape
+    const kept = Object.fromEntries(Object.entries(facts).filter(([, value]) => value !== undefined));
+    const occurrence = counted.get(fixture.record) ?? 0;
+    imported.push(fixtureKey(uuid, occurrence));
     const focus = focusOf(fixture, scene, offset);
     const { footprint } = fixture;
     const info = { uuid, layer, gdtfName: fixture.gdtfName, gdtfMode: fixture.mode, type: fixture.type };
@@ -33,8 +43,15 @@ export function mvrInfo(
       ...info,
       ...(focus ? { focus } : {}),
       ...(footprint === undefined ? {} : { footprint }),
+      ...kept,
+      ...(occurrence > 0 ? { occurrence } : {}),
+      ...fileData.of(fixture.record),
     };
   });
-  const layers = scene.layers.map(({ uuid, name }) => ({ uuid, name }));
-  return { fixtures: byId, layers, hiddenLayers: [], offset };
+  const layers = scene.layers.map(({ uuid, name, fileUuid }) => ({
+    uuid,
+    name,
+    ...(fileUuid === undefined ? {} : { fileUuid }),
+  }));
+  return { fixtures: byId, layers, hiddenLayers: [], offset, imported, ...fileData.tables() };
 }

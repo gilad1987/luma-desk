@@ -1,5 +1,7 @@
 import { unzipSync, type UnzipFileInfo } from 'fflate';
 import { MvrError } from '../MvrWarning';
+import { nameDecoder, type DecodedName } from './legacyNames';
+import { NameIndex } from './NameIndex';
 
 /**
  * The largest file the archive unpacks. Real MVR meshes stay well under 100 MB; an entry that claims more is a zip
@@ -21,25 +23,23 @@ export interface ArchiveOptions {
 
 /**
  * The files inside one `.mvr` or `.gdtf` file. Both formats are plain ZIP archives, and their writers do not agree on
- * the case of file names (a scene names `Robe Spiider.gdtf`, the archive stores `robe spiider.gdtf`), so lookup
- * falls back to ignoring case. Only root-level files are kept: both specs put every referenced file at the root, and
- * a file in a folder must not hide a root file with the same name.
+ * file names: the case differs (a scene names `Robe Spiider.gdtf`, the archive stores `robe spiider.gdtf`), and
+ * names with non-ASCII letters are stored as UTF-8 without the ZIP flag that says so. Names are decoded here
+ * (`decodeLegacy`) and looked up from strict to loose (`NameIndex`). Only root-level files are kept: both specs put
+ * every referenced file at the root, and a file in a folder must not hide a root file with the same name.
  */
 export class MvrArchive {
-  /** Root-level file names as the archive stores them, in archive order, so callers can search them and report them. */
+  /** Root-level file names, decoded, in archive order, so callers can search them and report them. */
   readonly names: readonly string[];
-  private readonly byName: ReadonlyMap<string, Uint8Array>;
-  private readonly byLowerName: ReadonlyMap<string, Uint8Array>;
+  /** The other reading of every name whose bytes the ZIP does not explain (`decodeLegacy`); `file` finds these too. */
+  readonly altNames: readonly string[];
+  private readonly index: NameIndex;
 
-  private constructor(files: Readonly<Record<string, Uint8Array>>) {
-    const byLowerName = new Map<string, Uint8Array>();
-    for (const [name, bytes] of Object.entries(files)) {
-      // the first of two names that differ only in case wins, as archive order is the writer's own order
-      if (!byLowerName.has(name.toLowerCase())) byLowerName.set(name.toLowerCase(), bytes);
-    }
-    this.names = Object.keys(files);
-    this.byName = new Map(Object.entries(files));
-    this.byLowerName = byLowerName;
+  private constructor(files: Readonly<Record<string, Uint8Array>>, decode: (name: string) => DecodedName) {
+    const entries = Object.entries(files).map(([name, bytes]) => ({ ...decode(name), bytes }));
+    this.names = entries.map((entry) => entry.name);
+    this.altNames = entries.flatMap((entry) => (entry.alt === undefined ? [] : [entry.alt]));
+    this.index = new NameIndex(entries);
   }
 
   /**
@@ -51,8 +51,11 @@ export class MvrArchive {
    */
   static open(bytes: Uint8Array, options: ArchiveOptions = {}): MvrArchive {
     let total = 0;
+    const decode = nameDecoder(bytes);
+    // both names: a Unicode Path name may put a root standard name in a folder
+    const inFolder = (name: string): boolean => name.includes('/') || decode(name).name.includes('/');
     const keep = (entry: UnzipFileInfo): boolean => {
-      if (entry.name.includes('/') || (options.only && !options.only(entry.name))) return false;
+      if (inFolder(entry.name) || (options.only && !options.only(entry.name))) return false;
       const size = Math.round(entry.originalSize / 2 ** 20);
       if (entry.originalSize > MAX_ENTRY_BYTES)
         throw new MvrError('too-large', `The file ${entry.name} in the archive unpacks to ${size} MiB, over 512 MiB.`);
@@ -62,7 +65,7 @@ export class MvrArchive {
       return true;
     };
     try {
-      return new MvrArchive(unzipSync(bytes, { filter: keep }));
+      return new MvrArchive(unzipSync(bytes, { filter: keep }), decode);
     } catch (error) {
       if (error instanceof MvrError) throw error;
       const detail = error instanceof Error ? ` (${error.message})` : '';
@@ -74,11 +77,18 @@ export class MvrArchive {
   }
 
   /**
-   * The bytes of a root-level file: the exact name first, so the file a caller chose among names that differ only in
-   * case is the one read; then matched without case. `undefined` when the archive does not have it.
+   * The bytes of a root-level file, by the strictest rule that finds it (`NameIndex`). `undefined` when the archive
+   * does not have it, and also when a loose rule matches several files: see `ties`.
    */
   file(name: string): Uint8Array | undefined {
-    return this.byName.get(name) ?? this.byLowerName.get(name.toLowerCase());
+    const found = this.index.matches(name);
+    return found.length === 1 ? found[0]?.bytes : undefined;
+  }
+
+  /** The files `name` matches equally well when it matches more than one, so a caller can say why none is used. */
+  ties(name: string): readonly string[] {
+    const found = this.index.matches(name);
+    return found.length > 1 ? found.map((entry) => entry.name) : [];
   }
 
   /** A root-level file decoded as UTF-8, the encoding both specs require for their XML; `undefined` when missing. */

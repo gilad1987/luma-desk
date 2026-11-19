@@ -4,7 +4,7 @@ import { aimAt, dirFrom } from '../../../src/domain/aim';
 import { Fixture, type Mount } from '../../../src/domain/Fixture';
 import { frameOf } from '../../../src/domain/stage/StageFrame';
 import { createTemplate } from '../../../src/domain/stage/templates';
-import { lookTargetOf } from '../../../src/show/mvrLook/lookTarget';
+import { lookTargetOf } from '../../../src/show/mvrLook/legacy/lookTarget';
 
 const frame = frameOf(createTemplate('festival'));
 const { x0, x1, z0, z1, height } = frame.deck;

@@ -1,4 +1,23 @@
 import type { FixtureTypeId } from '../../domain/FixtureType';
+import { PRODUCT_TYPES, stripRevision } from './productTypes';
+
+/**
+ * Words for a thing that is no light; they come first, because no light has one of them as its product word. Audio
+ * and rigging words of two words ("K2 Line Array", "Monitor Wedge") must come before `line`, which is a bar word.
+ */
+const DEVICE_WORDS = [
+  'hoist',
+  'motor',
+  'winch',
+  'speaker',
+  'line array',
+  'subwoofer',
+  'sub bass',
+  'monitor wedge',
+  'hazer',
+  'fog',
+  'fan',
+] as const;
 
 /**
  * Name words and the desk type each one suggests, in precedence order. Body words (strobe, blinder, par, the bar
@@ -6,9 +25,11 @@ import type { FixtureTypeId } from '../../domain/FixtureType';
  * static unit ("Wash Par", "Beam Bar"). `dot` and `pixel` describe the light source, not the housing, so they come
  * after the moving-head words: a "Pixel Wash" is a wash, and only a name with no other word ("Glow Dot") draws as a
  * bar. The desk has no moving hybrid head, so it becomes `spot`, the generic moving head; `profile` names the static
- * ellipsoidal, which `classifyFixture` turns into `spot` when the channels pan.
+ * ellipsoidal, which `classifyFixture` turns into `spot` when the channels pan. Product names (`PRODUCT_TYPES`) come
+ * after the light words, so a "Viper Wash" is a wash, and before `profile`, so a "Viper Profile" is a moving spot.
  */
 const KEYWORD_TYPES: readonly (readonly [keyword: string, type: FixtureTypeId])[] = [
+  ...DEVICE_WORDS.map((word) => [word, 'device'] as const),
   ['strobe', 'strobe'],
   ['blinder', 'blinder'],
   ['par', 'par'],
@@ -19,8 +40,11 @@ const KEYWORD_TYPES: readonly (readonly [keyword: string, type: FixtureTypeId])[
   ['wash', 'wash'],
   ['follow', 'follow'],
   ['spot', 'spot'],
+  // a single-cell strobe and blinder whose name holds `dot`, which would make it a bar
+  ['atomic dot', 'strobe'],
   ['dot', 'bar'],
   ['pixel', 'bar'],
+  ...PRODUCT_TYPES,
   ['hybrid', 'spot'],
   ['profile', 'profile'],
 ];
@@ -57,6 +81,7 @@ function wordsOf(name: string): ReadonlySet<string> {
  * `Manufacturer@Product` name only the product counts, as a maker such as "Pixel Range" says nothing of the fixture.
  */
 export function typeFromKeywords(name: string): FixtureTypeId | undefined {
-  const words = wordsOf(name.slice(name.indexOf('@') + 1));
-  return KEYWORD_TYPES.find(([keyword]) => words.has(keyword))?.[1];
+  const product = stripRevision(name);
+  const words = wordsOf(product.slice(product.indexOf('@') + 1));
+  return KEYWORD_TYPES.find(([keyword]) => keyword.split(' ').every((word) => words.has(word)))?.[1];
 }

@@ -25,7 +25,8 @@ const GEOMETRY: MvrGeometry = {
 function sceneryFit() {
   const views = { fitTo: vi.fn(), setView: vi.fn(), currentView: 'foh' as const };
   const surfaceHit = { setSurfaces: vi.fn(), setVenue: vi.fn(), setScenery: vi.fn() };
-  return { fit: new MvrSceneryFit({ views, surfaceHit }), surfaceHit, views };
+  const hall = { place: vi.fn() };
+  return { fit: new MvrSceneryFit({ views, surfaceHit, sceneLights: { hall } }), surfaceHit, views, hall };
 }
 
 /** The built scenery group; the fake surface hit only passes it on. */
@@ -70,9 +71,22 @@ describe('MvrSceneryFit beam surfaces', () => {
   });
 
   it('sets nothing before a scenery is shown', () => {
-    const { fit, surfaceHit } = sceneryFit();
+    const { fit, surfaceHit, hall } = sceneryFit();
     fit.refit(createTemplate('theatre'));
     expect(surfaceHit.setSurfaces).not.toHaveBeenCalled();
     expect(surfaceHit.setVenue).not.toHaveBeenCalled();
+    expect(hall.place).not.toHaveBeenCalled();
+  });
+
+  it('places the hall over the camera box; forget leaves the hall and the title to the stage follower', () => {
+    const { fit, hall } = sceneryFit();
+    const design = createTemplate('theatre');
+    fit.fit(design, GEOMETRY, MESHES);
+    // with the file's hall layers and the hidden layers: they say whether the desk adds a hall
+    const { hiddenLayers } = design.mvr ?? {};
+    expect(hall.place).toHaveBeenCalledWith(mvrCameraBounds(design, GEOMETRY), GEOMETRY.hallLayers, hiddenLayers);
+    fit.forget();
+    fit.refit(design);
+    expect(hall.place).toHaveBeenCalledTimes(1);
   });
 });
