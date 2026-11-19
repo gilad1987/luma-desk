@@ -8,11 +8,17 @@ const UUID = /^(?![0-]+$)[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
 /**
  * The uuid a `<Classing>` or `<Position>` reference is written with: the file's own, when the file defined the node
- * (the design holds its name) and the text is a UUID. A dangling reference names a node that exists nowhere, so it
- * is not written again; `plainLosses` counts it.
+ * (the design holds its name) and the text is a UUID. The import matches references by their 32 hex digits
+ * (`uuidKey`), and the spec's own Fixture example writes them as spaced byte pairs (`77 BC DE 16 ...`), so such a
+ * text is written in the hyphenated form. A dangling reference names a node that exists nowhere, so it is not
+ * written again; `plainLosses` counts it.
  */
 export function auxUuid(entry: MvrAuxName | undefined): string | undefined {
-  return entry?.name !== undefined && UUID.test(entry.uuid) ? entry.uuid : undefined;
+  if (entry?.name === undefined) return undefined;
+  if (UUID.test(entry.uuid)) return entry.uuid;
+  const key = uuidKey(entry.uuid);
+  const uuid = [key.slice(0, 8), key.slice(8, 12), key.slice(12, 16), key.slice(16, 20), key.slice(20)].join('-');
+  return key.length === 32 && UUID.test(uuid) ? uuid : undefined;
 }
 
 /** The file data of one fixture as `<Fixture>` children, by their place in the MVR 1.6 Table 26 child order. */

@@ -39,7 +39,9 @@ export function assignPatches(
       unsized += 1;
       continue;
     }
-    if (address + channels - 1 > UNIVERSE_CHANNELS) [universe, address] = [universe + 1, 1];
+    // `address > 512` too: a zero-channel fixture after a full universe would otherwise get address 513
+    if (address > UNIVERSE_CHANNELS || address + channels - 1 > UNIVERSE_CHANNELS)
+      [universe, address] = [universe + 1, 1];
     if (universe > MAX_UNIVERSE) break;
     patches.set(fixture.id, { universe, address, mode: gdtfIdentity(fixture, mvr).mode });
     address += channels;

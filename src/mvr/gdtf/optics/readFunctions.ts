@@ -3,6 +3,9 @@ import { compact, toNumber } from './compact';
 import { dmxValueBytes, parseDmxValue } from './dmxValue';
 import type { GdtfChannelSet, GdtfFunction } from './GdtfFunction';
 
+/** The most bytes a GDTF `DMXValue` names (`Uint/n`, n from 1 to 4). */
+const MAX_BYTES = 4;
+
 /**
  * The last DMX value of the range that starts at `starts[index]`. The spec: "The end DMX value is calculated as a
  * DMXFrom of the next channel function – 1 or the maximum value of the DMX channel." "Next" is read as the nearest
@@ -69,7 +72,11 @@ export function readFunctions(channel: Element, offsetBytes: number): GdtfFuncti
   const initial = attr(channel, 'InitialFunction')?.split('.').at(-1);
   const fns = childElements(channel, 'LogicalChannel').flatMap((logical) => childElements(logical, 'ChannelFunction'));
   const first = fns[0];
-  const bytes = offsetBytes > 0 ? offsetBytes : ((first && dmxValueBytes(attr(first, 'DMXFrom'))) ?? 1);
+  // A `DMXValue` names at most 4 bytes, and 256 ** 128 is Infinity: more `Offset` bytes are read as 4
+  const bytes = Math.min(
+    MAX_BYTES,
+    offsetBytes > 0 ? offsetBytes : ((first && dmxValueBytes(attr(first, 'DMXFrom'))) ?? 1),
+  );
   const starts = fns.map((fn) => parseDmxValue(attr(fn, 'DMXFrom'), bytes) ?? 0);
   const max = 256 ** bytes - 1;
   return fns.map((fn, index) =>
