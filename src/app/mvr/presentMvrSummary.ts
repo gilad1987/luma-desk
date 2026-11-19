@@ -15,27 +15,34 @@ export interface SummaryParts {
   readonly list: LayerListParts;
   /** True when the import kept the operator's cues: the summary then offers to build the starting show instead. */
   readonly kept: boolean;
+  /** False when the browser did not store the file: a reload then needs the file again. */
+  readonly stored: boolean;
 }
 
 /**
  * Opens the summary of `result` with its layer list, or, when another dialog holds the modal, toasts it in one line
  * so that dialog keeps its state. The toast path opens no list, so it names the layers that start hidden and says
- * where to show them: nothing of the file is hidden without a word.
+ * where to show them: nothing of the file is hidden without a word. Its messages go in one toast, as each toast
+ * replaces the one before (`Toast.show`). A file the browser did not store is said after the summary, or in that toast.
  */
 export function presentMvrSummary(result: MvrImport, parts: SummaryParts, deps: MvrFlowDeps): void {
-  const { view, ledWalls, list, kept } = parts;
+  const { view, ledWalls, list, kept, stored } = parts;
   const modal = deps.modal();
   const { layers = [], hiddenLayers = [] } = result.design.mvr ?? {};
   if (!mayOpenMvrSummary(modal)) {
-    deps.toast(he.mvr.imported(result.design.source.name, result.summary.fixtureCount, view.warnings.length));
     const hidden = layers.filter((layer) => hiddenLayers.includes(layer.uuid)).map((layer) => layer.name);
-    if (hidden.length > 0) deps.toast(he.mvr.layersHidden(hidden.join(', ')));
-    if (kept) deps.toast(he.mvr.cuesKept);
-    return;
+    const lines = [
+      he.mvr.imported(result.design.source.name, result.summary.fixtureCount, view.warnings.length),
+      ...(hidden.length > 0 ? [he.mvr.layersHidden(hidden.join(', '))] : []),
+      ...(kept ? [he.mvr.cuesKept] : []),
+      ...(stored ? [] : [he.mvr.notStored]),
+    ];
+    return deps.toast(lines.join('. '));
   }
   const buildShow = kept ? deps.show.build : undefined;
   const { showProxies, audience, hall } = list;
   const content = { view, layers, hiddenLayers, buildShow, showProxies, audience, hall, ledWalls };
   const { hide, markLed, register } = bindLayerList(deps);
   register(openMvrSummary(modal, { ...content, markLed }, hide));
+  if (!stored) deps.toast(he.mvr.notStored);
 }

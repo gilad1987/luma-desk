@@ -1,4 +1,3 @@
-import { he } from '../../i18n/he';
 import { importMvrFile } from '../../ui/panels/mvr/importMvrFile';
 import { importSummaryView } from '../../ui/panels/mvr/importSummaryView';
 import { setMvrImportError } from '../../ui/panels/mvr/setMvrImportError';
@@ -44,6 +43,6 @@ export async function importPickedMvr(file: File, deps: MvrFlowDeps): Promise<vo
   const ledWalls = await ledWallsControl(result.geometry, { fresh: true, marked, current });
   if (!current()) return;
   const list = offerLayerList(deps, result.geometry);
-  presentMvrSummary(result, { view: importSummaryView(result, failures), ledWalls, list, kept }, deps);
-  if (!outcome.stored) deps.toast(he.mvr.notStored);
+  const stored = outcome.stored;
+  presentMvrSummary(result, { view: importSummaryView(result, failures), ledWalls, list, kept, stored }, deps);
 }

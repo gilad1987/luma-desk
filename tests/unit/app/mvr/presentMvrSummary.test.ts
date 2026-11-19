@@ -5,7 +5,7 @@
  */
 import { expect, it } from 'vitest';
 import { layerListParts } from '../../../../src/app/mvr/mvrLayerList';
-import { presentMvrSummary } from '../../../../src/app/mvr/presentMvrSummary';
+import { presentMvrSummary, type SummaryParts } from '../../../../src/app/mvr/presentMvrSummary';
 import { createTemplate } from '../../../../src/domain/stage/templates';
 import { he } from '../../../../src/i18n/he';
 import type { MvrGeometry, MvrImport } from '../../../../src/mvr';
@@ -37,19 +37,35 @@ function resultWith(hiddenLayers: readonly string[]): MvrImport {
   return { design, geometry, summary: { fixtureCount: 3 } } as unknown as MvrImport;
 }
 
+/** The summary parts of the toast path tests; only the list, `kept` and `stored` are read there. */
+const partsWith = (kept: boolean, stored: boolean): SummaryParts => {
+  const list = layerListParts(geometry, () => undefined);
+  return { view, ledWalls: undefined, list, kept, stored };
+};
+
 it('names the hidden layers in the toast path and opens no dialog', () => {
   const flow = fakeMvrFlowDeps();
   flow.modal.isOpen.mockReturnValue(true);
-  const parts = { view, ledWalls: undefined, list: layerListParts(geometry, () => undefined), kept: false };
-  presentMvrSummary(resultWith(['L9']), parts, flow.deps);
-  expect(flow.toasts).toEqual([he.mvr.imported('Rig.mvr', 3, 1), he.mvr.layersHidden('Layer Z')]);
+  presentMvrSummary(resultWith(['L9']), partsWith(false, true), flow.deps);
+  expect(flow.toasts).toEqual([`${he.mvr.imported('Rig.mvr', 3, 1)}. ${he.mvr.layersHidden('Layer Z')}`]);
   expect(flow.modal.open).not.toHaveBeenCalled();
 });
 
-it('adds no layer toast when the import hides nothing', () => {
+it('adds no layer line when the import hides nothing', () => {
   const flow = fakeMvrFlowDeps();
   flow.modal.isOpen.mockReturnValue(true);
-  const parts = { view, ledWalls: undefined, list: layerListParts(geometry, () => undefined), kept: false };
-  presentMvrSummary(resultWith([]), parts, flow.deps);
+  presentMvrSummary(resultWith([]), partsWith(false, true), flow.deps);
   expect(flow.toasts).toEqual([he.mvr.imported('Rig.mvr', 3, 1)]);
+});
+
+it('puts every message of the toast path in one toast, as each toast replaces the one before', () => {
+  const flow = fakeMvrFlowDeps();
+  flow.modal.isOpen.mockReturnValue(true);
+  presentMvrSummary(resultWith(['L9']), partsWith(true, false), flow.deps);
+  expect(flow.toasts).toHaveLength(1);
+  const [toast] = flow.toasts;
+  for (const line of [he.mvr.imported('Rig.mvr', 3, 1), he.mvr.layersHidden('Layer Z'), he.mvr.cuesKept]) {
+    expect(toast).toContain(line);
+  }
+  expect(toast).toContain(he.mvr.notStored);
 });
