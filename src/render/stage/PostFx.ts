@@ -27,7 +27,7 @@ export class PostFx {
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
     const loadMvrChain = async (): Promise<MvrChain> =>
-      new (await import('../post/MvrPostChain')).MvrPostChain(renderer, scene, camera);
+      (await import('../post/createMvrPostChain')).createMvrPostChain(renderer, scene, camera);
     this.mvr = new LazyMvrChain(createMvrChain ?? loadMvrChain);
   }
 
@@ -47,6 +47,11 @@ export class PostFx {
   /** Resolves when the MVR chain's latest load ended; the test API's `mvrReady` waits on it. Never rejects. */
   mvrChainReady(): Promise<void> {
     return this.mvr.ready();
+  }
+
+  /** True when the MVR chain of the stage shown now did not load, so no surface light will come for this stage. */
+  get hasMvrChainFailed(): boolean {
+    return this.mvr.hasFailed;
   }
 
   /** The scene depth of the MVR chain, for the beam pass; undefined while the built-in chain draws. */

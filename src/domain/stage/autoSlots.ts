@@ -29,7 +29,7 @@ export type AutoSlot =
   | 'prof';
 
 /** Where a light that no legacy rule finds goes, by type; a tower beam or wash goes to `towB` or `towW` instead. */
-const OTHER_LIGHTS: Readonly<Record<Exclude<FixtureTypeId, 'screen'>, AutoSlot>> = {
+const OTHER_LIGHTS: Readonly<Record<Exclude<FixtureTypeId, 'screen' | 'device'>, AutoSlot>> = {
   spot: 't4',
   beam: 't2',
   wash: 't3',
@@ -44,13 +44,13 @@ const OTHER_LIGHTS: Readonly<Record<Exclude<FixtureTypeId, 'screen'>, AutoSlot>>
 /**
  * Appends each light no group holds to the group of its type, after the legacy ids: Auto Show sets every light dark
  * first, so a builder or MVR light outside the legacy rules (a beam on a front truss) would stay dark in every look.
- * Every built-in light is in a legacy rule, so the built-in groups do not change. Screens are the `screen` group.
+ * Every built-in light is in a legacy rule, so the built-in groups do not change. Screens and devices are no lights.
  */
 function addOtherLights(rig: Rig, d: StageDesign, groups: Readonly<Record<AutoSlot, number[]>>): void {
   const placed = new Set(Object.values(groups).flat());
   const onTower = new Set(selectIds(rig, d, { truss: 'tower' }));
   for (const f of rig.fixtures) {
-    if (f.type === 'screen' || placed.has(f.id)) continue;
+    if (f.type === 'screen' || f.type === 'device' || placed.has(f.id)) continue;
     let slot = OTHER_LIGHTS[f.type];
     if (onTower.has(f.id) && f.type === 'beam') slot = 'towB';
     if (onTower.has(f.id) && f.type === 'wash') slot = 'towW';

@@ -61,11 +61,11 @@ export function wireStage(design: StageDesign): StageHandles {
   views.fitTo(boundsOf(design));
   setView('foh', true);
   const postFx = new PostFx(renderer, scene, views.camera);
-  addEnvironmentLights(scene);
+  const environment = addEnvironmentLights(scene);
   const surfaceHit = new SurfaceHit();
   const stageScene = new StageScene({ scene, surfaces: surfaceHit, views }, design);
   const venue = stageScene.buildVenue();
-  const sceneLights = new SceneLights(scene, venue);
+  const sceneLights = new SceneLights(scene, venue, environment);
   const { camera, controls } = views;
   return {
     canvas,

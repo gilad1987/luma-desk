@@ -28,8 +28,7 @@ export class LazyMvrStage {
 
   /**
    * Loads the scenery chunk and adds the scenery group to the scene, once. The flows call it before they change the
-   * stage, so a chunk that does not load (offline, a new deploy) rejects while the stage is still as it was. A failed
-   * load is forgotten, so the next MVR load tries the chunk again.
+   * stage, so a chunk that fails (offline, a new deploy) rejects with the stage as it was; the next load tries again.
    */
   async load(): Promise<void> {
     await this.#loaded();
@@ -45,10 +44,11 @@ export class LazyMvrStage {
     try {
       const stage = await this.#loaded();
       const failures = await stage.show(input);
-      if (this.#showing) this.#fit.fit(input.design, input.geometry, stage.group);
+      if (this.#showing) await this.#fit.fitSeated(input.design, input.geometry, stage.group);
       return failures;
     } catch (error) {
       this.#showing = false;
+      this.#fit.forget(); // the file before is gone too: its title, hall light and beam surfaces must not stay
       throw error;
     }
   }

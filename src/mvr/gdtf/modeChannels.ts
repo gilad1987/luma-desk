@@ -32,7 +32,7 @@ function place(channel: GdtfModeChannel, at: GdtfBreak): GdtfChannel {
 }
 
 /** One copy of the channel per reference to its geometry, or the channel itself when no reference uses it. */
-function expand(channel: GdtfModeChannel, references: readonly GdtfReference[]): GdtfChannel[] {
+export function expand(channel: GdtfModeChannel, references: readonly GdtfReference[]): GdtfChannel[] {
   const users = references.filter((reference) => reference.geometry === channel.geometry);
   const breakLists = users.length > 0 ? users.map((reference) => reference.breaks) : [[]];
   return breakLists.map((breaks) => place(channel, breakFor(channel, breaks)));

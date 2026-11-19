@@ -1,3 +1,4 @@
+export { awaitMvrChain } from './awaitMvrChain';
 export { bootApp } from './bootApp';
 export { waitForTestApi } from './waitForTestApi';
 export { stepFrames } from './stepFrames';
@@ -24,3 +25,4 @@ export { boxOf, type BoxTuple } from './boxOf';
 export { offBy } from './offBy';
 export { canvasSize } from './canvasSize';
 export { dragDivider } from './dragDivider';
+export { showShadowStage } from './shadowStage';

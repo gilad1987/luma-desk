@@ -16,6 +16,9 @@ export async function exportAndImport(page: Page, desk: JSHandle<DeskTestApi>): 
   const download = await downloading;
   // Export runs in the MVR load queue: the download can arrive before its job ends
   await desk.evaluate((d) => d.mvrReady());
+  // an export that lost or could not judge something opens its summary dialog; the user closes it before the import
+  const close = page.locator('#mvrExportClose');
+  if (await close.isVisible()) await close.click();
   const name = download.suggestedFilename();
   await pickMvrFile(page, desk, mvrFile(name, await readFile(await download.path())));
   return name;

@@ -37,13 +37,15 @@ describe('the built service worker', () => {
     expect(/"(luma-desk-[^"]*)"/.exec(worker)?.[1]).toMatch(/^luma-desk-[0-9a-f]{10}$/);
   });
 
-  it('caches the folder URL, the page, its hashed JS and CSS entries, the manifest and every icon', () => {
+  it('caches the folder URL, the page, its hashed JS and CSS entries, the manifest, every icon and GDTF mesh', () => {
     const icons = readdirSync(join(root, 'public/icons')).map((name) => `./icons/${name}`);
+    // the default meshes of the GDTF specification are read at the first import that needs one, offline too
+    const meshes = readdirSync(join(root, 'public/gdtf-meshes')).map((name) => `./gdtf-meshes/${name}`);
     const entries = [
       pageUrl(/src="(\.\/assets\/index-[\w-]+\.js)"/),
       pageUrl(/href="(\.\/assets\/index-[\w-]+\.css)"/),
     ];
-    const expected = ['./', './index.html', ...entries, './manifest.webmanifest', ...icons];
+    const expected = ['./', './index.html', ...entries, './manifest.webmanifest', ...icons, ...meshes];
     expect(shellOf(worker)).toEqual(expect.arrayContaining(expected));
   });
 

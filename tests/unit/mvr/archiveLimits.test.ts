@@ -38,7 +38,7 @@ describe('MvrArchive limits', () => {
   it('reads the exact name before a name that differs only in case', () => {
     const archive = MvrArchive.open(makeZip({ 'a.gdtf': 'lower', 'A.gdtf': 'upper' }));
     const text = (name: string): string | undefined => archive.text(name);
-    expect([text('A.gdtf'), text('a.gdtf'), text('A.GDTF')]).toEqual(['upper', 'lower', 'lower']);
+    expect([text('A.gdtf'), text('a.gdtf'), text('A.GDTF')]).toEqual(['upper', 'lower', undefined]);
   });
 
   it('names the ZIP problem in the not-zip message', () => {

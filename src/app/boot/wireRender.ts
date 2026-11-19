@@ -36,5 +36,7 @@ export function wireRender(engine: Pick<EngineHandles, 'stage' | 'selection' | '
   // the built-in hazers stand on the desk's own deck; an imported stage (`mvr` set) brings its own rig
   visuals.props.setHazersShown(!engine.stage.design.mvr);
   bus.on('rigChanged', ({ design }) => visuals.props.setHazersShown(!design.mvr));
+  if ('__deskClock' in window)
+    void import('../testHook/shadowHook').then((m) => m.installShadowHook({ ...stage, ...visuals }));
   return { ...stage, ...visuals, stageRenderer };
 }

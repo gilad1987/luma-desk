@@ -26,7 +26,7 @@ const FIGURE = [
   box([-400, -60, 950], [150, 120, 500]),
   box([250, -60, 950], [150, 120, 500]),
 ];
-const MESHES = {
+export const MESHES = {
   'deck.3ds': makeBoxes3ds([box([-6000, -4000, 0], [12000, 8000, 1200])]),
   'wall.3ds': makeBoxes3ds([box([-7000, 0, 0], [14000, 200, 7000])]),
   'tower.3ds': makeBoxes3ds([box([-250, -250, 0], [500, 500, 8500])]),
@@ -35,7 +35,7 @@ const MESHES = {
 };
 
 /** One fixture of `type` at `id`, patched 8 channels apart from 1 so the 40 fit one universe. */
-function fixture(type: keyof typeof RIG_TYPES, id: number, position: Vec): string {
+export function fixture(type: keyof typeof RIG_TYPES, id: number, position: Vec): string {
   const patch = `<Addresses><Address break="0">${(id - 101) * 8 + 1}</Address></Addresses>`;
   const body = `<GDTFSpec>${RIG_TYPES[type].spec}</GDTFSpec><GDTFMode>Std</GDTFMode><FixtureID>${id}</FixtureID>`;
   return object('Fixture', [`F-${id}`, `${RIG_TYPES[type].name} ${id}`], position, body + patch);
@@ -63,7 +63,7 @@ const SYMBOLS = [
   ...range(2).map((i) => symbol(`PANEL-${i}`, `LED Panel ${i + 1}`, 'SD-PANEL', [i ? 4500 : -4500, 3500, 1200])),
 ];
 
-const STAGE = [
+export const STAGE = [
   object('SceneObject', ['DECK', 'Stage Deck'], [0, 0, 0], mesh('deck.3ds')),
   object('SceneObject', ['WALL', 'Backdrop Wall'], [0, 3800, 1200], mesh('wall.3ds')),
   object('Support', ['TOWER-L', 'Tower Left'], [-6500, -3500, 0], mesh('tower.3ds')),
@@ -74,7 +74,7 @@ const STAGE = [
   ),
 ];
 
-const layer = (uuid: string, name: string, children: readonly string[]): string =>
+export const layer = (uuid: string, name: string, children: readonly string[]): string =>
   `<Layer uuid="${uuid}" name="${name}"><ChildList>${children.join('')}</ChildList></Layer>`;
 
 /**

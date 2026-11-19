@@ -1,33 +1,50 @@
 import type { MvrDesignInfo } from '../../domain/stage/mvr';
 import type { StageDesign, StageFixture } from '../../domain/stage/StageDesign';
 import type { FixtureLink, LinkFootprint, LumaStageData } from '../luma/lumaData';
+import { bodyRotation } from '../design/bodyRotation';
+import { REST_ROTATION, restRotation } from '../math/restRotation';
 import type { MvrWarning } from '../MvrWarning';
 import { linkFootprint } from './linkFootprint';
+import { pairLinks } from './pairLinks';
+import { relinkScreens } from './relinkScreens';
 
 /** One link split once: its desk fields go onto the fixture, its footprint (MVR data) into the MVR facts. */
 interface SplitLink {
-  readonly desk: Omit<FixtureLink, 'footprint'>;
+  readonly desk: Omit<FixtureLink, 'footprint' | 'ownRotation' | 'uuid' | 'occurrence'>;
+  readonly ownRotation: boolean;
   readonly footprint: LinkFootprint | undefined;
+  readonly id: number;
+  readonly uuid: string | undefined;
+  readonly occurrence: number | undefined;
 }
 
 /**
  * Splits by a rest destructure, so this step needs no change for a desk field added to `FixtureLink` later. The field
  * must still be added to `linkOf` (export) and `LINK_FIELDS` (stand-in check), or it never reaches the fixture.
  */
-function splitLink({ footprint, ...desk }: FixtureLink): SplitLink {
-  return { desk, footprint };
+function splitLink({ footprint, ownRotation, uuid, occurrence, ...desk }: FixtureLink): SplitLink {
+  return { desk, footprint, ownRotation: ownRotation === true, id: desk.id, uuid, occurrence };
 }
 
 /**
- * The fixture with the desk fields the luma data gives for its id, or unchanged when it gives none. The link's
+ * The fixture with the desk fields of its link (`pairLinks`), or unchanged when it has none. The link's
  * `product`, `fixed` and `pixel` replace the fixture's own, so a fixture without them in the data has none after the
  * import; a product comes back before `placeBodies`, which then shifts the body by the product's own mount height.
+ * The matrix orientation stays as `rotation` when the link says the fixture had one (`ownRotation`); without the flag
+ * a matrix in the rest pose of the LINK's mount is the desk's own pose, as every export before the flag wrote it. The
+ * result takes the link's mount, so the rest pose is the link mount's too: a matrix another tool turned (a hung unit
+ * turned over, a floor unit hung) differs from it and is kept. A hanging matrix (the import gives it no `rotation`)
+ * on a `floor` link is kept as the identity rotation, or the fixture would fall back to the desk floor pose.
  */
 function relink(fixture: StageFixture, links: ReadonlyMap<number, SplitLink>): StageFixture {
   const link = links.get(fixture.id);
   if (!link) return fixture;
-  const { position, rotation, patch } = fixture;
-  return { ...link.desk, position, ...(rotation ? { rotation } : {}), ...(patch ? { patch } : {}) };
+  const { position, patch } = fixture;
+  const pose = fixture.rotation ?? REST_ROTATION;
+  const kept = bodyRotation(pose, link.ownRotation ? REST_ROTATION : restRotation(link.desk.mount));
+  const rotation = kept ?? (link.ownRotation && link.desk.mount === 'floor' ? pose : undefined);
+  // the fixture's own id: a link paired by uuid may carry the id from before a renumber
+  return { ...link.desk, id: fixture.id, position, ...(rotation ? { rotation } : {}), ...(patch ? { patch } : {}) };
 }
 
 /**
@@ -65,17 +82,9 @@ export interface LumaApplied {
  * take the restored types (`retype`), and the stored hidden layers, when the data has them, replace the hall rule's.
  */
 export function applyLumaData(design: StageDesign, luma: LumaStageData): LumaApplied {
-  const links = new Map(luma.links.map((link) => [link.id, splitLink(link)]));
+  const links = pairLinks(design.fixtures, design.mvr, luma.links.map(splitLink));
   const fixtures = design.fixtures.map((fixture) => relink(fixture, links));
-  const drivers = new Set(fixtures.filter((fixture) => fixture.type === 'screen').map((fixture) => fixture.id));
-  const screens = luma.screens.filter((screen) => drivers.has(screen.fixtureId));
-  const warnings = luma.screens
-    .filter((screen) => !drivers.has(screen.fixtureId))
-    .map((screen): MvrWarning => ({
-      code: 'missing-screen-driver',
-      message: `LED wall ${screen.id} was dropped: its driver fixture ${screen.fixtureId} is not in the file.`,
-      ref: screen.id,
-    }));
+  const { screens, warnings } = relinkScreens(luma.screens, fixtures, links);
   const { venue, scenery, deck, risers, trusses } = luma;
   const hidden = luma.hiddenLayers && { hiddenLayers: luma.hiddenLayers };
   const mvr = design.mvr && { mvr: { ...retype(design.mvr, fixtures, links), ...hidden } };

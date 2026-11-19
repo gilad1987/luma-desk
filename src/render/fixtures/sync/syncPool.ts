@@ -1,5 +1,8 @@
 import { Matrix4, Vector3, type Texture } from 'three';
+import { beamVolume } from '../../beams/beamVolume';
 import type { LightFrame } from '../../lights/LightFrame';
+import { decalRadiance } from '../../lighting/poolBalance';
+import { replacesPools, surfaceLight } from '../../lighting/surfaceLight';
 import { SCREEN_NORMAL, type BeamHit } from '../../surface/SurfaceHit';
 import type { BeamFrame } from './BeamFrame';
 import { addPoolContributions } from './poolContributions';
@@ -14,8 +17,16 @@ const tU = new Vector3(),
  */
 export function syncPool(frame: BeamFrame, gob: number, goboTextures: readonly Texture[], out: LightFrame): void {
   const { visual: v, hit } = frame;
-  if (!hit) {
+  // an MVR stage lights its scenery from the beam itself in the post chain: no decal, and no share for the stand-ins;
+  // also not for the frames before that pass draws, so its decals never flash (`surfaceLight.isAwaited`); with
+  // Real light off the pass holds no batch and the decals are the light on the floor again (`replacesPools`)
+  const lights = surfaceLight.batch;
+  if (!hit || replacesPools()) {
     v.pool.visible = false;
+    const beams = beamVolume.batch;
+    // the light is the beam's own row, with the incidence where the axis lands: the far end of its footprint
+    if (lights && beams)
+      lights.offer(v.beam, v.fixture.id, beams.row(v.beam), hit ? Math.abs(frame.dir.dot(hit.normal)) : 0);
     return;
   }
   v.pool.visible = true;
@@ -31,10 +42,11 @@ export function syncPool(frame: BeamFrame, gob: number, goboTextures: readonly T
     spec = v.fixture.T,
     r = length * tz,
     n = hit.normal;
+  const gain = surfaceLight.poolGain;
   const poolIntensity =
-    ((intensity * spec.power * 0.3) / (1 + r * 0.1)) * (n === SCREEN_NORMAL || length > 24 ? 0.45 : 1);
+    decalRadiance(intensity * spec.power, r) * (n === SCREEN_NORMAL || length > 24 ? 0.45 : 1) * gain;
   pl.material.color.setRGB(col[0] * poolIntensity, col[1] * poolIntensity, col[2] * poolIntensity);
-  addPoolContributions(frame, n, out);
+  addPoolContributions(frame, n, out, gain);
 }
 
 /** Places the pool at the hit, offset along the normal by a per-fixture step so overlapping pools do not z-fight. */

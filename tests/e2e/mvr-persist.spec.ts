@@ -53,6 +53,7 @@ test('a reload restores the MVR rig from IndexedDB', async ({ page }) => {
   expect(await readMvrStage(desk)).toEqual(imported);
   expect(await liveRigIds(page)).toEqual([101, 102]);
   await expect(page.locator('#mvrMissingPrompt')).toBeHidden();
+  await expect(page.locator('#showName')).toHaveText('Synthetic');
   expect(errors).toEqual([]);
 });
 
@@ -77,6 +78,8 @@ test('without the stored file a reload still builds the rig and asks for the fil
   desk = await waitForTestApi(page);
   await desk.evaluate((d) => d.mvrReady());
   await expect(page.locator('#mvrMissingPrompt')).toContainText(SYNTHETIC_MVR.name);
+  // the scenery never loads without the file, but the title follows the stage
+  await expect(page.locator('#showName')).toHaveText('Synthetic');
   expect(await readMvrStage(desk)).toEqual(imported);
   expect(await liveRigIds(page)).toEqual([101, 102]);
   expect(errors).toEqual([]);

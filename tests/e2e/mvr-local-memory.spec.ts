@@ -2,7 +2,16 @@ import { statSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test, type JSHandle, type Page } from '@playwright/test';
 import type { DeskTestApi } from '../shared';
-import { SAMPLES_DIR, bootApp, collectErrors, mvrFile, pickMvrFile, readSample, sampleFiles } from '../shared/e2e';
+import {
+  SAMPLES_DIR,
+  awaitMvrChain,
+  bootApp,
+  collectErrors,
+  mvrFile,
+  pickMvrFile,
+  readSample,
+  sampleFiles,
+} from '../shared/e2e';
 
 /*
  * Local only: the official gdtf.eu samples are third-party files and never committed, so this spec reads them from
@@ -22,10 +31,14 @@ function smallestSample(): string {
   return smallest;
 }
 
-/** Imports one sample through the Show File dialog and closes its summary. */
+/**
+ * Imports one sample through the Show File dialog, closes its summary and waits for the MVR post chain, whose render
+ * targets count as textures: a count read before the chain's chunk has loaded is lower than every later one.
+ */
 async function importSample(page: Page, desk: JSHandle<DeskTestApi>, name: string): Promise<void> {
   await pickMvrFile(page, desk, mvrFile(name, readSample(name)));
   await page.locator('#mvrSummaryClose').click();
+  await awaitMvrChain(desk);
 }
 
 /**
@@ -45,15 +58,27 @@ async function renderMemory(
   return page.evaluate(() => window.__desk.renderMemory());
 }
 
+/**
+ * Applies the festival template with the rig blacked out (the B.O. button). The show that plays is not the same in
+ * the two readings: the demo show before an import, the MVR first look after it, which stays on the executor and uses
+ * a gobo the demo's first cue does not (one more texture, and not a leak). Dark fixtures draw no beam, pool or
+ * glow, so both readings count the stage alone, which is what an import must leave as it was.
+ */
+async function darkFestival(page: Page, desk: JSHandle<DeskTestApi>): Promise<void> {
+  await page.evaluate(() => window.__desk.applyTemplate('festival'));
+  if (!(await desk.evaluate((d) => d.state().blackout))) await page.locator('#boBtn').click();
+  expect(await desk.evaluate((d) => d.state().blackout)).toBe(true);
+}
+
 test('a template after an MVR import holds the GPU memory of the same template without it', async ({ page }) => {
   const errors = collectErrors(page);
   const desk = await bootApp(page);
-  await page.evaluate(() => window.__desk.applyTemplate('festival'));
+  await darkFestival(page, desk);
   const fresh = await renderMemory(page, desk);
   await page.evaluate(() => window.__desk.applyTemplate('built-in'));
 
   await importSample(page, desk, smallestSample());
-  await page.evaluate(() => window.__desk.applyTemplate('festival'));
+  await darkFestival(page, desk);
   await desk.evaluate((d) => d.mvrReady());
   expect(await renderMemory(page, desk)).toEqual(fresh);
   expect(await desk.evaluate((d) => d.mvrScenery())).toBe(false);

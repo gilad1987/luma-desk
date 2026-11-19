@@ -27,9 +27,10 @@ function materialEntry({ name, rgb, texture }: TdsTestMaterial): Uint8Array {
 /**
  * A 3DS file with one mesh of one triangle per material, each in its own `MSH_MAT_GROUP`, after the material
  * entries. TDSLoader turns it into one geometry with a group per material and a material array, the case that a
- * reader taking only the first material gets wrong.
+ * reader taking only the first material gets wrong. Only the materials in `defined` get an entry, so a group can name
+ * a material the file does not define.
  */
-export function make3dsGroups(materials: readonly TdsTestMaterial[]): Uint8Array {
+export function make3dsGroups(materials: readonly TdsTestMaterial[], defined = materials): Uint8Array {
   const vertices = materials.flatMap((_, i): [number, number, number][] => [
     [i * 1000, 0, 0],
     [i * 1000 + 500, 0, 0],
@@ -39,5 +40,5 @@ export function make3dsGroups(materials: readonly TdsTestMaterial[]): Uint8Array
   const groups = materials.map(({ name }, i) => chunk(0x4130, text(name), words(1, i)));
   const faceArray = chunk(0x4120, words(materials.length, ...faces), ...groups);
   const mesh = chunk(0x4000, text('grouped'), chunk(0x4100, chunk(0x4110, vertexList(vertices)), faceArray));
-  return chunk(0x4d4d, chunk(0x3d3d, ...materials.map(materialEntry), mesh));
+  return chunk(0x4d4d, chunk(0x3d3d, ...defined.map(materialEntry), mesh));
 }

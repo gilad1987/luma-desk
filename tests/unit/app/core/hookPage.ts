@@ -3,8 +3,10 @@ import { wireEngine } from '../../../../src/app/boot/wireEngine';
 import type { DeskTestApi } from '../../../../src/app/testHook/installTestHook';
 import { installTestHook } from '../../../../src/app/testHook/installTestHook';
 import type { DeskStageApi } from '../../../../src/app/testHook/stageHooks';
+import { CameraViews } from '../../../../src/render/camera/CameraViews';
 import { ShowSerializer } from '../../../../src/show';
 import { FakeDom } from '../../../shared/dom';
+import { fakeCanvas } from '../../render/fakeCanvas';
 
 /** Stands in for MutationObserver: the test queues the records the next takeRecords() returns. */
 export class FakeObserver {
@@ -57,6 +59,7 @@ export function installOnFakePage(clock?: object) {
   installTestHook({
     ...engine,
     setView,
+    views: new CameraViews(fakeCanvas(), { isMaLayout: () => false, onViewChanged: () => undefined }),
     execs,
     serializer,
     deskMode: () => 'desk',
@@ -64,6 +67,10 @@ export function installOnFakePage(clock?: object) {
     renderer,
     mvrReady,
     mvrScenery,
+    mvrPostChain: () => false,
+    mvrBodies: () => Promise.resolve([]),
+    fixtureVisuals: { visuals: [] },
+    mvrScene: { traverse: () => undefined },
   });
   return { engine, dom, page, setView, mvrReady };
 }

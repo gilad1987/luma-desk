@@ -1,6 +1,7 @@
 import { InstancedMesh, Matrix4, type Object3D } from 'three';
 import { InstanceBuilder } from './InstanceBuilder';
 import { MeshInstances } from './MeshInstances';
+import { rigKindOf } from './rigKind';
 import { isMesh } from './trianglePoints';
 
 /** The scenery of a stage ready for beam rays: its instances, their holders and its triangle count in the world. */
@@ -48,7 +49,7 @@ export function collectScenery(root: Object3D): Scenery {
       for (let i = 0; i < count; i++) {
         if (node instanceof InstancedMesh) node.getMatrixAt(i, world);
         else world.identity();
-        builder.add(mesh, world.premultiply(node.matrixWorld), index);
+        builder.add(mesh, world.premultiply(node.matrixWorld), index, rigKindOf(node));
       }
     }),
   );

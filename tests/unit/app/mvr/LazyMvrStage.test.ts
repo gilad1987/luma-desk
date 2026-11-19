@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LazyMvrStage } from '../../../../src/app/mvr/LazyMvrStage';
 import { createTemplate } from '../../../../src/domain/stage/templates';
 import { mvrCameraBounds } from '../../../../src/render/mvr/mvrCameraBounds';
+import { mvrStagePlace } from '../../../../src/render/mvr/mvrStagePlace';
 import { mvrViews } from '../../../../src/render/mvr/mvrViews';
 import { MvrStage, type MvrStageInput } from '../../../../src/render/mvr/MvrStage';
 
@@ -31,7 +32,8 @@ const INPUT: MvrStageInput = {
 function lazyStage() {
   const views = { fitTo: vi.fn(), setView: vi.fn(), currentView: 'foh' as const };
   const surfaceHit = { setSurfaces: vi.fn(), setVenue: vi.fn(), setScenery: vi.fn() };
-  return { lazy: new LazyMvrStage({ scene: { add: vi.fn() }, views, surfaceHit }), views };
+  const sceneLights = { hall: { place: vi.fn() } };
+  return { lazy: new LazyMvrStage({ scene: { add: vi.fn() }, views, surfaceHit, sceneLights }), views };
 }
 
 describe('LazyMvrStage', () => {
@@ -56,6 +58,7 @@ describe('LazyMvrStage', () => {
     const own = mvrViews(
       box,
       INPUT.design.fixtures.map((fixture) => fixture.position),
+      mvrStagePlace(INPUT.design, INPUT.geometry),
     );
     expect(views.fitTo).toHaveBeenCalledWith(box, own);
     expect(views.setView).toHaveBeenCalledWith('foh');

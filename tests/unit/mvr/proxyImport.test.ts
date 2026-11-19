@@ -63,6 +63,9 @@ describe('proxies in an import', () => {
     expect(Object.keys(files)).toEqual(['GeneralSceneDescription.xml']);
     const xml = strFromU8(files['GeneralSceneDescription.xml'] ?? new Uint8Array());
     expect(xml).not.toMatch(/<Symbol|Part 12|Part 30|proxy|inferred|pitch/i);
-    expect(JSON.stringify(withProxies.design)).toEqual(JSON.stringify(without.design));
+    // the design differs only by the seat area, which is desk data (the Crowd view, the first look), not scene data
+    const { seatArea, ...rest } = withProxies.design.mvr ?? {};
+    expect(seatArea).toBeDefined();
+    expect(JSON.stringify({ ...withProxies.design, mvr: rest })).toEqual(JSON.stringify(without.design));
   });
 });

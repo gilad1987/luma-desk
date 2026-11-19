@@ -4,7 +4,7 @@
  * restore of its stored bytes, and a stage of the same file takes its hidden layers. The stage is the real
  * `StageService` and the show load the real `ShowSerializer`.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { followStage } from '../../../../src/app/mvr/followStage';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { createTemplate } from '../../../../src/domain/stage/templates';
@@ -14,7 +14,7 @@ const RIG: StageDesign = { ...importedDesign(), source: { kind: 'mvr', name: 'Ri
 const OTHER: StageDesign = { ...importedDesign(), source: { kind: 'mvr', name: 'Other.mvr', fileHash: 'h2' } };
 const unstored = (name: string): StageDesign => ({ ...importedDesign(), source: { kind: 'mvr', name } });
 const DROP = ['dispose', 'prompt.hide'];
-
+const QUIET = { bodies: { clear: vi.fn() }, hall: { show: vi.fn(), hide: vi.fn() } };
 /** A stage world on `initial` that a stage follower watches; `calls` names each scenery, prompt and restore call. */
 function followed(initial?: StageDesign) {
   const world = stageWorld(initial);
@@ -25,7 +25,7 @@ function followed(initial?: StageDesign) {
   const scenery = { dispose: record('dispose'), setHiddenLayers, refit };
   const prompt = { hide: record('prompt.hide') };
   const restore = (design: StageDesign): void => void calls.push(`restore ${design.source.name}`);
-  followStage({ bus: world.bus, stage: world.service, scenery, prompt, restore });
+  followStage({ ...QUIET, bus: world.bus, stage: world.service, scenery, prompt, restore });
   return { ...world, calls };
 }
 

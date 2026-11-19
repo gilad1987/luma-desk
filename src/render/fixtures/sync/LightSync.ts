@@ -2,6 +2,7 @@ import { Vector3, type Texture } from 'three';
 import { clamp, D2R } from '../../../core';
 import type { AttrValues } from '../../../domain/attributes';
 import type { Selection } from '../../../engine/Selection';
+import { reflectHall } from '../../lighting/hallReflection';
 import type { LightFrame } from '../../lights/LightFrame';
 import type { LightVisual } from '../FixtureVisual';
 import { outputValue, type BeamFrame, type BeamFrameSlot } from './BeamFrame';
@@ -10,6 +11,13 @@ import { syncGlow } from './syncGlow';
 import { syncLens } from './syncLens';
 import { syncPool } from './syncPool';
 import { syncPose } from './syncPose';
+
+/**
+ * Metres the cone of a desk model starts ahead of its lens face, so the cone does not fight the lens disc for depth
+ * (the legacy desk drew it so, and the built-in baselines hold it). A GDTF body has no such gap: the GDTF spec makes
+ * the origin of its Beam geometry the origin of the rendered beam, and its lens disc already sits clear of it.
+ */
+export const DESK_LENS_GAP = 0.02;
 
 /**
  * Where beams land: the stage's `SurfaceHit`, which follows the current design and venue. Structural, so a test can
@@ -59,11 +67,16 @@ export class LightSync {
     col[1] = outputValue(o, 'g') / 100;
     col[2] = outputValue(o, 'b') / 100;
     v.bodyMat.emissive.setHex(deps.selection.has(f.id) ? 0x7a5a00 : 0x000000);
+    reflectHall(v.bodyMat);
     syncLens(v, col, intensity);
     const on = intensity > 0.004;
     v.beam.visible = v.pool.visible = v.glow.visible = on;
     if (!on) return;
-    const origin = this.#origin.copy(f.pos).addScaledVector(dir, v.lensOff + 0.02);
+    const origin = this.#origin.copy(f.pos).addScaledVector(dir, v.lensOff + (v.beamAtLens ? 0 : DESK_LENS_GAP));
+    if (v.axisAt) origin.add(v.axisAt);
+    // a GDTF mover: the Beam origin goes through the world matrix of its section, so a lens beside the tilt axis
+    // turns with the head and the cone starts on the drawn lens (`localToWorld` writes into `origin`, no allocation)
+    if (v.beamFrom) v.beamFrom.holder.localToWorld(origin.copy(v.beamFrom.at));
     const zoom = clamp(outputValue(o, 'zoom'), spec.zr[0], spec.zr[1]),
       tz = Math.tan((zoom / 2) * D2R);
     const hit = deps.surface.hit(origin, dir),

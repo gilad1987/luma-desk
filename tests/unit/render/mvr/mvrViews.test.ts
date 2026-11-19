@@ -1,79 +1,100 @@
 /**
- * The framing views of an imported stage, checked by projecting the stage box through each view's 16:9 frustum:
- * FOH fills about 75% of the frame width, the overview about half, top and side about 80%, and the FOH eye stands
- * behind far FOH fixtures with a narrower lens.
+ * The framing views of an imported stage, projected as the renderer draws them (`projectBox`): every whole-stage view
+ * holds its box in the free rectangle of any frame from 4:3 to 32:9, with or without the MA console, and fills it.
  */
-import { PerspectiveCamera, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import type { StageBounds, Vec3 } from '../../../../src/domain/stage/types';
-import type { CameraView } from '../../../../src/render/camera/viewTable';
+import { FIT_MARGIN } from '../../../../src/render/camera/viewFrame';
 import { mvrViews } from '../../../../src/render/mvr/mvrViews';
+import type { StagePlace } from '../../../../src/render/mvr/stageViews';
+import { boxInFrame, frameOf, smallestMargin } from '../camera/projectBox';
 
-/** The box's projected extent in a 16:9 frame (fractions of the frame width and height) and whether it is all in. */
-function frameOf(view: CameraView, { min, max }: StageBounds): { width: number; height: number; inside: boolean } {
-  const camera = new PerspectiveCamera(view.fov ?? 46, 16 / 9, 0.1, 5000);
-  camera.position.set(...view.position);
-  camera.lookAt(...view.target);
-  camera.updateMatrixWorld();
-  const corners = [0, 1, 2, 3, 4, 5, 6, 7].map((i) =>
-    new Vector3(i & 1 ? max[0] : min[0], i & 2 ? max[1] : min[1], i & 4 ? max[2] : min[2]).project(camera),
-  );
-  const xs = corners.map((c) => c.x);
-  const ys = corners.map((c) => c.y);
-  const inside = corners.every((c) => Math.abs(c.x) <= 1 && Math.abs(c.y) <= 1 && c.z < 1);
-  return { width: (Math.max(...xs) - Math.min(...xs)) / 2, height: (Math.max(...ys) - Math.min(...ys)) / 2, inside };
-}
-
-const BOXES: readonly StageBounds[] = [
+const RIGS: readonly StageBounds[] = [
   { min: [-8, 0, -6], max: [8, 6, 2] },
   { min: [-20, 0, -14], max: [20, 14, 4] },
-  { min: [-35, 0, -20], max: [35, 22, 6] },
+  { min: [-95, 0, -30], max: [95, 28, 10] },
 ];
+/** The house box of a rig: the rig and seat rows 50 m out in front of it. */
+const withSeats = ({ min, max }: StageBounds): StageBounds => ({ min, max: [max[0], max[1], max[2] + 50] });
+const seated = (stage: StageBounds): StagePlace => ({ stage, seats: { min: stage.max, max: withSeats(stage).max } });
+const FRAMES = [
+  frameOf(1024, 768),
+  frameOf(1280, 720),
+  frameOf(3840, 2160),
+  frameOf(3840, 1080),
+  frameOf(1280, 684, 300),
+  frameOf(2000, 1114, 520),
+  frameOf(2560, 1044, 560),
+];
+const cases = RIGS.flatMap((rig) => FRAMES.map((frame) => ({ rig, frame })));
 
 describe('mvrViews', () => {
-  it.each(BOXES)('frames the box from FOH at about 75%% of the frame width (%#)', (box) => {
-    const { width, inside } = frameOf(mvrViews(box, []).foh, box);
-    expect(inside).toBe(true);
-    expect(width).toBeGreaterThan(0.6);
-    expect(width).toBeLessThan(0.9);
-  });
-
-  it.each(BOXES)('keeps the box in the upper two thirds of the MA FOH frame (%#)', (box) => {
-    const camera = mvrViews(box, []).fohMa;
-    expect(camera.fov).toBe(60);
-    const { inside } = frameOf(camera, box);
-    expect(inside).toBe(true);
-    const low = new PerspectiveCamera(60, 16 / 9, 0.1, 5000);
-    low.position.set(...camera.position);
-    low.lookAt(...camera.target);
-    low.updateMatrixWorld();
-    expect(new Vector3(box.min[0], box.min[1], box.max[2]).project(low).y).toBeGreaterThan(-1 / 3 - 0.05);
-  });
-
-  it.each(BOXES)('frames the overview at about half, top and side at about 80% (%#)', (box) => {
-    const views = mvrViews(box, []);
-    const wide = frameOf(views.wide, box);
-    expect(Math.max(wide.width, wide.height)).toBeGreaterThan(0.4);
-    expect(Math.max(wide.width, wide.height)).toBeLessThan(0.6);
-    expect(views.wide.position[0]).toBeLessThan(views.wide.target[0]);
-    for (const view of [views.top, views.side]) {
-      const { width, height, inside } = frameOf(view, box);
-      expect(inside).toBe(true);
-      expect(Math.max(width, height)).toBeGreaterThan(0.7);
+  it.each(cases)('holds the rig box in the free rectangle from FOH, front and side (%#)', ({ rig, frame }) => {
+    const views = mvrViews(withSeats(rig), [], seated(rig)).tableFor(frame);
+    for (const name of ['foh', 'fohMa', 'front', 'side'] as const) {
+      const at = boxInFrame(views[name], rig, frame);
+      expect(smallestMargin(at), name).toBeGreaterThan(FIT_MARGIN - 1e-6);
+      expect(Math.max(at.width, at.height), name).toBeGreaterThan(0.8);
     }
-    expect(frameOf(views.front, box).width).toBeGreaterThan(frameOf(views.foh, box).width);
   });
 
-  it('stands the FOH eye behind far FOH fixtures and narrows the lens to keep the fill', () => {
-    const box = BOXES[0] as StageBounds;
+  it.each(cases)('holds the rig whole in the free rectangle from wide and top (%#)', ({ rig, frame }) => {
+    const scene = withSeats(rig);
+    const views = mvrViews(scene, [], seated(rig)).tableFor(frame);
+    for (const name of ['wide', 'top'] as const) {
+      expect(smallestMargin(boxInFrame(views[name], rig, frame)), name).toBeGreaterThan(FIT_MARGIN - 1e-6);
+      const at = boxInFrame(views[name], scene, frame);
+      expect(Math.max(at.width, at.height), name).toBeGreaterThan(0.6);
+    }
+  });
+
+  it('draws the elevations level with a long lens and the plan with upstage at the top', () => {
+    const rig = RIGS[1] as StageBounds;
+    const frame = frameOf(1920, 1080);
+    const { front, side, top, wide, foh } = mvrViews(withSeats(rig), [], seated(rig)).tableFor(frame);
+    expect([front.fov, side.fov]).toEqual([25, 25]);
+    expect(front.position[1]).toBe(front.target[1]);
+    expect(front.position[0]).toBe(0);
+    expect(side.position[1]).toBe(side.target[1]);
+    expect(side.position[0]).toBeGreaterThan(rig.max[0]);
+    const upstage = boxInFrame(top, { min: [0, 0, rig.min[2]], max: [0, 0, rig.min[2]] }, frame);
+    const downstage = boxInFrame(top, { min: [0, 0, rig.max[2]], max: [0, 0, rig.max[2]] }, frame);
+    expect(upstage.top).toBeLessThan(downstage.top);
+    expect(wide.position[0]).toBeLessThan(wide.target[0]);
+    expect(wide.position[1]).toBeGreaterThan(rig.max[1]);
+    expect(foh.target).toEqual([0, 7, -5]);
+    expect(foh.position[1]).toBeGreaterThan(foh.target[1]);
+  });
+
+  it('stands the FOH eye in the house and zooms the lens; far FOH fixtures move it behind them', () => {
+    const rig = RIGS[1] as StageBounds;
+    const frame = frameOf(1920, 1080);
+    const house = mvrViews(withSeats(rig), [], seated(rig)).tableFor(frame).foh;
+    expect(house.position[2]).toBeCloseTo(rig.max[2] + 0.65 * 50, 3);
+    expect(house.fov).toBeLessThan(46);
     const spots: readonly Vec3[] = [
       [-2, 3, 60],
       [2, 3, 60],
     ];
-    const foh = mvrViews(box, spots).foh;
-    expect(foh.position[2]).toBeGreaterThan(60);
-    expect(foh.fov).toBeLessThan(46);
-    expect(frameOf(foh, box).width).toBeGreaterThan(0.6);
-    expect(mvrViews(box, [[0, 3, 5]]).foh).toEqual(mvrViews(box, []).foh);
+    const behind = mvrViews(withSeats(rig), spots, seated(rig)).tableFor(frame).foh;
+    expect(behind.position[2]).toBeCloseTo(65, 3);
+    expect(behind.fov).toBeLessThan(house.fov ?? 0);
+    expect(mvrViews(withSeats(rig), [[0, 3, 1]], seated(rig))).toEqual(mvrViews(withSeats(rig), [], seated(rig)));
+  });
+
+  it('walks the FOH eye in along its sight line when the lens would go below its limit', () => {
+    const rig = RIGS[0] as StageBounds;
+    const far = mvrViews(withSeats(rig), [[0, 3, 200]], seated(rig)).tableFor(frameOf(1920, 1080)).foh;
+    expect(far.fov).toBe(20);
+    expect(far.position[2]).toBeLessThan(200);
+  });
+
+  it('keeps the long lens of the elevations and the plan for a rig 190 m wide, at any distance', () => {
+    const frame = frameOf(2000, 1114, 520);
+    const { front, side, top } = mvrViews(RIGS[2] as StageBounds, []).tableFor(frame);
+    expect([front.fov, side.fov, top.fov]).toEqual([25, 25, 25]);
+    // no cap on the eye: the black picture from 270 m was a NaN normal of a fixture model, not the distance
+    expect(front.position[2] - front.target[2]).toBeGreaterThan(270);
+    expect(mvrViews(RIGS[1] as StageBounds, []).tableFor(frame).front.fov).toBe(25);
   });
 });

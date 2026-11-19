@@ -9,19 +9,19 @@ import type { MvrWarning } from '../MvrWarning';
 import { patchFromAddresses } from '../patch/address';
 import type { MvrFixtureRecord } from '../scene/MvrScene';
 import { classifyFixture, type FixtureClass } from './classifyFixture';
+import { withCustomId } from './deviceEvidence';
 import { fallbackType } from './fallbackType';
 import { readGdtfTable } from './gdtfTable';
+import { StandInTally } from './standInWarnings';
 import { typeGuessWarnings } from './typeGuessWarnings';
 
-/** The scene's `<Fixture>` elements after the GDTF and patch steps, split into desk fixtures and objects. */
+/** The scene's `<Fixture>` elements after the GDTF and patch steps: every one is a desk fixture, none is dropped. */
 export interface ResolvedRig {
-  /** Light fixtures in scene order: each becomes one desk fixture. */
+  /** Every `<Fixture>` in scene order: each becomes one desk fixture, also when its GDTF is no light. */
   readonly fixtures: readonly ResolvedFixture[];
-  /** Uuids of `<Fixture>` elements whose GDTF has no beam and no dimmer (a speaker): objects, not lights. */
-  readonly objectUuids: readonly string[];
   /** Fixtures whose GDTF file is not in the archive. */
   readonly missingGdtfCount: number;
-  /** GDTF file warnings first, then one unknown-mode warning per GDTF file and requested mode, in fixture order. */
+  /** GDTF file warnings, then unknown-mode warnings per file and mode, then the grouped type-guess lines. */
   readonly gdtfWarnings: readonly MvrWarning[];
   /** Patch warnings in fixture order. */
   readonly patchWarnings: readonly MvrWarning[];
@@ -36,6 +36,8 @@ interface TypeAndMode extends FixtureClass {
   readonly mode: string;
   readonly footprint?: number;
   readonly bodySize?: number;
+  /** The mode's channel count, for the placeholder line of the summary. */
+  readonly channelCount?: number;
 }
 
 /**
@@ -57,13 +59,14 @@ function typeAndMode(
   const kind = classifyFixture(info, result.channels, [record.gdtfSpec, info.name, record.name]);
   const bodySize = gdtfBodySize(info, result.mode);
   const sized = bodySize === undefined ? {} : { bodySize };
-  return { ...kind, mode: result.mode, ...(footprint === undefined ? {} : { footprint }), ...sized };
+  const channelCount = result.channels.length;
+  return { ...kind, mode: result.mode, ...(footprint === undefined ? {} : { footprint }), ...sized, channelCount };
 }
 
 /**
- * Gives every scene fixture a desk type, its resolved mode and its patch. GDTF files are read once per spec. Objects
- * get no patch, because the desk never drives them. `gdtfName` keeps the scene's `GDTFSpec` text, so an export can
- * write back the same name even when the file was missing.
+ * Gives every scene fixture a desk type, its resolved mode and its patch. GDTF files are read once per spec. A
+ * fixture whose GDTF is a placeholder or no light keeps its id and patch (`StandInTally` reports it). `gdtfName`
+ * keeps the scene's `GDTFSpec` text, so an export can write back the same name even when the file was missing.
  */
 export function resolveFixtures(archive: MvrArchive, records: readonly MvrFixtureRecord[]): ResolvedRig {
   const table = readGdtfTable(
@@ -73,23 +76,24 @@ export function resolveFixtures(archive: MvrArchive, records: readonly MvrFixtur
   const modeWarnings = new Map<string, MvrWarning>();
   const patchWarnings: MvrWarning[] = [];
   const fixtures: ResolvedFixture[] = [];
-  const objectUuids: string[] = [];
+  const standIns = new StandInTally();
   const guesses = new Map<FixtureTypeId, number>();
   const bodySizes = new Map<string, number>();
   for (const record of records) {
-    const kind = typeAndMode(record, table.infos.get(record.gdtfSpec), modeWarnings);
-    const { type, fromName, bodySize, ...identity } = kind;
-    if (type === 'object') {
-      objectUuids.push(record.uuid);
-      continue;
-    }
+    const kind = withCustomId(record, typeAndMode(record, table.infos.get(record.gdtfSpec), modeWarnings));
+    const { type, fromName, standIn, bodySize, channelCount = 0, mode, footprint } = kind;
     if (bodySize !== undefined) bodySizes.set(record.uuid, bodySize);
-    if (fromName) guesses.set(type, (guesses.get(type) ?? 0) + 1);
+    // a stand-in has its own summary line, so it is not counted as a plain name guess too
+    if (standIn !== undefined) standIns.add(record.gdtfSpec, kind, channelCount);
+    else if (fromName) guesses.set(type, (guesses.get(type) ?? 0) + 1);
     const { patch, warnings } = patchFromAddresses(record.addresses, record.uuid);
     patchWarnings.push(...warnings);
-    fixtures.push({ record, type, gdtfName: record.gdtfSpec, ...identity, ...(patch ? { patch } : {}) });
+    const sized = footprint === undefined ? {} : { footprint };
+    const marked = standIn === undefined ? {} : { standIn };
+    fixtures.push({ record, type, gdtfName: record.gdtfSpec, mode, ...sized, ...marked, ...(patch ? { patch } : {}) });
   }
-  const gdtfWarnings = [...table.warnings, ...modeWarnings.values(), ...typeGuessWarnings(guesses)];
+  const guessWarnings = [...typeGuessWarnings(guesses), ...standIns.warnings()];
+  const gdtfWarnings = [...table.warnings, ...modeWarnings.values(), ...guessWarnings];
   const { infos, missingCount: missingGdtfCount } = table;
-  return { fixtures, objectUuids, missingGdtfCount, gdtfWarnings, patchWarnings, bodySizes, infos };
+  return { fixtures, missingGdtfCount, gdtfWarnings, patchWarnings, bodySizes, infos };
 }

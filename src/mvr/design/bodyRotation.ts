@@ -1,6 +1,5 @@
-import type { Mount } from '../../domain/Fixture';
 import type { Quat } from '../../domain/stage/types';
-import { restRotation } from '../math/restRotation';
+import { REST_ROTATION } from '../math/restRotation';
 
 /** How close a rotation must be to the rest pose to count as it: 0.01 degrees (contract Amendment 3). */
 const REST_TOLERANCE = (0.01 * Math.PI) / 180;
@@ -12,11 +11,14 @@ function angleBetween(a: Quat, b: Quat): number {
 }
 
 /**
- * The `rotation` an imported fixture keeps, or `undefined` when its body is in the rest pose of `mount`. The desk
- * aims a floor unit without `rotation` by its own floor formula, which is a mirror of "hung and turned over"; keeping
- * the turned-over rotation would aim every floor unit of a round trip mirrored in z. Without it, `mount` decides, as
- * it did before the export.
+ * The `rotation` an imported fixture keeps, or `undefined` when its body is in the pose `rest`. For the matrix of a
+ * file the rest pose is the hanging one (GDTF draws a device hanging, and the MVR matrix turns that into the real
+ * pose), so every other matrix, also a unit turned over to stand on the floor, is kept exactly: the body and its pan
+ * zero face where the file says, and the desk aims in that body frame (`dirFrom` with a `rotation`). The luma data
+ * step passes the rest pose of the mount instead for a fixture the desk exported without a `rotation`: the export
+ * wrote the turned-over matrix for the desk's own floor pose, which aims by the floor formula, a mirror of "hung and
+ * turned over", and such a fixture must come back with the aim it had (`applyLumaData`).
  */
-export function bodyRotation(rotation: Quat, mount: Mount): Quat | undefined {
-  return angleBetween(rotation, restRotation(mount)) <= REST_TOLERANCE ? undefined : rotation;
+export function bodyRotation(rotation: Quat, rest: Quat = REST_ROTATION): Quat | undefined {
+  return angleBetween(rotation, rest) <= REST_TOLERANCE ? undefined : rotation;
 }

@@ -39,8 +39,11 @@ test('the MVR samples folder holds .mvr files', () => {
   expect(sampleFiles().length).toBeGreaterThan(0);
 });
 
-for (const name of sampleFiles()) {
-  test(`${name} imports, exports and imports again with the same fixtures and kept patches`, async ({ page }) => {
+// The title carries an index, not the file name: the samples can be private files, and a title reaches every log and
+// report artifact. For the same reason no assertion below prints the name when it fails.
+for (const [index, name] of sampleFiles().entries()) {
+  const title = `sample ${index + 1} imports, exports and imports again with the same fixtures and kept patches`;
+  test(title, async ({ page }) => {
     const known = KNOWN_ISSUES[name];
     const errors = collectErrors(page);
     const desk = await bootApp(page);
@@ -48,7 +51,8 @@ for (const name of sampleFiles()) {
     if (known) await expect(page.locator('#mvrWarnings')).toContainText(known.warning);
     await page.locator('#mvrSummaryClose').click();
     const imported = await readMvrStage(desk);
-    expect(imported).toMatchObject({ kind: 'mvr', fileName: name });
+    expect(imported.kind).toBe('mvr');
+    expect(imported.fileName === name).toBe(true);
 
     await exportAndImport(page, desk);
     const reimported = await readMvrStage(desk);

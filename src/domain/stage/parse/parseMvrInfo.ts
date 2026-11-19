@@ -1,37 +1,10 @@
-import type { FixtureTypeId } from '../../FixtureType';
-import { TYPES } from '../../fixtureTypes';
 import type { MvrDesignInfo, MvrFixtureInfo, MvrLayer } from '../mvr';
+import type { StageBounds } from '../types';
 import type { Key } from './fieldReader';
-import { parseFootprint } from './parseFootprint';
+import { parseDesignFileData } from './parseMvrFileData';
+import { parseFixtureInfo } from './parseMvrFixtureInfo';
 import { allDefined, describeValue, type Raw } from './rawValues';
 import type { Reader } from './readers';
-
-function isTypeId(v: unknown): v is FixtureTypeId {
-  return typeof v === 'string' && Object.hasOwn(TYPES, v);
-}
-
-function parseFixtureInfo(r: Reader, parent: Raw, key: Key, at: string): MvrFixtureInfo | undefined {
-  const o = r.obj(parent, key, at);
-  if (!o) return undefined;
-  const path = r.path(at, key);
-  const type = o['type'];
-  const info = {
-    uuid: r.str(o, 'uuid', path),
-    layer: r.str(o, 'layer', path),
-    gdtfName: r.str(o, 'gdtfName', path),
-    gdtfMode: r.str(o, 'gdtfMode', path),
-    type: isTypeId(type) ? type : r.fail(r.path(path, 'type'), `unknown type ${describeValue(type)}`),
-  };
-  const focus = r.optional(o, 'focus', path, r.vec3);
-  const footprint = r.optional(o, 'footprint', path, (c, k, p) => parseFootprint(r, c, k, p));
-  const bodySize = r.optional(o, 'bodySize', path, r.positive);
-  if (!allDefined(info)) return undefined;
-  const optional = {
-    ...(footprint === undefined ? {} : { footprint }),
-    ...(bodySize === undefined ? {} : { bodySize }),
-  };
-  return { ...info, ...(focus === undefined ? {} : { focus }), ...optional };
-}
 
 /**
  * Each fixture entry; keys must be desk ids (positive integers as text), because the rig looks them up by id. A bad
@@ -59,7 +32,10 @@ function parseLayer(r: Reader, parent: Raw, key: Key, at: string): MvrLayer | un
   if (!o) return undefined;
   const path = r.path(at, key);
   const layer = { uuid: r.str(o, 'uuid', path), name: r.str(o, 'name', path) };
-  return allDefined(layer) ? layer : undefined;
+  // a show saved before layer keys has no `fileUuid`, and parses as before
+  const fileUuid = r.optional(o, 'fileUuid', path, r.str);
+  if (!allDefined(layer)) return undefined;
+  return fileUuid === undefined ? layer : { ...layer, fileUuid };
 }
 
 /**
@@ -76,5 +52,24 @@ export function parseMvrInfo(r: Reader, parent: Raw, key: Key, at: string): MvrD
     hiddenLayers: r.list(o, 'hiddenLayers', path, r.str),
     offset: r.vec3(o, 'offset', path),
   };
-  return allDefined(info) ? info : undefined;
+  const ledLayers = r.optional(o, 'ledLayers', path, (c, k, p) => r.list(c, k, p, r.str));
+  const imported = r.optional(o, 'imported', path, (c, k, p) => r.list(c, k, p, r.str));
+  const seatArea = r.optional(o, 'seatArea', path, (c, k, p) => parseBox(r, c, k, p));
+  const fileData = parseDesignFileData(r, o, path);
+  if (!allDefined(info)) return undefined;
+  return {
+    ...info,
+    ...(ledLayers === undefined ? {} : { ledLayers }),
+    ...(imported === undefined ? {} : { imported }),
+    ...(seatArea === undefined ? {} : { seatArea }),
+    ...fileData,
+  };
+}
+
+/** A box of two finite points (`seatArea`); a show saved before the field existed has none and reads unchanged. */
+function parseBox(r: Reader, parent: Raw, key: Key, at: string): StageBounds | undefined {
+  const o = r.obj(parent, key, at);
+  if (!o) return undefined;
+  const box = { min: r.vec3(o, 'min', r.path(at, key)), max: r.vec3(o, 'max', r.path(at, key)) };
+  return allDefined(box) ? box : undefined;
 }

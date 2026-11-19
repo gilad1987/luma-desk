@@ -1,5 +1,6 @@
 import type { ShowBefore, StartingShow } from '../../show/startingShow/StartingShow';
 import { applyFirstLook } from './applyFirstLook';
+import { followLookPalette } from './ledLookPalette';
 
 /** What an import did with the show: built the starting show, or kept the operator's cues. */
 export type ShowAfterImport = 'built' | 'kept';
@@ -24,7 +25,11 @@ export interface MvrShow {
  * whole demo show file (executors, groups, presets), which replaces everything the drop touched.
  */
 export function mvrShow(show: StartingShow, toast: (text: string) => void): MvrShow {
-  const look = (): void => applyFirstLook(() => show.placeFirstLook(), toast);
+  const look = (): void => {
+    applyFirstLook(() => show.placeFirstLook(), toast);
+    // the look chooses its colour pair by the fixture count of the rig now on stage; the LED content takes the same
+    followLookPalette(show.before().rig.fixtures.length);
+  };
   const build = (): void => {
     show.build();
     look();

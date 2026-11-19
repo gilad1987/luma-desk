@@ -3,18 +3,25 @@ import type { MvrWarning } from '../MvrWarning';
 
 /**
  * `id` when it is a usable desk id (a positive safe integer, as the stage parser reads fixture ids), else `undefined`,
- * so the record gets an auto id. A 20-digit FixtureID is not safe: `id + 1` could equal `id`.
+ * so the record gets an auto id. A 20-digit FixtureID is not safe: `id + 1` could equal `id`. The pass-through export
+ * reads file ids by this rule too, so it keeps the text of each id the import did not use (D1).
  */
-const positive = (id: number | undefined): number | undefined =>
+export const positive = (id: number | undefined): number | undefined =>
   id !== undefined && Number.isSafeInteger(id) && id > 0 ? id : undefined;
+
+/**
+ * The number a `FixtureID` text holds when it is digits only (`001` is 1), else `undefined`: `1.0` or `0x1` is a
+ * label. The pass-through export reads the text by this rule too, so it renumbers exactly the ids the import read.
+ */
+export const fixtureIdNumber = (text: string): number | undefined =>
+  /^\s*\d+\s*$/.test(text) ? Number(text) : undefined;
 
 /**
  * The id the file asks for: `FixtureIDNumeric`, else a numeric `FixtureID`. The spec defines `FixtureIDNumeric` 0 as
  * "not set", and writers emit 0 by default, so a 0 must not hide the `FixtureID` the user typed.
  */
 function requestedId(record: MvrFixtureRecord): number | undefined {
-  const fromText = /^\s*\d+\s*$/.test(record.fixtureId) ? Number(record.fixtureId) : undefined;
-  return positive(record.fixtureIdNumeric) ?? positive(fromText);
+  return positive(record.fixtureIdNumeric) ?? positive(fixtureIdNumber(record.fixtureId));
 }
 
 /**

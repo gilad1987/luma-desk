@@ -14,7 +14,7 @@ import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { createTemplate, TEMPLATE_IDS } from '../../../../src/domain/stage/templates';
 import { FIXTURE_ROLES, TRUSS_KINDS } from '../../../../src/domain/stage/types';
 
-/** Every fixture type but `screen`, which is not a light (`isLight`). */
+/** Every fixture type but `screen` and `device`, which are no lights (`isLight`). */
 const TYPES: readonly FixtureTypeId[] = [
   'spot',
   'beam',
@@ -71,5 +71,14 @@ describe('autoGroupsOf coverage', () => {
     expect(groups.towB).toEqual([...legacy.towB, ...added.slice(0, 2)]);
     expect(groups.t2).toEqual([...legacy.t2, ...added.slice(2, 4)]);
     expect(groups.t4).toEqual([...legacy.t4, ...added.slice(4, 6)]);
+  });
+
+  it('gives a device no Auto Show group: nothing lights it, and its type has no slot', () => {
+    const festival = createTemplate('festival');
+    const d = addFloorRow(festival, { type: 'device', count: 2, from: [-4, 0, 2], to: [4, 0, 2] });
+    const devices = d.fixtures.slice(festival.fixtures.length).map((f) => f.id);
+    const placed = Object.values(autoGroupsOf(rigFromDesign(d), d)).flat();
+    expect(devices).toHaveLength(2);
+    expect(placed.filter((id) => devices.includes(id))).toEqual([]);
   });
 });

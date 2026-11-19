@@ -6,6 +6,8 @@ export interface CameraView {
   readonly position: Vec3Tuple;
   readonly target: Vec3Tuple;
   readonly fov?: number;
+  /** Set when no place on the sight line gave the eye a clear zone (`clearEye`): how badly objects are in its way. */
+  readonly faults?: number;
 }
 
 /**
