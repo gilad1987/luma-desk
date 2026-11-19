@@ -19,18 +19,27 @@ export interface MvrCommand {
   readonly percent: boolean;
 }
 
-/** `<name> ,f <float>`; the MVR example has no space before the comma, the GDTF style has one. */
-const COMMAND = /^(.*?)\s*,\s*f\s+(\S+)$/;
+/**
+ * `,f <float>` after the last comma of `<name> ,f <float>`; the MVR example has no space before the comma, the GDTF
+ * style has one. The text is split at the last comma, not by one pattern over the whole text: a lazy name before
+ * `\s*` tried every split and took seconds on a long run of spaces. A float holds no comma, so the last comma is the
+ * one before `f`.
+ */
+const TAIL = /^,\s*f\s+(\S+)$/;
+/** A command is one line of text: a name that holds a line break (Zl, Zp: U+2028, U+2029) is no command name. */
+const LINE_BREAK = /[\n\r\p{Zl}\p{Zp}]/u;
 
 /** Reads a command text; `undefined` for text that is not `name ,f float`, which the caller keeps and counts. */
 export function parseCustomCommand(text: string): MvrCommand | undefined {
-  const match = COMMAND.exec(text.trim());
-  const value = Number(match?.[2]);
-  if (!match || !Number.isFinite(value)) return undefined;
+  const trimmed = text.trim();
+  const comma = trimmed.lastIndexOf(',');
+  const match = comma < 0 ? null : TAIL.exec(trimmed.slice(comma));
+  const value = Number(match?.[1]);
+  const path = trimmed.slice(0, Math.max(comma, 0)).trimEnd();
+  if (!match || !Number.isFinite(value) || LINE_BREAK.test(path)) return undefined;
   // "/FIXTURE_ID/NAME[/percent]": a path that starts with "/" starts with the sender's address of the fixture. GDTF:
   // "Note that all "." Separators can be replaced with "/"", so the parts after the id are the parts of the name
   // (`/7/Body_Pan/Pan/Pan 1` is `Body_Pan.Pan.Pan 1`), and the name is kept in its dotted form.
-  const path = match[1] ?? '';
   const parts = path.split('/').filter((part) => part !== '');
   const percent = parts.length > 1 && parts[parts.length - 1] === 'percent';
   const named = percent ? parts.slice(0, -1) : parts;
