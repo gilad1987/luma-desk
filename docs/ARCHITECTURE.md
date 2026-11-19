@@ -241,11 +241,14 @@ A catalogue product (a real fixture such as the Robe Esprite) is a layer over a 
 
 1. The brand file in `src/domain/fixtureProducts/` (for example `robe.ts`): add a record with `id`, `brand`, `name`,
    `category`, `base`, `optics`, `body`, `span`, `mountHeight`, `dataSheet` and `unmodelled`. The `id` is show
-   format: a saved design stores it, so it never changes.
+   format: a saved design stores it, so it never changes. A new brand file must also be spread into `PRODUCTS` in
+   `src/domain/fixtureProducts/index.ts`, or the desk does not know its products.
 2. `body.family` picks the parametric body family in `src/render/fixtures/families/` (`mover` in C1). A new family is
    a new member of `ProductBody` and a new case in the family switch.
-3. Run `catalogueRules.test.ts`, `lazyProducts.test.ts` and `productSpans.test.ts`. Pin `span` and `mountHeight` to
-   the values measured from the built model, as `BODY_SPANS` and `MOUNT_HEIGHTS` are.
+3. Add the id to the pinned product id list (`PRODUCT_IDS`) in
+   `tests/unit/domain/fixtureProducts/catalogueRules.test.ts`. Run `catalogueRules.test.ts`, `lazyProducts.test.ts`
+   and `productSpans.test.ts`. Pin `span` and `mountHeight` to the values measured from the built model, as
+   `BODY_SPANS` and `MOUNT_HEIGHTS` are.
 4. Never add a product to `createLensTextures` or `createModelMaterials`: everything for a product is made when the
    first fixture of that product is built, so the boot draws no new `Math.random` (`random-calls.json`).
 5. Cite the manufacturer data sheet in `dataSheet`, and check every optical number against it.
