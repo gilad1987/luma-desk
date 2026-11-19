@@ -1,6 +1,7 @@
 /**
  * Owns the shape of a built mover product: the Esprite is a Robe mover with joints, head and lens, drawn with its
- * body's lens offset and radius, and a mover body gets side vents only when it asks for them. The lazy creation rule
+ * body's lens offset and radius, the body `ref` picks the native head lathe the barrel scales, a `cells` face paints
+ * one lens per cell, and a mover body gets side vents only when it asks for them. The lazy creation rule
  * is owned by `lazyProducts.test.ts`, the pinned sizes by `productSpans.test.ts`.
  */
 import { Box3, BufferGeometry, Vector3 } from 'three';
@@ -9,6 +10,14 @@ import { PRODUCTS } from '../../../../../src/domain/fixtureProducts';
 import type { MoverBody } from '../../../../../src/domain/fixtureProducts/FixtureProduct';
 import { ModelPrimitives, type LightVisual } from '../../../../../src/render/fixtures';
 import { moverHead } from '../../../../../src/render/fixtures/families/moverFamily';
+import { moverFacePainter } from '../../../../../src/render/fixtures/families/moverFaces';
+import { barrelProfile } from '../../../../../src/render/fixtures/families/moverProfile';
+import { MOVER_REFERENCES } from '../../../../../src/render/fixtures/families/moverReferences';
+import { FORTE_BARREL_PROFILE } from '../../../../../src/render/fixtures/models/forteHead';
+import { MEGAPOINTE_BARREL_PROFILE } from '../../../../../src/render/fixtures/models/megapointeHead';
+import { SPIIDER_DRUM_PROFILE } from '../../../../../src/render/fixtures/models/spiiderHead';
+import type { CanvasPainter } from '../../../../../src/render/shared';
+import { asReal } from '../../../../shared/dom';
 import { stubCanvasDocument } from '../../stubCanvasDocument';
 import { visualBuilder } from '../builtBox';
 
@@ -39,6 +48,38 @@ it('draws the Esprite lens disc at the body lens radius, not the FORTE one', () 
 it('paints the lens on the fixture lens material, and that material is the lens mesh material', () => {
   const visual = buildEsprite();
   expect([visual.lens.material === visual.lensMat, visual.lensMat.map === null]).toStrictEqual([true, false]);
+});
+
+const REFS = [
+  ['forte', FORTE_BARREL_PROFILE, 28],
+  ['megapointe', MEGAPOINTE_BARREL_PROFILE, 28],
+  ['spiider', SPIIDER_DRUM_PROFILE, 32],
+] as const;
+
+it.each(REFS)('draws a %s-ref body at its reference shape with that head barrel lathe', (ref, profile, segments) => {
+  const body: MoverBody = { ...ESPRITE.body, ref, barrel: MOVER_REFERENCES[ref].shape };
+  const round = ([r, y]: readonly [number, number]): number[] => [r, y].map((v) => Math.round(v * 1e9) / 1e9);
+  const head = moverHead(body).geometry(new ModelPrimitives(), false).head;
+  // the merged lathe is not indexed: two triangles per profile step and segment
+  const vertices = (profile.length - 1) * segments * 6;
+  expect([barrelProfile(body).map(round), head.getAttribute('position').count]).toStrictEqual([
+    profile.map(round),
+    vertices,
+  ]);
+});
+
+/** How many `arc` calls `painter` makes on a 128 px face: one per round lens cell. */
+function arcCount(painter: CanvasPainter): number {
+  let arcs = 0;
+  const context: object = new Proxy({}, { get: (_, key) => (key === 'arc' ? () => void arcs++ : () => context) });
+  painter(asReal<CanvasRenderingContext2D>(context), 128, 128);
+  return arcs;
+}
+
+it('paints one round lens per cell of a cells face, the sum of its ring counts', () => {
+  expect([arcCount(moverFacePainter({ cells: [1, 6] })), arcCount(moverFacePainter({ cells: [1, 6, 12] }))]).toEqual([
+    7, 19,
+  ]);
 });
 
 it('cuts side vents into a mover head only when its body asks for them', () => {

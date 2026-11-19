@@ -18,6 +18,9 @@ export interface MoverBody {
   readonly ribs?: readonly number[];
   /** Side vent grilles on the head. */
   readonly vents?: boolean;
-  /** Lens face painter: 'rings' (one front lens over zoom optics), 'hotspot' (short-arc beam). */
-  readonly face: 'rings' | 'hotspot';
+  /**
+   * Lens face painter: 'rings' (one front lens over zoom optics), 'hotspot' (short-arc beam), or `cells`: one round
+   * lens per LED cell, the count of each concentric ring, centre first (a count of 1 is the centre cell).
+   */
+  readonly face: 'rings' | 'hotspot' | { readonly cells: readonly number[] };
 }

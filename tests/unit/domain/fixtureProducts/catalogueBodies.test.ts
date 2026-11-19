@@ -16,7 +16,7 @@ import { TYPES } from '../../../../src/domain/fixtureTypes/index.ts';
 const NEEDS_MOVING = { mover: true } as const satisfies Record<ProductBody['family'], boolean>;
 
 /** The ids the manufacturer lists as discontinued, in catalogue order. */
-const DISCONTINUED_IDS: readonly ProductId[] = [];
+const DISCONTINUED_IDS: readonly ProductId[] = ['robe-pointe'];
 
 /** Every mover product with its body, narrowed on the family. */
 const MOVERS: { id: ProductId; body: MoverBody }[] = PRODUCT_IDS.flatMap((id) => {
