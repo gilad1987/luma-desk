@@ -62,6 +62,8 @@ first, so the record names a GDTF only when the product sets its own. `ProductOp
 type system already keeps the invariants; the guard test checks them on the merged record anyway (it guards a future
 widening of `ProductOptics`).
 
+Optics per field (pre-review L1): ADR 0007, "Optics: absolute or relative, per field", says which fields are absolute.
+
 Drawn size convention (decision, recorded in the ADR): a product is drawn at the desk's scale relative to its base
 model, not at real metres: `body.size = TYPES[base].size * (product height / base product height)` from the two
 data sheets (Esprite 733 mm / FORTE 843 mm => `0.72 * 0.870 = 0.626`, re-computed by the implementer from the cited
