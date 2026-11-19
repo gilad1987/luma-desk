@@ -42,6 +42,13 @@ export type FixtureLink = Pick<StageFixture, 'id' | 'type' | 'role' | 'trussId' 
    * pose of the mount is the desk's own pose and gives no `rotation` (a desk floor unit, and every older export).
    */
   readonly ownRotation?: true;
+  /**
+   * The `<Fixture uuid>` and its `occurrence` (absent for 0) of a fixture with MVR facts. The import pairs the link
+   * with the fixture by them, because the desk id can change on the way: a pass-through keeps the file's own empty
+   * `FixtureID`, so the next import numbers again. A link without one (a desk fixture, an older export) pairs by id.
+   */
+  readonly uuid?: string;
+  readonly occurrence?: number;
 };
 
 /**

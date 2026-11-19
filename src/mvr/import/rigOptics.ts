@@ -28,8 +28,9 @@ function imagesOf(optics: FixtureOptics): string[] {
 function withOptics(design: StageDesign, byUuid: ReadonlyMap<string, OpticsVerdict>): StageDesign {
   if (design.mvr === undefined) return design;
   const entries = Object.entries(design.mvr.fixtures).map(([id, info]) => {
-    const optics = byUuid.get(info.uuid)?.optics;
-    return [id, optics === undefined ? info : { ...info, optics }] as const;
+    const { optics, mixesColour } = byUuid.get(info.uuid) ?? {};
+    const mixed = mixesColour ? { mixesColour } : {};
+    return [id, optics === undefined ? info : { ...info, optics, ...mixed }] as const;
   });
   return { ...design, mvr: { ...design.mvr, fixtures: Object.fromEntries(entries) } };
 }

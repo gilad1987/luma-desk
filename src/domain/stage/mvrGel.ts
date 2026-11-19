@@ -29,10 +29,11 @@ export function isFileWhite(color: MvrFileColor): boolean {
 
 /**
  * Whether the real device makes one colour only: its GDTF is trusted for optical data and names no colour system
- * (no emitters, no mixing filters, no colour wheel). Without trusted optics the desk cannot tell, so it is false.
+ * (no emitters, no mixing filters, no colour wheel) and its mode has no other colour channel (`mixesColour`). Without
+ * trusted optics the desk cannot tell, so it is false.
  */
 export function isSingleColour(info: MvrFixtureInfo): boolean {
-  return info.optics !== undefined && info.optics.color === undefined;
+  return info.optics !== undefined && info.optics.color === undefined && info.mixesColour !== true;
 }
 
 /**

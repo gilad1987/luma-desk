@@ -6,6 +6,7 @@ import { gdtfTreeSize, largestTrusted } from '../gdtf/gdtfBodySize';
 import { meshCache, meshTreeSize } from '../gdtf/gdtfMeshBox';
 import { treeModels } from '../gdtf/gdtfTreeSize';
 import type { MvrWarning } from '../MvrWarning';
+import { badModelWarnings } from './badModelWarnings';
 import { bodyDraw, type BodyPlan } from './bodyDraw';
 import { bodyLines, type BodyEntry, type BodyLine } from './bodyWarnings';
 import { gdtfBudget, type ByteBudget } from '../gdtf/gdtfEntries';
@@ -84,14 +85,10 @@ export function fixtureBodies(
     const names = [info?.name, record.gdtfSpec, record.name];
     const plan = deskSizes ? drawn : withProductSize(drawn, names, fixture.type);
     const product = info?.name || record.gdtfSpec || record.name;
-    bodies.set(record.uuid, {
-      product,
-      ...verdict,
-      ...plan,
-      ...(info ? { gdtfFile: info.fileName } : {}),
-      ...(body ? { body } : {}),
-    });
+    const file = info ? { gdtfFile: info.fileName } : {};
+    bodies.set(record.uuid, { product, ...verdict, ...plan, ...file, ...(body ? { body } : {}) });
     entries.push({ product, verdict, plan, noGdtf: info === undefined });
   }
-  return { gdtfMeshes: new Map(read.meshes), bodies, bodySizes, lines: bodyLines(entries), warnings: read.warnings };
+  const warnings = [...read.warnings, ...badModelWarnings(read.meshes, boxes)];
+  return { gdtfMeshes: new Map(read.meshes), bodies, bodySizes, lines: bodyLines(entries), warnings };
 }

@@ -4,7 +4,7 @@ import type { MvrFixtureInfo } from '../mvr';
 import type { Key } from './fieldReader';
 import { parseOptics } from './optics/parseOptics';
 import { parseFootprint } from './parseFootprint';
-import { parseFixtureFileData } from './parseMvrFileData';
+import { parseFixtureFileData, parseFlag } from './parseMvrFileData';
 import { allDefined, describeValue, type Raw } from './rawValues';
 import type { Reader } from './readers';
 
@@ -26,8 +26,10 @@ function parseExtras(r: Reader, o: Raw, path: string): Partial<MvrFixtureInfo> {
     const value = r.optional(o, key, path, r.positiveInt);
     return value === undefined ? [] : [[key, value] as const];
   });
+  const mixesColour = parseFlag(r, o, 'mixesColour', path);
   return {
     ...(standIn === undefined ? {} : { standIn }),
+    ...(mixesColour ? { mixesColour } : {}),
     ...Object.fromEntries(ids),
     ...parseFixtureFileData(r, o, path),
   };

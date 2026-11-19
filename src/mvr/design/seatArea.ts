@@ -14,17 +14,24 @@ export type SeatFit = Pick<FittedScene, 'offset' | 'layers' | 'positions'>;
  * seats in the stage frame (metres, after the fit offset), or `{}` for a file without a seat. The seats are proxies:
  * they stay in the import's geometry, which a saved show does not hold, so the box is written into the design as
  * plain data. The camera places the Crowd view in it and the first look ends its audience fans over it, also after a
- * reload. A seat more than `FAR` m outside every mesh and fixture is a parked block (`farLayers`) and does not count,
- * and one whose matrix is not finite is left out, so the box never is NaN or endless.
+ * reload. The seats of a parked layer (every proxy more than `FAR` m outside every mesh and fixture) do not count,
+ * and a seat whose matrix is not finite is left out, so the box never is NaN or endless.
  */
 export function seatAreaOf(placements: readonly ProxyPlacement[], fit: SeatFit): { readonly seatArea?: StageBounds } {
   const all = fileBox(fit.layers, fit.positions);
-  const points = classifyProxies(placements).flatMap(({ kind, matrix: m }): Vec3[] => {
-    if (kind !== 'seat') return [];
+  const at = (m: ArrayLike<number>): Vec3 => {
     const [x, y, z] = pointToThree([m[12] ?? 0, m[13] ?? 0, m[14] ?? 0]);
-    const point: Vec3 = [x + fit.offset[0], y + fit.offset[1], z + fit.offset[2]];
-    const isParked = isFiniteBox(all) && outside(all, point) > FAR;
-    return point.every(Number.isFinite) && !isParked ? [point] : [];
+    return [x + fit.offset[0], y + fit.offset[1], z + fit.offset[2]];
+  };
+  const proxies = classifyProxies(placements).filter(({ kind }) => kind !== 'unknown');
+  const isFar = (point: Vec3): boolean => isFiniteBox(all) && outside(all, point) > FAR;
+  // As `farLayers` parks them: a layer is parked only when every proxy of it is far and it holds no mesh, so the far
+  // rows of a deep seat block whose front rows are near still count.
+  const kept = new Set([...proxies.filter(({ matrix }) => !isFar(at(matrix))), ...fit.layers].map((p) => p.layer));
+  const points = proxies.flatMap(({ kind, matrix, layer }): Vec3[] => {
+    const point = at(matrix);
+    const isParked = isFar(point) && !kept.has(layer);
+    return kind === 'seat' && point.every(Number.isFinite) && !isParked ? [point] : [];
   });
   const [first] = points;
   if (!first) return {};

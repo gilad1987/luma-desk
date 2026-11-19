@@ -90,11 +90,11 @@ describe('classifyFixture', () => {
     expect(classifyFixture(GENERIC_WASH, real, ['Acme Par 7'])).toEqual({ type: 'par', fromName: false });
   });
 
-  it('gives beam for a narrow moving head and keeps a fixture without a beam a fixture', () => {
+  it('gives beam for a narrow moving head and keeps a beamless stand-in with a Dimmer a fixture (R2-12)', () => {
     const narrow = { ...GENERIC_WASH, beamType: 'Spot', beamAngle: 4 };
     expect(classifyFixture(narrow, REAL_SPOT, ['Acme Thing']).type).toBe('beam');
     const beamless = { ...GENERIC_WASH, hasBeam: false };
     const stub = { type: 'strobe', fromName: true, standIn: 'placeholder' };
-    expect(classifyFixture(beamless, channels('Pan'), ['Acme Strobe'])).toEqual(stub);
+    expect(classifyFixture(beamless, channels('Dimmer'), ['Acme Strobe'])).toEqual(stub);
   });
 });
