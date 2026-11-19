@@ -59,7 +59,7 @@ function importNow(bytes: Uint8Array, options: MvrImportOptions): MvrImport {
     gdtfMeshes: bodies.gdtfMeshes,
     bodies: bodies.bodies,
     goboImages: optics.images,
-    summary: { ...summarize(walked, rig, noGeometry, bodies.lines), ...optics.summary },
+    summary: { ...summarize(walked, rig, optics.design, { noGeometry, bodyLines: bodies.lines }), ...optics.summary },
     warnings: foldWarnings([
       ...versionWarnings(doc),
       ...scene.warnings,
