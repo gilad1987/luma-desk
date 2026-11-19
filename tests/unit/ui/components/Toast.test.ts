@@ -22,10 +22,11 @@ describe('Toast', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it('shows a message as text only and hides it after its time', () => {
+  it('shows a message as text only, in the direction of its text, and hides it after its time', () => {
     mounted().emit('message', { kind: 'toast', text: 'Saved <b>x</b>' });
     expect([element().textContent, element().style.display]).toEqual(['Saved <b>x</b>', 'block']);
     expect(element().querySelector('b, button')).toBeNull();
+    expect(element().dir).toBe('auto');
     vi.advanceTimersByTime(1800);
     expect(element().style.display).toBe('none');
   });

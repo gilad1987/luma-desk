@@ -64,17 +64,18 @@ async function openLayerList(deps: MvrFlowDeps, parts: LayerListParts, loads: La
   const { mvr, source } = deps.stage.design;
   if (!mvr) return;
   if (!mayOpenMvrLayers(deps.modal())) return deps.toast(he.mvr.layersBusy);
+  const current = (): boolean => deps.stage.design.source === source;
   // a failed LED load still opens the list, without the LED rows, and says why they are missing
-  const ledWalls = await loads.ledNow(mvr.ledLayers ?? []).catch(() => {
+  const ledWalls = await loads.ledNow(mvr.ledLayers ?? [], current).catch(() => {
     deps.toast(he.mvr.ledLayersFailed);
     return undefined;
   });
   // a stage change during the load wins: the list would bind this file's layers to the new stage
-  if (deps.stage.design.source !== source) return;
+  if (!current()) return;
   if (!mayOpenMvrLayers(deps.modal())) return deps.toast(he.mvr.layersBusy);
-  const { hiddenLayers } = mvr;
+  const { hiddenLayers, layers: fileLayers } = deps.stage.design.mvr ?? mvr;
   const { showProxies, audience, hall, shown } = parts;
-  const layers = keyedLayers(mvr.layers);
+  const layers = keyedLayers(fileLayers);
   const content = { layers, hiddenLayers, showProxies, proxiesShown: shown(), audience, hall, ledWalls };
   const { hide, markLed, register } = bindLayerList(deps);
   register(openMvrLayers(deps.modal(), { ...content, markLed }, hide));

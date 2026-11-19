@@ -28,6 +28,19 @@ describe('Toast', () => {
     expect(element.style.display).toBe('none');
   });
 
+  it('keeps a long text up 50 ms per character, at most 15 s', () => {
+    toast.show('x'.repeat(271));
+    vi.advanceTimersByTime(13549);
+    expect(element.style.display).toBe('block');
+    vi.advanceTimersByTime(1);
+    expect(element.style.display).toBe('none');
+    toast.show('x'.repeat(1000));
+    vi.advanceTimersByTime(14999);
+    expect(element.style.display).toBe('block');
+    vi.advanceTimersByTime(1);
+    expect(element.style.display).toBe('none');
+  });
+
   it('shows engine toast messages and ignores log messages', () => {
     bus.emit('message', { kind: 'log', text: 'logged', level: 'ok' });
     expect(element.style.display).toBe('');
