@@ -26,6 +26,7 @@ const BODY_CLASS = 'is-building';
 export class BuilderMode {
   readonly #deps: BuilderDeps;
   #open: OpenBuilder | null = null;
+  #ticket = 0;
 
   constructor(deps: BuilderDeps) {
     this.#deps = deps;
@@ -33,6 +34,17 @@ export class BuilderMode {
 
   get isOpen(): boolean {
     return this.#open !== null;
+  }
+
+  /**
+   * Books an open for after the chunk load and returns the call that enters, if no later booking or `exit` came first:
+   * a Cancel during a slow load keeps the builder shut, and a double click opens it once.
+   */
+  book(): () => void {
+    const ticket = ++this.#ticket;
+    return () => {
+      if (ticket === this.#ticket) this.enter();
+    };
   }
 
   /**
@@ -69,6 +81,7 @@ export class BuilderMode {
    * must not leave the console hidden, the 3D view gone or the desk inert under a dead builder screen.
    */
   exit(keep: boolean): void {
+    this.#ticket += 1;
     const open = this.#open;
     if (!open) return;
     this.#open = null;

@@ -22,8 +22,16 @@ function clickWith(shell: Promise<void>) {
   const loadShell = vi.fn(() => shell);
   const stageRenderer = { setConsoleHeight: vi.fn() };
   const builder = wireBuilder({ stage: h.deps.stage, bus: h.deps.bus, stageRenderer, fitLayout: vi.fn(), loadShell });
-  dom.get('buildBtn').onclick?.({ target: null });
-  return { emit: h.emit, enter, loadShell, builder };
+  const click = (): unknown => dom.get('buildBtn').onclick?.({ target: null });
+  click();
+  return { emit: h.emit, enter, loadShell, builder, click };
+}
+
+/** A chunk load the test resolves itself, as a slow network would. */
+function slowShell(): { shell: Promise<void>; release: () => void } {
+  let release = (): void => undefined;
+  const shell = new Promise<void>((resolve) => (release = resolve));
+  return { shell, release };
 }
 
 describe('wireBuilder #buildBtn load', () => {
@@ -34,14 +42,33 @@ describe('wireBuilder #buildBtn load', () => {
 
   // catches an enter before the chunk loads, which would mount bare, unstyled wa-* tags
   it('opens Builder mode from a #buildBtn click only after the shell loads', async () => {
-    let release = (): void => undefined;
-    const shell = new Promise<void>((resolve) => (release = resolve));
+    const { shell, release } = slowShell();
     const { enter, loadShell, builder } = clickWith(shell);
     const beforeLoad = enter.mock.contexts.length;
     release();
     await shell;
     expect([loadShell.mock.calls.length, beforeLoad]).toEqual([1, 0]);
     expect(enter.mock.contexts).toEqual([builder]);
+  });
+
+  // the bug: a Cancel (main.ts `cancelBuilder`, which calls exit) during a slow load did nothing, and the builder opened
+  it('does not open when the builder exits before the shell loads', async () => {
+    const { shell, release } = slowShell();
+    const { enter, builder } = clickWith(shell);
+    builder.exit(false);
+    release();
+    await shell;
+    expect(enter).not.toHaveBeenCalled();
+  });
+
+  // catches a double click during the load that enters twice once the shell resolves
+  it('opens once after two clicks during the load', async () => {
+    const { shell, release } = slowShell();
+    const { enter, click } = clickWith(shell);
+    click();
+    release();
+    await shell;
+    expect(enter.mock.calls.length).toBe(1);
   });
 
   // the bug: after a deploy an open tab asks for a chunk that is gone, the import rejects and the click does nothing
