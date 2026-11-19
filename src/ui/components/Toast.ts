@@ -27,6 +27,9 @@ export class Toast {
 
   constructor(bus: Pick<EngineBus, 'on'>) {
     this.#element = byId('toast');
+    // a toast mixes Hebrew and Latin; its first strong letter sets the direction, as in a layer row. Set here, so the
+    // shell markup keeps the legacy page's bytes.
+    this.#element.dir = 'auto';
     bus.on('message', (m) => {
       if (m.kind === 'toast') this.show(m.text, m.action);
     });
