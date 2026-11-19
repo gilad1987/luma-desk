@@ -1,3 +1,4 @@
+import { isHiddenWallFixture } from '../../domain/stage/hiddenWall';
 import type { BuilderSelection } from './selection';
 import type { TopScene } from './topViewDraw';
 import { trussFootprint, type TrussFootprint } from './topViewShapes';
@@ -48,11 +49,11 @@ function pickedIds(selection: BuilderSelection): PickedIds {
   return ids;
 }
 
-/** One pass over the fixtures whose pick state is `picked`, with no array or closure made per frame. */
+/** One pass over the fixtures whose pick state is `picked`, but a hidden wall's, with no array or closure per frame. */
 function fillFixtures(ctx: CanvasRenderingContext2D, { design, selection, view }: TopScene, picked: boolean): void {
   const ids = pickedIds(selection).fixtures;
   for (const f of design.fixtures) {
-    if (ids.has(f.id) !== picked) continue;
+    if (ids.has(f.id) !== picked || isHiddenWallFixture(design, f.id)) continue;
     const [px, py] = view.toCanvas(f.position[0], f.position[2]);
     ctx.fillRect(px - FIXTURE_PX / 2, py - FIXTURE_PX / 2, FIXTURE_PX, FIXTURE_PX);
   }

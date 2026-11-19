@@ -1,3 +1,4 @@
+import { isHiddenWallFixture } from '../../domain/stage/hiddenWall';
 import type { StageDesign, StageFixture } from '../../domain/stage/StageDesign';
 import type { StageTruss } from '../../domain/stage/trussTypes';
 import { NO_SELECTION, type BuilderSelection } from './selection';
@@ -20,17 +21,19 @@ const TOWER_MARK_PX = 12;
  * The item under canvas point `at`, in this order: a fixture whose mark is under the pointer, a tower (a one-point
  * truss) near it, the nearest truss line within the pick radius, then the nearest fixture within it. Fixtures hang
  * close together on the truss lines and towers stand on them, so a fixture that won at the full radius hid nearly
- * every truss on a dense rig; a fixture off the trusses still gets the full touch target.
+ * every truss on a dense rig; a fixture off the trusses still gets the full touch target. The screen fixture of a
+ * hidden LED wall is not drawn, so it is not picked (`isHiddenWallFixture`).
  */
 export function pickAt(d: StageDesign, view: TopTransform, at: Point2): TopPick | null {
+  const fixtures = d.fixtures.filter((f) => !isHiddenWallFixture(d, f.id));
   const fixtureDistance = (f: StageFixture): number => distance(view.toCanvas(f.position[0], f.position[2]), at);
-  const onMark = nearest(d.fixtures, fixtureDistance, FIXTURE_MARK_PX);
+  const onMark = nearest(fixtures, fixtureDistance, FIXTURE_MARK_PX);
   if (onMark) return fixturePick(onMark);
   const trussDistance = (t: StageTruss): number => footprintDistance(trussFootprint(t), view, at);
   const towerDistance = (t: StageTruss): number => (isTower(t) ? trussDistance(t) : Infinity);
   const truss = nearest(d.trusses, towerDistance, TOWER_MARK_PX) ?? nearest(d.trusses, trussDistance, PICK_RADIUS_PX);
   if (truss) return { kind: 'truss', id: truss.id, anchor: [truss.transform.position[0], truss.transform.position[2]] };
-  const fixture = nearest(d.fixtures, fixtureDistance, PICK_RADIUS_PX);
+  const fixture = nearest(fixtures, fixtureDistance, PICK_RADIUS_PX);
   return fixture ? fixturePick(fixture) : null;
 }
 

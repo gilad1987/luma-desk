@@ -4,6 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { boundsOf } from '../../../../src/domain/stage/bounds';
+import { setLedWall } from '../../../../src/domain/stage/edit/ledWall';
 import { createTemplate } from '../../../../src/domain/stage/templates';
 import { BUILT_IN_DESIGN } from '../../../../src/domain/stage/templates/sultansPool/builtInDesign';
 import { pickAt } from '../../../../src/ui/builder/topViewPick';
@@ -39,6 +40,15 @@ describe('pickAt on a dense rig', () => {
   it('still gives a fixture with no truss near it the full touch radius', () => {
     const bare = { ...theatre, trusses: [] };
     expect(pickAt(bare, view, [px + 15, py])).toEqual({ kind: 'fixture', id: first.id, anchor: [-5, 2] });
+  });
+
+  it('picks the screen fixture of a shown LED wall, but not of a hidden one', () => {
+    const walled = setLedWall({ ...theatre, trusses: [] }, { width: 8, height: 4 });
+    const screen = walled.fixtures.find((f) => f.id === walled.screens[0]?.fixtureId);
+    if (!screen) throw new Error('the wall has a screen fixture');
+    const at = view.toCanvas(screen.position[0], screen.position[2]);
+    const hidden = { ...walled, scenery: { ...walled.scenery, ledWall: false } };
+    expect([pickAt(walled, view, at)?.id, pickAt(hidden, view, at)?.id]).toEqual([screen.id, undefined]);
   });
 
   it('lets a click pick each of the 43 built-in trusses in an 800 x 600 view', () => {
