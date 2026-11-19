@@ -5,6 +5,7 @@ import { newUniqueId } from './ids';
 import { checkFinite, checkSizes } from './inputChecks';
 import { roundToMillimetre } from './millimetres';
 import { isSameLength } from '../sameData';
+import { wallRisen } from './wallRisen';
 
 /** Deck size in metres: `width` along x, `depth` along z, `height` of the top above the ground. */
 export interface DeckSize {
@@ -15,9 +16,10 @@ export interface DeckSize {
 
 /**
  * Resizes the deck around its centre line, keeping the downstage edge (z1) where it is, so the deck grows away from
- * the audience. Risers stand on the deck, so a new height moves them up or down with it in the same step (the riser
- * row has no height field to fix them later). Trusses, fixtures and the LED wall do not move. The size the deck
- * already has (float noise aside) returns `d` itself, so History adds no undo step.
+ * the audience. Risers and the LED wall stand on the deck, so a new height moves them up or down with it in the same
+ * step (the riser row has no height field to fix them later): the wall with its side screens and its screen fixture
+ * (`wallRisen`). Trusses and the other fixtures do not move. The size the deck already has (float noise aside)
+ * returns `d` itself, so History adds no undo step.
  * @throws RangeError when a size is not a finite number > 0: a zero deck has no top for beams to land on.
  */
 export function setDeckSize(d: StageDesign, size: DeckSize): StageDesign {
@@ -27,7 +29,8 @@ export function setDeckSize(d: StageDesign, size: DeckSize): StageDesign {
   if (isSameLength(width, x1 - x0) && isSameLength(depth, z1 - z0) && isSameLength(height, d.deck.height)) return d;
   const centreX = (x0 + x1) / 2;
   const deck = { x0: centreX - width / 2, x1: centreX + width / 2, z0: z1 - depth, z1, height };
-  return { ...d, deck, risers: risersOn(d.risers, height - d.deck.height) };
+  const rise = height - d.deck.height;
+  return { ...d, ...wallRisen(d, rise), deck, risers: risersOn(d.risers, rise) };
 }
 
 /**

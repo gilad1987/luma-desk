@@ -19,7 +19,7 @@ export function roundFixtureToMillimetre(f: StageFixture): StageFixture {
   return f.pixel ? { ...placed, pixel: { ...f.pixel, p: roundToMillimetre(f.pixel.p) } } : placed;
 }
 
-/** Adding 0 turns a rounded -0 into 0, so a position near zero reads and compares as 0. */
-function millimetres(n: number): number {
+/** `n` rounded to whole millimetres; adding 0 turns a rounded -0 into 0, so a value near zero reads and compares as 0. */
+export function millimetres(n: number): number {
   return Math.round(n * 1000) / 1000 + 0;
 }

@@ -1,6 +1,7 @@
 /**
  * Owns the deck, LED wall, riser and venue ops: the deck keeps its downstage edge, the wall brings its screen
- * fixture, and a venue sets its scenery defaults. Drawing them is owned by the render tests.
+ * fixture, and a venue sets its scenery defaults. What a deck height change moves is owned by `deckHeight.test.ts`;
+ * drawing them is owned by the render tests.
  */
 import { describe, expect, it } from 'vitest';
 import {
@@ -18,19 +19,6 @@ describe('setDeckSize', () => {
     const d = setDeckSize(sampleDesign(), { width: 10, depth: 6, height: 1.5 });
     expect(d.deck).toEqual({ x0: -5, x1: 5, z0: -2, z1: 4, height: 1.5 });
     expect(() => setDeckSize(sampleDesign(), { width: 0, depth: 6, height: 1 })).toThrow(/0 x 6 x 1/);
-  });
-
-  it('moves the risers with a new deck height, so they keep standing on the deck', () => {
-    const withRiser = addRiser(sampleDesign(), [1, 1.5, 0], [2, 0.5, 2]);
-    const raised = setDeckSize(withRiser, { width: 12, depth: 8, height: 1.75 });
-    expect(raised.risers[0]?.at).toEqual([1, 2.25, 0]);
-    expect(setDeckSize(raised, { width: 10, depth: 8, height: 1.75 }).risers).toBe(raised.risers);
-  });
-
-  it('stores the moved riser height rounded to 1 mm, as a riser move does', () => {
-    const withRiser = addRiser(sampleDesign(), [1, 1.1, 0], [2, 0.1, 2]);
-    // without the rounding 1.1 + (1.3 - 1) gives 1.4000000000000001
-    expect(setDeckSize(withRiser, { width: 12, depth: 8, height: 1.3 }).risers[0]?.at[1]).toBe(1.4);
   });
 });
 
