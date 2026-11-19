@@ -19,24 +19,24 @@ export const ROBE_TARRANTULA = {
     // field angle); power = TYPES.wash.power 0.9 * Tarrantula 25,200 lm / Spiider 13,700 lm (both integrating sphere)
     // = 1.66
     optics: { zr: [4, 50], power: 1.66 },
-    // model units, the Spiider drum the reference: radius 190 over the 397 mm tilt axis height, on the shared 1.09.
-    // The sheet's 587 mm is drawn head horizontal (axis + radius), but the desk measures the head vertical, so the
-    // front is stretched to about the radius and the rear cut to keep the drum about 226 mm deep; ax and size are
-    // tuned so the hung span meets the size rule (1.063 * 587 / 477 = 1.308 m) and the width / height meets 508 / 587.
+    // model units, the Spiider drum the reference: radius 190, front 93 and rear 131 mm over the 397 mm tilt axis
+    // height (user manual p34 side view), on the shared 1.09. The sheet's 587 mm is drawn head-forward (axis +
+    // radius), so the size rule (1.063 * 587 / 477 = 1.308 m) and the width / height 508 / 587 are measured with the
+    // head tilted level (HEAD_FORWARD_SHEETS, productProportions.test.ts); hung at rest the 508 mm width is the span.
     body: {
       family: 'mover',
       ref: 'spiider',
-      size: 0.823,
+      size: 0.8074,
       ax: 0.6,
-      barrel: { r: 0.52, rear: 0.2, front: -0.5 },
-      lens: { r: 0.47, y: 0.49, off: 0.5 },
+      barrel: { r: 0.52, rear: 0.36, front: -0.255 },
+      lens: { r: 0.47, y: 0.245, off: 0.255 },
       vents: true,
       face: { cells: [1, 6, 12, 18] },
     },
     dimensions: { h: 587, w: 508, d: 257 },
     // measured from the built model and pinned by tests/unit/render/fixtures/productSpans.test.ts
-    span: 1.309,
-    mountHeight: { hang: 0.897, floor: 0.897 },
+    span: 1.159,
+    mountHeight: { hang: 0.88, floor: 0.88 },
     dataSheet:
       'https://www.robe.cz/tarrantula (Robe data sheet "Tarrantula" 7/21/2026, https://cdn.aws.robe.cz/print/en_product_666.pdf)',
     unmodelled: [

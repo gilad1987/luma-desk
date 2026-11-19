@@ -38,11 +38,15 @@ new object at boot.
    498 mm with its hanging bracket. For a mover the largest dimension is the height, so the rule gives the C1 height
    rule and the Esprite does not change. Known limit: when the largest drawn axis is not the largest sheet dimension,
    the body is up to about 4 % off strict scale. The onePATT is the case: its largest drawn axis is the 309 mm width
-   across the knobs, but its largest sheet dimension is the 321 mm height with the arch.
+   across the knobs, but its largest sheet dimension is the 321 mm height with the arch. A moving head whose sheet
+   draws the height head-forward (the Tarrantula, user manual p34) meets the rule with its built head-forward largest
+   dimension (`productProportions.test.ts`); its pinned `span` stays the hung-at-rest measure.
 
    Proportion rule (Phase C2): the built hung box width / height is within 10 % of the sheet's width / height
    (`productProportions.test.ts`). A moving head is measured hung at rest. A static product is measured with its head
-   turned level to the front (head-forward). Both are measured as their data sheets draw them.
+   turned level to the front (head-forward). Both are measured as their data sheets draw them. A moving head whose
+   sheet draws the height head-forward (the Tarrantula, user manual p34) is measured head-forward too, its head
+   tilted level through the tilt joint.
 
 5. Product ids are show format. A saved design stores them, so an id is never renamed.
 6. Every optical number is checked against the manufacturer data sheet, and the record names the sheet
