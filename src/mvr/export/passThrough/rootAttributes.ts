@@ -39,8 +39,10 @@ export function nameExporter(root: Element): void {
  * version stays, as does a version that is missing or not a number.
  */
 export function raiseVersion(root: Element): string | undefined {
-  const major = Number(attr(root, 'verMajor') ?? '');
-  const minor = Number(attr(root, 'verMinor') ?? '');
+  // `Number('')` is 0, so a missing or blank part would read as version 0 and be raised; NaN keeps it as it is
+  const part = (name: string): number => Number(attr(root, name)?.trim() || NaN);
+  const major = part('verMajor');
+  const minor = part('verMinor');
   if (!Number.isInteger(major) || !Number.isInteger(minor)) return undefined;
   if (major > WRITTEN.major || (major === WRITTEN.major && minor >= WRITTEN.minor)) return undefined;
   root.setAttribute('verMajor', String(WRITTEN.major));
