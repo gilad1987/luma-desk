@@ -48,18 +48,18 @@ interface Scope {
 }
 
 function visit(node: GdtfNode, scope: Scope, t: Targets, out: TreeWalk): void {
-  let frame = scope.frame.clone().multiply(toAppMatrix(node.position)),
-    section = scope.section;
+  const frame = scope.frame.clone().multiply(toAppMatrix(node.position));
+  let section = scope.section;
   if (node === t.pan) {
-    out.panAt = frame;
+    out.panAt = new Matrix4().copyPosition(frame);
     out.hasPan = true;
     section = 'yoke';
-    frame = new Matrix4();
+    frame.setPosition(0, 0, 0);
   } else if (node === t.tilt) {
-    out.tiltAt = frame;
+    out.tiltAt = new Matrix4().copyPosition(frame);
     out.hasTilt = true;
     section = 'head';
-    frame = new Matrix4();
+    frame.setPosition(0, 0, 0);
   } else if (node.role !== 'fixed') out.extraAxes++;
   const hidden = scope.hidden || isPixelReference(node, t.beams);
   const part = !hidden && isDrawn(node, t.beams) ? t.geometryOf(node) : undefined;
@@ -76,8 +76,8 @@ function visit(node: GdtfNode, scope: Scope, t: Targets, out: TreeWalk): void {
 /**
  * Sorts the drawn parts of a tree into its rigid sections. The desk drives one pan and one tilt: the first pan axis
  * and the first tilt axis under it (the first tilt of the tree without a pan). Every other axis stays at rest inside
- * its section and is counted in `extraAxes`. Each joint starts a new section whose frame is the axis frame, so the
- * joint group turns the section about the real axis.
+ * its section and is counted in `extraAxes`. A joint frame is the axis place only; its parts keep the file's rest
+ * turn, so the joint turns them about the app axes, as `dirFrom` turns the beam (an unturned joint is as before).
  */
 export function walkTree(root: GdtfNode, beamPath: readonly number[] | undefined, geometryOf: PartGeometry): TreeWalk {
   const pan = find(root, 'pan'),
