@@ -95,8 +95,10 @@ drawn values, measured from the built model and pinned by a test, exactly as `BO
   import), `FixtureBase` adds `'product'`, and a 4-line `unitOf({ type, product })` helper feeds `appendFixtures` so
   a batch without a product adds no `product` key. Net about +3 lines (98). Lane `ui` rebases on this; nothing else
   in the file moves.
-- `src/domain/fixtureTypes/bodyScale.ts`: `Pick<StageFixture, 'id' | 'type' | 'product'>`; span =
-  `productOf(fixture.product)?.span ?? BODY_SPANS[fixture.type]`.
+- `src/domain/fixtureTypes/bodyScale.ts`: `Pick<StageFixture, 'id' | 'type' | 'product'>`; span stays
+  `BODY_SPANS[fixture.type]`. Pre-review M1: `importedGdtfInfo` returns `undefined` for a fixture with a product (the
+  imported facts describe the file's product), so a product always scales 1 and the export and the Sheet name the
+  base type's GDTF (ADR 0007, Consequences).
 - `src/mvr/design/mountHeight.ts`: `MountPose` gains `product?: ProductId | undefined`; heights =
   `productOf(product)?.mountHeight ?? MOUNT_HEIGHTS[type]`. Callers already pass whole `StageFixture`s.
 - Not in C1 (named so nobody is surprised): `deskType`/`gdtfModeOf` (C5 reads the product's `gdtfSpec`), the builder property panel
@@ -248,8 +250,8 @@ Domain (`tests/unit/domain/fixtureProducts/`, `tests/unit/domain/stage/`):
   product adds fixtures that carry it; without a product the new fixtures have no `product` key.
 - `tests/unit/show/stageField.product.test.ts`: a theatre design plus one Esprite survives save -> JSON -> load
   deep-equal through `stageWorld()` ("a stage with an Esprite saves and loads").
-- `tests/unit/mvr/productMount.test.ts`: `mountHeight` and `bodyScale` read the product's values; a product with no
-  GDTF info scales 1.
+- `tests/unit/mvr/productMount.test.ts`: `mountHeight` reads the product's values; a product scales 1, also with an
+  imported GDTF size. `tests/unit/domain/stage/importedGdtfInfo.product.test.ts`: a product has no imported GDTF facts.
 
 Render (`tests/unit/render/fixtures/`):
 

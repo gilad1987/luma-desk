@@ -1,6 +1,6 @@
 /**
  * Owns how the MVR mount height and the body scale read a product: a product's own drawn mounting-point distances
- * replace its type's, and a product with no imported GDTF size is drawn at scale 1. The pinned values against the
+ * replace its type's, and a product is drawn at scale 1 even with an imported GDTF size. The pinned values against the
  * built model are owned by the render lane (productSpans.test.ts).
  */
 import { describe, expect, it } from 'vitest';
@@ -28,14 +28,10 @@ describe('product mount height and body scale', () => {
     expect(bodyScale({ id: 1, type: 'spot', product: 'robe-esprite' }, undefined)).toBe(1);
   });
 
-  it("scales a 1 m GDTF body by the product's own span, and a plain spot by the type's", () => {
+  it('ignores a 1 m GDTF body on a product, and scales a plain spot by its type span', () => {
     const info = { uuid: 'u', layer: 'l', gdtfName: 'Acme@Spot', gdtfMode: 'Std', type: 'spot', bodySize: 1 } as const;
     const mvr: MvrDesignInfo = { fixtures: { '1': info }, layers: [], hiddenLayers: [], offset: [0, 0, 0] };
-    const scales = [
-      bodyScale({ id: 1, type: 'spot', product: 'robe-esprite' }, mvr),
-      bodyScale({ id: 1, type: 'spot' }, mvr),
-    ];
-    const expected = [1 / PRODUCTS['robe-esprite'].span, 1 / BODY_SPANS.spot];
-    scales.forEach((scale, index) => expect(scale).toBeCloseTo(expected[index] ?? NaN, 6));
+    expect(bodyScale({ id: 1, type: 'spot', product: 'robe-esprite' }, mvr)).toBe(1);
+    expect(bodyScale({ id: 1, type: 'spot' }, mvr)).toBeCloseTo(1 / BODY_SPANS.spot, 6);
   });
 });

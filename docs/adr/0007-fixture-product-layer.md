@@ -63,6 +63,9 @@ Costs and risks:
 
 - The MVR luma link carries `product` (C1), so a desk round trip keeps a product and its position. Only the GDTF
   identity of a product (its own `gdtfSpec`) waits for Phase C5; until then the export names the base type's GDTF.
+- A product fixture has no imported GDTF facts (`importedGdtfInfo`), because in C1 those facts always describe the
+  file's product, not the catalogue's. So `bodyScale` is 1 for it, and the export and the Sheet name the base type's
+  GDTF, also when the user gives an imported fixture a product. C5 revisits this with the products' own `gdtfSpec`.
 - The builder property panel shows the base type name until lane `ui` Phase 5 replaces the panels.
 - One more table to keep honest: each product needs its data sheet, and its drawn `span` and `mountHeight` must be
   measured again when its body changes.
@@ -85,7 +88,10 @@ product that no longer matches.
 - `tests/unit/domain/stage/edit/productCarry.test.ts`: the edit ops keep `product`; a batch without a product adds
   no `product` key.
 - `tests/unit/show/stageField.product.test.ts`: a stage with an Esprite saves and loads.
-- `tests/unit/mvr/productMount.test.ts`: `mountHeight` and `bodyScale` read the product's values.
+- `tests/unit/mvr/productMount.test.ts`: `mountHeight` reads the product's values; `bodyScale` is 1 for a product,
+  even with an imported GDTF size.
+- `importedGdtfInfo.product.test.ts` (`tests/unit/domain/stage/`): a product fixture has no imported GDTF facts, and
+  an imported spot that gets a product exports the base type's GDTF.
 - `tests/unit/render/fixtures/families/lazyProducts.test.ts`: `createLensTextures` and `createModelMaterials` keep
   their native keys, `createFixtureModels` draws no `Math.random`, and the product geometry and lens are cached.
 - `tests/unit/render/fixtures/families/mover.test.ts`: the Esprite visual has joints, a head and a round lens.
