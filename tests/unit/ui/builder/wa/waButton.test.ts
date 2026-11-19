@@ -22,12 +22,16 @@ describe('setWaDisabled', () => {
     expect(el.hasAttribute('disabled')).toBe(false);
   });
 
-  // catches an upgraded element whose property disagrees with the attribute
+  // catches an upgraded element whose property disagrees with the attribute: the property here does not follow the
+  // attribute (as on a native button), so only a direct property write turns it off and on
   it('sets the disabled property of an element that has one', () => {
-    const el = document.createElement('button');
+    const el = Object.defineProperty(document.createElement('div'), 'disabled', { value: false, writable: true });
     setWaDisabled(el, true);
-    const off = el.disabled;
+    const off = [Reflect.get(el, 'disabled'), el.hasAttribute('disabled')];
     setWaDisabled(el, false);
-    expect([off, el.disabled, el.hasAttribute('disabled')]).toEqual([true, false, false]);
+    expect([off, [Reflect.get(el, 'disabled'), el.hasAttribute('disabled')]]).toEqual([
+      [true, true],
+      [false, false],
+    ]);
   });
 });
