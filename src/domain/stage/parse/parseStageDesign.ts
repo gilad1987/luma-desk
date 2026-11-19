@@ -3,7 +3,6 @@ import { SOURCE_KINDS, VENUE_KINDS, type SceneryPart, type StageSource } from '.
 import { checkMvrFixtureIds } from './checkMvrFixtureIds';
 import { parseDeck, parseRisers } from './parseDeck';
 import { parseFixtures } from './parseFixture';
-import { parseIdMark } from './parseIdMark';
 import { parseMvrInfo } from './parseMvrInfo';
 import { parseScreens } from './parseScreens';
 import { parseTrusses } from './parseTruss';
@@ -39,7 +38,8 @@ export function parseStageDesign(raw: unknown): StageParseResult {
   };
   const mvr = r.optional(o, 'mvr', '', (c, k, p) => parseMvrInfo(r, c, k, p));
   if (mvr) checkMvrFixtureIds(r, mvr, parsed.ids);
-  const nextFixtureId = parseIdMark(r, o, parsed.ids);
+  // Absent in a design that never lost a fixture; `nextIdBlock` then derives it from the highest id.
+  const nextFixtureId = r.optional(o, 'nextFixtureId', '', (c, k, p) => safeMark(r, r.positiveInt(c, k, p), p));
   if (!allDefined(design) || r.errors.length > 0) return { ok: false, errors: r.errors };
   const mvrField = mvr === undefined ? {} : { mvr };
   const idMark = nextFixtureId === undefined ? {} : { nextFixtureId };
@@ -48,6 +48,15 @@ export function parseStageDesign(raw: unknown): StageParseResult {
     ok: true,
     design: { v: STAGE_DESIGN_VERSION, ...design, venue, trusses, fixtures: parsed.fixtures, ...mvrField, ...idMark },
   };
+}
+
+/**
+ * Any safe integer: an MVR import keeps the file's FixtureIDs, so a delete there can store a high mark that must load.
+ * A mark too near the limit makes the next add a refused edit (`nextIdBlock` checks the whole batch), never a repeat.
+ */
+function safeMark(r: Reader, mark: number | undefined, at: string): number | undefined {
+  if (mark === undefined || Number.isSafeInteger(mark)) return mark;
+  return r.fail(r.path(at, 'nextFixtureId'), `expected a safe integer, got ${mark}`);
 }
 
 function parseSource(r: Reader, stage: Raw): StageSource | undefined {
