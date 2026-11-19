@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 /**
- * Owns the product through a desk MVR round trip: the luma link carries it, so an exported Esprite comes back as an
- * Esprite at the same place (its own mount height shifts the body on export and import), and an unknown product comes
- * back as a plain fixture of its base type. The parser rule itself is owned by parseProduct.test.ts.
+ * Owns the product through a desk MVR round trip: the luma link carries it, so an exported Esprite (a moving `spot`)
+ * or onePATT (a static `par`) comes back as the same product at the same place (its own mount height shifts the body
+ * on export and import), and an unknown product comes back as a plain fixture of its base type. The parser rule
+ * itself is owned by parseProduct.test.ts.
  */
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
@@ -15,22 +16,25 @@ import { exportRoundTrip } from '../../shared/index.ts';
 
 const SCENE = 'GeneralSceneDescription.xml';
 
-/** The theatre stage with one hung and one floor Esprite as its only fixtures. */
-function espriteDesign(): StageDesign {
-  const esprite = { type: 'spot', role: 'front', trussId: null, product: 'robe-esprite' } as const;
+/** The theatre stage with one hung and one floor fixture of the product as its only fixtures. */
+function productDesign(type: 'spot' | 'par', product: 'robe-esprite' | 'robe-onepatt'): StageDesign {
+  const added = { type, role: 'front', trussId: null, product } as const;
   const fixtures: StageFixture[] = [
-    { ...esprite, id: 1, position: [-1.5, 6.25, 1], mount: 'hang' },
-    { ...esprite, id: 2, position: [2, 0.4, 3.5], mount: 'floor' },
+    { ...added, id: 1, position: [-1.5, 6.25, 1], mount: 'hang' },
+    { ...added, id: 2, position: [2, 0.4, 3.5], mount: 'floor' },
   ];
   return { ...createTemplate('theatre'), fixtures };
 }
 
 describe('MVR round trip of a product', () => {
-  it('brings a hung and a floor Esprite back as Esprites at the same position', async () => {
-    const design = espriteDesign();
+  it.each([
+    ['spot', 'robe-esprite'],
+    ['par', 'robe-onepatt'],
+  ] as const)('brings a hung and a floor %s %s back as the same product at the same position', async (type, id) => {
+    const design = productDesign(type, id);
     const { result } = await exportRoundTrip(design);
     const back = result.design.fixtures;
-    expect(back.map((fixture) => fixture.product)).toStrictEqual(['robe-esprite', 'robe-esprite']);
+    expect(back.map((fixture) => fixture.product)).toStrictEqual([id, id]);
     design.fixtures.forEach((fixture, index) => {
       const position = back[index]?.position ?? [NaN, NaN, NaN];
       position.forEach((value, axis) => expect(value).toBeCloseTo(fixture.position[axis] ?? NaN, 6));
@@ -38,7 +42,7 @@ describe('MVR round trip of a product', () => {
   });
 
   it('brings an unknown product back as a plain spot, lower by the mount height difference', async () => {
-    const exported = espriteDesign();
+    const exported = productDesign('spot', 'robe-esprite');
     const entries = unzipSync(exportMvr(exported).bytes);
     const scene = strFromU8(entries[SCENE] ?? new Uint8Array()).replaceAll('robe-esprite', 'acme-x');
     const { design } = await importMvr(zipSync({ ...entries, [SCENE]: strToU8(scene) }), { name: 'x' });
