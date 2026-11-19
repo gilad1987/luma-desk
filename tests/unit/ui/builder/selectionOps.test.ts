@@ -3,7 +3,7 @@
  * fixture on a picked truss is copied once, not twice; a loose picked fixture is still copied; a hidden wall's screen
  * fixture leaves the selection, so Delete cannot reach it. The single-item ops are owned by tests/unit/domain/stage/edit.
  */
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { setSceneryPart } from '../../../../src/domain/stage/edit/deckOps.ts';
 import { setLedWall } from '../../../../src/domain/stage/edit/ledWall.ts';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
@@ -21,6 +21,8 @@ const countsByTruss = (d: StageDesign): Record<string, number> => {
 };
 
 describe('selectionOps', () => {
+  // the session test starts fake timers; a failed assertion must not leave them on for the next test
+  afterEach(() => vi.useRealTimers());
   const d = sampleDesign();
   const onPipe = d.fixtures.filter((f) => f.trussId === PIPE.id).map((f) => f.id);
   const loose = d.fixtures.filter((f) => f.trussId === null).map((f) => f.id);
@@ -54,6 +56,5 @@ describe('selectionOps', () => {
     const hidden = session.draft;
     expect([session.selection, session.edit(deleteSelection(session.selection))]).toEqual([NO_SELECTION, null]);
     expect(session.draft).toBe(hidden);
-    vi.useRealTimers();
   });
 });
