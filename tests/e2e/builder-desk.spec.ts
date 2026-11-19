@@ -1,21 +1,14 @@
 /**
- * The desk around the open Stage Builder. In the classic layout the encoders, the executors and the command line stay
- * on show under the builder's open middle cell, so they are inert while it is open: a click or the Tab key must not
- * reach them, and after Done they work again. In every layout the 3D view keeps its place under the builder (the
- * hidden top bar must not move it into the 40 px row). The builder screens themselves are owned by builder-flow.
+ * The desk around the open Stage Builder. The builder covers the whole window, but in the classic layout the encoders,
+ * the executors and the command line stay in the page under it, so they are inert while it is open: a click or the
+ * Tab key must not reach them, and after Done they work again. In every layout the 3D view (`#viewer`) moves into the
+ * builder's 3D pane, the renderer refits to the pane, and Cancel puts it back in its place on the desk. The builder
+ * screens are owned by builder-flow, the shell layout by builder-shell.*.
  */
 import { expect, test, type Page } from '@playwright/test';
-import { bootApp, collectErrors } from '../shared/e2e';
+import { bootApp, boxOf, canvasSize, collectErrors, offBy, openBuilder } from '../shared/e2e';
 
 const DESK_AREAS = '#side, #enc, #desk';
-
-/** Opens the builder from the top bar on the Theatre template at the Sultan's Pool venue. */
-async function openBuilder(page: Page): Promise<void> {
-  await page.locator('#buildBtn').click();
-  await page.locator('[data-template="theatre"]').click();
-  await page.locator('[data-venue="sultans-pool"]').click();
-  await expect(page.locator('section.builder.is-editing')).toBeVisible();
-}
 
 /** Clicks the centre of `selector` with the mouse and returns the id of the area the click reached, or ''. */
 async function clickCentre(page: Page, selector: string): Promise<string> {
@@ -49,8 +42,6 @@ async function tabStops(page: Page, count: number): Promise<string[]> {
   return stops;
 }
 
-const viewerBox = (page: Page) => page.locator('#viewer').boundingBox();
-
 test('classic: while building, clicks and Tab never reach the desk; after Done they do', async ({ page }) => {
   const errors = collectErrors(page);
   await bootApp(page, { layout: 'classic' });
@@ -67,16 +58,22 @@ test('classic: while building, clicks and Tab never reach the desk; after Done t
 });
 
 for (const layout of ['classic', 'desk', 'ma'] as const) {
-  test(`${layout}, saved: boots clean, the builder opens and the 3D view keeps its top`, async ({ page }) => {
+  test(`${layout}: the 3D view fills the builder's 3D pane, then Cancel puts it back`, async ({ page }) => {
     const errors = collectErrors(page);
     await bootApp(page, { layout });
-    const before = await viewerBox(page);
+    const viewer = page.locator('#viewer');
+    const before = await boxOf(viewer);
     await openBuilder(page);
-    const building = await viewerBox(page);
-    expect(building?.y).toBe(before?.y);
-    expect(building?.height).toBeGreaterThanOrEqual(before?.height ?? Infinity);
+    // a class: the 3D pane is a plain <div> slot of the split panel, with no role or id
+    const pane = page.locator('section.builder .builder-3d');
+    await expect(pane.locator('#viewer')).toHaveCount(1);
+    const paneBox = await boxOf(pane);
+    expect(offBy(await boxOf(viewer), paneBox, 1)).toEqual([0, 0, 0, 0]);
+    await expect.poll(async () => offBy(await canvasSize(page), paneBox.slice(2), 2)).toEqual([0, 0]);
     await page.locator('[data-builder="cancel"]').click();
     await expect(page.locator('section.builder')).toHaveCount(0);
+    expect(await page.evaluate(() => document.querySelector('#main')?.firstElementChild?.id)).toBe('viewer');
+    await expect.poll(() => boxOf(viewer)).toEqual(before);
     expect(errors).toEqual([]);
   });
 }
