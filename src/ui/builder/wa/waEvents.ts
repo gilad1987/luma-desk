@@ -1,4 +1,7 @@
-/** The Web Awesome events the builder listens to; a later phase adds the drawer's `wa-show`/`wa-hide` when it needs them. */
+/**
+ * The Web Awesome events the builder listens to; a later phase adds the drawer's `wa-show`/`wa-hide` when it needs
+ * them.
+ */
 export type WaEventName = 'wa-reposition';
 
 /**
