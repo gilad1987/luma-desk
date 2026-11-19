@@ -65,6 +65,8 @@ and the old uuid and GDTF name are still absent from the export.
   and records both images again; whichever PR merges second records them again.
 - A deck height change stores the moved riser heights rounded to 1 mm, as `moveRiser` does.
 - The stricter parser (truss sizes 0.1-60 m, ring chains, one wall per screen fixture) rejects an old saved show that
-  breaks a limit; the desk then loads the built-in stage with a toast. The builder could not make such a design.
-- Not fixed: the parser accepts a `nextFixtureId` (or fixture id) above `Number.MAX_SAFE_INTEGER`; only a damaged
-  file can hold one, and fixture ids already had this gap.
+  breaks a limit, or that holds a fixture id above `Number.MAX_SAFE_INTEGER`; the desk then loads the built-in stage
+  with a toast. The builder could not make such a design.
+- Fixture ids (`fixtures[].id`, `screens[].fixtureId`) must be positive safe integers, and the MVR import gives an
+  unsafe FixtureID an auto id. `nextFixtureId` loads up to 2^53, and `nextIdBlock` refuses a batch whose last id is
+  not safe, so ids never repeat and every design the app saves loads again.

@@ -45,6 +45,12 @@ describe('parseStageDesign ids', () => {
       'screens[1].fixtureId: 9 already drives the LED wall "wall"',
     ]);
   });
+
+  it('rejects a screen fixture id that is not a safe integer', () => {
+    expect(errorsOf({ ...SAMPLE, screens: [{ ...wall, fixtureId: 1e20 }] })).toStrictEqual([
+      'screens[0].fixtureId: expected a positive safe integer, got 100000000000000000000',
+    ]);
+  });
 });
 
 describe('parseStageDesign quaternions', () => {
