@@ -30,7 +30,7 @@ describe('fixture ids after a delete', () => {
 
   it('keeps the ids of a removed LED wall', () => {
     const walled = setLedWall(sampleDesign(), { width: 8, height: 4 });
-    expect(nextIdBlock(setLedWall(walled, null))).toBe(501);
+    expect(nextIdBlock(setLedWall(walled, null), 1)).toBe(501);
   });
 
   it('keeps the ids of a deleted truss that held the highest fixtures', () => {
@@ -42,15 +42,15 @@ describe('fixture ids after a delete', () => {
     ]);
     const deleted = deleteTruss(onPipe, 'pipe-1');
     expect(Math.max(...deleted.fixtures.map((f) => f.id))).toBeLessThan(401);
-    expect(nextIdBlock(deleted)).toBe(501);
+    expect(nextIdBlock(deleted, 1)).toBe(501);
   });
 
   it('keeps the mark through a save and load', () => {
-    expect(nextIdBlock(reloaded(deleteFixtures(sampleDesign(), [301])))).toBe(401);
+    expect(nextIdBlock(reloaded(deleteFixtures(sampleDesign(), [301])), 1)).toBe(401);
   });
 
   it('derives the mark of a design saved without it from its highest id', () => {
-    expect(nextIdBlock(reloaded(sampleDesign()))).toBe(401);
+    expect(nextIdBlock(reloaded(sampleDesign()), 1)).toBe(401);
     expect(reloaded(sampleDesign())).not.toHaveProperty('nextFixtureId');
   });
 });

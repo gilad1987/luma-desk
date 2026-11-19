@@ -89,7 +89,7 @@ function firstFreeLane(placesAt: (lane: number) => FixturePlace[], isTaken: IsTa
 }
 
 function appendFixtures(d: StageDesign, places: FixturePlace[], base: FixtureBase): StageDesign {
-  const first = nextIdBlock(d);
+  const first = nextIdBlock(d, places.length);
   const added = places.map((p, i): StageFixture => ({ id: first + i, ...base, ...p }));
   return { ...d, fixtures: [...d.fixtures, ...added] };
 }

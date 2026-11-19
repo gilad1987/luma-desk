@@ -45,7 +45,7 @@ function resizeWall(d: StageDesign, wall: StageScreen, size: WallSize): StageDes
 }
 
 function addWall(d: StageDesign, size: WallSize): StageDesign {
-  const id = nextIdBlock(d);
+  const id = nextIdBlock(d, 1);
   const { height: y0, z0: z } = d.deck;
   const x0 = -size.width / 2;
   const wall: StageScreen = { id: LED_WALL_ID, fixtureId: id, x0, x1: x0 + size.width, y0, y1: y0 + size.height, z };
