@@ -9,7 +9,7 @@ import { GalleryScene } from './GalleryScene';
 
 /**
  * One catalogue product as the shot runner sees it: its id, the body family its shots are filed under, and whether
- * its base type moves (the runner poses only moving heads).
+ * its base type moves (the runner pans and tilts a moving head, and turns a static light's head to the audience).
  */
 interface GalleryId {
   readonly id: string;

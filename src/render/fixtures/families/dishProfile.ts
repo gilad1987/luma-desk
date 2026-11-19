@@ -3,7 +3,7 @@ import type { YokedCanBody } from '../../../domain/fixtureProducts/FixtureProduc
 import { merge } from '../modelGeometry';
 import type { ModelPrimitives, ProfilePoint } from '../ModelPrimitives';
 
-/** The head of a yoked can: shell (body material), bezel trim, and the reflector wall with the grille spokes (alu). */
+/** The head of a yoked can: bowl shell (body material), spun bezel with its clips, reflector wall and spokes (alu). */
 export interface DishGeometry {
   readonly head: BufferGeometry;
   readonly headTrim: BufferGeometry;
@@ -17,16 +17,19 @@ const LIP = { out: 0.008, depth: 0.06 };
 const CLIPS = 8;
 const SPOKES = 3;
 
-/** The outer shell, front to rear so its faces point outward: the bezel wall, then the bowl, closed at its back. */
+/** The bowl behind the bezel, front to rear so its faces point outward, closed at its back. */
 export function shellProfile({ rim, bowl }: YokedCanBody): ProfilePoint[] {
   const curve = BOWL_STEPS.map((t): ProfilePoint => {
     const r = bowl.r + (rim.r - bowl.r) * Math.sqrt(1 - t);
     return [r, rim.back + (bowl.y - rim.back) * t];
   });
-  return [[rim.r, rim.front + LIP.depth], [rim.r, rim.back], ...curve, [0, bowl.y]];
+  return [[rim.r, rim.back], ...curve, [0, bowl.y]];
 }
 
-/** The bezel front ring with its rolled lip, front to rear: flat from the mouth out, then round the edge. */
+/**
+ * The spun bezel, front to rear: flat from the mouth out, round the rolled lip, then its wall back to the bowl. The
+ * photos show the whole ring bare grey aluminium, so it is one alu part.
+ */
 export function bezelProfile({ rim, mouth }: YokedCanBody): ProfilePoint[] {
   const outer = rim.r + LIP.out;
   return [
@@ -35,6 +38,7 @@ export function bezelProfile({ rim, mouth }: YokedCanBody): ProfilePoint[] {
     [outer, rim.front + 0.015],
     [outer, rim.front + LIP.depth - 0.01],
     [rim.r, rim.front + LIP.depth],
+    [rim.r, rim.back],
   ];
 }
 

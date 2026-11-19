@@ -9,7 +9,7 @@ export interface GalleryParams {
   readonly id: string;
   readonly view: GalleryView;
   readonly isLit: boolean;
-  /** The moving heads' pose in degrees, set on the joints as the desk does. */
+  /** The pose in degrees, set as the desk does: on a moving head's joints, on a static light's pivot. */
   readonly pan: number;
   readonly tilt: number;
 }
