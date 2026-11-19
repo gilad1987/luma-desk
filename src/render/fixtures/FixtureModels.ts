@@ -46,5 +46,5 @@ export function createFixtureModels(kit: ModelKit): FixtureModelTable {
     s4: product(SOURCE_FOUR_MODEL),
     tetra2: product(TETRA2_MODEL),
   };
-  return { ...natives, ...familyModels({ robe }) };
+  return { ...natives, ...familyModels({ robe, product }) };
 }

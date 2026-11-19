@@ -13,7 +13,7 @@ import { TYPES } from '../../../../src/domain/fixtureTypes/index.ts';
  * Whether each body family draws a moving head. A static-mount body on a moving base throws at render (`staticMount`
  * in ModelContext.ts); a new family is a type error here until it gets a row.
  */
-const NEEDS_MOVING = { mover: true } as const satisfies Record<ProductBody['family'], boolean>;
+const NEEDS_MOVING = { mover: true, tiltBar: true } as const satisfies Record<ProductBody['family'], boolean>;
 
 /** The ids the manufacturer lists as discontinued, in catalogue order. */
 const DISCONTINUED_IDS: readonly ProductId[] = [];
