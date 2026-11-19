@@ -27,15 +27,22 @@ const SIDE_MARGIN_M = 0.3;
 /** Two units this close in plan (metres) and this far apart in height are one above the other: a tower or ladder. */
 const STACK_REACH_M = 0.8;
 const STACK_STEP_M = 0.6;
+/**
+ * Most metres between a unit in the floor band and a unit above it for the two to be one tower: a shin light under
+ * the next tower unit. A truss light further above a floor light hangs on the truss and is not a tower unit.
+ */
+const TOWER_GAP_M = 3;
 /** Share of the half width from which a stack is a side tower; a stack nearer the centre is an upstage ladder. */
 const STACK_SIDE = 0.5;
 
-/** The ids of the fixtures that have another fixture above or below them. */
-function stackedIds(fixtures: readonly RigBody[]): ReadonlySet<number> {
+/** The ids of the fixtures that have another fixture above or below them; `bandTop` is the top of the floor band. */
+function stackedIds(fixtures: readonly RigBody[], bandTop: number): ReadonlySet<number> {
   const ids = new Set<number>();
   for (const a of fixtures)
     for (const b of fixtures) {
-      if (a.id >= b.id || Math.abs(a.pos.y - b.pos.y) < STACK_STEP_M) continue;
+      const gap = Math.abs(a.pos.y - b.pos.y);
+      if (a.id >= b.id || gap < STACK_STEP_M) continue;
+      if (Math.min(a.pos.y, b.pos.y) < bandTop && gap > TOWER_GAP_M) continue;
       if (Math.hypot(a.pos.x - b.pos.x, a.pos.z - b.pos.z) > STACK_REACH_M) continue;
       ids.add(a.id).add(b.id);
     }
@@ -45,13 +52,14 @@ function stackedIds(fixtures: readonly RigBody[]): ReadonlySet<number> {
 /**
  * The system of each fixture of a rig on `area`. Type decides follow spots, effects and screens; place decides the
  * rest, in this order: at floor height; outside the deck's sides or stacked on a side tower, unless it stands out in
- * the house; at or past the downstage edge; else overhead. Pure, and the same for a fixture and its mirror image about the centre line.
+ * the house; at or past the downstage edge; else overhead. Pure, and the same for a fixture and its mirror image
+ * about the centre line.
  */
 export function systemOf(area: LookArea, fixtures: readonly RigBody[]): (f: RigBody) => RigSystem {
-  // lights only: a hoist above a wash must not make that wash a tower unit; a unit in the floor band stands on the
-  // deck, not on a stand, so a floor light under a truss light must not make that truss light a tower unit
+  // lights only: a hoist above a wash must not make that wash a tower unit; a unit in the floor band pairs only with
+  // a unit at most TOWER_GAP_M above it, so a floor light under a truss light does not make that truss light a tower
   const isLit = (f: RigBody): boolean => !EFFECT_TYPES.has(f.type) && !DARK_TYPES.has(f.type);
-  const stacked = stackedIds(fixtures.filter((f) => isLit(f) && f.pos.y >= area.floor + FLOOR_BAND_M));
+  const stacked = stackedIds(fixtures.filter(isLit), area.floor + FLOOR_BAND_M);
   const frontZ = area.cz + area.halfDepth;
   return (f) => {
     if (DARK_TYPES.has(f.type)) return 'none';
