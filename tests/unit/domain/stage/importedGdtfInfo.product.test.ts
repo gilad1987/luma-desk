@@ -1,6 +1,7 @@
 /**
  * Owns the rule that the imported MVR/GDTF facts stop on a fixture with a catalogue product: the facts describe the
- * file's product, so a product fixture is exported and shown with its base type's GDTF.
+ * file's product, so a product fixture is exported and shown with its base type's GDTF. It does not own the position
+ * after a round trip (tests/unit/mvr/productRoundTrip.test.ts) or the body scale (tests/unit/mvr/productMount.test.ts).
  */
 import { describe, expect, it } from 'vitest';
 import { TYPES } from '../../../../src/domain/fixtureTypes/index.ts';
