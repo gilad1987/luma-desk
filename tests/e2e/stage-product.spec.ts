@@ -1,11 +1,12 @@
 /**
  * Owns "a stage with a catalogue product saves and loads" through the real app: a saved theatre design with one Robe
- * Esprite boots, keeps its `product` and derives one fixture more, also after a reload. The parser branches (an
- * unknown id, a base that differs, a non-string) are owned by the unit tests in tests/unit/domain/stage/.
+ * Esprite boots, keeps its `product` and derives one fixture more; the show the app then saves itself still names the
+ * product, and a second boot from that saved text keeps it. The parser branches (an unknown id, a base that differs, a
+ * non-string) are owned by the unit tests in tests/unit/domain/stage/.
  */
-import { expect, test, type JSHandle } from '@playwright/test';
-import type { DeskTestApi, SavedShow } from '../shared';
-import { bootApp, collectErrors, waitForTestApi } from '../shared/e2e';
+import { expect, test, type JSHandle, type Page } from '@playwright/test';
+import { STORAGE_KEYS, TIMER_POLLING, type DeskTestApi, type SavedShow } from '../shared';
+import { bootApp, collectErrors } from '../shared/e2e';
 
 /** The part of a stored stage fixture this spec reads; the other keys pass through as the desk saved them. */
 interface StoredFixture {
@@ -26,7 +27,23 @@ async function readProductStage(desk: JSHandle<DeskTestApi>): Promise<[string | 
   ]);
 }
 
-test('a theatre stage with a Robe Esprite keeps the product after a load and a reload', async ({ page }) => {
+/**
+ * The show text the app itself saves. The init script of `bootApp` wrote the test's own text, so it is removed first;
+ * a cue store then asks for the delayed save (a real 500 ms timer), so the text read back can only come from the app.
+ */
+async function appSavedShowText(page: Page, desk: JSHandle<DeskTestApi>): Promise<string> {
+  await page.evaluate((key) => localStorage.removeItem(key), STORAGE_KEYS.show);
+  await desk.evaluate((d) => {
+    d.run(`Fixture ${window.__desk.fixtures[0]?.id ?? 0} At 100`);
+    d.run('Store Exec 1');
+  });
+  const saved = await page.waitForFunction((key) => localStorage.getItem(key), STORAGE_KEYS.show, TIMER_POLLING);
+  return (await saved.jsonValue()) as string;
+}
+
+test('a theatre stage with a Robe Esprite keeps the product in the show the app saves and in a boot from it', async ({
+  page,
+}) => {
   const errors = collectErrors(page);
   const desk = await bootApp(page);
   await page.evaluate(() => window.__desk.applyTemplate('theatre'));
@@ -46,7 +63,13 @@ test('a theatre stage with a Robe Esprite keeps the product after a load and a r
   const loaded = await bootApp(page, { show: withEsprite });
   expect([errors, ...(await readProductStage(loaded))]).toEqual([[], 'robe-esprite', theatreCount + 1]);
 
-  await page.reload();
-  const reloaded = await waitForTestApi(page);
+  const savedText = await appSavedShowText(page, loaded);
+  const saved = JSON.parse(savedText) as ShowWithStage;
+  expect([saved.stage.fixtures.at(-1)?.product, saved.stage.fixtures.length]).toEqual([
+    'robe-esprite',
+    withEsprite.stage.fixtures.length,
+  ]);
+
+  const reloaded = await bootApp(page, { show: savedText });
   expect([errors, ...(await readProductStage(reloaded))]).toEqual([[], 'robe-esprite', theatreCount + 1]);
 });
