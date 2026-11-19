@@ -13,6 +13,8 @@ export const builder = {
   tooManyFixtures: (n: number): string => `בבמה ${n} גופי תאורה, יותר מ-500. ייתכן שהתצוגה תאט.`,
   /** The toast when a show file's `stage` key does not parse; the rest of the show still loads. */
   badStage: 'נתוני הבמה בקובץ ההופעה פגומים. נטענה במת ברירת המחדל.',
+  /** The toast when the builder's code chunk does not load, as after a deploy that removed the chunk an open tab needs. */
+  loadFailed: 'טעינת בונה הבמה נכשלה. בדקו את החיבור לרשת ונסו שוב.',
   done: 'שמירת הבמה וחזרה לקונסולה',
   cancel: 'ביטול כל השינויים וחזרה לקונסולה',
   edit: {
@@ -22,13 +24,12 @@ export const builder = {
     delete: 'מחיקת הפריטים הנבחרים (Delete)',
     mirror: 'העתקת הצד השמאלי של הבמה לצד הימני',
   },
-  /** The tooltips of the shell: the Inspector button, the three view modes, the split divider and the library rail. */
+  /** The tooltips of the shell: the Inspector button, the three view modes and the library rail. */
   shell: {
     inspector: 'פתיחת המאפיינים של הפריט הנבחר',
     modePlan: 'תצוגת תוכנית בלבד',
     modeSplit: 'תוכנית ותצוגה תלת-ממדית יחד',
     mode3d: 'תצוגה תלת-ממדית בלבד',
-    divider: 'גרירה משנה את החלוקה בין התצוגות',
     library: 'ספריית גופי התאורה (בעדכון הבא)',
   },
   ...builderStart,

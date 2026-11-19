@@ -1,3 +1,4 @@
+import { he } from '../../i18n/he';
 import type { StageRenderer } from '../../render/stage/StageRenderer';
 import type { BuilderDeps } from '../../ui/builder/BuilderDeps';
 import { BuilderMode } from '../../ui/builder/BuilderMode';
@@ -6,8 +7,8 @@ import { byId } from '../../ui/dom';
 import { attachViewer } from './viewerHost';
 
 /**
- * The desk areas made inert while the builder is open: the side panes, the encoders and the executor desk. In the
- * classic layout they stay on show under the builder's open middle cell; in the other layouts they are hidden anyway.
+ * The desk areas made inert while the builder is open: the side panes, the encoders and the executor desk. The
+ * builder covers the whole window; the desk areas stay in the DOM under it, so they must not take a click or Tab key.
  */
 const DESK_AREA_IDS = ['side', 'enc', 'desk'] as const;
 
@@ -30,7 +31,7 @@ export interface BuilderWiringDeps {
 
 /**
  * The browser side of {@link BuilderDeps}: the builder hears its keys on `document`, draws its plan at most once
- * per animation frame and mounts the real tool tabs, property panel and top view. Kept apart from
+ * per animation frame and mounts the real tool tabs, property panel and plan. Kept apart from
  * {@link wireBuilder} so a test can check each binding without a DOM that can host the tools.
  */
 export function builderDepsOf(deps: BuilderWiringDeps): BuilderDeps {
@@ -54,10 +55,15 @@ export function builderDepsOf(deps: BuilderWiringDeps): BuilderDeps {
  * Builds Builder mode and opens it from `#buildBtn` in the top bar. Nothing else is built until the first click: the
  * session, the screen and every listener exist only while the builder is open. The click is asynchronous: it loads the
  * Web Awesome chunk first and enters when it resolves. A second click during the load is harmless, because `enter()`
- * ignores a call while the builder is open.
+ * ignores a call while the builder is open. A failed load (after a deploy, an open tab asks for a chunk that is gone)
+ * shows a toast, so the button does not silently do nothing.
  */
 export function wireBuilder(deps: BuilderWiringDeps): BuilderMode {
   const builder = new BuilderMode(builderDepsOf(deps));
-  byId('buildBtn').onclick = () => void deps.loadShell().then(() => builder.enter());
+  byId('buildBtn').onclick = () =>
+    void deps
+      .loadShell()
+      .then(() => builder.enter())
+      .catch(() => deps.bus.emit('message', { kind: 'toast', text: he.builder.loadFailed }));
   return builder;
 }

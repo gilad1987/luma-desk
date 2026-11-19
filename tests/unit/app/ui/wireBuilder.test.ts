@@ -1,12 +1,11 @@
 /**
  * The app wiring of the Stage Builder: each browser binding of `BuilderDeps` (the narrow-screen query included),
- * `#buildBtn` as the only thing built at boot, and its click waiting for the Web Awesome chunk before it enters.
- * Builder mode is owned by ui/builder/BuilderMode.test.ts; opening it for real by tests/e2e/builder-*.spec.ts.
+ * and `#buildBtn` as the only thing built at boot. Its click (the chunk load) is owned by wireBuilder.load.test.ts,
+ * Builder mode by ui/builder/BuilderMode.test.ts, and opening it for real by tests/e2e/builder-*.spec.ts.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { attachViewer } from '../../../../src/app/ui/viewerHost';
 import { builderDepsOf, wireBuilder } from '../../../../src/app/ui/wireBuilder';
-import { BuilderMode } from '../../../../src/ui/builder/BuilderMode';
 import { mountTools } from '../../../../src/ui/builder/mountTools';
 import { asReal, FakeButton, FakeDom } from '../../../shared/dom';
 import { BuilderHarness } from '../../ui/builder/builderHarness';
@@ -19,12 +18,9 @@ function setup() {
   vi.stubGlobal('matchMedia', matchMedia);
   const setConsoleHeight = vi.fn<(px: number) => void>();
   const fitLayout = vi.fn();
-  // a deferred shell load the test resolves by hand, so it sees the click before and after the chunk arrives
-  let release = (): void => undefined;
-  const shell = new Promise<void>((resolve) => (release = resolve));
-  const loadShell = vi.fn(() => shell);
+  const loadShell = vi.fn(() => Promise.resolve());
   const wiring = { stage: h.deps.stage, bus: h.deps.bus, stageRenderer: { setConsoleHeight }, fitLayout, loadShell };
-  return { dom, h, wiring, setConsoleHeight, fitLayout, loadShell, shell, release: () => release() };
+  return { dom, h, wiring, setConsoleHeight, fitLayout, loadShell };
 }
 
 describe('wireBuilder', () => {
@@ -57,21 +53,6 @@ describe('wireBuilder', () => {
     expect([setConsoleHeight.mock.calls, fitLayout.mock.calls.length]).toEqual([[[120]], 1]);
   });
 
-  // catches an enter before the chunk loads, which would mount bare, unstyled wa-* tags
-  it('opens Builder mode from a #buildBtn click only after the shell loads', async () => {
-    const { dom, wiring, loadShell, shell, release } = setup();
-    // the real enter mounts the tool panels, which need a real DOM (e2e); here it only has to be the click's target
-    const enter = vi.spyOn(BuilderMode.prototype, 'enter').mockImplementation(() => undefined);
-    const builder = wireBuilder(wiring);
-    dom.get('buildBtn').onclick?.({ target: null });
-    const beforeLoad = enter.mock.contexts.length;
-    release();
-    await shell;
-    expect([loadShell.mock.calls.length, beforeLoad]).toEqual([1, 0]);
-    expect(enter.mock.contexts).toEqual([builder]);
-    enter.mockRestore();
-  });
-
   it('makes the side panes, the encoders and the executor desk inert, and live again', () => {
     const { dom, wiring } = setup();
     const areas = ['side', 'enc', 'desk'].map((id) => asReal<HTMLElement>(dom.add(id)));
@@ -85,7 +66,7 @@ describe('wireBuilder', () => {
     ]);
   });
 
-  it('draws the top view through the animation frame clock', () => {
+  it('draws the plan view through the animation frame clock', () => {
     const raf = vi.fn(() => 7),
       caf = vi.fn();
     vi.stubGlobal('requestAnimationFrame', raf);

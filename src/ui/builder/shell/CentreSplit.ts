@@ -22,8 +22,8 @@ const MODE_CLASSES: Readonly<Record<ViewMode, string>> = {
 /**
  * Lays out the builder centre for a view mode: it owns the split panel's position and the `is-mode-*` class of the
  * centre, and remembers where the user left the divider in Split, so a trip to Plan or 3D and back does not lose it.
- * Only a move in Split mode is remembered; the 0 and 100 of the other modes are not the user's choice. It does not own
- * the mode buttons (`ViewModeSwitch`) or what the panes hold.
+ * Only a move in Split mode is remembered; the 0 and 100 of the other modes are not the user's choice, so a reposition
+ * there puts the edge back. It does not own the mode buttons (`ViewModeSwitch`) or what the panes hold.
  *
  * Risk (docs/plan/stage-builder-dnd/01-shell.md): a 0 % pane gives the renderer a 0 px box, so the 3D canvas sizes
  * to 0 height in Plan mode; QA watches the console in both single-view modes.
@@ -40,7 +40,7 @@ export class CentreSplit {
     this.#centre = centre;
     this.#panel = splitPanelIn(centre);
     this.#mode = initial;
-    this.#stop = listenWa(this.#panel, 'wa-reposition', () => this.#remember());
+    this.#stop = listenWa(this.#panel, 'wa-reposition', () => this.#onReposition());
     this.setMode(initial);
   }
 
@@ -68,8 +68,15 @@ export class CentreSplit {
     }
   }
 
-  #remember(): void {
-    if (this.#mode === 'split') this.#splitPercent = this.#panel.position;
+  /**
+   * Remembers a divider move in Split. In Plan and 3D it writes the mode's edge back: on a window resize the panel
+   * keeps the start pane's cached pixel size and recomputes `position`, so a taller window drops 3D below 100 % and a
+   * strip of the plan shows. The write raises one more `wa-reposition`, which then matches the edge and stops.
+   */
+  #onReposition(): void {
+    const position = this.#panel.position;
+    if (this.#mode === 'split') this.#splitPercent = position;
+    else if (position !== this.#positionOf(this.#mode)) this.#panel.position = this.#positionOf(this.#mode);
   }
 }
 

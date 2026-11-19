@@ -13,7 +13,7 @@ const RISER_SIZE_M: Vec3 = [2, 0.4, 2];
 /**
  * The Risers section of the Stage tab: one row per riser with its Remove button and its X and Z fields, then Add
  * riser. A new riser stands on the deck centre and the X and Z fields place it; it has no Y field, because it stands
- * on the deck. The top view draws risers but does not move them.
+ * on the deck. The plan draws risers but does not move them.
  */
 export function riserControls(d: StageDesign, session: Pick<EditorSession, 'edit'>, run: RunEdit): HTMLElement[] {
   const rows = d.risers.flatMap((riser) => {

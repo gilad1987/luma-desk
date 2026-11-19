@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 /**
  * Owns the centre layout per view mode: the split position, the divider's `disabled` state, the one `is-mode-*`
- * class, and the divider position remembered across Plan and 3D. The buttons are owned by ViewModeSwitch.test.ts.
+ * class, the divider position remembered across Plan and 3D, and the Plan and 3D edges put back after the panel
+ * repositions itself (a window resize). The buttons are owned by ViewModeSwitch.test.ts.
  * jsdom with a fake `wa-split-panel` (defineFakeSplitPanel.ts), because the real panel needs a browser.
  */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -64,6 +65,17 @@ describe('CentreSplit', () => {
     dragTo(0);
     split.setMode('split');
     expect(layout()[0]).toBe(50);
+  });
+
+  // the bug: a window resize recomputes the position from the cached pixels, so a strip of the other view shows
+  it.each<[ViewMode, number, number]>([
+    ['3d', 87, 100],
+    ['plan', 13, 0],
+    ['split', 37, 37],
+  ])('in %s mode, a reposition to %d leaves the panel at %d', (mode, drifted, kept) => {
+    new CentreSplit(centre, mode);
+    dragTo(drifted);
+    expect(panel.position).toBe(kept);
   });
 
   // a kept listener would write the closed builder's divider into a dead object on every reposition
