@@ -19,7 +19,7 @@ const NEEDS_MOVING = { mover: true, tiltBar: true, yokedCan: false } as const sa
 >;
 
 /** The ids the manufacturer lists as discontinued, in catalogue order. */
-const DISCONTINUED_IDS: readonly ProductId[] = ['robe-pointe'];
+const DISCONTINUED_IDS: readonly ProductId[] = ['robe-pointe', 'robe-spikie'];
 
 /** Every mover product with its body, narrowed on the family. */
 const MOVERS: { id: ProductId; body: MoverBody }[] = PRODUCT_IDS.flatMap((id) => {
