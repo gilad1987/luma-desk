@@ -2,6 +2,7 @@ import type { FixtureOptics } from '../../domain/stage/optics/FixtureOptics';
 import { isVendorSymbol } from '../gdtf/gdtfBodySize';
 import type { GdtfInfo } from '../gdtf/GdtfInfo';
 import { isGenericGdtf } from '../gdtf/isGenericGdtf';
+import { mixesColour } from '../gdtf/mixesColour';
 import { modeChannels } from '../gdtf/modeChannels';
 import { gdtfOptics } from '../gdtf/optics/gdtfOptics';
 import type { OpticsDrop } from '../gdtf/optics/OpticsDrop';
@@ -21,6 +22,8 @@ export interface OpticsVerdict {
   readonly reason?: OpticsDistrust;
   /** Single values of a trusted file that were not used (`OpticsDrop`). */
   readonly drops: readonly OpticsDrop[];
+  /** The mode has colour channels the optics do not describe; stored beside them (`MvrColourMix`). */
+  readonly mixesColour?: true;
 }
 
 /**
@@ -36,5 +39,6 @@ export function fixtureOptics(info: GdtfInfo | undefined, spec: string, modeName
   const { mode, channels } = modeChannels(info, modeName, spec);
   if (isGenericGdtf(channels)) return { reason: 'generic', drops: [] };
   const { optics, drops } = gdtfOptics(info, mode);
-  return optics === undefined ? { reason: 'noData', drops } : { optics, drops };
+  const mixed = mixesColour(channels) ? { mixesColour: true as const } : {};
+  return optics === undefined ? { reason: 'noData', drops } : { optics, drops, ...mixed };
 }

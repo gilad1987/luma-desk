@@ -29,7 +29,7 @@ function parseIndex(r: Reader, o: Raw, key: Key, at: string): number | undefined
 }
 
 /** A flag the import stores only when true; a stored `false` reads as absent, which means the same. */
-function parseFlag(r: Reader, o: Raw, key: Key, at: string): true | undefined {
+export function parseFlag(r: Reader, o: Raw, key: Key, at: string): true | undefined {
   return r.optional(o, key, at, r.bool) === true ? true : undefined;
 }
 

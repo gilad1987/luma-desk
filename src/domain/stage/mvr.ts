@@ -1,5 +1,5 @@
 import type { FixtureTypeId } from '../FixtureType';
-import type { MvrDesignFileData, MvrFixtureFileData } from './mvrFileData';
+import type { MvrColourMix, MvrDesignFileData, MvrFixtureFileData } from './mvrFileData';
 import type { FixtureOptics } from './optics/FixtureOptics';
 import type { StageBounds, Vec3 } from './types';
 
@@ -7,7 +7,7 @@ import type { StageBounds, Vec3 } from './types';
  * What an imported fixture was in the MVR file. The desk fixture keeps only desk data, so the import keeps these
  * MVR names here to show them in the Sheet and to match a fixture again on a later import.
  */
-export interface MvrFixtureInfo extends MvrFixtureFileData {
+export interface MvrFixtureInfo extends MvrFixtureFileData, MvrColourMix {
   /** The `<Fixture uuid>`: stable across exports of the same file, unlike the desk id. */
   readonly uuid: string;
   /** Uuid of the `<Layer>` the fixture sits in, so a layer can be hidden as a whole. */

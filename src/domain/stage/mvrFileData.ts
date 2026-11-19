@@ -71,6 +71,19 @@ export function positionNameOf(design: MvrDesignFileData, fixture: MvrFixtureFil
   return fixture.position === undefined ? undefined : design.positions?.[fixture.position]?.name;
 }
 
+/**
+ * What a fixture's GDTF says about its colour beyond the stored optics. It sits beside the file data because the
+ * gel rule reads both: the file's colour, and whether the unit can make another one.
+ */
+export interface MvrColourMix {
+  /**
+   * The mode has colour channels the optics do not describe (`ColorRGB_*`, `HSB_*`, `CIE_*`, `ColorMacro*`), so the
+   * unit changes colour although `optics.color` is absent. Absent in a show saved before the field: that fixture
+   * counts as before.
+   */
+  readonly mixesColour?: true;
+}
+
 /** The name of a fixture's class; `undefined` for no reference and for a dangling one. */
 export function classNameOf(design: MvrDesignFileData, fixture: MvrFixtureFileData): string | undefined {
   return fixture.classing === undefined ? undefined : design.classes?.[fixture.classing]?.name;
