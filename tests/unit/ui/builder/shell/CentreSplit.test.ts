@@ -59,23 +59,21 @@ describe('CentreSplit', () => {
     expect(layout()).toEqual([30, false, ['is-mode-split']]);
   });
 
-  // catches a Plan-mode reposition (the panel reports its own 0) saved as the user's split
-  it('ignores a reposition outside Split mode', () => {
-    const split = new CentreSplit(centre, 'plan');
-    dragTo(0);
-    split.setMode('split');
-    expect(layout()[0]).toBe(50);
-  });
-
-  // the bug: a window resize recomputes the position from the cached pixels, so a strip of the other view shows
-  it.each<[ViewMode, number, number]>([
-    ['3d', 87, 100],
-    ['plan', 13, 0],
-    ['split', 37, 37],
-  ])('in %s mode, a reposition to %d leaves the panel at %d', (mode, drifted, kept) => {
-    new CentreSplit(centre, mode);
+  // the bug: a window resize recomputes the position from the cached pixels, so a strip of the other view shows; a
+  // Plan or 3D position saved as the user's split, or a Split drift to an edge saved as a 0 px pane, comes back later
+  it.each<[ViewMode, number, number, number]>([
+    ['3d', 87, 100, 50],
+    ['plan', 13, 0, 50],
+    ['split', 37, 37, 37],
+    ['split', 100, 90, 90],
+    ['split', 0, 10, 10],
+  ])('in %s mode, a reposition to %d leaves the panel at %d and Split at %d', (mode, drifted, kept, remembered) => {
+    const split = new CentreSplit(centre, mode);
     dragTo(drifted);
-    expect(panel.position).toBe(kept);
+    const after = panel.position;
+    split.setMode('plan');
+    split.setMode('split');
+    expect([after, panel.position]).toEqual([kept, remembered]);
   });
 
   // a kept listener would write the closed builder's divider into a dead object on every reposition
