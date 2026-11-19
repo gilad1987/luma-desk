@@ -48,8 +48,10 @@ function stackedIds(fixtures: readonly RigBody[]): ReadonlySet<number> {
  * the house; at or past the downstage edge; else overhead. Pure, and the same for a fixture and its mirror image about the centre line.
  */
 export function systemOf(area: LookArea, fixtures: readonly RigBody[]): (f: RigBody) => RigSystem {
-  // lights only: a hoist above a wash must not make that wash a tower unit
-  const stacked = stackedIds(fixtures.filter((f) => !EFFECT_TYPES.has(f.type) && !DARK_TYPES.has(f.type)));
+  // lights only: a hoist above a wash must not make that wash a tower unit; a unit in the floor band stands on the
+  // deck, not on a stand, so a floor light under a truss light must not make that truss light a tower unit
+  const isLit = (f: RigBody): boolean => !EFFECT_TYPES.has(f.type) && !DARK_TYPES.has(f.type);
+  const stacked = stackedIds(fixtures.filter((f) => isLit(f) && f.pos.y >= area.floor + FLOOR_BAND_M));
   const frontZ = area.cz + area.halfDepth;
   return (f) => {
     if (DARK_TYPES.has(f.type)) return 'none';

@@ -36,6 +36,13 @@ describe('systemOf', () => {
     expect([...corner, ...house].map(system)).toEqual(['side', 'side', 'front', 'front']);
   });
 
+  it('keeps a truss light over a floor light on the truss and a stack on a stand above the floor as a tower', () => {
+    const truss = [fx(1, 'wash', [-5, 7, -2]), fx(2, 'wash', [5, 7, -2]), fx(3, 'beam', [5, 1.5, -2])];
+    const tower = [fx(4, 'spot', [6, 1.5, 0]), fx(5, 'spot', [6, 3, 0]), fx(6, 'spot', [6, 5, 0])];
+    const system = systemOf(AREA, [...truss, ...tower]);
+    expect([...truss, ...tower].map(system)).toEqual(['overhead', 'overhead', 'floor', 'floor', 'side', 'side']);
+  });
+
   it('gives a fixture and its mirror image the same system', () => {
     const mirrored = rig.map((f) => fx(f.id + 100, f.type, [-f.pos.x, f.pos.y, f.pos.z]));
     const system = systemOf(AREA, [...rig, ...mirrored]);
