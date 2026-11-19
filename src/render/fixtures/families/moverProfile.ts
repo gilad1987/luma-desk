@@ -2,37 +2,13 @@ import type { BufferGeometry } from 'three';
 import type { MoverBody } from '../../../domain/fixtureProducts/FixtureProduct';
 import { merge } from '../modelGeometry';
 import type { ModelPrimitives, ProfilePoint } from '../ModelPrimitives';
+import { FORTE_BARREL_PROFILE, FORTE_BEZEL_PROFILE } from '../models/forteHead';
 
 /**
  * The Robe FORTE head (`models/forteHead.ts`) is the reference shape of the family: its barrel radius at the tilt
  * axis and the y of its rear cap and lens face, which the product's `barrel` numbers replace.
  */
-const FORTE = { r: 0.335, rear: 0.45, front: -0.78, lensR: 0.235 } as const;
-
-/** The FORTE barrel, front to rear: slim lens end, widened body around the tilt axis, domed rear cap. */
-const FORTE_BARREL: readonly ProfilePoint[] = [
-  [0.26, -0.72],
-  [0.3, -0.7],
-  [0.3, -0.42],
-  [0.315, -0.3],
-  [0.33, -0.15],
-  [0.335, 0.05],
-  [0.33, 0.2],
-  [0.31, 0.32],
-  [0.27, 0.4],
-  [0.18, 0.44],
-  [0, 0.45],
-];
-
-/** The FORTE bezel: lens lip, flat front plate, then the step that stands out over the barrel. */
-const FORTE_BEZEL: readonly ProfilePoint[] = [
-  [0.235, -0.78],
-  [0.3, -0.78],
-  [0.3, -0.765],
-  [0.325, -0.755],
-  [0.325, -0.69],
-  [0.305, -0.68],
-];
+const FORTE = { r: 0.335, rear: 0.45, front: -0.78 } as const;
 
 /** Rib ring thickness over the barrel and height, as the FORTE's. */
 const RIB = { outset: 0.01, height: 0.014 } as const;
@@ -47,7 +23,7 @@ const scaleY = (y: number, { rear, front }: MoverBody['barrel']): number =>
 /** The barrel lathe: the FORTE profile with its radii scaled by `barrel.r` and its length by `rear` and `front`. */
 export function barrelProfile(body: MoverBody): readonly ProfilePoint[] {
   const k = body.barrel.r / FORTE.r;
-  return FORTE_BARREL.map(([r, y]) => [r * k, scaleY(y, body.barrel)]);
+  return FORTE_BARREL_PROFILE.map(([r, y]) => [r * k, scaleY(y, body.barrel)]);
 }
 
 /**
@@ -57,7 +33,10 @@ export function barrelProfile(body: MoverBody): readonly ProfilePoint[] {
 export function bezelProfile(body: MoverBody): readonly ProfilePoint[] {
   const k = body.barrel.r / FORTE.r;
   const s = body.barrel.front / FORTE.front;
-  return FORTE_BEZEL.map(([r, y], i) => [i === 0 ? body.lens.r : r * k, body.barrel.front + (y - FORTE.front) * s]);
+  return FORTE_BEZEL_PROFILE.map(([r, y], i) => [
+    i === 0 ? body.lens.r : r * k,
+    body.barrel.front + (y - FORTE.front) * s,
+  ]);
 }
 
 /** The cooling rib rings at the given y, a thin cylinder just over the barrel each. */
