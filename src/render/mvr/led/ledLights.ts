@@ -2,6 +2,7 @@ import type { Object3D } from 'three';
 import { FAR, outside, type Aabb } from '../../../mvr/index';
 import { addWallSources, syncWallLights, type WallSource } from './ledLightPool';
 import { scale, type V3 } from './ledPose';
+import { isShown } from './ledShown';
 import { frontSign } from './ledWallFront';
 import type { LedWall } from './ledWalls';
 
@@ -13,7 +14,7 @@ const NEAR = 3;
 /**
  * The light the panel walls of one import throw on the stage: per wall one wide, soft spot just in front of the
  * wall's middle, with the wall's mean content colour and an intensity of radiance times area (`ledLightPool`, which
- * holds the fixed set of lights and syncs them once per frame). A wall whose layer is hidden gives no light, and of
+ * holds the fixed set of lights and syncs them once per frame). A wall whose layers are all hidden gives no light, and of
  * the walls on screen the four that are largest and at the venue get one; a wall far outside the venue never does.
  * The file does not say which side of a wall is its front: `frontSign` states the rule (the seats, else downstage),
  * and the emitting face of the panels follows the same rule.
@@ -30,7 +31,11 @@ export class LedWallLights {
       const position: V3 = [centre[0] + 0.3 * normal[0], centre[1] + 0.3 * normal[1], centre[2] + 0.3 * normal[2]];
       const away = outside(venue, centre);
       const weight = away > FAR ? 0 : (wall.width * wall.height) / (1 + (away / NEAR) ** 2);
-      const anchor = (): Object3D | undefined => this.#holders.get(wall.layer);
+      // A wall drawn on several layers shines while any of them is shown; hidden, it still names a holder.
+      const anchor = (): Object3D | undefined => {
+        const holders = wall.layers.flatMap((layer) => this.#holders.get(layer) ?? []);
+        return holders.find((holder) => isShown(holder)) ?? holders[0];
+      };
       const { width, height } = wall;
       return weight > 0 ? [{ position, normal, width, height, seed, weight, anchor }] : [];
     });

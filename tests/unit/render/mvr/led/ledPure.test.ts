@@ -55,4 +55,12 @@ describe('duplicatePanels', () => {
       [5, 0],
     ]);
   });
+
+  it('makes one group of a chain: a panel 3 mm off two that are 6 mm apart joins them to the first', () => {
+    const panels = [panel([0, 1, 0]), panel([0.006, 1, 0]), panel([0.003, 1, 0])];
+    expect([...duplicatePanels(panels)]).toEqual([
+      [1, 0],
+      [2, 0],
+    ]);
+  });
 });

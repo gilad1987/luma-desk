@@ -7,23 +7,6 @@ export { nearPairs };
 /** Two layers that draw the same wall place their panels within a few millimetres of each other. */
 const DUPLICATE_REACH = 0.005;
 
-/**
- * The coplanar duplicates among `panels`: index of a later panel that lies on an earlier one (same place to 5 mm,
- * same plane, same size) to the index of the first panel there. Drawing both makes the two faces fight for depth and
- * flicker, so one is drawn; the data keeps both.
- */
-export function duplicatePanels(panels: readonly PanelPose[]): Map<number, number> {
-  const first = new Map<number, number>();
-  const positions = panels.map((panel) => panel.position);
-  nearPairs(positions, DUPLICATE_REACH, (earlier, later) => {
-    const [a, b] = [panels[earlier], panels[later]];
-    if (!a || !b || first.has(later)) return;
-    if (Math.abs(dot(a.normal, b.normal)) < 0.999 || Math.abs(a.pitch - b.pitch) > 0.01 * a.pitch) return;
-    first.set(later, first.get(earlier) ?? earlier);
-  });
-  return first;
-}
-
 /** Neighbours on one wall may turn against each other by the bend of a curved wall, not by a corner. */
 const SAME_WALL = 0.85;
 
@@ -68,4 +51,30 @@ export function clusterPanels(panels: readonly PanelPose[], links = panelLinks(p
   };
   for (const [earlier, later] of links) parent[root(later)] = root(earlier);
   return panels.map((_, index) => root(index));
+}
+
+/**
+ * The coplanar duplicates among `panels`: index of a later panel that lies on an earlier one (same place to 5 mm,
+ * same plane, same size) to the index of the first panel of its group. Drawing both makes the two faces fight for
+ * depth and flicker, so one is drawn; the data keeps both. A chain of such pairs is one group, so three layers that
+ * overlap only in part still name one first panel.
+ */
+export function duplicatePanels(panels: readonly PanelPose[]): Map<number, number> {
+  const pairs: PanelLink[] = [];
+  const positions = panels.map((panel) => panel.position);
+  nearPairs(positions, DUPLICATE_REACH, (earlier, later) => {
+    const [a, b] = [panels[earlier], panels[later]];
+    if (!a || !b) return;
+    if (Math.abs(dot(a.normal, b.normal)) < 0.999 || Math.abs(a.pitch - b.pitch) > 0.01 * a.pitch) return;
+    pairs.push([earlier, later]);
+  });
+  const firstOf = new Map<number, number>();
+  const first = new Map<number, number>();
+  // The indexes run up, so the first index seen of a group is its first panel.
+  clusterPanels(panels, pairs).forEach((group, index) => {
+    const at = firstOf.get(group);
+    if (at === undefined) firstOf.set(group, index);
+    else first.set(index, at);
+  });
+  return first;
 }

@@ -6,17 +6,22 @@ import { isShown } from './ledShown';
 import type { V3 } from './ledPose';
 import { frontSign, seatsCentre } from './ledWallFront';
 
-/** The panels of one layer that draw as one mesh; `keeper` is the layer that draws the same panels already. */
+/** The panels of one layer that draw as one mesh; `keeper` is the first layer that draws the same panels already. */
 export interface PanelGroup {
   readonly panels: readonly MvrProxy[];
   readonly keeper: string | undefined;
+  /** Every layer that draws the same panels earlier, `keeper` first: the mesh draws while none of them is shown. */
+  readonly keepers?: readonly string[];
 }
+
+/** The layers of `panels`, each once, in panel order. */
+const layersOf = (panels: readonly MvrProxy[]): string[] => [...new Set(panels.map((panel) => panel.layer))];
 
 /**
  * The LED look of the panel proxies of one import: each panel's place on its wall, the duplicates that are not
  * drawn, and the light of the walls. A duplicate keeps its instance, in a mesh of its own that draws only while the
- * layer of the panel in front of it is hidden: layers are often alternatives of one wall, and the user who hides one
- * must still see the other whole.
+ * layers of all the panels before it are hidden: layers are often alternatives of one wall, and the user who hides
+ * one must still see another whole, once.
  */
 export class LedProxyLook {
   readonly #plan: LedPlan;
@@ -39,17 +44,18 @@ export class LedProxyLook {
     );
   }
 
-  /** The drawable panels of one layer: first those always drawn, then its duplicates by the layer they repeat. */
+  /** The drawable panels of one layer: first those always drawn, then its duplicates by the layers they repeat. */
   split(panels: readonly MvrProxy[]): PanelGroup[] {
-    const groups = new Map<string | undefined, MvrProxy[]>([[undefined, []]]);
+    const groups = new Map<string, PanelGroup & { panels: MvrProxy[] }>([['', { panels: [], keeper: undefined }]]);
     for (const panel of panels) {
       if (!this.#plan.coords.has(panel)) continue;
-      const keeper = this.#plan.duplicateOf.get(panel)?.layer;
-      const group = groups.get(keeper) ?? [];
-      group.push(panel);
-      groups.set(keeper, group);
+      const keepers = layersOf(this.#plan.duplicateOf.get(panel) ?? []);
+      const key = keepers.join('\n');
+      const group = groups.get(key) ?? { panels: [], keeper: keepers[0], keepers };
+      group.panels.push(panel);
+      groups.set(key, group);
     }
-    return [...groups].map(([keeper, list]) => ({ panels: list, keeper }));
+    return [...groups.values()];
   }
 
   /** Records the proxy group of a layer, which says whether its panels are on screen, and hangs its wall lights there. */
@@ -75,12 +81,12 @@ export class LedProxyLook {
     mesh.geometry.setAttribute('ledAxes', new InstancedBufferAttribute(axes, 4));
     mesh.geometry.setAttribute('ledSide', new InstancedBufferAttribute(side, 1));
     const lights = this.#lights;
-    const { keeper } = group;
-    if (keeper !== undefined) {
+    const keepers = group.keepers ?? [];
+    if (keepers.length > 0) {
       const count = mesh.count;
       // The renderer reads `count` after this call, so the choice holds for the frame that is drawn now.
       mesh.onBeforeRender = () => {
-        mesh.count = isShown(this.#holders.get(keeper)) ? 0 : count;
+        mesh.count = keepers.some((layer) => isShown(this.#holders.get(layer))) ? 0 : count;
       };
     }
     // The wall lights do not sync here: a panel mesh is culled out of view, and the lights must still follow.

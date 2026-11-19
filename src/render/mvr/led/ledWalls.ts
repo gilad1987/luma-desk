@@ -1,5 +1,5 @@
 import { clusterPanels, panelLinks, type PanelLink } from './ledClusters';
-import { commonLayer, dot, scale, unit, type PanelPose, type V3 } from './ledPose';
+import { dot, panelLayers, scale, unit, type PanelPose, type V3 } from './ledPose';
 import { withGridSpacing } from './ledSpacing';
 import { unrollChain } from './ledUnroll';
 
@@ -16,8 +16,11 @@ export interface PanelWallCoord {
 
 /** One wall: a cluster of panels, as a light source would see it. Position is before the stage offset. */
 export interface LedWall {
-  /** Uuid of the layer most of the wall's panels are on; empty when the panels bring no layer. */
-  readonly layer: string;
+  /**
+   * Uuids of the layers of the wall's panels, in panel order (the order in which duplicates draw); empty when the
+   * panels bring no layer. Coincident panels on two layers link into one wall, so a wall can have several.
+   */
+  readonly layers: readonly string[];
   readonly centre: V3;
   /** The mean of the panel normals on one side of the wall; the file does not say which side is the front. */
   readonly normal: V3;
@@ -60,7 +63,7 @@ function mapWall(
   const centre = scale(sumOf(panels.map((p) => p.position)), 1 / Math.max(1, panels.length));
   const size = (lengths: readonly number[]): number => lengths.reduce((most, l) => Math.max(most, l), 0) + pitch;
   const [width, height] = [size(rolled.map((at) => at.u)), size(rolled.map((at) => at.v))];
-  return { coords, wall: { layer: commonLayer(panels), centre, normal, width, height } };
+  return { coords, wall: { layers: panelLayers(panels), centre, normal, width, height } };
 }
 
 /** Groups `panels` into walls and gives each panel its place on its wall, so content runs across the whole wall. */

@@ -8,7 +8,7 @@ import { proxyGeometry, proxyMaterial } from '../../../../../src/render/mvr/prox
 
 afterEach(() => setLedWallPercent(25));
 
-const wall = { layer: '', centre: [0, 3, -6], normal: [0, 0, -1], width: 12, height: 6 } as const;
+const wall = { layers: [''], centre: [0, 3, -6], normal: [0, 0, -1], width: 12, height: 6 } as const;
 
 describe('LED materials', () => {
   it('shows a file image as content, treats a placeholder as no content, and frees what it made', () => {
@@ -38,9 +38,9 @@ describe('LED materials', () => {
 
 describe('LedWallLights', () => {
   const venue = { min: [-15, 0, -15], max: [15, 10, 15] } as const;
-  const walls = ['a', 'b', 'c', 'd', 'e'].map((layer, i) => ({ ...wall, layer, width: 12 - i }));
-  const parked = { ...wall, layer: 'far', centre: [-40, 3, -6], width: 30 } as const;
-  const beside = { ...wall, layer: 'beside', centre: [-21, 3, -6], width: 30 } as const;
+  const walls = ['a', 'b', 'c', 'd', 'e'].map((layer, i) => ({ ...wall, layers: [layer], width: 12 - i }));
+  const parked = { ...wall, layers: ['far'], centre: [-40, 3, -6], width: 30 } as const;
+  const beside = { ...wall, layers: ['beside'], centre: [-21, 3, -6], width: 30 } as const;
 
   it('lights the largest walls on screen at the venue, never a far one, and skips a hidden layer', () => {
     const lights = new LedWallLights([...walls, parked, beside], [0, 0, 0], venue);
@@ -62,7 +62,7 @@ describe('LedWallLights', () => {
   });
 
   it('lights in the content colour, follows the level, is dark when off and faces the audience', () => {
-    const lights = new LedWallLights([{ ...wall, layer: 'a' }], [0, 0, 0], venue);
+    const lights = new LedWallLights([{ ...wall, layers: ['a'] }], [0, 0, 0], venue);
     const holder = new Group();
     lights.attach('a', holder);
     lights.sync();

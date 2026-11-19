@@ -14,7 +14,7 @@ import { setLedWallPercent } from '../../../../../src/render/mvr/led/ledUniforms
 afterEach(() => setLedWallPercent(25));
 
 const venue = { min: [-15, 0, -15], max: [15, 10, 15] } as const;
-const wall = { layer: 'a', centre: [0, 3, -6], normal: [0, 0, 1], width: 12, height: 6 } as const;
+const wall = { layers: ['a'], centre: [0, 3, -6], normal: [0, 0, 1], width: 12, height: 6 } as const;
 const spots = (root: Object3D): SpotLight[] => root.children.filter((node) => node instanceof SpotLight);
 const lit = (root: Object3D): number => spots(root).filter((light) => light.intensity > 0).length;
 /** A stage group in a scene with one layer group, as the scenery is built. */
@@ -32,7 +32,7 @@ const solid = (): Mesh => {
 describe('the wall light pool', () => {
   it('keeps four lights under the stage root, dark when unused, whatever comes and goes', () => {
     const { root, layer } = stage();
-    const lights = new LedWallLights([wall, { ...wall, layer: 'b', width: 8 }], [0, 0, 0], venue);
+    const lights = new LedWallLights([wall, { ...wall, layers: ['b'], width: 8 }], [0, 0, 0], venue);
     const other = new Group();
     root.add(other);
     lights.attach('a', layer);
