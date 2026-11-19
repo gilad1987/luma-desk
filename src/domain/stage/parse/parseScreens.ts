@@ -42,7 +42,7 @@ function checkDriver(r: Reader, fixtureId: number, path: string, { fixtures, ids
 function parseScreen(r: Reader, o: Raw, path: string, id: string | undefined): StageScreen | undefined {
   const screen = {
     id,
-    fixtureId: r.positiveInt(o, 'fixtureId', path),
+    fixtureId: r.fixtureId(o, 'fixtureId', path),
     x0: r.num(o, 'x0', path),
     x1: r.num(o, 'x1', path),
     y0: r.num(o, 'y0', path),

@@ -55,16 +55,16 @@ describe('deleteFixtures on an MVR import', () => {
 });
 
 describe('parseStageDesign nextFixtureId', () => {
-  it.each([0, -5, 1.5, '302', null, Number.NaN, 1e20, Number.MAX_SAFE_INTEGER + 1])('rejects the mark %s', (mark) => {
+  it.each([0, -5, 1.5, '302', null, Number.NaN, 1e20, Number.MAX_SAFE_INTEGER + 3])('rejects the mark %s', (mark) => {
     expect(markErrors(sampleDesign(), mark)).toHaveLength(1);
     expect(markErrors(sampleDesign(), mark)[0]).toMatch(/^nextFixtureId: /);
   });
 
-  it('names an unsafe mark as such, and accepts Number.MAX_SAFE_INTEGER itself', () => {
+  it('names a mark above 2^53 as such, and accepts 2^53 itself (the highest safe id + 1)', () => {
     expect(markErrors(sampleDesign(), 1e20)).toEqual([
-      'nextFixtureId: expected a safe integer, got 100000000000000000000',
+      'nextFixtureId: expected a positive integer up to 2^53, got 100000000000000000000',
     ]);
-    expect(markErrors(sampleDesign(), Number.MAX_SAFE_INTEGER)).toEqual([]);
+    expect(markErrors(sampleDesign(), Number.MAX_SAFE_INTEGER + 1)).toEqual([]);
   });
 
   it('accepts a mark at or below the highest id, and a new batch still starts above the highest id', () => {

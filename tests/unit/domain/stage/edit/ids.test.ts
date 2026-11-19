@@ -19,7 +19,7 @@ describe('nextIdBlock', () => {
 
   it('refuses a batch whose last id would pass Number.MAX_SAFE_INTEGER, even past one block of 100', () => {
     const d = sampleDesign();
-    const high = { ...d, fixtures: [{ ...d.fixtures[0], id: 9_007_199_254_740_800 }] } as typeof d;
+    const high = { ...d, fixtures: d.fixtures.slice(0, 1).map((f) => ({ ...f, id: 9_007_199_254_740_800 })) };
     // the block starts at 9007199254740801, so 191 ids end on MAX_SAFE_INTEGER and 192 pass it
     expect(nextIdBlock(high, 191)).toBe(9_007_199_254_740_801);
     expect(() => nextIdBlock(high, 192)).toThrow(/nextIdBlock: no 192 safe fixture ids after 9007199254740800/);

@@ -15,10 +15,12 @@ function withFixture(patch: Record<string, unknown>): unknown {
 }
 
 describe('parseStageDesign fixtures', () => {
-  it('rejects ids that are not positive integers', () => {
-    expect(errorsOf(withFixture({ id: 0 }))).toEqual(['fixtures[0].id: expected a positive integer, got 0']);
-    expect(errorsOf(withFixture({ id: 1.5 }))).toEqual(['fixtures[0].id: expected a positive integer, got 1.5']);
-    expect(errorsOf(withFixture({ id: '3' }))).toEqual(['fixtures[0].id: expected a positive integer, got "3"']);
+  it('rejects ids that are not positive safe integers', () => {
+    const error = (got: string): string => `fixtures[0].id: expected a positive safe integer, got ${got}`;
+    expect(errorsOf(withFixture({ id: 0 }))).toEqual([error('0')]);
+    expect(errorsOf(withFixture({ id: 1.5 }))).toEqual([error('1.5')]);
+    expect(errorsOf(withFixture({ id: '3' }))).toEqual([error('"3"')]);
+    expect(errorsOf(withFixture({ id: 1e20 }))).toEqual([error('100000000000000000000')]);
   });
 
   it('rejects a duplicate id', () => {

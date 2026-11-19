@@ -1,7 +1,8 @@
 /**
- * The promise behind the `nextFixtureId` rule (review #8): the parser loads any safe-integer mark, as an MVR import
- * keeps its FixtureIDs and a delete there stores a high mark; a mark or a fixture id near `Number.MAX_SAFE_INTEGER`
- * makes the next add refuse with a RangeError (`nextIdBlock` checks the whole batch), so ids never repeat.
+ * The promise behind the id rules (review #8): fixture ids are safe integers, and the parser loads any mark up to 2^53
+ * (the highest safe id + 1), as an MVR import keeps its FixtureIDs and a delete there stores a high mark. A mark or a
+ * fixture id near `Number.MAX_SAFE_INTEGER` makes the next add refuse with a RangeError (`nextIdBlock` checks the
+ * whole batch), so ids never repeat.
  */
 import { describe, expect, it } from 'vitest';
 import { addFloorRow } from '../../../../../src/domain/stage/edit/addFixtures.ts';
@@ -23,19 +24,21 @@ function withFirstId(id: number): StageDesign {
 }
 
 describe('the id mark near Number.MAX_SAFE_INTEGER', () => {
-  it('loads Number.MAX_SAFE_INTEGER and rejects MAX_SAFE_INTEGER + 1 and 1e20', () => {
+  it('loads a mark up to 2^53 (the highest safe id + 1) and rejects one above it', () => {
     const errorsOf = (mark: number) => {
       const parsed = parseWithMark(mark);
       return parsed.ok ? [] : parsed.errors;
     };
-    expect([errorsOf(Number.MAX_SAFE_INTEGER), errorsOf(Number.MAX_SAFE_INTEGER + 1), errorsOf(1e20)]).toEqual([
+    const marks = [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER + 1, Number.MAX_SAFE_INTEGER + 3, 1e20];
+    expect(marks.map(errorsOf)).toEqual([
       [],
-      ['nextFixtureId: expected a safe integer, got 9007199254740992'],
-      ['nextFixtureId: expected a safe integer, got 100000000000000000000'],
+      [],
+      ['nextFixtureId: expected a positive integer up to 2^53, got 9007199254740994'],
+      ['nextFixtureId: expected a positive integer up to 2^53, got 100000000000000000000'],
     ]);
   });
 
-  it.each([Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER - 50])('makes the next add after mark %s throw', (mark) => {
+  it.each([Number.MAX_SAFE_INTEGER + 1, Number.MAX_SAFE_INTEGER - 50])('refuses the next add after mark %s', (mark) => {
     const parsed = parseWithMark(mark);
     if (!parsed.ok) throw new Error(`the parser rejected the mark: ${parsed.errors.join('; ')}`);
     expect(() => addFloorRow(parsed.design, ROW)).toThrow(RangeError);
@@ -45,6 +48,19 @@ describe('the id mark near Number.MAX_SAFE_INTEGER', () => {
     const saved: unknown = JSON.parse(JSON.stringify(deleteFixtures(withFirstId(2e9), [deleted])));
     const parsed = parseStageDesign(saved);
     expect(parsed.ok && parsed.design.nextFixtureId).toBe(2e9 + 1);
+  });
+
+  it('saves and loads a delete next to the fixture id MAX_SAFE_INTEGER - 1, whose mark is MAX_SAFE_INTEGER', () => {
+    const top = Number.MAX_SAFE_INTEGER - 1;
+    const parsed = parseStageDesign(JSON.parse(JSON.stringify(deleteFixtures(withFirstId(top), [301]))));
+    expect(parsed.ok && parsed.design.nextFixtureId).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
+  it('rejects a fixture id of 1e20 at parse', () => {
+    const parsed = parseStageDesign(JSON.parse(JSON.stringify(withFirstId(1e20))));
+    expect(parsed.ok ? [] : parsed.errors).toContain(
+      'fixtures[0].id: expected a positive safe integer, got 100000000000000000000',
+    );
   });
 
   it('refuses an add after a fixture id near Number.MAX_SAFE_INTEGER instead of repeating ids', () => {

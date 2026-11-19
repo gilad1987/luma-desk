@@ -1,9 +1,12 @@
 import type { MvrFixtureRecord } from '../scene/MvrScene';
 import type { MvrWarning } from '../MvrWarning';
 
-/** `id` when it is a usable desk id (a positive integer), else `undefined`. */
+/**
+ * `id` when it is a usable desk id (a positive safe integer, as the stage parser reads fixture ids), else `undefined`,
+ * so the record gets an auto id. A 20-digit FixtureID is not safe: `id + 1` could equal `id`.
+ */
 const positive = (id: number | undefined): number | undefined =>
-  id !== undefined && Number.isInteger(id) && id > 0 ? id : undefined;
+  id !== undefined && Number.isSafeInteger(id) && id > 0 ? id : undefined;
 
 /**
  * The id the file asks for: `FixtureIDNumeric`, else a numeric `FixtureID`. The spec defines `FixtureIDNumeric` 0 as
