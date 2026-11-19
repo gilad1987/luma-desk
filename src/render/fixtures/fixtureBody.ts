@@ -30,7 +30,13 @@ export function createFixtureBody(
   if (f.rotation) g.quaternion.copy(f.rotation);
   else if (spec.moving && floor) g.rotation.z = Math.PI; // floor movers stand on their base
   const bodyMat = new MeshStandardMaterial({ color: 0x232328, metalness: 0.55, roughness: 0.38, emissive: 0x000000 });
-  const lensMat = new MeshBasicMaterial({ color: 0x050505, side: DoubleSide, toneMapped: false, map: lensMap });
+  // a product fixture has no lens map yet (its family paints it lazily); three's setValues warns on `map: undefined`
+  const lensMat = new MeshBasicMaterial({
+    color: 0x050505,
+    side: DoubleSide,
+    toneMapped: false,
+    ...(lensMap === undefined ? {} : { map: lensMap }),
+  });
   const pivot = new Group();
   g.add(pivot);
   return { g, bodyMat, lensMat, floor, pivot, mount: spec.moving ? null : createStaticMount(f, pivot, g, floor) };

@@ -1,4 +1,4 @@
-import type { FixtureTypeId } from '../../FixtureType';
+import { productIdOf } from '../../fixtureProducts';
 import type { StageDesign, StageFixture } from '../StageDesign';
 import { type FixturePlace, placesOnLine, placesOnTruss } from '../trussPlaces';
 import type { StageTruss } from '../trussTypes';
@@ -11,19 +11,17 @@ const SAME_SPOT_M = 0.2;
 /** Lanes tried before the last one is kept as it is; a real truss never holds this many rows. */
 const MAX_LANES = 10;
 
-type FixtureBase = Pick<StageFixture, 'type' | 'role' | 'trussId' | 'mount'>;
+type FixtureBase = Pick<StageFixture, 'type' | 'role' | 'trussId' | 'mount' | 'product'>;
 type IsTaken = (p: FixturePlace) => boolean;
 
 /** `count` fixtures of `type` to spread evenly along the truss `trussId`. */
-export interface TrussBatch {
+export interface TrussBatch extends Pick<StageFixture, 'type' | 'product'> {
   readonly trussId: string;
-  readonly type: FixtureTypeId;
   readonly count: number;
 }
 
 /** `count` fixtures of `type` to spread evenly on the floor from `from` to `to` (world metres). */
-export interface FloorRow {
-  readonly type: FixtureTypeId;
+export interface FloorRow extends Pick<StageFixture, 'type' | 'product'> {
   readonly count: number;
   readonly from: Vec3;
   readonly to: Vec3;
@@ -32,8 +30,8 @@ export interface FloorRow {
 /**
  * Adds fixtures evenly along a truss (see `placesOnTruss`), hung, with the role `defaultRole` gives. A batch that
  * lands on fixtures already there moves one 0.4 m lane at a time until it is free, so a second batch never hides in
- * the first. Ids start at the next free block.
- * @throws RangeError when the truss is missing or `count` is not a whole number >= 1: a silent no-op hides a UI bug.
+ * the first. Ids start at the next free block. Bad input throws, because a silent no-op hides a UI bug.
+ * @throws RangeError when the truss is missing, `count` is not a whole number >= 1, or `product` is not of `type`.
  */
 export function addFixturesOnTruss(d: StageDesign, batch: TrussBatch): StageDesign {
   checkCount(batch.count);
@@ -41,23 +39,30 @@ export function addFixturesOnTruss(d: StageDesign, batch: TrussBatch): StageDesi
   if (!truss) throw new RangeError(`addFixturesOnTruss: no truss with id ${batch.trussId}`);
   const places = firstFreeLane((lane) => placesOnTruss(truss, batch.count, lane), takenOnTruss(d, truss));
   const role = defaultRole(batch.type, truss);
-  return appendFixtures(d, places, { type: batch.type, role, trussId: truss.id, mount: 'hang' });
+  return appendFixtures(d, places, { ...unitOf(batch), role, trussId: truss.id, mount: 'hang' });
 }
 
 /**
  * Adds a floor row, evenly spaced (see `placesOnLine`) and lane-shifted like `addFixturesOnTruss`.
- * @throws RangeError when `count` is not a whole number >= 1.
+ * @throws RangeError when `count` is not a whole number >= 1, or `product` is not of `type` (`productIdOf`).
  */
 export function addFloorRow(d: StageDesign, row: FloorRow): StageDesign {
   checkCount(row.count);
   const places = firstFreeLane((lane) => placesOnLine(row.from, row.to, row.count, lane), takenSpot(d));
   const role = defaultRole(row.type, null);
-  return appendFixtures(d, places, { type: row.type, role, trussId: null, mount: 'floor' });
+  return appendFixtures(d, places, { ...unitOf(row), role, trussId: null, mount: 'floor' });
 }
 
 /** True when `at` is within 0.2 m of `other`: the two count as one spot (lane shift, mirror). */
 export function isSameSpot(at: Vec3, other: Vec3): boolean {
   return Math.hypot(at[0] - other[0], at[1] - other[1], at[2] - other[2]) < SAME_SPOT_M;
+}
+
+/** The type and product (only when set) of a batch. */
+function unitOf({ type, product }: Pick<StageFixture, 'type' | 'product'>): Pick<StageFixture, 'type' | 'product'> {
+  if (product !== undefined && productIdOf(product, type) === undefined)
+    throw new RangeError(`addFixtures: ${product} is not a product of type ${type}`);
+  return product === undefined ? { type } : { type, product };
 }
 
 function checkCount(count: number): void {
