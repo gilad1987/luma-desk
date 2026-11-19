@@ -14,12 +14,34 @@ import { StartScreen } from './StartScreen';
  * switches the host to `is-editing`, which shows the tools. The edit toolbar is made only then: on the start screen
  * there is no chosen draft yet, so no edit button exists and the keys reach nothing (Mirror there would edit the
  * stage the user is about to replace). The columns and the drawer under the start screen are `inert` until then.
+ * A part that throws while mounting takes back the parts made before it, then the error goes on: the caller gets no
+ * disposer in that case, so the document's and the screen query's listeners would stay behind.
  */
 export function mountBuilder(host: HTMLElement, session: EditorSession, deps: BuilderDeps): () => void {
+  const disposers: (() => void)[] = [];
+  const disposeAll = (): void =>
+    disposers
+      .splice(0)
+      .reverse()
+      .forEach((dispose) => dispose());
+  try {
+    mountParts(host, session, deps, disposers);
+  } catch (error) {
+    disposeAll();
+    throw error;
+  }
+  return disposeAll;
+}
+
+/** Mounts the parts in order and pushes the disposer of each one as soon as it exists, so a later throw can undo it. */
+function mountParts(host: HTMLElement, session: EditorSession, deps: BuilderDeps, disposers: (() => void)[]): void {
   const report = (text: string): void => deps.bus.emit('message', { kind: 'toast', text });
   const shell = mountShell(host, deps);
+  disposers.push(shell.dispose);
   const badge = new CountBadge(requireChild(host, '.count-badge'), session);
+  disposers.push(() => badge.dispose());
   let toolbar: EditToolbar | null = null;
+  disposers.push(() => toolbar?.dispose());
   const start = new StartScreen(requireChild(host, '.start-screen'), {
     builtIn: deps.stage.builtIn,
     choose: (design) => {
@@ -31,14 +53,8 @@ export function mountBuilder(host: HTMLElement, session: EditorSession, deps: Bu
   });
   setCovered(host, true);
   start.show();
-  const disposers = [
-    () => toolbar?.dispose(),
-    () => badge.dispose(),
-    listenBuilderKeys(deps.keys, (action) => toolbar?.run(action)),
-    deps.mountTools(shell.slots, session, { ...deps.frames, report }),
-    shell.dispose,
-  ];
-  return () => disposers.forEach((dispose) => dispose());
+  disposers.push(listenBuilderKeys(deps.keys, (action) => toolbar?.run(action)));
+  disposers.push(deps.mountTools(shell.slots, session, { ...deps.frames, report }));
 }
 
 /** The parts under the start screen: laid out (so `#viewer` never gets a 0 px box) but out of reach until a choice. */
