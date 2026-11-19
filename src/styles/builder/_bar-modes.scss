@@ -1,0 +1,68 @@
+// The Plan, Split and 3D radios (ViewModeSwitch). They are native buttons, drawn as Web Awesome's outlined button
+// group they replace (toolbar.md, mode buttons): 44 px tall, 1 px --line2 borders, 4 px corners only at the group's
+// ends, brand normal for the checked mode, the --acc focus ring. The colours come from the Web Awesome tokens.
+.builder {
+  .mode-group,
+  .mode-anchor {
+    display: flex;
+  }
+  // neighbours share one 1 px border line, not two; a builder rule, so it wins over the page's `* { margin: 0 }`
+  .mode-anchor ~ .mode-anchor {
+    margin-inline-start: -1px;
+  }
+  .mode-radio {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--builder-target);
+    min-inline-size: var(--builder-target);
+    padding-block: 0;
+    padding-inline: var(--wa-form-control-padding-inline);
+    border: 1px solid var(--wa-color-neutral-border-loud);
+    border-radius: 0;
+    background: transparent;
+    color: var(--wa-color-neutral-on-quiet);
+    font-family: var(--wa-font-family-body);
+    font-size: var(--wa-font-size-m);
+    font-weight: var(--wa-font-weight-action);
+    line-height: normal;
+    white-space: nowrap;
+    // the page's `button:hover` lightens the border; the group keeps it
+    &:hover {
+      border-color: var(--wa-color-neutral-border-loud);
+      background: var(--wa-color-neutral-fill-quiet);
+    }
+    &:active {
+      background: color-mix(in oklab, var(--wa-color-neutral-fill-quiet), var(--wa-color-mix-active));
+    }
+    // above its neighbours, so their borders do not cover the --acc border or the ring
+    &.is-pressed {
+      position: relative;
+      z-index: 1;
+      background: var(--wa-color-brand-fill-normal);
+      color: var(--wa-color-brand-on-normal);
+      border-color: var(--wa-color-brand-border-normal);
+    }
+    &:focus-visible {
+      position: relative;
+      z-index: 2;
+      outline: var(--wa-focus-ring);
+      outline-offset: var(--wa-focus-ring-offset);
+    }
+    .wa-icon-svg {
+      inline-size: 20px;
+      block-size: 20px;
+      flex: none;
+      margin-inline-end: 6px;
+    }
+  }
+  // the tooltips sit between the anchors, so the ends are the first and last `span`, not the first and last child
+  .mode-anchor:first-of-type .mode-radio {
+    border-start-start-radius: var(--wa-border-radius-m);
+    border-end-start-radius: var(--wa-border-radius-m);
+  }
+  .mode-anchor:last-of-type .mode-radio {
+    border-start-end-radius: var(--wa-border-radius-m);
+    border-end-end-radius: var(--wa-border-radius-m);
+  }
+}

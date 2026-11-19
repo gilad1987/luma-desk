@@ -17,7 +17,7 @@ holds a tool that needs a second step; those live in the library, the inspector 
 | Stage Builder | [↶ Undo] [↷ Redo] [⧉ Duplicate] [⌫ Delete] [⇋ Mirror] | [▭ Plan][⊟ Split][⬚ 3D] | 12 fixtures
 |                                                                             [☰ Inspector]  [ Cancel ] [ Done ]
 +-------------------------------------------------------------------------------------------------------------+
-  title 13/600   edit group: wa-button variant=neutral appearance=plain   view group: wa-button-group   badge 12
+  title 13/600   edit group: wa-button variant=neutral appearance=plain   view group: native radios    badge 12
                  |  = 1 px --line divider, 24 px tall, 8 px on each side              Done: variant=brand accent
 ```
 
@@ -57,7 +57,9 @@ Plain edit buttons (Undo, Redo, Duplicate, Delete, Mirror):
 | disabled | none | transparent, no hover | `--mut` | `disabled` + `is-disabled`; tooltip still shows (note 1) |
 | selected, error, mixed | n/a | | | an edit button has no such state |
 
-Mode buttons (Plan, Split, 3D; outlined, in a `wa-button-group`):
+Mode buttons (Plan, Split, 3D): native `<button role="radio">` elements drawn as an outlined Web Awesome button
+group (`_bar-modes.scss`). Neighbours overlap by 1 px, so one 1 px line divides them; only the group's outer corners
+are rounded (4 px).
 
 | State | Border | Fill | Text / icon | Extra |
 | --- | --- | --- | --- | --- |
@@ -107,12 +109,16 @@ Notes:
 
 ## Accessibility
 
-- `header.builder-bar` with `role="toolbar"` and `aria-label="Stage Builder"`; groups are `role="group"` with an
-  English `aria-label` ("Edit", "View"); the mode group is `role="radiogroup"`, and each mode `wa-button` host is
-  `role="radio"` with `aria-checked` (an `aria-pressed` on the host does not reach the accessibility tree, because
-  `wa-button` does not forward it to its inner button).
-- Each button: visible English label or `aria-label`; the Hebrew `wa-tooltip` (`dir="rtl"`) is extra, from
-  `he.builder.edit.*`, `he.builder.modes.*`, `he.builder.cancel`, `he.builder.done`. Undo/Redo tooltips name the key.
+- `header.builder-bar` with `role="toolbar"` and `aria-label="Stage Builder"`; the edit group is `role="group"` with
+  `aria-label="Edit"`; the mode group is `role="radiogroup"` with `aria-label="View"`. Each mode is a native button
+  with `role="radio"` and `aria-checked`, so the name, the focus and the checked state are on one element (a role on a
+  `wa-button` host split them over the host and its inner button). Roving tabindex: only the checked radio has
+  `tabindex="0"`; the arrow keys (Right/Down next, Left/Up previous, wrapping) and Home/End move the focus and select.
+- Each button: the visible English label is the accessible name; the Hebrew help is the accessible description. A
+  `wa-button` gets it from its `title`, which `wa-button` forwards to its inner button; a mode radio from
+  `aria-description`. The mode tooltip anchors on a wrapper `span`, as `wa-tooltip` adds itself to its anchor's
+  `aria-labelledby` and would replace the name. Every Hebrew `wa-tooltip` is `dir="rtl"`. The texts come from
+  `he.builder.edit.*`, `he.builder.shell.*`, `he.builder.cancel`, `he.builder.done`. Undo/Redo tooltips name the key.
 - The badge is `aria-live="polite"` so the count change after a drop is announced; the warning text names the limit.
 
 ## Open points

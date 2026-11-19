@@ -11,10 +11,10 @@ const view = (page: Page) => page.locator('.builder-3d');
 const plan = (page: Page) => page.locator('.builder-plan');
 const heightOf = async (page: Page, pane: 'view' | 'plan'): Promise<number> =>
   (await boxOf(pane === 'view' ? view(page) : plan(page)))[3];
-// the button inside the one checked radio (strict: a second checked radio fails); the radio host itself has no name
-// in Playwright, as wa-tooltip labels it by its hidden tooltip
+// the one checked radio (strict: a second checked radio fails)
 const checkedMode = (page: Page) =>
-  page.getByRole('radiogroup', { name: 'View' }).getByRole('radio', { checked: true }).getByRole('button');
+  page.getByRole('radiogroup', { name: 'View' }).getByRole('radio', { checked: true });
+const mode = (page: Page, name: string) => page.getByRole('radio', { name, exact: true });
 
 test('dragging the divider 100 px down grows the 3D pane and shrinks the plan by 100 px', async ({ page }) => {
   const errors = collectErrors(page);
@@ -44,13 +44,13 @@ test('3D and Plan each collapse the other pane; Split brings the dragged divider
 
   // Bug: aria-pressed on the wa-button host never reached the accessibility tree, so no mode read as on
   await expect(checkedMode(page)).toHaveAccessibleName('Split');
-  await page.getByRole('button', { name: '3D', exact: true }).click();
+  await mode(page, '3D').click();
   await expect(centre).toHaveClass(/\bis-mode-3d\b/);
   await expect(checkedMode(page)).toHaveAccessibleName('3D');
   await expect.poll(() => heightOf(page, 'plan')).toBe(0);
   expect(errors).toEqual([]);
 
-  await page.getByRole('button', { name: 'Plan', exact: true }).click();
+  await mode(page, 'Plan').click();
   await expect(centre).toHaveClass(/\bis-mode-plan\b/);
   await expect(checkedMode(page)).toHaveAccessibleName('Plan');
   await expect.poll(() => heightOf(page, 'view')).toBe(0);
@@ -58,7 +58,7 @@ test('3D and Plan each collapse the other pane; Split brings the dragged divider
   await expect.poll(async () => (await canvasSize(page))[1]).toBe(2);
   expect(errors).toEqual([]);
 
-  await page.getByRole('button', { name: 'Split', exact: true }).click();
+  await mode(page, 'Split').click();
   await expect(centre).toHaveClass(/\bis-mode-split\b/);
   await expect(checkedMode(page)).toHaveAccessibleName('Split');
   await expect.poll(async () => offBy([await heightOf(page, 'view')], [dragged], 1)).toEqual([0]);
@@ -70,7 +70,7 @@ test('3D mode stays 3D only when the window resizes', async ({ page }) => {
   await bootApp(page);
   await openBuilder(page);
   const centre = page.locator('.builder-centre');
-  await page.getByRole('button', { name: '3D', exact: true }).click();
+  await mode(page, '3D').click();
   await expect.poll(() => heightOf(page, 'plan')).toBe(0);
   await page.setViewportSize({ width: 1280, height: 600 });
   await expect.poll(async () => (await boxOf(centre))[3]).toBe(600 - 56);
