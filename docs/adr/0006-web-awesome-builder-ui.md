@@ -73,7 +73,11 @@ Costs and risks:
   and `::part()` selectors; a component's internals are not reachable from SCSS.
 - Form controls in shadow DOM: `isTextField` must learn the Web Awesome input hosts when Phase 5 introduces them.
 - Each upgrade of the package needs the design review and the offline and no-off-origin checks again.
-- A pane at 0 % height (Plan or 3D mode) gives the renderer a 0 px box for a moment; the fallback is a 2 px minimum.
+- A pane at 0 % height (Plan or 3D mode) would give the renderer a 0 px canvas, and WebGL then logs
+  `GL_INVALID_FRAMEBUFFER_OPERATION` on every frame; the moved viewer keeps a 2 px minimum height
+  (`src/styles/builder/_centre.scss`).
+- The split panel recomputes its position in pixels on a window resize, so 3D mode (100 %) would drift; `CentreSplit`
+  writes the mode's edge back on every `wa-reposition` outside Split mode.
 
 ## Verified
 
@@ -83,8 +87,13 @@ Costs and risks:
   chunk; the main chunk has no `--wa-` string, the chunk does).
 - `tests/unit/app/ui/wireBuilder.test.ts`: the click awaits the chunk before `enter()`; `viewerHost.test.ts`: the
   viewer moves into the pane and back before `#side`.
-- `tests/e2e/builder-shell.spec.ts`: no off-origin request from the Build Stage click to Done, no `wa-icon` element,
-  no Web Awesome in the boot bundle before the click; `tests/e2e/builder-offline.spec.ts`: the builder opens offline
-  from the service worker cache.
-- `npm run test:screenshots`: the 9 desk baselines unchanged.
+- `tests/e2e/builder-shell.network.spec.ts`: no off-origin request from the Build Stage click to Done, no `wa-icon`
+  element, no Web Awesome custom element or token in the page before the click, the chunk under a 600 KB budget;
+  `builder-shell.layout.spec.ts` and `builder-shell.divider.spec.ts`: the column widths, the 44 px buttons, the
+  divider drag, the three modes, 3D mode after a window resize, the 56 px rail and the drawer at 1024 px;
+  `tests/e2e/builder-offline.spec.ts`: the builder opens offline and the chunk comes from the service worker.
+- `tests/e2e/builder-desk.spec.ts`: the viewer fills the 3D pane while building and is back at its old box after
+  Cancel, in the three desk layouts.
+- `npm run test:screenshots`: the 9 desk baselines unchanged. A desk screenshot after one builder visit differs
+  from one before it in 0 pixels beyond the 8 the 3D view changes on its own between two runs.
 - Not verified: iPad Safari on a device (owner check); Web Awesome inputs (Phase 5).
