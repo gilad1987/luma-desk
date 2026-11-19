@@ -13,11 +13,14 @@ export const builderMarkup = `<header class="builder-bar" role="toolbar" aria-la
   <div class="edit-tools" role="group" aria-label="Edit"></div>
   <div class="view-modes"></div>
   <span class="count-badge" aria-live="polite"></span>
-  <wa-button id="builder-inspector" class="builder-btn is-narrow-only" data-builder="inspector" appearance="outlined" aria-description="${he.builder.shell.inspector}">${startIcon('inspector')}Inspector</wa-button>
+  <wa-button id="builder-inspector" class="builder-btn is-narrow-only" data-builder="inspector" appearance="outlined"
+    aria-description="${he.builder.shell.inspector}">${startIcon('inspector')}Inspector</wa-button>
   <wa-tooltip for="builder-inspector" dir="rtl">${he.builder.shell.inspector}</wa-tooltip>
-  <wa-button id="builder-cancel" class="builder-btn" data-builder="cancel" appearance="outlined" aria-description="${he.builder.cancel}">Cancel</wa-button>
+  <wa-button id="builder-cancel" class="builder-btn" data-builder="cancel" appearance="outlined"
+    aria-description="${he.builder.cancel}">Cancel</wa-button>
   <wa-tooltip for="builder-cancel" dir="rtl">${he.builder.cancel}</wa-tooltip>
-  <wa-button id="builder-done" class="builder-btn is-primary" data-builder="done" variant="brand" aria-description="${he.builder.done}">Done</wa-button>
+  <wa-button id="builder-done" class="builder-btn is-primary" data-builder="done" variant="brand"
+    aria-description="${he.builder.done}">Done</wa-button>
   <wa-tooltip for="builder-done" dir="rtl">${he.builder.done}</wa-tooltip>
 </header>
 <div class="start-screen"></div>`;

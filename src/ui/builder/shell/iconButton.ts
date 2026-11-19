@@ -21,9 +21,10 @@ export type IconButtonAppearance = 'plain';
  * shows on keyboard focus. The edit toolbar builds its buttons with it; the mode radios are native buttons
  * (`ViewModeSwitch`), drawn to match.
  *
- * The tooltip's text is also the `aria-description`, which `describeWaButtons` copies to the inner button, the element
- * that takes the focus. The tooltip's own `aria-labelledby` lands on the host, which has no role, so without it a screen
- * reader would hear the label and never the help or the key. Not a `title`: that also opens the browser's own tooltip.
+ * The tooltip's text is also the `aria-description`, which `describeWaButtons` copies to the inner button, the
+ * element that takes the focus. The tooltip's own `aria-labelledby` lands on the host, which has no role, so without
+ * it a screen reader would hear the label and never the help or the key. Not a `title`: that also opens the browser's
+ * own tooltip.
  */
 export function iconButton(button: IconButton, appearance: IconButtonAppearance): string {
   return (

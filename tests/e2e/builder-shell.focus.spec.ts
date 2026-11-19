@@ -1,7 +1,7 @@
 /**
  * Where the keyboard focus goes in a real browser when the edit toolbar turns off the `wa-button` that has it: to an
  * enabled neighbour, after Web Awesome rendered that neighbour. Which neighbour, in jsdom, is owned by
- * EditToolbar.focus.test; the toolbar's names and descriptions by builder-shell.a11y.
+ * EditToolbar.focus.test; the toolbar's names and descriptions by builder-shell.names.
  */
 import { expect, test, type Page } from '@playwright/test';
 import { bootApp, collectErrors, openBuilder } from '../shared/e2e';
