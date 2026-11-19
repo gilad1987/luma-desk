@@ -7,17 +7,22 @@ import type { WallExtent } from './ledMeshExtents';
  */
 const JOIN_GAP = 0.1;
 
-const touch = (a: WallExtent, b: WallExtent): boolean =>
-  b.low.x - a.high.x <= JOIN_GAP &&
-  a.low.x - b.high.x <= JOIN_GAP &&
-  b.low.y - a.high.y <= JOIN_GAP &&
-  a.low.y - b.high.y <= JOIN_GAP &&
-  Math.abs(a.high.z - b.high.z) <= JOIN_GAP;
+/** How far the spans [aLow, aHigh] and [bLow, bHigh] overlap: below 0 by the gap between them. */
+const overlap = (aLow: number, aHigh: number, bLow: number, bHigh: number): number =>
+  Math.min(aHigh, bHigh) - Math.max(aLow, bLow);
+
+const touch = (a: WallExtent, b: WallExtent): boolean => {
+  const x = overlap(a.low.x, a.high.x, b.low.x, b.high.x);
+  const y = overlap(a.low.y, a.high.y, b.low.y, b.high.y);
+  const isSide = (x > 0 && y >= -JOIN_GAP) || (y > 0 && x >= -JOIN_GAP);
+  return isSide && Math.abs(a.high.z - b.high.z) <= JOIN_GAP;
+};
 
 /**
  * The walls among `extents`, each as the numbers of the extents of its tiles. Two extents are one wall when their
- * rectangles on the wall axes touch or overlap within `JOIN_GAP` and their fronts stand at about one depth; a wall is
- * every extent that a chain of such pairs reaches.
+ * rectangles on the wall axes overlap on one axis and touch or overlap within `JOIN_GAP` on the other (they share a
+ * side, not only a corner), and their fronts stand at about one depth; a wall is every extent that a chain of such
+ * pairs reaches, so a grid of tiles joins through the neighbours on its sides.
  */
 export function wallGroups(extents: readonly WallExtent[]): number[][] {
   const group = extents.map((_, i) => i);
