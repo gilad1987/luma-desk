@@ -36,7 +36,8 @@ export function wallGroups(extents: readonly WallExtent[]): number[][] {
   const order = extents.map((_, i) => i).sort((a, b) => (extents[a]?.low.x ?? 0) - (extents[b]?.low.x ?? 0));
   order.forEach((a, n) => {
     const first = extents[a];
-    for (const b of order.slice(n + 1)) {
+    for (let k = n + 1; k < order.length; k += 1) {
+      const b = order[k] ?? -1;
       const other = extents[b];
       if (!first || !other || other.low.x - first.high.x > JOIN_GAP) break;
       if (touch(first, other)) group[find(b)] = find(a);
