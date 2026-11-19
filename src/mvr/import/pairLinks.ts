@@ -24,8 +24,9 @@ function soleUuids(links: readonly KeyedLink[]): ReadonlySet<string> {
  * `FixtureID` (empty, or the text from before a renumber), so the next import numbers again and a neighbour can take
  * the old id. Any other link pairs by id: one without a uuid (a fixture the desk added, or an export from before the
  * uuid), and one whose uuid is empty or shared, because then the occurrence is only file order, which a delete shifts.
- * Limit: a pass-through export of a file with empty or shared uuids keeps its empty `FixtureID`, so after a delete
- * such a link can still pair with a neighbour. MVR asks for unique uuids, so only a file that breaks it is affected.
+ * Limit: a pass-through export of a file with empty or shared uuids keeps its own `FixtureID` (empty or stale), so
+ * after a delete or a renumber such a link can still pair with a neighbour. MVR asks for unique uuids, so only a
+ * file that breaks that rule is affected.
  */
 export function pairLinks<L extends KeyedLink>(
   fixtures: readonly StageFixture[],

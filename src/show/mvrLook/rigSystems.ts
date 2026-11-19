@@ -30,6 +30,7 @@ const STACK_STEP_M = 0.6;
 /**
  * Most metres between a unit in the floor band and a unit above it for the two to be one tower: a shin light under
  * the next tower unit. A truss light further above a floor light hangs on the truss and is not a tower unit.
+ * Limit: a truss light at most this far above a floor light under it still counts as a tower unit.
  */
 const TOWER_GAP_M = 3;
 /** Share of the half width from which a stack is a side tower; a stack nearer the centre is an upstage ladder. */
