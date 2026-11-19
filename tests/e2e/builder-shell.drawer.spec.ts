@@ -10,9 +10,8 @@ import { bootApp, boxOf, collectErrors, openBuilder } from '../shared/e2e';
 const inspectorButton = (page: Page) => page.getByRole('button', { name: 'Inspector', exact: true });
 
 /**
- * The open state the Inspector button's `wa-button` host carries. A data hook, not the role: `wa-button` does not pass
- * `aria-expanded` to its inner `<button>`, so Chromium's accessibility tree shows the button with no expanded state and
- * `getByRole(..., { expanded })` finds nothing (an open issue of the bar's buttons, not of the drawer).
+ * The open state the Inspector button's `wa-button` host carries, which the builder copies to the inner `<button>`;
+ * that the accessibility tree shows it there is owned by builder-shell.aria.
  */
 const expandedState = (page: Page) => page.locator('[data-builder="inspector"]').getAttribute('aria-expanded');
 

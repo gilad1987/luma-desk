@@ -30,8 +30,8 @@ test('a builder visit with every mode, a drag and a resize asks no other origin'
   await page.setViewportSize({ width: 1000, height: 700 });
   // a class: the narrow layout's library rail shows the resize has reached the shell
   await expect.poll(async () => (await boxOf(page.locator('.builder-library')))[2]).toBe(56);
-  // the page's own DOM, not the shadow roots: Web Awesome's drawer has one wa-icon (its close button) from the inline
-  // `system` library; a request for an icon from any library would show in `offOrigin`
+  // the page's own DOM, not the shadow roots: the builder draws its icons as inline SVG and has no wa-icon; a request
+  // for an icon from any library would show in `offOrigin`
   const icons = await page.evaluate(() => document.querySelectorAll('wa-icon').length);
   await page.locator('[data-builder="done"]').click();
   await expect(page.locator('section.builder')).toHaveCount(0);

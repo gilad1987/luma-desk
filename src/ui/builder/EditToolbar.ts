@@ -5,7 +5,7 @@ import type { EditorSession } from './EditorSession';
 import { isEmptySelection } from './selection';
 import { deleteSelection, duplicateSelection } from './selectionOps';
 import { editToolbarMarkup } from './shell/editToolbarMarkup';
-import { setWaDisabled } from './wa/waButton';
+import { describeWaButtons, setWaDisabled } from './wa/waButton';
 
 /** Every toolbar action: the keyboard ones plus Mirror, which has no key. */
 export type EditAction = KeyAction | 'mirror';
@@ -34,6 +34,7 @@ export class EditToolbar {
     this.#session = session;
     this.#report = report;
     root.innerHTML = editToolbarMarkup;
+    describeWaButtons(root);
     this.#buttons = new Map(ACTIONS.map((action) => [action, requireChild(root, `[data-edit="${action}"]`)]));
     for (const [action, button] of this.#buttons) button.onclick = () => this.run(action);
     this.#stop = session.onChange(() => this.#paint());
