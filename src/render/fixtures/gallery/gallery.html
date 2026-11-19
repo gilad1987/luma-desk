@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Fixture gallery (dev)</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: #141519;
+        color: #ddd;
+        font:
+          13px system-ui,
+          sans-serif;
+      }
+      canvas {
+        display: block;
+      }
+      #controls {
+        position: fixed;
+        top: 8px;
+        left: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+        max-width: 760px;
+        padding: 6px 8px;
+        background: rgb(0 0 0 / 55%);
+        border-radius: 4px;
+      }
+      #controls button[aria-pressed='true'] {
+        font-weight: bold;
+      }
+      #error {
+        position: fixed;
+        top: 60px;
+        left: 16px;
+        color: #ff8a80;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas></canvas>
+    <script type="module" src="./galleryMain.ts"></script>
+  </body>
+</html>
