@@ -94,6 +94,6 @@ function modeMarkup(mode: ViewMode): string {
   return (
     `<span id="${id}" class="mode-anchor"><button type="button" class="mode-radio" role="radio" data-mode="${mode}" ` +
     `aria-description="${tip}">${iconSvg(icon)}<span class="mode-label">${label}</span></button></span>\n` +
-    `<wa-tooltip for="${id}">${tip}</wa-tooltip>`
+    `<wa-tooltip for="${id}" dir="rtl">${tip}</wa-tooltip>`
   );
 }

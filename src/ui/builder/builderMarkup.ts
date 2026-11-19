@@ -5,18 +5,19 @@ import { startIcon } from './shell/startIcon';
  * The builder bar inside its `section.builder` host (title, edit tools, view modes, count, Inspector, Cancel, Done)
  * and the start screen. `mountShell` appends the columns after them (`shell/shellMarkup.ts`). The Inspector button is
  * shown only on a narrow screen, where the inspector moves into a drawer. Each button has a Hebrew `wa-tooltip`, and
- * the same text as its `title`, which `wa-button` passes to its inner button as the accessible description.
+ * the same text as its `title`, which `wa-button` passes to its inner button as the accessible description. The bar is
+ * an ARIA toolbar and the count badge a polite live region, so a drop's new count is announced (toolbar.md).
  */
-export const builderMarkup = `<header class="builder-bar">
+export const builderMarkup = `<header class="builder-bar" role="toolbar" aria-label="Stage Builder">
   <span class="builder-title">Stage Builder</span>
-  <div class="edit-tools"></div>
+  <div class="edit-tools" role="group" aria-label="Edit"></div>
   <div class="view-modes"></div>
-  <span class="count-badge"></span>
+  <span class="count-badge" aria-live="polite"></span>
   <wa-button id="builder-inspector" class="builder-btn is-narrow-only" data-builder="inspector" appearance="outlined" title="${he.builder.shell.inspector}">${startIcon('inspector')}Inspector</wa-button>
-  <wa-tooltip for="builder-inspector">${he.builder.shell.inspector}</wa-tooltip>
+  <wa-tooltip for="builder-inspector" dir="rtl">${he.builder.shell.inspector}</wa-tooltip>
   <wa-button id="builder-cancel" class="builder-btn" data-builder="cancel" appearance="outlined" title="${he.builder.cancel}">Cancel</wa-button>
-  <wa-tooltip for="builder-cancel">${he.builder.cancel}</wa-tooltip>
+  <wa-tooltip for="builder-cancel" dir="rtl">${he.builder.cancel}</wa-tooltip>
   <wa-button id="builder-done" class="builder-btn is-primary" data-builder="done" variant="brand" title="${he.builder.done}">Done</wa-button>
-  <wa-tooltip for="builder-done">${he.builder.done}</wa-tooltip>
+  <wa-tooltip for="builder-done" dir="rtl">${he.builder.done}</wa-tooltip>
 </header>
 <div class="start-screen"></div>`;

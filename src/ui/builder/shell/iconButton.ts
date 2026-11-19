@@ -28,6 +28,7 @@ export type IconButtonAppearance = 'plain' | 'outlined';
 export function iconButton(button: IconButton, appearance: IconButtonAppearance): string {
   return (
     `<wa-button id="${button.id}" ${button.hook} appearance="${appearance}" title="${button.tip}">` +
-    `${startIcon(button.icon)}${button.label}</wa-button>\n<wa-tooltip for="${button.id}">${button.tip}</wa-tooltip>`
+    `${startIcon(button.icon)}${button.label}</wa-button>\n` +
+    `<wa-tooltip for="${button.id}" dir="rtl">${button.tip}</wa-tooltip>`
   );
 }

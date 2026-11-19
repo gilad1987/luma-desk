@@ -51,3 +51,17 @@ test('a bar control is named by its English label and described by its Hebrew he
   }
   expect(errors).toEqual([]);
 });
+
+// Bug: the bar was a plain <header> and the badge a plain <span>, so a screen reader heard no toolbar and no new count
+test('the bar is a toolbar named Stage Builder with an Edit group and a polite count badge', async ({ page }) => {
+  const errors = collectErrors(page);
+  await bootApp(page);
+  await openBuilder(page);
+  const bar = page.getByRole('toolbar', { name: 'Stage Builder' });
+  await expect(
+    bar.getByRole('group', { name: 'Edit' }).getByRole('button', { name: 'Undo', exact: true }),
+  ).toBeVisible();
+  // a class: the badge is a live region with no role of its own
+  await expect(bar.locator('.count-badge')).toHaveAttribute('aria-live', 'polite');
+  expect(errors).toEqual([]);
+});
