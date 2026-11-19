@@ -37,7 +37,7 @@ describe('MVR round trip of a product', () => {
     });
   });
 
-  it('brings a link with an unknown product back as a plain spot, lower by the two mount heights difference', async () => {
+  it('brings an unknown product back as a plain spot, lower by the mount height difference', async () => {
     const exported = espriteDesign();
     const entries = unzipSync(exportMvr(exported).bytes);
     const scene = strFromU8(entries[SCENE] ?? new Uint8Array()).replaceAll('robe-esprite', 'acme-x');
