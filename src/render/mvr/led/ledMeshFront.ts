@@ -1,4 +1,4 @@
-import { InstancedMesh, Matrix4, type Mesh, type Vector3 } from 'three';
+import { InstancedMesh, Matrix4, Vector3, type Mesh } from 'three';
 import { ledFrontOf } from './ledFront';
 import { partMesh, partsOf } from './ledMeshParts';
 import { directionsOf, type StageSides } from './ledStageSides';
@@ -10,25 +10,48 @@ const MOST_INSTANCES = 64;
 const EMITS = 0.5;
 
 /**
+ * A part with less front area than this share of the largest part's is trim (a top cap, an end sheet), not a
+ * screen: it may not cancel the front. Each part is judged alone, so many small caps do not add up to a screen.
+ */
+const TRIM_SHARE = 0.15;
+
+/**
  * The meshes whose instances or parts agree on no front. Their search is the costly one (every face of every
  * instance or part), and a layer mark or a screen walk asks again on every `setLedLayers`; the answer stays
  * "no front" while the mesh lives, as the desk never moves the instances or the merged parts of a file mesh.
  */
 const noFront = new WeakSet<Mesh>();
 
+/** The area of the triangles in `corners` (nine numbers per triangle) as seen from `front`. */
+function frontArea(corners: Float32Array, front: Vector3): number {
+  const [p, q, r] = [new Vector3(), new Vector3(), new Vector3()];
+  let area = 0;
+  for (let i = 0; i + 8 < corners.length; i += 9) {
+    p.fromArray(corners, i);
+    q.fromArray(corners, i + 3).sub(p);
+    r.fromArray(corners, i + 6).sub(p);
+    area += Math.max(0, q.cross(r).dot(front) / 2);
+  }
+  return area;
+}
+
 /**
- * `front` if every connected part of `mesh` emits to it, else undefined. Static scenery merges the screens of one
- * material into one mesh, and one front would leave a screen that faces another way dark.
+ * `front` if every connected part of `mesh` that is a screen emits to it, else undefined. Static scenery merges the
+ * screens of one material into one mesh, and one front would leave a screen that faces another way dark. A part is
+ * a screen when its area seen from its own front is at least `TRIM_SHARE` of the largest part's.
  */
 function agreed(mesh: Mesh, sides: StageSides, front: Vector3): Vector3 | undefined {
   mesh.updateWorldMatrix(true, false);
   const parts = partsOf(mesh, mesh.matrixWorld);
   if (parts.length < 2) return front;
   const world = new Matrix4();
-  const apart = parts.some((part) => {
+  const judged = parts.map((part) => {
     const one = partMesh(part);
-    return ledFrontOf(one, { ...directionsOf(one, sides), world }).dot(front) < EMITS;
+    const own = ledFrontOf(one, { ...directionsOf(one, sides), world });
+    return { own, area: frontArea(part, own) };
   });
+  const largest = judged.reduce((most, { area }) => Math.max(most, area), 0);
+  const apart = judged.some(({ own, area }) => area >= TRIM_SHARE * largest && own.dot(front) < EMITS);
   if (apart) noFront.add(mesh);
   return apart ? undefined : front;
 }
