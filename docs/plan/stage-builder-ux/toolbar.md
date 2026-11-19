@@ -108,7 +108,9 @@ Notes:
 ## Accessibility
 
 - `header.builder-bar` with `role="toolbar"` and `aria-label="Stage Builder"`; groups are `role="group"` with an
-  English `aria-label` ("Edit", "View"); the mode group is `role="radiogroup"` semantics through `aria-pressed`.
+  English `aria-label` ("Edit", "View"); the mode group is `role="radiogroup"`, and each mode `wa-button` host is
+  `role="radio"` with `aria-checked` (an `aria-pressed` on the host does not reach the accessibility tree, because
+  `wa-button` does not forward it to its inner button).
 - Each button: visible English label or `aria-label`; the Hebrew `wa-tooltip` (`dir="rtl"`) is extra, from
   `he.builder.edit.*`, `he.builder.modes.*`, `he.builder.cancel`, `he.builder.done`. Undo/Redo tooltips name the key.
 - The badge is `aria-live="polite"` so the count change after a drop is announced; the warning text names the limit.
