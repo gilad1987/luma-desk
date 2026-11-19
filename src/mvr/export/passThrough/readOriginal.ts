@@ -1,6 +1,6 @@
 import { unzipSync, type UnzipFileInfo } from 'fflate';
 import { MAX_ENTRY_BYTES, MAX_TOTAL_BYTES } from '../../archive/MvrArchive';
-import { nameDecoder } from '../../archive/legacyNames';
+import { type DecodedName, nameDecoder } from '../../archive/legacyNames';
 import { MvrError } from '../../MvrWarning';
 import { entryNameResolver, repeatedNames } from './entryNames';
 
@@ -29,7 +29,19 @@ export interface OriginalArchive {
   readonly duplicates: readonly string[];
 }
 
-const SCENE_FILE = 'generalscenedescription.xml';
+const SCENE_FILE = 'GeneralSceneDescription.xml';
+const loose = (name: string | undefined): string | undefined => name?.normalize('NFC').toLowerCase();
+
+/**
+ * The rules that find the scene file, in the order of the import's `NameIndex` (exact, composed, no case, the other
+ * reading of the name bytes): the first rule that matches decides, so the export patches the scene the import read.
+ */
+const SCENE_RULES: readonly ((decoded: DecodedName) => boolean)[] = [
+  ({ name }) => name === SCENE_FILE,
+  ({ name }) => name.normalize('NFC') === SCENE_FILE,
+  ({ name }) => loose(name) === loose(SCENE_FILE),
+  ({ alt }) => alt !== undefined && loose(alt) === loose(SCENE_FILE),
+];
 
 /**
  * Whether a ZIP entry name stays inside the folder it is unpacked to. An absolute path, a drive letter, a backslash or
@@ -66,7 +78,8 @@ export function readOriginal(bytes: Uint8Array): OriginalArchive {
     return true;
   };
   const files = unzipSync(bytes, { filter: keep });
-  const sceneRaw = Object.keys(files).find((raw) => decode(raw).name.toLowerCase() === SCENE_FILE);
+  const raws = Object.keys(files);
+  const sceneRaw = SCENE_RULES.map((rule) => raws.find((raw) => rule(decode(raw)))).find((raw) => raw !== undefined);
   if (sceneRaw === undefined) throw new MvrError('no-scene', 'The original file has no GeneralSceneDescription.xml.');
   const sceneText = new TextDecoder().decode(files[sceneRaw]);
   const resolve = entryNameResolver(decode, sceneText);
