@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * Owns the view-mode switch: one pressed button for the current mode, a change report for a new mode and none for a
- * repeat press. How the centre lays out a mode is owned by CentreSplit.test.ts. jsdom, for real `aria-pressed`.
+ * repeat press. How the centre lays out a mode is owned by CentreSplit.test.ts. jsdom, for real `aria-checked`.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ViewModeSwitch, type ViewMode } from '../../../../../src/ui/builder/shell/ViewModeSwitch.ts';
@@ -20,11 +20,11 @@ describe('ViewModeSwitch', () => {
     MODES.map((mode) => [
       mode,
       String(button(mode)?.classList.contains('is-pressed')),
-      button(mode)?.getAttribute('aria-pressed') ?? 'none',
+      button(mode)?.getAttribute('aria-checked') ?? 'none',
     ]);
 
   // catches two buttons shown as pressed, so the bar says both modes are on
-  it('presses exactly the button of the current mode, in class and aria-pressed', () => {
+  it('presses exactly the button of the current mode, in class and aria-checked', () => {
     button('plan')?.click();
     expect([modes.mode, pressed()]).toEqual([
       'plan',
@@ -58,6 +58,17 @@ describe('ViewModeSwitch', () => {
       'View',
       ['builder-mode-plan', 'builder-mode-split', 'builder-mode-3d'],
       ['builder-mode-plan', 'builder-mode-split', 'builder-mode-3d'],
+    ]);
+  });
+
+  // Bug: aria-pressed on the wa-button host never reached the accessibility tree; a role on the host does
+  it('exposes the group as a radio group named View, with one radio per mode', () => {
+    const group = root.querySelector('wa-button-group');
+    const roles = MODES.map((mode) => button(mode)?.getAttribute('role'));
+    expect([group?.getAttribute('role'), group?.getAttribute('aria-label'), roles]).toEqual([
+      'radiogroup',
+      'View',
+      ['radio', 'radio', 'radio'],
     ]);
   });
 });

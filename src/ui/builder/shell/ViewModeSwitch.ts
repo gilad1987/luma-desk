@@ -17,7 +17,8 @@ const BUTTONS: Readonly<Record<ViewMode, IconButton>> = {
 /**
  * The Plan, Split and 3D buttons of the builder bar. It owns the current mode and shows it as the one pressed
  * button; it does not lay out the centre itself, it tells `onChange` (the `CentreSplit`), so the switch and the split
- * can change apart. A press on the mode already shown sends nothing.
+ * can change apart. A press on the mode already shown sends nothing. The state is exposed as a radio group: `wa-button`
+ * does not pass `aria-pressed` to its inner button, but a `role` on the host makes the host the exposed node.
  */
 export class ViewModeSwitch {
   readonly #buttons: ReadonlyMap<ViewMode, HTMLElement>;
@@ -27,9 +28,12 @@ export class ViewModeSwitch {
   /** Renders the button group into `root` with `initial` pressed; `onChange` hears only later changes. */
   constructor(root: HTMLElement, initial: ViewMode, onChange: (mode: ViewMode) => void) {
     const buttons = MODES.map((mode) => iconButton(BUTTONS[mode], 'outlined')).join('\n');
-    root.innerHTML = `<wa-button-group label="View">${buttons}</wa-button-group>`;
+    root.innerHTML = `<wa-button-group label="View" role="radiogroup" aria-label="View">${buttons}</wa-button-group>`;
     this.#buttons = new Map(MODES.map((mode) => [mode, requireChild(root, `[data-mode="${mode}"]`)]));
-    for (const [mode, button] of this.#buttons) button.onclick = () => this.set(mode);
+    for (const [mode, button] of this.#buttons) {
+      button.setAttribute('role', 'radio');
+      button.onclick = () => this.set(mode);
+    }
     this.#onChange = onChange;
     this.#mode = initial;
     this.#paint();
@@ -51,7 +55,7 @@ export class ViewModeSwitch {
     for (const [mode, button] of this.#buttons) {
       const isPressed = mode === this.#mode;
       button.classList.toggle('is-pressed', isPressed);
-      button.setAttribute('aria-pressed', String(isPressed));
+      button.setAttribute('aria-checked', String(isPressed));
     }
   }
 }

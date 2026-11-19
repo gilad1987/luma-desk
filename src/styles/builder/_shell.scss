@@ -66,6 +66,15 @@ body.is-building {
   }
 }
 
+// Before a choice the view modes and the Inspector button have nothing to act on (the columns are `inert`,
+// mountBuilder.ts); `visibility` keeps their place, so the bar does not reflow when the tools appear.
+.builder:not(.is-editing) {
+  .view-modes,
+  [data-builder='inspector'] {
+    visibility: hidden;
+  }
+}
+
 // Narrow: the library becomes a 56 px icon rail and the inspector moves into the drawer, opened from the bar.
 @include below($builder-narrow) {
   .builder {
