@@ -1,5 +1,6 @@
 import type { Texture, Vector3 } from 'three';
 import type { Selection } from '../../engine/Selection';
+import { beamVolume } from '../beams/beamVolume';
 import type { LightFrame } from '../lights/LightFrame';
 import type { SharedUniform } from './BeamMaterial';
 import type { FixtureVisual, ScreenVisual } from './FixtureVisual';
@@ -63,6 +64,10 @@ export class FixtureVisualSync {
   update(now: number, dt: number, cameraPosition: Vector3): void {
     this.#light.camera.copy(cameraPosition);
     this.#lights.reset();
+    // The show camera of an MVR stage runs on the haze clock of the batch. A lit beam writes it (`syncBeam`); with
+    // none lit it must move too, or the camera reads every frame and jumps. Same value a lit beam writes: last frame.
+    const batch = beamVolume.batch;
+    if (batch) batch.time = this.#beamTime.value;
     for (const v of this.#visuals) {
       const o = v.fixture.out,
         intensity = gatedIntensity(o, now);
