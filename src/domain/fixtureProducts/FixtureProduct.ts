@@ -1,6 +1,7 @@
 import type { FixtureType, FixtureTypeId } from '../FixtureType';
 import type { MountHeight } from '../fixtureTypes/mountHeights';
 import type { MoverBody } from './bodies/moverBody';
+import type { TiltBarBody } from './bodies/tiltBarBody';
 
 /** Every library category a product can sit in; the library groups its cards by this list, in this order. */
 export const PRODUCT_CATEGORIES = [
@@ -25,9 +26,10 @@ export type ProductOptics = Partial<
 >;
 
 export type { MoverBody } from './bodies/moverBody';
+export type { TiltBarBody } from './bodies/tiltBarBody';
 
 /** Every body family a product can be drawn with; other families join the union as they land. */
-export type ProductBody = MoverBody;
+export type ProductBody = MoverBody | TiltBarBody;
 
 /**
  * One real fixture of the catalogue, drawn and driven as its `base` type with its own optics and body. It is static
