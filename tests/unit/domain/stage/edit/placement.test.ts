@@ -1,5 +1,5 @@
 /**
- * Owns the placing ops of the property fields and the plan view drag: `moveRiser` and `moveTruss` store the moved
+ * Owns the placing ops of the property fields and the top view drag: `moveRiser` and `moveTruss` store the moved
  * position on whole millimetres, a truss carries its fixtures, a no-op returns the same design and a stale id is
  * refused. The fixture move is owned by fixtureMoves.test.ts, the truss parent link by trussOps.test.ts.
  */
