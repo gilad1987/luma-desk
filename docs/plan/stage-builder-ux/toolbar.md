@@ -64,7 +64,7 @@ Mode buttons (Plan, Split, 3D; outlined, in a `wa-button-group`):
 | default | 1 px `--line2` | `--p2` | `--txt` | the group shares inner borders |
 | hover | 1 px `--line2` | `--p2` + 8 % `--txt` | `--txt` | |
 | pressed | 1 px `--line2` | `--p2` + 16 % `--bg` | `--txt` | |
-| selected | 1 px `--acc` | 18 % `--acc` on `--p2` | `--acc` | `aria-pressed="true"`, `is-selected`; exactly one |
+| selected | 1 px `--acc` | 18 % `--acc` on `--p2` | `--acc` | `aria-checked="true"`, `is-pressed`; exactly one |
 | disabled | n/a | | | mode buttons are never disabled |
 
 Cancel, Done, badge:
