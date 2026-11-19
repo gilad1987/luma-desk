@@ -7,11 +7,25 @@
  */
 import { expect, test, type Page } from '@playwright/test';
 
-/** What the page puts on `window.galleryIds` (`galleryMain.ts`); typed here, as a spec imports nothing from src. */
+/** One entry of the JSON list the page puts on `body[data-gallery-ids]` (`galleryMain.ts`); typed here, as a spec
+ * imports nothing from src. */
 interface GalleryId {
   readonly id: string;
   readonly family: string;
   readonly moving: boolean;
+}
+
+function isGalleryId(value: unknown): value is GalleryId {
+  if (typeof value !== 'object' || value === null) return false;
+  if (!('id' in value && 'family' in value && 'moving' in value)) return false;
+  return typeof value.id === 'string' && typeof value.family === 'string' && typeof value.moving === 'boolean';
+}
+
+/** Parses the page's list; a list of another shape fails the run instead of filing shots under `undefined`. */
+function parseGalleryIds(json: string | null): GalleryId[] {
+  const list: unknown = JSON.parse(json ?? 'null');
+  if (!Array.isArray(list) || !list.every(isGalleryId)) throw new Error(`gallery.html: bad data-gallery-ids: ${json}`);
+  return list;
 }
 
 const GALLERY_PAGE = 'src/render/fixtures/gallery/gallery.html';
@@ -30,7 +44,7 @@ const SHOT_BUDGET_MS = 30_000;
 async function readGalleryIds(page: Page): Promise<GalleryId[]> {
   await page.goto(`${GALLERY_PAGE}?id=`);
   await expect(page.locator('#error')).toBeVisible();
-  const all = await page.evaluate(() => (window as unknown as { galleryIds: GalleryId[] }).galleryIds);
+  const all = parseGalleryIds(await page.locator('body').getAttribute('data-gallery-ids'));
   const wanted = (process.env['GALLERY_IDS'] ?? '').split(',').map((id) => id.trim());
   if (wanted.every((id) => id === '')) return all;
   const unknown = wanted.filter((id) => id !== '' && !all.some((item) => item.id === id));

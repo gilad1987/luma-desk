@@ -17,17 +17,12 @@ interface GalleryId {
   readonly moving: boolean;
 }
 
-declare global {
-  interface Window {
-    galleryIds: readonly GalleryId[];
-  }
-}
-
-window.galleryIds = PRODUCT_IDS.map((id) => ({
+const galleryIds: readonly GalleryId[] = PRODUCT_IDS.map((id) => ({
   id,
   family: PRODUCTS[id].body.family,
   moving: TYPES[PRODUCTS[id].base].moving,
 }));
+document.body.dataset['galleryIds'] = JSON.stringify(galleryIds);
 
 const params = readGalleryParams(location.search);
 mountGalleryControls(document.body, params, (next) => {
