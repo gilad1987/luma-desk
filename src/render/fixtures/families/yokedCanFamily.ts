@@ -23,7 +23,8 @@ export function yokedCanBuilder(scope: FamilyScope, id: ProductId, body: YokedCa
 
 /**
  * The arch hangs in the stand (`st`, turned over on the floor like the ParFect's bracket) from its top; the head turns
- * in `aim`: shell in the body material, bezel trim, reflector wall and grille spokes in alu, the painted face behind.
+ * in `aim`: the bowl in the body material; the bezel with its clips, the reflector wall and the grille spokes in alu,
+ * the painted face behind. The arch, side brackets and T-knobs are bare metal too, as on the Robe photos.
  */
 export function yokedCanModel(body: YokedCanBody, face: () => CanvasTexture): FixtureModel<YokedCanGeometry> {
   return {
@@ -31,9 +32,9 @@ export function yokedCanModel(body: YokedCanBody, face: () => CanvasTexture): Fi
     build(kit, G, c) {
       const { aim, st } = staticMount(c);
       addMesh(st, G.arch, kit.materials.alu);
-      addMesh(st, G.knobs, kit.materials.trim);
+      addMesh(st, G.knobs, kit.materials.alu);
       const head = addMesh(aim, G.head, c.bodyMat);
-      addMesh(aim, G.headTrim, kit.materials.trim);
+      addMesh(aim, G.headTrim, kit.materials.alu);
       addMesh(aim, G.reflector, kit.materials.alu);
       c.lensMat.map = face();
       const lens = addRoundLens(kit, c, aim, { y: body.lens.y, radius: body.lens.r });

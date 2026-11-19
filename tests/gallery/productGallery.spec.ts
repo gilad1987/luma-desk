@@ -1,8 +1,9 @@
 /**
  * The fixture gallery shot runner: for each catalogue product, the product next to its native base model in every
- * view, unlit and lit, plus a posed pair for moving heads. It writes PNGs for a person to check and asserts only
- * that each page drew. Run it with `npx playwright test -c playwright.gallery.config.ts`; `GALLERY_IDS` (a comma
- * list, default all) picks the products, `GALLERY_OUT` the folder.
+ * view, unlit and lit, plus a posed pair: a moving head panned and tilted, a static light with its head turned level to
+ * the audience, so its front face shows. It writes PNGs for a person to check and asserts only that each page drew.
+ * Run it with `npx playwright test -c playwright.gallery.config.ts`; `GALLERY_IDS` (a comma list, default all) picks
+ * the products, `GALLERY_OUT` the folder.
  */
 import { expect, test, type Page } from '@playwright/test';
 
@@ -20,6 +21,8 @@ const LIGHTS = [
   ['off', ''],
   ['lit', '&lit=1'],
 ] as const;
+/** The posed pair's pose: a moving head on its joints; a static light focused level to the audience (+Z). */
+const POSES = { moving: '&pan=30&tilt=45', static: '&tilt=90' } as const;
 /** One page load and frame under software WebGL, with room to spare. */
 const SHOT_BUDGET_MS = 30_000;
 
@@ -48,9 +51,9 @@ test('shoots each product next to its native base model', async ({ page }) => {
     await test.step(item.id, async () => {
       for (const view of VIEWS)
         for (const [light, query] of LIGHTS) await shoot(page, item, `&view=${view}${query}`, `${view}-${light}`);
-      if (!item.moving) return;
+      const pose = POSES[item.moving ? 'moving' : 'static'];
       for (const [light, query] of LIGHTS)
-        await shoot(page, item, `&view=front34&pan=30&tilt=45${query}`, `front34-posed-${light}`);
+        await shoot(page, item, `&view=front34${pose}${query}`, `front34-posed-${light}`);
     });
   }
 });

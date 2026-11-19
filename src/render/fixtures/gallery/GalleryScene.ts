@@ -28,14 +28,19 @@ export class GalleryScene {
     this.#studio = createGalleryStudio(canvas);
   }
 
-  /** Builds the pair of `product`, lights and poses it as `params` say, and frames the camera on it. */
+  /**
+   * Builds the pair of `product`, lights and poses it as `params` say, and frames the camera on it. A moving head
+   * always takes the pose on its joints; a static light takes a non-rest pose by its pivot, as the desk focuses it
+   * (tilt 90 turns its head level to the audience, so its front face shows).
+   */
   show(product: ProductId, params: GalleryParams): void {
     const { scene, camera, controls } = this.#studio;
     const pair = buildGalleryPair(scene, product, params.view === 'side' ? SIDE_TURN : 0);
     const dir = new Vector3();
+    const isPosed = params.pan !== 0 || params.tilt !== 0;
     for (const v of pair.visuals) {
       syncLens(v, WHITE, params.isLit ? 1 : 0);
-      if (v.fixture.T.moving) syncPose(v, { pan: params.pan, tilt: params.tilt }, POSE_SETTLE_S, dir);
+      if (v.fixture.T.moving || isPosed) syncPose(v, { pan: params.pan, tilt: params.tilt }, POSE_SETTLE_S, dir);
     }
     pair.hung.visible = params.view !== 'floor';
     pair.floor.visible = params.view !== 'below';
