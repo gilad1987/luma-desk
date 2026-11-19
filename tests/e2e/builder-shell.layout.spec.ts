@@ -1,6 +1,7 @@
 /**
  * The Stage Builder shell's columns on a wide and a narrow screen: the column widths, the bar height, the 44 px touch
- * targets of the bar, the centre panes sharing the height, and the narrow screen's icon rail and inspector drawer. The
+ * targets of the bar, the centre panes sharing the height, the narrow screen's icon rail and inspector drawer, and the
+ * bar fitting an iPad portrait window. The
  * divider and the view modes are owned by builder-shell.divider, the network boundary by builder-shell.network, and
  * the tools inside the inspector by builder-flow.
  */
@@ -56,6 +57,10 @@ test('narrow (1024 px): a 56 px library rail, Plan first, and the inspector in a
   const drawer = page.locator('wa-drawer.inspector-drawer');
   await page.getByRole('button', { name: 'Inspector', exact: true }).click();
   await expect(drawer).toHaveAttribute('open', '');
+  // the open host covers the window out of the grid flow, so it is visible and the grid keeps its two rows
+  await expect(drawer).toBeVisible();
+  const rows = await page.locator('section.builder').evaluate((host) => getComputedStyle(host).gridTemplateRows);
+  expect(rows.split(' ')).toHaveLength(2);
   await expect(drawer.getByRole('tab', { name: 'Trusses' })).toBeVisible();
   // Escape asks the drawer to close (`wa-hide`). The close itself is not awaited: Web Awesome ends its hide animation
   // on a requestAnimationFrame, and under `?test` the page's animation frames do not run, so `open` would never go.
@@ -65,4 +70,28 @@ test('narrow (1024 px): a 56 px library rail, Plan first, and the inspector in a
   }));
   await page.keyboard.press('Escape');
   expect([await hide.evaluate((h) => h.fired), errors]).toEqual(['wa-hide', []]);
+});
+
+// Bug: at 768 px the bar's items shrank to fit, so the mode group stacked its three buttons in a 76 px column and the
+// 56 px bar showed only Split.
+test('fits the bar in an iPad portrait window', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await bootApp(page);
+  await openBuilder(page);
+  // a class: the bar is a <header> inside the builder, with no role or name
+  const bar = page.locator('.builder-bar');
+  const overflow = await bar.evaluate((el) => el.scrollWidth - el.clientWidth);
+  const [, , barWidth, barHeight] = await boxOf(bar);
+  const outside: string[] = [];
+  for (const name of ['Plan', 'Split', '3D', 'Done']) {
+    const [x, y, w, h] = await boxOf(page.getByRole('button', { name, exact: true }));
+    if (x < 0 || y < 0 || x + w > barWidth || y + h > barHeight) outside.push(`${name}: ${x},${y} ${w}x${h}`);
+  }
+  const small = await bar
+    .locator('wa-button:visible')
+    .evaluateAll(
+      (all) => all.map((b) => b.getBoundingClientRect()).filter((box) => box.width < 44 || box.height < 44).length,
+    );
+  expect([overflow, barWidth, outside, small, errors]).toEqual([0, 768, [], 0, []]);
 });
