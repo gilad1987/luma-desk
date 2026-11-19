@@ -4,20 +4,23 @@
 $builder-title-hidden: 819px;
 
 // Narrow: the edit, mode and Inspector buttons show only the icon (44 x 44) and their tooltip; Cancel and Done keep
-// the text. The label (a <slot>) is hidden from sight only: with `display: none` the button would lose its name.
+// the text. The label (a <slot>, or the mode radio's span) is hidden from sight only: with `display: none` the button
+// would lose its name.
 @include below($builder-narrow) {
+  .builder .edit-tools wa-button::part(label),
+  .builder .builder-bar wa-button[data-builder='inspector']::part(label),
+  .builder .mode-label {
+    display: block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
   .builder .edit-tools wa-button,
-  .builder .view-modes wa-button,
+  .builder .mode-radio,
   .builder .builder-bar wa-button[data-builder='inspector'] {
-    &::part(label) {
-      display: block;
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-      white-space: nowrap;
-    }
     .wa-icon-svg {
       margin-inline-end: 0;
     }

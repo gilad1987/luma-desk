@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 /**
- * Owns the view-mode switch: one pressed button for the current mode, a change report for a new mode and none for a
- * repeat press. How the centre lays out a mode is owned by CentreSplit.test.ts. jsdom, for real `aria-checked`.
+ * Owns the view-mode switch: one checked radio for the current mode, a change report for a new mode and none for a
+ * repeat press, and the roving Tab stop. The arrow keys are owned by ViewModeSwitch.keys.test.ts; how the centre lays
+ * out a mode by CentreSplit.test.ts. jsdom, for real `aria-checked` and `tabIndex`.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ViewModeSwitch, type ViewMode } from '../../../../../src/ui/builder/shell/ViewModeSwitch.ts';
@@ -15,60 +16,62 @@ describe('ViewModeSwitch', () => {
     onChange = vi.fn<(mode: ViewMode) => void>();
     modes = new ViewModeSwitch(root, 'split', onChange);
   });
-  const button = (mode: ViewMode): HTMLElement | null => root.querySelector<HTMLElement>(`[data-mode="${mode}"]`);
-  const pressed = (): string[][] =>
+  const radio = (mode: ViewMode): HTMLElement | null => root.querySelector<HTMLElement>(`[data-mode="${mode}"]`);
+  const states = (): string[][] =>
     MODES.map((mode) => [
       mode,
-      String(button(mode)?.classList.contains('is-pressed')),
-      button(mode)?.getAttribute('aria-checked') ?? 'none',
+      String(radio(mode)?.classList.contains('is-pressed')),
+      radio(mode)?.getAttribute('aria-checked') ?? 'none',
+      String(radio(mode)?.tabIndex),
     ]);
 
-  // catches two buttons shown as pressed, so the bar says both modes are on
-  it('presses exactly the button of the current mode, in class and aria-checked', () => {
-    button('plan')?.click();
-    expect([modes.mode, pressed()]).toEqual([
+  // catches two radios shown as checked, so the bar says both modes are on, or two Tab stops in the group
+  it('checks exactly the radio of the current mode, in class, aria-checked and the one Tab stop', () => {
+    radio('plan')?.click();
+    expect([modes.mode, states()]).toEqual([
       'plan',
       [
-        ['plan', 'true', 'true'],
-        ['split', 'false', 'false'],
-        ['3d', 'false', 'false'],
+        ['plan', 'true', 'true', '0'],
+        ['split', 'false', 'false', '-1'],
+        ['3d', 'false', 'false', '-1'],
       ],
     ]);
   });
 
-  // catches a switch that never tells the centre, so the button changes and the view does not
+  // catches a switch that never tells the centre, so the radio changes and the view does not
   it('reports each new mode to onChange', () => {
-    button('3d')?.click();
-    button('plan')?.click();
+    radio('3d')?.click();
+    radio('plan')?.click();
     expect(onChange.mock.calls).toEqual([['3d'], ['plan']]);
   });
 
   // catches a repeat press that re-lays out the centre and resets the divider for nothing
   it('sends no change for a press on the mode already shown, the initial one included', () => {
-    button('split')?.click();
+    radio('split')?.click();
     modes.set('split');
     expect(onChange.mock.calls).toEqual([]);
   });
 
-  it('renders a labelled button group with an id and a tooltip for each mode', () => {
-    const group = root.querySelector('wa-button-group');
-    const ids = MODES.map((mode) => button(mode)?.id);
-    const tips = Array.from(root.querySelectorAll('wa-tooltip')).map((tip) => tip.getAttribute('for'));
-    expect([group?.getAttribute('label'), ids, tips]).toEqual([
-      'View',
-      ['builder-mode-plan', 'builder-mode-split', 'builder-mode-3d'],
-      ['builder-mode-plan', 'builder-mode-split', 'builder-mode-3d'],
+  // Bug: the mode group was three wa-button hosts with role="radio" whose inner buttons held the name and the focus
+  it('renders a radio group named View with one native radio button per mode', () => {
+    const group = root.querySelector('[role="radiogroup"]');
+    const radios = MODES.map((mode) => [
+      radio(mode)?.tagName,
+      radio(mode)?.getAttribute('role'),
+      radio(mode)?.textContent,
     ]);
-  });
-
-  // Bug: aria-pressed on the wa-button host never reached the accessibility tree; a role on the host does
-  it('exposes the group as a radio group named View, with one radio per mode', () => {
-    const group = root.querySelector('wa-button-group');
-    const roles = MODES.map((mode) => button(mode)?.getAttribute('role'));
-    expect([group?.getAttribute('role'), group?.getAttribute('aria-label'), roles]).toEqual([
-      'radiogroup',
+    expect([
+      group?.getAttribute('aria-label'),
+      root.querySelectorAll('wa-button, wa-button-group').length,
+      radios,
+    ]).toEqual([
       'View',
-      ['radio', 'radio', 'radio'],
+      0,
+      [
+        ['BUTTON', 'radio', 'Plan'],
+        ['BUTTON', 'radio', 'Split'],
+        ['BUTTON', 'radio', '3D'],
+      ],
     ]);
   });
 });
