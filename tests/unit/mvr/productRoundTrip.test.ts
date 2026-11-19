@@ -36,11 +36,19 @@ describe('MVR round trip of a product', () => {
   });
 
   it('brings a link with an unknown product back as a plain spot', async () => {
-    const entries = unzipSync(exportMvr(espriteDesign()).bytes);
+    const exported = espriteDesign();
+    const entries = unzipSync(exportMvr(exported).bytes);
     const scene = strFromU8(entries[SCENE] ?? new Uint8Array()).replaceAll('robe-esprite', 'acme-x');
     const { design } = await importMvr(zipSync({ ...entries, [SCENE]: strToU8(scene) }), { name: 'x' });
     const fixture = design.fixtures[0];
-    const facts = [scene.includes('acme-x'), fixture?.type, fixture && Object.hasOwn(fixture, 'product')];
-    expect(facts).toStrictEqual([true, 'spot', false]);
+    // The role and the truss count come from the luma link, so a rejected link block fails here, not only the product.
+    const facts = [
+      scene.includes('acme-x'),
+      fixture?.type,
+      fixture?.role,
+      design.trusses.length,
+      fixture && Object.hasOwn(fixture, 'product'),
+    ];
+    expect(facts).toStrictEqual([true, 'spot', 'front', exported.trusses.length, false]);
   });
 });

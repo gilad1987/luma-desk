@@ -9,22 +9,7 @@ import { History } from '../../../../../src/domain/stage/edit/History.ts';
 import { deleteFixtures } from '../../../../../src/domain/stage/edit/itemOps.ts';
 import { moveTruss, setTrussProps } from '../../../../../src/domain/stage/edit/trussOps.ts';
 import type { StageDesign } from '../../../../../src/domain/stage/StageDesign.ts';
-import { PIPE, sampleDesign } from './sampleDesign.ts';
-
-/** The sample design plus one Esprite on the pipe, id 501. */
-function withEsprite(): StageDesign {
-  const d = sampleDesign();
-  const esprite = {
-    id: 501,
-    type: 'spot',
-    role: 'mid',
-    trussId: PIPE.id,
-    position: [-4, 7, 0],
-    mount: 'hang',
-    product: 'robe-esprite',
-  } as const;
-  return { ...d, fixtures: [...d.fixtures, esprite] };
-}
+import { PIPE, withEsprite } from './sampleDesign.ts';
 
 /** Id and position of every Esprite of `d`. */
 function esprites(d: StageDesign | undefined): unknown[] {

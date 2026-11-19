@@ -6,28 +6,12 @@
 import { Texture } from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { rigFromDesign } from '../../../../src/domain/stage/deriveRig';
-import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import type { FixtureVisual } from '../../../../src/render/fixtures';
-import { PIPE, sampleDesign } from '../../domain/stage/edit/sampleDesign';
+import { sampleDesign, withEsprite } from '../../domain/stage/edit/sampleDesign';
 import { setupFixtureVisuals } from './fixtureVisualsSetup';
 
 afterEach(() => vi.restoreAllMocks());
 afterEach(() => vi.unstubAllGlobals());
-
-/** The sample design plus one hung Esprite, id 501; the sample has no screens. */
-function withEsprite(): StageDesign {
-  const d = sampleDesign();
-  const esprite = {
-    id: 501,
-    type: 'spot',
-    role: 'mid',
-    trussId: PIPE.id,
-    position: [-4, 7, 0],
-    mount: 'hang',
-    product: 'robe-esprite',
-  } as const;
-  return { ...d, fixtures: [...d.fixtures, esprite] };
-}
 
 /** The lens face of the Esprite visual of `visuals`, or null when the rig has none. */
 function espriteLens(visuals: readonly FixtureVisual[]): Texture | null {

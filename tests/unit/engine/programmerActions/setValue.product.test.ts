@@ -5,27 +5,15 @@
  */
 import { describe, expect, it } from 'vitest';
 import { rigFromDesign } from '../../../../src/domain/stage/deriveRig.ts';
-import type { StageDesign } from '../../../../src/domain/stage/StageDesign.ts';
 import type { FixtureValues } from '../../../../src/engine/CueList.ts';
 import { resetOutput } from '../../../../src/engine/output/resetOutput.ts';
 import { PRESET_FNS } from '../../../../src/engine/presetFunctions.ts';
 import { setValue } from '../../../../src/engine/programmerActions/setValue.ts';
-import { PIPE, sampleDesign } from '../../domain/stage/edit/sampleDesign.ts';
+import { withEsprite } from '../../domain/stage/edit/sampleDesign.ts';
 
-/** The rig of the sample design plus one Esprite, id 501. */
+/** The rig of the sample design plus one Esprite at the pipe centre, id 501. */
 function espriteRig() {
-  const base = sampleDesign();
-  const esprite = {
-    id: 501,
-    type: 'spot',
-    role: 'mid',
-    trussId: PIPE.id,
-    position: [0, 7, 0],
-    mount: 'hang',
-    product: 'robe-esprite',
-  } as const;
-  const design: StageDesign = { ...base, fixtures: [...base.fixtures, esprite] };
-  return rigFromDesign(design);
+  return rigFromDesign(withEsprite([0, 7, 0]));
 }
 
 describe('engine values of an Esprite', () => {

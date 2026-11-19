@@ -9,22 +9,7 @@ import { addFixturesOnTruss } from '../../../../../src/domain/stage/edit/addFixt
 import { duplicateFixtures, setFixtureProps } from '../../../../../src/domain/stage/edit/itemOps.ts';
 import { mirrorLeftToRight } from '../../../../../src/domain/stage/edit/mirror.ts';
 import type { StageDesign } from '../../../../../src/domain/stage/StageDesign.ts';
-import { PIPE, sampleDesign } from './sampleDesign.ts';
-
-/** The sample design plus one house-left Esprite on the pipe, id 501. */
-function withEsprite(): StageDesign {
-  const d = sampleDesign();
-  const esprite = {
-    id: 501,
-    type: 'spot',
-    role: 'mid',
-    trussId: PIPE.id,
-    position: [-4, 7, 0],
-    mount: 'hang',
-    product: 'robe-esprite',
-  } as const;
-  return { ...d, fixtures: [...d.fixtures, esprite] };
-}
+import { PIPE, sampleDesign, withEsprite } from './sampleDesign.ts';
 
 /** The `product` of every fixture added past `before`'s fixture count. */
 function addedProducts(before: StageDesign, after: StageDesign): unknown[] {

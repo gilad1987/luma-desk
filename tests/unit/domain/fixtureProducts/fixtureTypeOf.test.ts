@@ -1,8 +1,7 @@
 /**
  * Owns `fixtureTypeOf`: a plain fixture keeps its native type record by identity (the built-in rig's parity rests on
  * it), a product gets the exact merged record (with no GDTF identity of its base), and that record is made once per
- * product. The catalogue rows
- * themselves are guarded by catalogueRules.test.ts.
+ * product. The catalogue rows themselves are guarded by catalogueRules.test.ts.
  */
 import { describe, expect, it } from 'vitest';
 import { fixtureTypeOf } from '../../../../src/domain/fixtureProducts/fixtureTypeOf.ts';
