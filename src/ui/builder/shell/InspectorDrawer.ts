@@ -41,6 +41,11 @@ export class InspectorDrawer {
     return !this.#frame.hidden;
   }
 
+  /** Whether the focus is in the drawer: on its frame, its Close button or the tools in it. */
+  get hasFocus(): boolean {
+    return this.#frame.contains(document.activeElement);
+  }
+
   /**
    * Shows or hides the drawer. Opening moves the focus into it; closing gives it back to the Inspector button only if
    * it was in the drawer (a focus elsewhere stays) and `canFocusButton` holds: the caller passes `false` when the
