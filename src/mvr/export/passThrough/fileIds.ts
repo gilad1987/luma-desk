@@ -1,12 +1,8 @@
-import { fixtureIdNumber } from '../../design/assignIds';
+import { fixtureIdNumber, positive } from '../../design/assignIds';
 import { childText } from '../../xml/elements';
 
-/** `value` when it is a positive integer, else `undefined`. */
-const positive = (value: number | undefined): number | undefined =>
-  value !== undefined && Number.isInteger(value) && value > 0 ? value : undefined;
-
 /**
- * A positive integer id, or `undefined`, read as the import reads it: FixtureIDNumeric first as a whole number, then
+ * A positive safe integer id, or `undefined`, read as the import reads it (`positive`): FixtureIDNumeric first, then
  * FixtureID only when it is digits only (`fixtureIdNumber`), so `1.0` or `0x1` is a label here too.
  */
 export function numericId(element: Element): number | undefined {

@@ -3,9 +3,10 @@ import type { MvrWarning } from '../MvrWarning';
 
 /**
  * `id` when it is a usable desk id (a positive safe integer, as the stage parser reads fixture ids), else `undefined`,
- * so the record gets an auto id. A 20-digit FixtureID is not safe: `id + 1` could equal `id`.
+ * so the record gets an auto id. A 20-digit FixtureID is not safe: `id + 1` could equal `id`. The pass-through export
+ * reads file ids by this rule too, so it keeps the text of each id the import did not use (D1).
  */
-const positive = (id: number | undefined): number | undefined =>
+export const positive = (id: number | undefined): number | undefined =>
   id !== undefined && Number.isSafeInteger(id) && id > 0 ? id : undefined;
 
 /**

@@ -47,4 +47,13 @@ describe('pass-through FixtureID text of a renumbered fixture (review #14)', () 
     expect(texts(bytes, 'FixtureID')).toEqual(['1.0']);
     expect(summary.changes).toMatchObject({ updated: 0 });
   });
+
+  it('keeps a 20-digit FixtureID, which the import reads as no safe integer (rule D1)', async () => {
+    // the import gave the fixture the lowest free id, 1, as 12345678901234567890 is past Number.MAX_SAFE_INTEGER
+    const original = withIds('<FixtureID>12345678901234567890</FixtureID>');
+    for (const from of [1, 77]) {
+      const design = from === 1 ? (await importMvr(original, { name: 'a.mvr' })).design : await renumbered(original, 1);
+      expect(texts(exportMvr(design, { original }).bytes, 'FixtureID')).toEqual(['12345678901234567890']);
+    }
+  });
 });
