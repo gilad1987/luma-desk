@@ -3,7 +3,7 @@ import { SCENERY_PARTS, type SceneryPart, type Vec3, type VenueKind } from '../t
 import { sceneryFor } from '../venueScenery';
 import { newUniqueId } from './ids';
 import { checkFinite, checkSizes } from './inputChecks';
-import { roundToMillimetre } from './millimetres';
+import { millimetres, roundToMillimetre } from './millimetres';
 import { isSameLength } from '../sameData';
 import { wallRisen } from './wallRisen';
 
@@ -34,12 +34,12 @@ export function setDeckSize(d: StageDesign, size: DeckSize): StageDesign {
 }
 
 /**
- * The risers moved up by `rise` metres, rounded to 1 mm as `moveRiser` stores them; no rise (float noise aside) keeps
- * the list, so a width edit leaves them be.
+ * The risers moved up by `rise` metres. The new height is rounded to 1 mm, as `moveRiser` stores it; x and z do not
+ * move, so they stay as stored. No rise (float noise aside) keeps the list, so a width edit leaves them be.
  */
 function risersOn(risers: StageDesign['risers'], rise: number): StageDesign['risers'] {
   if (isSameLength(rise, 0)) return risers;
-  return risers.map((r) => ({ ...r, at: roundToMillimetre([r.at[0], r.at[1] + rise, r.at[2]]) }));
+  return risers.map((r) => ({ ...r, at: [r.at[0], millimetres(r.at[1] + rise), r.at[2]] as const }));
 }
 
 /**

@@ -23,6 +23,11 @@ describe('setDeckSize with a new height', () => {
     expect(setDeckSize(withRiser, DECK_13).risers[0]?.at[1]).toBe(1.4);
   });
 
+  it('rounds only the height, so a sub-millimetre x or z stays as stored', () => {
+    const withRiser = addRiser(sampleDesign(), [1.0004, 1.1, -0.0003], [2, 0.1, 2]);
+    expect(setDeckSize(withRiser, DECK_13).risers[0]?.at).toEqual([1.0004, 1.4, -0.0003]);
+  });
+
   it('moves the LED wall, its side screens and its screen fixture', () => {
     const walled = setLedWall(sampleDesign(), { width: 8, height: 4 });
     const side = { at: [6, 3, -4], yaw: 0.3, width: 2, height: 3 } as const;
