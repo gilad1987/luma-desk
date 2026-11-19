@@ -36,25 +36,26 @@ export class OcclusionCache {
   ): boolean {
     const key = (size.width * 16384 + size.height) * 2 + (isEnabled ? 1 : 0);
     const isMoved = this.#watch.stamp() !== this.#stamp;
+    const isRebuilt = isMoved || this.#age >= MAX_AGE;
     const looks = this.#materials();
     const isSame =
-      !isMoved &&
-      this.#age < MAX_AGE &&
+      !isRebuilt &&
       key === this.#key &&
       looks === this.#looks &&
       camera.matrixWorld.equals(this.#view) &&
       camera.projectionMatrix.equals(this.#projection);
     this.#age = isSame ? this.#age + 1 : 1;
     if (isSame) return false;
-    if (isMoved) {
-      // the list is rebuilt, as the move may be a mesh that came or left; at rest the stamp is one pass over it
+    if (isRebuilt) {
+      // the list is rebuilt, as the move may be a mesh that came or left; at rest the stamp is one pass over it. The
+      // age redraw rebuilds it too: a body that came into an object no list watched (a group of beams alone) counts
       this.#watch.clear();
       this.#meshes.length = 0;
       this.#watched.clear();
       scene.traverse(this.#add);
       this.#stamp = this.#watch.stamp();
     }
-    this.#looks = isMoved ? this.#materials() : looks;
+    this.#looks = isRebuilt ? this.#materials() : looks;
     this.#key = key;
     this.#view.copy(camera.matrixWorld);
     this.#projection.copy(camera.projectionMatrix);

@@ -1,5 +1,6 @@
 import { BoxGeometry, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, PerspectiveCamera, Scene } from 'three';
 import { expect, it } from 'vitest';
+import { MAX_AGE } from '../../../../src/render/lighting/SurfaceCache';
 import { OcclusionCache } from '../../../../src/render/occlusion/OcclusionCache';
 
 const SIZE = { width: 1280, height: 720 };
@@ -31,5 +32,26 @@ it('draws again when a depth mesh or a group of them hides, not when a beam, a p
   rig.visible = true;
   expect(isStale()).toBe(true);
   body.visible = false;
+  expect([isStale(), isStale()]).toEqual([true, false]);
+});
+
+it('watches a body that came into a group of beams alone from the next age redraw on', () => {
+  const scene = new Scene();
+  const camera = new PerspectiveCamera();
+  const rig = new Group();
+  rig.add(light());
+  scene.add(rig);
+  camera.updateMatrixWorld(true);
+  const cache = new OcclusionCache();
+  const isStale = (): boolean => cache.isStale(camera, scene, SIZE, true);
+  expect(isStale()).toBe(true);
+  const body = new Mesh(new BoxGeometry(), new MeshStandardMaterial());
+  rig.add(body);
+  scene.updateMatrixWorld(true);
+  // no list watches the group, so the body shows at the age redraw, as a sway does
+  for (let n = 1; n < MAX_AGE; n++) expect(isStale()).toBe(false);
+  expect([isStale(), isStale()]).toEqual([true, false]);
+  body.position.x = 1;
+  scene.updateMatrixWorld(true);
   expect([isStale(), isStale()]).toEqual([true, false]);
 });
