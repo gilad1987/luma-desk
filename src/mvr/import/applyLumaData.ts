@@ -20,7 +20,8 @@ function splitLink({ footprint, ...desk }: FixtureLink): SplitLink {
 
 /**
  * The fixture with the desk fields the luma data gives for its id, or unchanged when it gives none. The link's
- * `fixed` and `pixel` replace the fixture's own, so a fixture without them in the data has none after the import.
+ * `product`, `fixed` and `pixel` replace the fixture's own, so a fixture without them in the data has none after the
+ * import; a product comes back before `placeBodies`, which then shifts the body by the product's own mount height.
  */
 function relink(fixture: StageFixture, links: ReadonlyMap<number, SplitLink>): StageFixture {
   const link = links.get(fixture.id);

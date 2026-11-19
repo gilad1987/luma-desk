@@ -60,8 +60,8 @@ Good:
 
 Costs and risks:
 
-- The MVR luma link and the GDTF identity learn `product` only in Phase C5. Until then an Esprite that is exported
-  to MVR and imported again comes back as its base type (`spot`).
+- The MVR luma link carries `product` (C1), so a desk round trip keeps a product and its position. Only the GDTF
+  identity of a product (its own `gdtfSpec`) waits for Phase C5; until then the export names the base type's GDTF.
 - The builder property panel shows the base type name until lane `ui` Phase 5 replaces the panels.
 - One more table to keep honest: each product needs its data sheet, and its drawn `span` and `mountHeight` must be
   measured again when its body changes.
@@ -85,6 +85,8 @@ Costs and risks:
   their native keys, `createFixtureModels` draws no `Math.random`, and the product geometry and lens are cached.
 - `tests/unit/render/fixtures/families/mover.test.ts`: the Esprite visual has joints, a head and a round lens.
 - `tests/unit/render/fixtures/productSpans.test.ts`: the measured `span` and `mountHeight` equal the pinned values.
+- `tests/unit/mvr/productRoundTrip.test.ts`: a hung and a floor Esprite come back from a desk MVR export with
+  their product and their position (within 1e-6 m); a link with an unknown product comes back as a plain `spot`.
 - `tests/e2e/stage-product.spec.ts`: a stage with an Esprite saves and loads through the real app and a reload.
-- Not verified: the MVR round trip of a product (Phase C5); the owner's close-up check of the `mover` family (before
+- Not verified: the GDTF identity of a product (Phase C5); the owner's close-up check of the `mover` family (before
   Phase C2).

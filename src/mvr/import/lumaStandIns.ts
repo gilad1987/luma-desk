@@ -7,8 +7,11 @@ function objects(value: unknown): object[] {
   return value.filter((item: unknown): item is object => typeof item === 'object' && item !== null);
 }
 
-/** The fields of a link that the stand-in takes over, so the parser checks each of them as it checks a stored show. */
-const LINK_FIELDS = ['type', 'role', 'trussId', 'mount', 'fixed', 'pixel'] as const;
+/**
+ * The fields of a link that the stand-in takes over, so the parser checks each of them as it checks a stored show. An
+ * unknown `product`, or one whose base is not the link's type, is dropped there and the fixture comes back plain.
+ */
+const LINK_FIELDS = ['type', 'role', 'trussId', 'mount', 'product', 'fixed', 'pixel'] as const;
 
 /** The own link fields of the data; an absent optional field stays absent, so the parser never sees `undefined`. */
 function linkFields(link: object): Record<string, unknown> {
@@ -32,8 +35,7 @@ export function linkFootprints(raw: object): (readonly [unknown, unknown])[] {
 
 /**
  * Raw fixtures for checking the luma data with the stored-show parser: one per `links` entry (id, type, role, truss
- * id, mount, fixed, pixel) and
- * one per LED wall driver id. The real fixtures travel as `<Fixture>` elements, but the parser checks a role, a truss
+ * id, mount, product, fixed, pixel) and one per LED wall driver id. The real fixtures travel as `<Fixture>` elements, but the parser checks a role, a truss
  * link and a wall driver only on fixtures, so these stand-ins let the one parser check the whole block. Nothing is
  * filtered here: a bad id, role or truss link fails the parse, and the import then treats the file as a plain MVR.
  */

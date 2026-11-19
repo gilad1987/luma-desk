@@ -32,7 +32,8 @@ Facts that shape the plan (verified in the code):
 - Every edit op copies a fixture by spread (`copies.ts`, `mirrorGeometry.ts`, `patchedFixtures.ts`, `trussOps.ts`,
   `ledWall.ts`, `millimetres.ts`), so `product` is carried for free; only the parser, `appendFixtures`, the MVR luma
   link (`lumaData.ts` `linkOf`, `lumaStandIns.ts` `LINK_FIELDS`, `applyLumaData.ts` `relink`) and the templates
-  build a fixture field by field. The MVR link is Phase C5 (source plan: "MVR: `product` in the luma link fields").
+  build a fixture field by field. The MVR link was planned for Phase C5 (source plan: "MVR: `product` in the luma
+  link fields"); the C1 review moved it into C1, because without it a round trip moved an Esprite by 0.103 m.
 - Line budget (hard 100): Phase 0 `StageDesign.ts` 98, `addFixtures.ts` 95, `parseFixture.ts` 84,
   `FixtureModels.ts` 47, `Fixture.ts` 79, `RigBuilder.ts` 63.
 - Robe Esprite numbers (Robe data sheet "Esprite", 27.11.2019, and "ESPRITE FS", 4/16/2026, pages 1, 3-5, 8;
@@ -96,8 +97,7 @@ drawn values, measured from the built model and pinned by a test, exactly as `BO
   `productOf(fixture.product)?.span ?? BODY_SPANS[fixture.type]`.
 - `src/mvr/design/mountHeight.ts`: `MountPose` gains `product?: ProductId | undefined`; heights =
   `productOf(product)?.mountHeight ?? MOUNT_HEIGHTS[type]`. Callers already pass whole `StageFixture`s.
-- Not in C1 (named so nobody is surprised): the luma link fields (C5, an exported-then-imported Esprite comes back
-  as a plain `spot`), `deskType`/`gdtfModeOf` (C5 reads the product's `gdtfSpec`), the builder property panel
+- Not in C1 (named so nobody is surprised): `deskType`/`gdtfModeOf` (C5 reads the product's `gdtfSpec`), the builder property panel
   (`ui/builder/fixtureProps.ts` shows the base type name; lane `ui` Phase 5 replaces the panels).
 
 ### Render: `src/render/fixtures/families/`
