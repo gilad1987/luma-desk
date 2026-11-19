@@ -50,5 +50,8 @@ export function wireEncoders(deps: EncodersWiringDeps): EncodersWiring {
     frame: () => deps.stage.frame,
     goboIcons: deps.goboIcons,
   });
+  // the Position pad stays on screen across a stage change (template load, show load, MVR import, builder preview,
+  // Done or Cancel) and draws its map only when built, so the panel is built again for the new stage
+  deps.bus.on('rigChanged', () => encoders.render());
   return { encoders, aimHeight };
 }

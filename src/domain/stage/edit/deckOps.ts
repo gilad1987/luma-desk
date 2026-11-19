@@ -3,8 +3,9 @@ import { SCENERY_PARTS, type SceneryPart, type Vec3, type VenueKind } from '../t
 import { sceneryFor } from '../venueScenery';
 import { newUniqueId } from './ids';
 import { checkFinite, checkSizes } from './inputChecks';
-import { roundToMillimetre } from './millimetres';
+import { millimetres, roundToMillimetre } from './millimetres';
 import { isSameLength } from '../sameData';
+import { wallRisen } from './wallRisen';
 
 /** Deck size in metres: `width` along x, `depth` along z, `height` of the top above the ground. */
 export interface DeckSize {
@@ -15,8 +16,10 @@ export interface DeckSize {
 
 /**
  * Resizes the deck around its centre line, keeping the downstage edge (z1) where it is, so the deck grows away from
- * the audience. Trusses, fixtures and the LED wall do not move. The size the deck already has (float noise aside)
- * returns `d` itself, so History adds no undo step.
+ * the audience. Risers and the LED wall stand on the deck, so a new height moves them up or down with it in the same
+ * step (the riser row has no height field to fix them later): the wall with its screen fixture (`wallRisen`). The
+ * side screens stand off the deck, so they stay, as do trusses and the other fixtures. The size the deck already has
+ * (float noise aside) returns `d` itself, so History adds no undo step.
  * @throws RangeError when a size is not a finite number > 0: a zero deck has no top for beams to land on.
  */
 export function setDeckSize(d: StageDesign, size: DeckSize): StageDesign {
@@ -25,7 +28,18 @@ export function setDeckSize(d: StageDesign, size: DeckSize): StageDesign {
   const { width, depth, height } = size;
   if (isSameLength(width, x1 - x0) && isSameLength(depth, z1 - z0) && isSameLength(height, d.deck.height)) return d;
   const centreX = (x0 + x1) / 2;
-  return { ...d, deck: { x0: centreX - width / 2, x1: centreX + width / 2, z0: z1 - depth, z1, height } };
+  const deck = { x0: centreX - width / 2, x1: centreX + width / 2, z0: z1 - depth, z1, height };
+  const rise = height - d.deck.height;
+  return { ...d, ...wallRisen(d, rise), deck, risers: risersOn(d.risers, rise) };
+}
+
+/**
+ * The risers moved up by `rise` metres. The new height is rounded to 1 mm, as `moveRiser` stores it; x and z do not
+ * move, so they stay as stored. No rise (float noise aside) keeps the list, so a width edit leaves them be.
+ */
+function risersOn(risers: StageDesign['risers'], rise: number): StageDesign['risers'] {
+  if (isSameLength(rise, 0)) return risers;
+  return risers.map((r) => ({ ...r, at: [r.at[0], millimetres(r.at[1] + rise), r.at[2]] as const }));
 }
 
 /**

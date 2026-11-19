@@ -1,3 +1,4 @@
+import { isHiddenWallFixture } from '../../domain/stage/hiddenWall';
 import type { StageDesign } from '../../domain/stage/StageDesign';
 
 /** What the user picked in the builder: fixture ids and truss ids, in pick order. */
@@ -16,12 +17,13 @@ export function isEmptySelection(sel: BuilderSelection): boolean {
 
 /**
  * The part of `sel` that still exists in `d`. An undo or a delete can remove picked items; a stale id would make the
- * next Duplicate throw on a truss that is gone. An unchanged selection returns `sel` itself.
+ * next Duplicate throw on a truss that is gone. The screen fixture of a hidden LED wall is dropped too, so Delete,
+ * drag and Duplicate cannot act on a wall the user cannot see. An unchanged selection returns `sel` itself.
  */
 export function keepExisting(sel: BuilderSelection, d: StageDesign): BuilderSelection {
   const fixtureIds = new Set(d.fixtures.map((f) => f.id));
   const trussIds = new Set(d.trusses.map((t) => t.id));
-  const fixtures = sel.fixtures.filter((id) => fixtureIds.has(id));
+  const fixtures = sel.fixtures.filter((id) => fixtureIds.has(id) && !isHiddenWallFixture(d, id));
   const trusses = sel.trusses.filter((id) => trussIds.has(id));
   if (fixtures.length === sel.fixtures.length && trusses.length === sel.trusses.length) return sel;
   return { fixtures, trusses };

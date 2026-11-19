@@ -1,9 +1,9 @@
 import type { StageDesign } from '../StageDesign';
 
 /**
- * Removes the fixtures `gone` together with their `mvr.fixtures` entries. A freed id is given out again
- * (`nextIdBlock`), so an entry left behind would give a later fixture with that id the deleted fixture's MVR uuid and
- * GDTF name on export. Every edit that deletes fixtures goes through here, so none of them can keep a stale entry.
+ * Removes the fixtures `gone` together with their `mvr.fixtures` entries. The entry goes with its fixture, so the saved
+ * design still parses (`checkMvrFixtureIds` rejects an entry without a fixture) and the export never carries a dead
+ * fixture's MVR uuid or GDTF name. Every edit that deletes fixtures goes through here, so none can keep a stale entry.
  */
 export function withoutFixtures(d: StageDesign, gone: ReadonlySet<number>): StageDesign {
   const fixtures = d.fixtures.filter((f) => !gone.has(f.id));

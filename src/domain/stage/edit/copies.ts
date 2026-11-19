@@ -10,7 +10,7 @@ export type TrussIdOf = (f: StageFixture) => string | null;
  * source's address it would answer the same channels (contract Amendment 3).
  */
 export function appendCopies(d: StageDesign, sources: readonly StageFixture[], trussIdOf: TrussIdOf): StageDesign {
-  const first = nextIdBlock(d);
+  const first = nextIdBlock(d, sources.length);
   const copies = sources.map(({ patch: _patch, ...f }, i): StageFixture => ({
     ...f,
     id: first + i,

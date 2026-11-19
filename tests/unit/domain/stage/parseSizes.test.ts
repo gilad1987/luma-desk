@@ -71,7 +71,7 @@ describe('parseStageDesign sizes', () => {
     ]);
   });
 
-  it('accepts the smallest sizes above zero', () => {
-    expect(errorsOf(withParams(1, { radius: 1e-9, section: 1e-9, chains: { count: 1, phase: 0 } }))).toStrictEqual([]);
+  it('accepts the smallest truss sizes (0.1 m, see parseTrussLimits.test.ts) and one chain', () => {
+    expect(errorsOf(withParams(1, { radius: 0.1, section: 0.1, chains: { count: 1, phase: 0 } }))).toStrictEqual([]);
   });
 });

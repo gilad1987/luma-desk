@@ -54,16 +54,19 @@ describe('StageTab', () => {
     expect([session.canUndo, shownErrors(root)]).toEqual([false, [he.builder.tools.badNumber(0.1, 100)]]);
   });
 
-  it('turns the LED wall on at 8 x 4.5 m, resizes it, and turns it off', () => {
+  it('adds an 8 x 4.5 m LED wall, resizes it, hides it, and shows the same wall with the same screen fixture again', () => {
     check(control(root, 'LED wall'), true);
     const on = session.draft;
     change(control(root, 'Wall height (m)'), '5');
     const resized = session.draft;
     check(control(root, 'LED wall'), false);
-    expect([on, resized, session.draft]).toEqual([
+    const hidden = session.draft;
+    check(control(root, 'LED wall'), true);
+    expect([on, resized, hidden, session.draft]).toEqual([
       setLedWall(start, { width: 8, height: 4.5 }),
       setLedWall(on, { width: 8, height: 5 }),
-      setLedWall(resized, null),
+      setSceneryPart(resized, 'ledWall', false),
+      resized,
     ]);
   });
 

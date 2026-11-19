@@ -59,9 +59,11 @@ function screenSpecs(screen: StageScreen): ObjectSpec[] {
 
 /**
  * The trusses, deck, risers and screens of a design as objects to write, so a console shows the stage the fixtures
- * hang on. A hidden deck (an imported stage brings its own) and its risers are not written: the desk does not draw
- * them either, and their numbers still travel in the luma data.
+ * hang on. A hidden deck (an imported stage brings its own) and its risers are not written, and neither are the LED
+ * wall and side screens when the `ledWall` part is hidden: the desk does not draw them either, and their numbers still
+ * travel in the luma data. Trusses are written whether the `trusses` part is shown or not.
  */
 export function objectSpecs(design: StageDesign): ObjectSpec[] {
-  return [...design.trusses.map(trussSpec), ...deckSpecs(design), ...design.screens.flatMap(screenSpecs)];
+  const screens = design.scenery.ledWall ? design.screens.flatMap(screenSpecs) : [];
+  return [...design.trusses.map(trussSpec), ...deckSpecs(design), ...screens];
 }

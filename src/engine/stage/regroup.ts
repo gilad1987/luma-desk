@@ -12,10 +12,12 @@ function sameGroup(a: Readonly<Group>, b: Readonly<Group>): boolean {
  * by the operator, so it is dropped; any other group is the operator's and stays, as the same object. Each new default
  * then fills its own slot if that slot is free; a default never moves to another slot, so slot numbers stay stable.
  * New defaults are copied, so a later Label on the pool cannot change the defaults the next change compares with.
+ * Saved shows are not validated, so a slot may hold `null`; it is an empty slot, as `addNewDefaultGroups` reads it.
  */
 export function regroup(pool: Readonly<GroupPool>, oldDefaults: DefaultPool, newDefaults: DefaultPool): GroupPool {
   const next: GroupPool = {};
   for (const [slot, group] of Object.entries(pool)) {
+    if (group === null) continue;
     const oldDefault = oldDefaults[Number(slot)];
     if (oldDefault === undefined || !sameGroup(group, oldDefault)) next[Number(slot)] = group;
   }

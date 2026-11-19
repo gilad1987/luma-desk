@@ -9,12 +9,20 @@ import { sampleDesign } from './sampleDesign.ts';
 describe('nextIdBlock', () => {
   it('starts the block after the highest id, rounded up to a full hundred', () => {
     const d = sampleDesign();
-    const at = (id: number): number => nextIdBlock({ ...d, fixtures: d.fixtures.map((f) => ({ ...f, id })) });
-    expect([nextIdBlock(d), at(120), at(200), at(201)]).toEqual([401, 201, 201, 301]);
+    const at = (id: number): number => nextIdBlock({ ...d, fixtures: d.fixtures.map((f) => ({ ...f, id })) }, 1);
+    expect([nextIdBlock(d, 1), at(120), at(200), at(201)]).toEqual([401, 201, 201, 301]);
   });
 
   it('starts an empty design at 1', () => {
-    expect(nextIdBlock({ ...sampleDesign(), fixtures: [] })).toBe(1);
+    expect(nextIdBlock({ ...sampleDesign(), fixtures: [] }, 1)).toBe(1);
+  });
+
+  it('refuses a batch whose last id would pass Number.MAX_SAFE_INTEGER, even past one block of 100', () => {
+    const d = sampleDesign();
+    const high = { ...d, fixtures: d.fixtures.slice(0, 1).map((f) => ({ ...f, id: 9_007_199_254_740_800 })) };
+    // the block starts at 9007199254740801, so 191 ids end on MAX_SAFE_INTEGER and 192 pass it
+    expect(nextIdBlock(high, 191)).toBe(9_007_199_254_740_801);
+    expect(() => nextIdBlock(high, 192)).toThrow(/nextIdBlock: no 192 safe fixture ids after 9007199254740800/);
   });
 });
 

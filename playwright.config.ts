@@ -7,6 +7,10 @@ const PORT = 4173;
 const requestedURL = process.env['BASE_URL'] ?? `http://127.0.0.1:${PORT}/`;
 const baseURL = requestedURL.endsWith('/') ? requestedURL : `${requestedURL}/`;
 const buildAndPreview = `npm run build && npm run preview -- --host 127.0.0.1 --port ${PORT} --strictPort`;
+// The render-stats spec draws more than 60 frames of the lit MVR stage. On the CI runner SwiftShader takes one to two
+// seconds per frame, so it passed or hit 120 s by chance. Its waits are all on states (frozen-clock frames), so a
+// larger budget changes no result; a config project gives it one, as Playwright has no timeout per file.
+const RENDER_STATS = /mvr-render-stats\.spec\.ts$/;
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -48,6 +52,10 @@ export default defineConfig({
       ],
     },
   },
+  projects: [
+    { name: 'e2e', testIgnore: RENDER_STATS },
+    { name: 'render-stats', testMatch: RENDER_STATS, timeout: 360_000 },
+  ],
   webServer: {
     command: process.env['WEB_SERVER_CMD'] ?? buildAndPreview,
     url: baseURL,

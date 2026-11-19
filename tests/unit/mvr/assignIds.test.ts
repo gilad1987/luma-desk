@@ -37,4 +37,13 @@ describe('assignIds', () => {
     expect(result.ids).toEqual([5, 2, 1]);
     expect(result.warnings.map((w) => [w.code, w.ref])).toEqual([['duplicate-id', 'b']]);
   });
+
+  it('gives an auto id to a FixtureID or FixtureIDNumeric that is not a safe integer, and keeps the fixture', () => {
+    const result = ids(
+      makeFixtureRecord({ fixtureId: '12345678901234567890' }),
+      makeFixtureRecord({ fixtureIdNumeric: Number.MAX_SAFE_INTEGER + 1 }),
+      makeFixtureRecord({ fixtureIdNumeric: Number.MAX_SAFE_INTEGER }),
+    );
+    expect(result.ids).toEqual([1, 2, Number.MAX_SAFE_INTEGER]);
+  });
 });

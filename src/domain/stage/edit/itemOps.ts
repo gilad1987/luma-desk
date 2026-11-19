@@ -1,7 +1,7 @@
 import type { StageDesign, StageFixture } from '../StageDesign';
 import type { Vec3 } from '../types';
 import { appendCopies } from './copies';
-import { newTrussId } from './ids';
+import { newTrussId, nextFixtureId } from './ids';
 import { patchedFixtures } from './patchedFixtures';
 import { isSameData } from '../sameData';
 import { moveTruss, shiftFixture } from './trussOps';
@@ -37,13 +37,15 @@ export function duplicateTruss(d: StageDesign, trussId: string): StageDesign {
 }
 
 /**
- * Deletes fixtures; an LED wall whose screen fixture goes is deleted too, so no screen points at nothing. When no id
- * names a fixture it returns `d` itself, so History adds no undo step.
+ * Deletes fixtures; an LED wall whose screen fixture goes is deleted too, so no screen points at nothing. The design
+ * keeps its `nextFixtureId`, so the deleted ids are never given out again. When no id names a fixture it returns `d`
+ * itself, so History adds no undo step.
  */
 export function deleteFixtures(d: StageDesign, ids: readonly number[]): StageDesign {
   const gone = new Set(ids);
   if (!d.fixtures.some((f) => gone.has(f.id))) return d;
-  return { ...withoutFixtures(d, gone), screens: d.screens.filter((s) => !gone.has(s.fixtureId)) };
+  const screens = d.screens.filter((s) => !gone.has(s.fixtureId));
+  return { ...withoutFixtures(d, gone), screens, nextFixtureId: nextFixtureId(d) };
 }
 
 /**

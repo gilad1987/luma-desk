@@ -13,7 +13,7 @@ export class UniqueIds<T extends string | number> {
   readonly #read: FieldReader<T>;
   readonly #seen = new Set<T>();
 
-  /** `read` checks the id value (`r.str` or `r.positiveInt`) before it is compared with the earlier ids. */
+  /** `read` checks the id value (`r.str` or `r.fixtureId`) before it is compared with the earlier ids. */
   constructor(r: Reader, read: FieldReader<T>) {
     this.#r = r;
     this.#read = read;

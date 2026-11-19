@@ -27,7 +27,7 @@ const TYPE_IDS = Object.keys(TYPES).filter(isTypeId);
  * misleading error. There is no count cap: the builder only warns above the soft limit.
  */
 export function parseFixtures(r: Reader, stage: Raw, trussIds: ReadonlySet<string>): ParsedFixtures {
-  const ids = new UniqueIds(r, r.positiveInt);
+  const ids = new UniqueIds(r, r.fixtureId);
   const trusses: Choices<string | null> = { options: [null, ...trussIds], what: 'truss' };
   const fixtures = r.list(stage, 'fixtures', '', (items, i, at) => {
     const o = r.obj(items, i, at);

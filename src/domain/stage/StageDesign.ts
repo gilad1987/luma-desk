@@ -88,6 +88,11 @@ export interface StageDesign {
   readonly trusses: readonly StageTruss[];
   /** Array order is rig build order. */
   readonly fixtures: readonly StageFixture[];
+  /**
+   * The lowest fixture id this design never used; a delete sets it (`nextFixtureId`), so a later batch never reuses
+   * the id of a deleted fixture that cues and groups still name. Absent, it is the highest fixture id + 1.
+   */
+  readonly nextFixtureId?: number;
   /** MVR facts of an imported design (G4). Every edit copies a design with `{ ...d, field }`, so it survives edits. */
   readonly mvr?: MvrDesignInfo;
 }

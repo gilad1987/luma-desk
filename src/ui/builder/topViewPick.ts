@@ -1,4 +1,6 @@
-import type { StageDesign } from '../../domain/stage/StageDesign';
+import { isHiddenWallFixture } from '../../domain/stage/hiddenWall';
+import type { StageDesign, StageFixture } from '../../domain/stage/StageDesign';
+import type { StageTruss } from '../../domain/stage/trussTypes';
 import { NO_SELECTION, type BuilderSelection } from './selection';
 import { trussFootprint, type TrussFootprint } from './topViewShapes';
 import type { Point2, TopTransform } from './topViewTransform';
@@ -10,18 +12,39 @@ export type TopPick =
 
 /** Half of the 44 px touch target (U9): a tap this far from an item still picks it. */
 const PICK_RADIUS_PX = 22;
+/** A tap within one mark width (the drawn mark is 6 px square) of a fixture's centre is on it, so the fixture wins. */
+const FIXTURE_MARK_PX = 6;
+/** A tap this close to a tower is on the ring around its fixtures' marks, so the tower wins over a truss line. */
+const TOWER_MARK_PX = 12;
 
 /**
- * The item nearest to canvas point `at`, within the pick radius. A fixture wins over a truss: fixtures hang on the
- * truss line, so the truss would otherwise tie with every fixture on it; a truss is picked between its fixtures.
+ * The item under canvas point `at`, in this order: a fixture whose mark is under the pointer, a tower (a one-point
+ * truss) near it, the nearest truss line within the pick radius, then the nearest fixture within it. Fixtures hang
+ * close together on the truss lines and towers stand on them, so a fixture that won at the full radius hid nearly
+ * every truss on a dense rig; a fixture off the trusses still gets the full touch target. The screen fixture of a
+ * hidden LED wall is not drawn, so it is not picked (`isHiddenWallFixture`).
  */
 export function pickAt(d: StageDesign, view: TopTransform, at: Point2): TopPick | null {
-  const fixture = nearest(d.fixtures, (f) => distance(view.toCanvas(f.position[0], f.position[2]), at));
-  if (fixture) return { kind: 'fixture', id: fixture.id, anchor: [fixture.position[0], fixture.position[2]] };
-  const truss = nearest(d.trusses, (t) => footprintDistance(trussFootprint(t), view, at));
-  if (!truss) return null;
-  const [x, , z] = truss.transform.position;
-  return { kind: 'truss', id: truss.id, anchor: [x, z] };
+  const fixtures = d.fixtures.filter((f) => !isHiddenWallFixture(d, f.id));
+  const fixtureDistance = (f: StageFixture): number => distance(view.toCanvas(f.position[0], f.position[2]), at);
+  const onMark = nearest(fixtures, fixtureDistance, FIXTURE_MARK_PX);
+  if (onMark) return fixturePick(onMark);
+  const trussDistance = (t: StageTruss): number => footprintDistance(trussFootprint(t), view, at);
+  const towerDistance = (t: StageTruss): number => (isTower(t) ? trussDistance(t) : Infinity);
+  const truss = nearest(d.trusses, towerDistance, TOWER_MARK_PX) ?? nearest(d.trusses, trussDistance, PICK_RADIUS_PX);
+  if (truss) return { kind: 'truss', id: truss.id, anchor: [truss.transform.position[0], truss.transform.position[2]] };
+  const fixture = nearest(fixtures, fixtureDistance, PICK_RADIUS_PX);
+  return fixture ? fixturePick(fixture) : null;
+}
+
+function fixturePick(f: StageFixture): TopPick {
+  return { kind: 'fixture', id: f.id, anchor: [f.position[0], f.position[2]] };
+}
+
+/** A truss drawn as one point from above: a tower, a post or a ladder. */
+function isTower(t: StageTruss): boolean {
+  const fp = trussFootprint(t);
+  return fp.kind === 'outline' && fp.points.length === 1;
 }
 
 /**
@@ -38,9 +61,9 @@ export function selectionAfterPick(sel: BuilderSelection, pick: TopPick | null, 
   return isAdding ? { ...sel, trusses: [...sel.trusses, pick.id] } : { fixtures: [], trusses: [pick.id] };
 }
 
-function nearest<T>(items: readonly T[], distanceOf: (item: T) => number): T | null {
+function nearest<T>(items: readonly T[], distanceOf: (item: T) => number, radius: number): T | null {
   let best: T | null = null,
-    bestDistance = PICK_RADIUS_PX;
+    bestDistance = radius;
   for (const item of items) {
     const d = distanceOf(item);
     if (d > bestDistance) continue;

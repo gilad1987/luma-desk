@@ -5,12 +5,29 @@ import type { TrussKind } from '../types';
 const ID_BLOCK = 100;
 
 /**
- * The first id of the next free block: the highest fixture id rounded up to a full hundred, plus 1 (an empty design
- * starts at 1). A new batch then never shares a hundred with an older one, so its ids read as one group.
+ * The first id of the next free block for a batch of `count` ids: the highest fixture id ever used rounded up to a
+ * full hundred, plus 1 (an empty design starts at 1). A new batch then never shares a hundred with an older one, so
+ * its ids read as one group.
+ * @throws RangeError when the last id of the batch is not a safe integer (a stored fixture id or `nextFixtureId` near
+ * `Number.MAX_SAFE_INTEGER`), as the ids could repeat; the builder shows it as a refused edit.
  */
-export function nextIdBlock(d: StageDesign): number {
+export function nextIdBlock(d: StageDesign, count: number): number {
+  const highest = nextFixtureId(d) - 1;
+  const first = Math.ceil(highest / ID_BLOCK) * ID_BLOCK + 1;
+  // count - 1 first: first + count can round past the safe limit and come back to it after the - 1
+  if (!Number.isSafeInteger(first + (count - 1))) {
+    throw new RangeError(`nextIdBlock: no ${count} safe fixture ids after ${highest}`);
+  }
+  return first;
+}
+
+/**
+ * The lowest fixture id `d` never used: its stored mark or its highest id + 1, whichever is higher. An op that deletes
+ * fixtures stores it in the result, so the ids of the deleted fixtures stay used for the life of the design.
+ */
+export function nextFixtureId(d: StageDesign): number {
   const highest = d.fixtures.reduce((top, f) => Math.max(top, f.id), 0);
-  return Math.ceil(highest / ID_BLOCK) * ID_BLOCK + 1;
+  return Math.max(highest + 1, d.nextFixtureId ?? 1);
 }
 
 /**

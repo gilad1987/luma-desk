@@ -5,6 +5,8 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { boundsOf } from '../../../../src/domain/stage/bounds';
+import { setLedWall } from '../../../../src/domain/stage/edit/ledWall';
+import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
 import { createTemplate } from '../../../../src/domain/stage/templates';
 import type { BuilderSelection } from '../../../../src/ui/builder/selection';
 import { drawFixtures, drawTrusses } from '../../../../src/ui/builder/topViewDrawItems';
@@ -25,12 +27,13 @@ class CountingSet<T> extends Set<T> {
 const design = createTemplate('theatre');
 const size = { width: 448, height: 448 };
 const view = fitTransform(boundsOf(design), size);
+const NONE: BuilderSelection = { fixtures: [], trusses: [] };
 
 /** Draws the trusses and fixtures of the theatre with `selection`; returns the recorded context calls. */
-function draw(selection: BuilderSelection): unknown[][] {
+function draw(selection: BuilderSelection, shown: StageDesign = design): unknown[][] {
   vi.stubGlobal('getComputedStyle', () => ({ getPropertyValue: (name: string) => name }));
   const { ctx, calls } = recordingContext();
-  const scene = { design, selection, view, palette: readPalette(asReal<Element>({})), size };
+  const scene = { design: shown, selection, view, palette: readPalette(asReal<Element>({})), size };
   drawTrusses(asReal<CanvasRenderingContext2D>(ctx), scene);
   drawFixtures(asReal<CanvasRenderingContext2D>(ctx), scene);
   return calls;
@@ -60,6 +63,13 @@ describe('drawTrusses and drawFixtures', () => {
     const contexts: unknown[] = spies.flatMap((spy) => spy.mock.contexts);
     vi.restoreAllMocks();
     expect(contexts.some((self) => self === design.trusses || self === design.fixtures)).toBe(false);
+  });
+
+  it('draws no mark for the screen fixture of a hidden LED wall', () => {
+    const walled = setLedWall(design, { width: 8, height: 4 });
+    const hidden = { ...walled, scenery: { ...walled.scenery, ledWall: false } };
+    const marks = (d: StageDesign): number => draw(NONE, d).filter(([name]) => name === 'fillRect').length;
+    expect([marks(walled), marks(hidden)]).toEqual([design.fixtures.length + 1, design.fixtures.length]);
   });
 
   it('draws the plain items first and the picked ones last, in the selection colour', () => {

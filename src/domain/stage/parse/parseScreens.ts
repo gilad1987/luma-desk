@@ -8,16 +8,26 @@ import { UniqueIds } from './UniqueIds';
 /**
  * Reads the `screens` list of a stored design. Screen ids must be unique, as the builder edits a screen by id. Each
  * LED wall must name a fixture of type 'screen' in `fixtures`, because that fixture's output drives the wall picture;
- * a wall without it would stay dark with no error.
+ * a wall without it would stay dark with no error. Two walls may not share one fixture: the renderer drives one wall
+ * per fixture, so the other would stay dark.
  */
 export function parseScreens(r: Reader, stage: Raw, parsed: ParsedFixtures): StageScreen[] | undefined {
   const ids = new UniqueIds(r, r.str);
+  const wallOf = new Map<number, string>();
   return r.list(stage, 'screens', '', (items, i, at) => {
     const o = r.obj(items, i, at);
     if (!o) return undefined;
     const path = r.path(at, i);
     const screen = parseScreen(r, o, path, ids.take(o, path));
-    if (screen) checkDriver(r, screen.fixtureId, r.path(path, 'fixtureId'), parsed);
+    if (!screen) return undefined;
+    const driven = wallOf.get(screen.fixtureId);
+    const fixturePath = r.path(path, 'fixtureId');
+    if (driven !== undefined) {
+      r.fail(fixturePath, `${screen.fixtureId} already drives the LED wall "${driven}"`);
+      return screen;
+    }
+    checkDriver(r, screen.fixtureId, fixturePath, parsed);
+    wallOf.set(screen.fixtureId, screen.id);
     return screen;
   });
 }
@@ -32,7 +42,7 @@ function checkDriver(r: Reader, fixtureId: number, path: string, { fixtures, ids
 function parseScreen(r: Reader, o: Raw, path: string, id: string | undefined): StageScreen | undefined {
   const screen = {
     id,
-    fixtureId: r.positiveInt(o, 'fixtureId', path),
+    fixtureId: r.fixtureId(o, 'fixtureId', path),
     x0: r.num(o, 'x0', path),
     x1: r.num(o, 'x1', path),
     y0: r.num(o, 'y0', path),
