@@ -162,7 +162,8 @@ Sentence case everywhere ("Stage Builder", "Mirror L → R").
 
 - Columns `300px minmax(0, 1fr) 320px`, rows `56px minmax(0, 1fr)`; the bar spans every column.
 - One breakpoint, `$builder-narrow` = below 1100 px (`max-width: 1099px`): the library is a 56 px icon rail, the
-  inspector is a `wa-drawer placement="end"` of `--size: 320px` opened from the bar, the bar buttons drop their
+  inspector is a 320 px drawer at the end edge under the bar, opened from the bar and not modal (the builder's own
+  panel, not a `wa-drawer`, which always opens as a modal; ADR 0006), the bar buttons drop their
   labels and keep icon and tooltip, and the default view mode is Plan. iPad landscape (1024) and portrait (768) are
   this layout.
 - Minimum tested widths: 1280 × 800, 1024 × 768, 768 × 1024.

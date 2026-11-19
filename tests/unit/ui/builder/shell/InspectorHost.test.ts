@@ -1,21 +1,27 @@
 // @vitest-environment jsdom
 /**
  * Owns where the tools panel lives: the column on a wide screen, the drawer on a narrow one, the move of the panel
- * when the screen crosses the line (a focused field blurred first), the drawer's open state and the listeners a dispose removes. What the panel holds
- * is owned by mountTools.test.ts. jsdom, because the drawer state is a real attribute.
+ * when the screen crosses the line (a focused field blurred first), the drawer closed on the way back and the listeners
+ * a dispose removes. What the panel holds is owned by mountTools.test.ts, the drawer's own opening and closing by
+ * InspectorHost.drawer.test.ts. jsdom, on the real shell markup.
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { InspectorHost } from '../../../../../src/ui/builder/shell/InspectorHost.ts';
+import { shellMarkup } from '../../../../../src/ui/builder/shell/shellMarkup.ts';
+import { requireChild } from '../../../../../src/ui/dom.ts';
 import { FakeNarrowScreen } from '../fakeNarrowScreen.ts';
 
 describe('InspectorHost', () => {
-  let column: HTMLElement, drawer: HTMLElement, button: HTMLElement, panel: HTMLElement;
+  let column: HTMLElement, drawer: HTMLElement, frame: HTMLElement, button: HTMLElement, panel: HTMLElement;
   beforeEach(() => {
-    column = document.createElement('aside');
-    drawer = document.createElement('wa-drawer');
-    button = document.createElement('wa-button');
+    document.body.innerHTML = `<button data-builder="inspector">Inspector</button>${shellMarkup}`;
+    column = requireChild(document, '.builder-inspector');
+    drawer = requireChild(document, '.inspector-drawer');
+    frame = requireChild(document, '.inspector-drawer-frame');
+    button = requireChild(document, '[data-builder="inspector"]');
     panel = document.createElement('div');
   });
+  afterEach(() => document.body.replaceChildren());
   const mount = (narrow: FakeNarrowScreen): InspectorHost => {
     const host = new InspectorHost({ column, drawer, button, narrow });
     host.slot.append(panel);
@@ -37,21 +43,21 @@ describe('InspectorHost', () => {
     expect([panel.parentElement === drawer, host.slot === drawer, column.children.length]).toEqual([true, true, 0]);
   });
 
-  // catches a drawer left open (and empty) over the wide layout after the panel moved back
+  // catches a drawer left open (and empty) over the wide layout after the panel moved back, or a drawer whose title
+  // and Close button moved into the column with the panel
   it('moves the panel back to the column and closes the drawer when the screen turns wide', () => {
     const screen = new FakeNarrowScreen(true);
     mount(screen);
     button.click();
-    const wasOpen = drawer.hasAttribute('open');
+    const wasOpen = !frame.hidden;
     screen.flip(false);
-    expect([wasOpen, panel.parentElement === column, drawer.hasAttribute('open')]).toEqual([true, true, false]);
+    expect([wasOpen, Array.from(column.children), frame.hidden]).toEqual([true, [panel], true]);
   });
 
   // catches a typed, uncommitted inspector value lost when the window crosses 1100 px: the move drops the focus
   // without a `change`. A browser fires `change` on that blur when the value changed; jsdom does not, so the blur
   // itself is checked.
   it('blurs the focused field in the panel before the move', () => {
-    document.body.append(column, drawer);
     const screen = new FakeNarrowScreen(false);
     mount(screen);
     const input = document.createElement('input');
@@ -70,6 +76,6 @@ describe('InspectorHost', () => {
     const held = screen.listeners.size;
     host.dispose();
     button.click();
-    expect([held, screen.listeners.size, drawer.hasAttribute('open')]).toEqual([1, 0, false]);
+    expect([held, screen.listeners.size, frame.hidden]).toEqual([1, 0, true]);
   });
 });

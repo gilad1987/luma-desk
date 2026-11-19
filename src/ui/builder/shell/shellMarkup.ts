@@ -1,5 +1,19 @@
 import { he } from '../../../i18n/he';
 import { iconSvg } from '../wa/waIcons';
+import { iconButton } from './iconButton';
+
+/**
+ * The narrow screen's inspector drawer (`InspectorDrawer`): an `aside` under the bar at the end edge, not a modal, so
+ * the bar stays usable while it is open. `.inspector-drawer` is its body, the tools slot; the frame with the title and
+ * the Close button stays put when the tools move to the column.
+ */
+const drawerMarkup = `<aside id="builder-inspector-drawer" class="inspector-drawer-frame" tabindex="-1" aria-labelledby="builder-inspector-drawer-title" hidden>
+  <div class="inspector-drawer-head">
+    <h2 id="builder-inspector-drawer-title" class="inspector-drawer-title">Inspector</h2>
+    ${iconButton({ id: 'builder-inspector-close', hook: 'data-builder="inspector-close"', icon: 'close', label: 'Close', tip: he.builder.shell.inspectorClose }, 'plain')}
+  </div>
+  <div class="inspector-drawer"></div>
+</aside>`;
 
 /**
  * The three columns under the builder bar: the library (a placeholder until the fixture library arrives), the centre
@@ -20,4 +34,4 @@ export const shellMarkup = `<aside class="builder-library">
   </wa-split-panel>
 </div>
 <aside class="builder-inspector"></aside>
-<wa-drawer class="inspector-drawer" placement="end" label="Inspector" light-dismiss></wa-drawer>`;
+${drawerMarkup}`;

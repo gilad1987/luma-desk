@@ -79,6 +79,9 @@ Costs and risks:
   (`src/styles/builder/_centre.scss`).
 - The split panel recomputes its position in pixels on a window resize, so 3D mode (100 %) would drift; `CentreSplit`
   writes the mode's edge back on every `wa-reposition` outside Split mode.
+- `wa-drawer` (3.15.0) always opens its `<dialog>` with `showModal()`: it covers the window and makes the bar, Cancel
+  and Done inert. The narrow screen's inspector drawer is therefore the builder's own panel under the bar
+  (`InspectorDrawer`), and `wa-drawer` is not registered.
 
 ## Verified
 
