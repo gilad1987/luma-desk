@@ -82,13 +82,13 @@ it('reuses one product geometry for every fixture of that product', () => {
   const [a, b] = [builder.build(esprite()), builder.build(esprite())];
   if (a.kind !== 'light' || b.kind !== 'light') throw new Error('an Esprite builds a light visual');
   // The yoke holds the yoke mesh first; the tilt group holds the head, then the head trim (`buildRobeMover`).
-  const yokeOf = (v: fx.LightVisual) => (v.joints?.yoke.children[0] as Mesh).geometry;
-  const trimOf = (v: fx.LightVisual) => (v.joints?.tiltG.children[1] as Mesh).geometry;
-  expect([a.head.geometry === b.head.geometry, yokeOf(a) === yokeOf(b), trimOf(a) === trimOf(b)]).toStrictEqual([
-    true,
-    true,
-    true,
-  ]);
+  const parts = (v: fx.LightVisual) => [v.head, v.joints?.yoke.children[0], v.joints?.tiltG.children[1]];
+  const [pa, pb] = [parts(a), parts(b)];
+  const shared = pa.map((o, i) => {
+    const q = pb[i];
+    return o instanceof Mesh && q instanceof Mesh && o.geometry === q.geometry;
+  });
+  expect(shared).toStrictEqual([true, true, true]);
 });
 
 it('shares one painted lens face between two fixtures of the same product', () => {
