@@ -1,6 +1,7 @@
 /**
  * Owns how the edit ops carry `product`: duplicate, mirror and a props patch keep it, and a truss batch adds it only
- * when the batch names one, so a plain batch adds fixtures with no `product` key. Where the copies land is owned by
+ * when the batch names one, so a plain batch adds fixtures with no `product` key; a product of another base throws
+ * (a UI bug must not store a fixture the parser would strip). Where the copies land is owned by
  * itemOps.test.ts, mirror.test.ts and addFixtures.test.ts.
  */
 import { describe, expect, it } from 'vitest';
@@ -60,5 +61,12 @@ describe('edit ops carry the product', () => {
     const d = sampleDesign();
     const next = addFixturesOnTruss(d, { trussId: PIPE.id, type: 'spot', count: 2 });
     expect(addedProducts(d, next)).toStrictEqual(['none', 'none']);
+  });
+
+  it('refuses a batch whose product has another base than its type', () => {
+    const batch = { trussId: PIPE.id, type: 'par', product: 'robe-esprite', count: 2 } as const;
+    const add = (): StageDesign => addFixturesOnTruss(sampleDesign(), batch);
+    expect(add).toThrow(RangeError);
+    expect(add).toThrow(/^addFixtures: product robe-esprite has base spot, not type par$/);
   });
 });

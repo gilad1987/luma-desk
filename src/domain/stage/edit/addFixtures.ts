@@ -1,3 +1,4 @@
+import { PRODUCTS } from '../../fixtureProducts';
 import type { StageDesign, StageFixture } from '../StageDesign';
 import { type FixturePlace, placesOnLine, placesOnTruss } from '../trussPlaces';
 import type { StageTruss } from '../trussTypes';
@@ -29,8 +30,8 @@ export interface FloorRow extends Pick<StageFixture, 'type' | 'product'> {
 /**
  * Adds fixtures evenly along a truss (see `placesOnTruss`), hung, with the role `defaultRole` gives. A batch that
  * lands on fixtures already there moves one 0.4 m lane at a time until it is free, so a second batch never hides in
- * the first. Ids start at the next free block.
- * @throws RangeError when the truss is missing or `count` is not a whole number >= 1: a silent no-op hides a UI bug.
+ * the first. Ids start at the next free block. Bad input throws, because a silent no-op hides a UI bug.
+ * @throws RangeError when the truss is missing, `count` is not a whole number >= 1, or `product` is not of `type`.
  */
 export function addFixturesOnTruss(d: StageDesign, batch: TrussBatch): StageDesign {
   checkCount(batch.count);
@@ -43,7 +44,7 @@ export function addFixturesOnTruss(d: StageDesign, batch: TrussBatch): StageDesi
 
 /**
  * Adds a floor row, evenly spaced (see `placesOnLine`) and lane-shifted like `addFixturesOnTruss`.
- * @throws RangeError when `count` is not a whole number >= 1.
+ * @throws RangeError when `count` is not a whole number >= 1, or `product` is not of `type` (its `base` differs).
  */
 export function addFloorRow(d: StageDesign, row: FloorRow): StageDesign {
   checkCount(row.count);
@@ -59,6 +60,8 @@ export function isSameSpot(at: Vec3, other: Vec3): boolean {
 
 /** The type and, only when set, the product of a batch, so a plain batch adds fixtures with no `product` key. */
 function unitOf({ type, product }: Pick<StageFixture, 'type' | 'product'>): Pick<StageFixture, 'type' | 'product'> {
+  if (product !== undefined && PRODUCTS[product].base !== type)
+    throw new RangeError(`addFixtures: product ${product} has base ${PRODUCTS[product].base}, not type ${type}`);
   return product === undefined ? { type } : { type, product };
 }
 
