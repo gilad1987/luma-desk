@@ -19,7 +19,7 @@ baselines of the desk layouts. The owner chose Web Awesome 3.15.0 (MIT) over Man
 1. `@awesome.me/webawesome` is pinned to `3.15.0` in `dependencies` and bundled by Vite. Nothing is loaded from a
    CDN: the components are imported one by one (`dist/components/<name>/<name>.js`), never the autoloader.
 2. One folder imports the package: `src/ui/builder/wa/` (`registerWa.ts`, `waIcons.ts`, `waIconPaths.ts`,
-   `waEvents.ts`, `waButton.ts`). ESLint (`eslint/waBoundary.ts`) rejects the import anywhere else. The rest of the
+   `waEvents.ts`, `waButton.ts`, `waInnerAria.ts`). ESLint (`eslint/waBoundary.ts`) rejects the import anywhere else. The rest of the
    builder drives Web Awesome elements through the plain `HTMLElement` surface (attributes, properties, `onclick`), so
    unit tests on
    FakeDom or jsdom never load the package.
@@ -85,17 +85,18 @@ Costs and risks:
 
 ## Verified
 
-- `npm run build`: the lazy chunk `assets/registerWa-*.js` is 226,683 bytes (58,139 gzip) and its CSS
-  `assets/registerWa-*.css` 50,570 bytes (6,891 gzip); the boot chunk `assets/index-*.js` is 995,439 bytes
-  (295,149 gzip; main: 988,967) and holds no Web Awesome code (`tests/unit/swBuild.test.ts`: the service worker shell
-  lists the chunk; the main chunk has no `--wa-` string, the chunk does). The boot CSS `assets/index-*.css` is 56,998
-  bytes (12,985 gzip; main: 48,700): the builder's own shell styles and the token mapping are desk styles, scoped
-  under `.builder`.
+- `npm run build`: the lazy chunk `assets/registerWa-*.js` registers three components, `wa-button`, `wa-tooltip` and
+  `wa-split-panel` (no `wa-drawer`, see above; no `wa-button-group`: the view modes are native radios). It is 210,498
+  bytes (54,548 gzip) and its CSS `assets/registerWa-*.css` 50,570 bytes (6,891 gzip); the boot chunk
+  `assets/index-*.js` is 999,309 bytes (296,359 gzip; main: 988,967) and holds no Web Awesome code
+  (`tests/unit/swBuild.test.ts`: the service worker shell lists the chunk; the main chunk has no `--wa-` string, the
+  chunk does). The boot CSS `assets/index-*.css` is 58,606 bytes (13,207 gzip; main: 48,700): the builder's own shell
+  styles and the token mapping are desk styles, scoped under `.builder`.
 - `tests/unit/app/ui/wireBuilder.load.test.ts`: the click awaits the chunk before `enter()` and a failed load shows
   a toast; `viewerHost.test.ts`: the viewer moves into the pane and back before `#side`.
 - `tests/e2e/builder-shell.network.spec.ts`: no off-origin request from the Build Stage click to Done, no `wa-icon`
   element, no Web Awesome custom element or token in the page before the click, the chunk under a 600 KB budget;
-  `builder-shell.layout.spec.ts` and `builder-shell.divider.spec.ts`: the column widths, the 44 px buttons, the
+  `builder-shell.layout.spec.ts` and `builder-shell.divider.spec.ts`: the column widths, the 44 px buttons and mode radios, the
   divider drag, the three modes, 3D mode after a window resize, the 56 px rail and the drawer at 1024 px;
   `tests/e2e/builder-offline.spec.ts`: the builder opens offline and the chunk comes from the service worker;
   `builder-shell.failure.spec.ts`: a blocked chunk shows the toast and the next click opens the builder, and a double
