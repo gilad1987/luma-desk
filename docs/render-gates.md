@@ -91,12 +91,15 @@ so the marks are gone and all four checks gate.
 ## Count budgets (`tests/e2e/mvr-render-stats.spec.ts`)
 
 The counts do not depend on the GPU, so SwiftShader in CI gates them. `MEASURED` holds the values of 2026-11-19 at
-`867ab800` on `rq/wave4`: at rest 385 calls and 75,875 triangles, while a fixture moves 765 calls and 150,742
-triangles, and 43 programs, 66 geometries, 61 textures (rest the same in 5 runs). The spec waits for the lazy MVR
-chain and draws 40 warm-up frames before the 60 measured frames: the chain's arrival frame depends on real time and
-sets the phase of the surface-buffer redraws, so without the wait the last frame was a buffer redraw in some CI runs
-(765 calls). The earlier rest of 468 calls and 76,542 triangles was such a transient frame, not rest. Every count
-has a ceiling of 1.15x. Calls and triangles also have a floor of 0.85x, so a change that stops drawing the beams fails.
+`867ab800` on `rq/render-quality` for rest: 385 calls and 75,875 triangles (the same in 5 runs). Moving (765 calls,
+150,742 triangles) and the objects (43 programs, 66 geometries, 61 textures) stay as pinned at `ee8faf54`; at
+`867ab800` the objects were the same and the moving peak drew 766 calls and 150,743 triangles. The chain's arrival
+frame depends on real time and sets the phase of the surface-buffer redraws that follow, every second frame until
+about frame 65 after the chain. So the spec waits for the lazy MVR chain and measures the 100th frame after it (40
+warm-up and 60 measured frames), past those redraws. Without the wait the measured frame was a buffer redraw in two
+CI runs (765 calls), and the earlier rest of 468 calls and 76,542 triangles was a transient frame, not rest. Every
+count has a ceiling of 1.15x. Calls and triangles also have a floor of 0.85x, so a change that stops drawing the
+bodies, the scenery or the buffers fails; the beams are one instanced draw, too small for the band.
 All 40 fixtures must be at dim 100 in the output (an exact count). A change that needs more or saves some changes
 `MEASURED` in its own commit, with the values from the attached `render-stats.json` and the reason.
 
@@ -107,7 +110,7 @@ Local only, on the real GPU (ANGLE on Metal), 2560x1440, every fixture at full, 
 the 500 run is recorded only. When the 1-minute load average is above 8, the run records its numbers, marks them
 `valid: false` in the attachment and does not judge them: other processes then share the CPU and the GPU. Before any
 time is judged, every fixture must be at dim 100 in the output, and the rig must draw at least the 143,917 triangles
-of the 40-fixture stage, so a rig that is not lit or not drawn cannot pass on speed. On 2026-11-18 the 250 rig drew
+of a 40-fixture frame with its buffer draw, so a rig that is not lit or not drawn cannot pass on speed. On 2026-11-18 the 250 rig drew
 420,378 triangles and 2,116 calls (500: 834,084 and 4,200).
 
 ## First CI run on Linux

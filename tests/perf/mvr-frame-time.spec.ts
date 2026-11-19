@@ -8,8 +8,9 @@ const LIMIT = { medianMs: 12, p95Ms: 16 } as const;
 const FRAMES = 120;
 // Above this 1-minute load average other processes share the CPU and GPU, so the numbers are recorded but not judged.
 const MAX_LOAD = 8;
-// The triangles of the 40-fixture render stage at full (MEASURED in tests/e2e/mvr-render-stats.spec.ts). A bigger rig
-// that draws fewer is not lit or not drawn, and its frame time would prove nothing.
+// The triangles of the 40-fixture render stage at full in a frame with its buffer draw, as measured on 2026-11-18
+// (a rest frame now draws 75,875, see tests/e2e/mvr-render-stats.spec.ts). A bigger rig that draws fewer is not lit
+// or not drawn, and its frame time would prove nothing.
 const TRIANGLES_OF_40 = 143_917;
 
 for (const { n, gate } of [

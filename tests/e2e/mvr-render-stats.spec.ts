@@ -12,8 +12,9 @@ const WARM_UP_FRAMES = 40;
 const MOVING_FRAMES = 8;
 
 /**
- * What the build drew for the synthetic stage at full, measured by this spec on 2026-11-19: rest at 867ab800,
- * moving and objects at ee8faf54 (at 867ab800 the moving peak measured 766 calls and 150,743 triangles).
+ * What the build drew for the synthetic stage at full, measured by this spec on 2026-11-19 on rq/render-quality: rest
+ * at 867ab800 (5 runs); moving and objects as pinned before, at ee8faf54. At 867ab800 the objects were the same and
+ * the moving peak drew 766 calls and 150,743 triangles, inside its band.
  * The counts do not depend on the GPU, so SwiftShader in CI gates them. Frame time is only attached here: SwiftShader
  * time says nothing of a GPU (the real-GPU gate is `test:perf`).
  *
@@ -29,7 +30,10 @@ const MEASURED = {
   objects: { programs: 43, geometries: 66, textures: 61 },
 } as const;
 const ceiling = (v: number): number => Math.ceil(v * 1.15);
-/** Floors at 0.85 x MEASURED: a change that stops drawing the beams, the bodies or the buffers draws far fewer. */
+/**
+ * Floors at 0.85 x MEASURED: a change that stops drawing the bodies, the scenery or the buffers draws far fewer. The
+ * beams are one instanced draw (a few calls, about 480 triangles), so a lost beam pass stays inside the band.
+ */
 const floor = (v: number): number => Math.floor(v * 0.85);
 
 /** Soft-checks each count of `got` against the ceiling and, when `floored`, the floor of its measured value. */
@@ -59,8 +63,10 @@ test('the synthetic MVR stage at full stays within its draw-call, triangle and G
   const out = await desk.evaluate((d) => d.outputAt(11));
   expect(out.filter((o) => o['dim'] === 100)).toHaveLength(RENDER_RIG_FIXTURES);
   // The frame on which the lazy MVR chain arrives depends on real time and sets the phase of the surface-buffer
-  // redraws that follow, so the spec waits for the chain first. The warm-up ends those transient redraws; the
-  // measured frame (the 100th after the chain) then sits between two age redraws of the cache, at rest.
+  // redraws that follow, so the spec waits for the chain first. Those redraws come every second frame until about
+  // frame 65 after the chain; the measured frame, the 100th (40 warm-up and 60 measured), is past them and between
+  // two age redraws of the cache (MAX_AGE in SurfaceCache.ts, near frames 73 and 133), away from the shadow tiles
+  // (TURN in KeyShadows.ts). A change to those constants can move a redraw onto it: a steady failure, not a flake.
   await awaitMvrChain(desk);
   await measureFrames(desk, WARM_UP_FRAMES);
   const measure = await measureFrames(desk, FRAMES);
