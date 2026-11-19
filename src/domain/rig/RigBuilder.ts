@@ -1,6 +1,7 @@
 import { Vector3 } from 'three';
 import { lerp, type Vec3Tuple } from '../../core';
 import { Fixture, type Mount, type PanTilt } from '../Fixture';
+import type { ProductId } from '../fixtureProducts';
 import type { FixtureTypeId } from '../FixtureType';
 import { Rig } from './Rig';
 
@@ -12,6 +13,8 @@ export interface PlaceOptions {
   readonly mount: Mount;
   /** The rigged pan/tilt of a static unit; absent or undefined for a moving one. */
   readonly fixed?: PanTilt | undefined;
+  /** The catalogue product the fixture is; absent or undefined for a plain fixture of `type`. */
+  readonly product?: ProductId | undefined;
 }
 
 /** One evenly spaced row of identical fixtures, the way the truss, deck and audience areas lay theirs out. */
@@ -37,8 +40,8 @@ export class RigBuilder {
   readonly #fixtures: Fixture[] = [];
 
   /** Adds one fixture at a position. */
-  add({ id, type, at: [x, y, z], mount, fixed }: PlaceOptions): Fixture {
-    const fixture = new Fixture({ id, type, pos: new Vector3(x, y, z), mount, fixed: fixed ?? null });
+  add({ id, type, at: [x, y, z], mount, fixed, product }: PlaceOptions): Fixture {
+    const fixture = new Fixture({ id, type, pos: new Vector3(x, y, z), mount, fixed: fixed ?? null, product });
     this.#fixtures.push(fixture);
     return fixture;
   }

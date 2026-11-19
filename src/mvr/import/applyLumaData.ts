@@ -28,9 +28,10 @@ function splitLink({ footprint, ownRotation, uuid, occurrence, ...desk }: Fixtur
 
 /**
  * The fixture with the desk fields of its link (`pairLinks`), or unchanged when it has none. The link's
- * `fixed` and `pixel` replace the fixture's own, so a fixture without them in the data has none after the import. The
- * matrix orientation stays as `rotation` when the link says the fixture had one (`ownRotation`); without the flag a
- * matrix in the rest pose of the LINK's mount is the desk's own pose, as every export before the flag wrote it. The
+ * `product`, `fixed` and `pixel` replace the fixture's own, so a fixture without them in the data has none after the
+ * import; a product comes back before `placeBodies`, which then shifts the body by the product's own mount height.
+ * The matrix orientation stays as `rotation` when the link says the fixture had one (`ownRotation`); without the flag
+ * a matrix in the rest pose of the LINK's mount is the desk's own pose, as every export before the flag wrote it. The
  * result takes the link's mount, so the rest pose is the link mount's too: a matrix another tool turned (a hung unit
  * turned over, a floor unit hung) differs from it and is kept. A hanging matrix (the import gives it no `rotation`)
  * on a `floor` link is kept as the identity rotation, or the fixture would fall back to the desk floor pose.

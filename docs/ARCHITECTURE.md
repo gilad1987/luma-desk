@@ -219,8 +219,9 @@ green unchanged; a change that alters them is re-recorded only with the orchestr
 3. `src/domain/fixtureTypes/index.ts`: add it at the end of `TYPES`, because the key order is the iteration order.
 4. A new `FixtureModel` file in `src/render/fixtures/models/` (see `strike4Model.ts`). Register it under the `model`
    key in `createFixtureModels` (`src/render/fixtures/FixtureModels.ts`) and its lens in `createLensTextures`
-   (`src/render/fixtures/LensTextures.ts`, faces in `src/render/fixtures/lens/`). The tables are keyed by string, so
-   a missing model throws at boot in `FixtureVisualBuilder`, not at compile time.
+   (`src/render/fixtures/LensTextures.ts`, faces in `src/render/fixtures/lens/`). This lens table is for native types
+   only; a catalogue product uses the lazy lens of its family (see "A fixture product"). The tables are keyed by
+   string, so a missing model throws at boot in `FixtureVisualBuilder`, not at compile time.
 5. A new area file in `src/domain/rig/` with an `add…(rig: RigBuilder)` function (see `profiles.ts`), called at the
    end of `buildRig` (`src/domain/rig/index.ts`): the call order is the id order of the groups and the output.
 6. Type-specific behavior: search for `f.type ===` (`src/engine/OutputMerger.ts`,
@@ -232,6 +233,25 @@ Tests: update the key list in `tests/unit/domain/rigQueries.test.ts`. `tests/uni
 (`rig-build.json`) and `tests/unit/render/fixtures/fixtureParity.test.ts` (`fixture-scene.json`) prove that the old
 rig is unchanged. New fixtures in the rig change those goldens, `random-calls.json` (`tests/e2e/determinism.spec.ts`),
 the output goldens and the screenshots by design.
+
+### A fixture product
+
+A catalogue product (a real fixture such as the Robe Esprite) is a layer over a fixture type, not a new type (ADR
+0007). The goldens and the screenshots stay unchanged.
+
+1. The brand file in `src/domain/fixtureProducts/` (for example `robe.ts`): add a record with `id`, `brand`, `name`,
+   `category`, `base`, `optics`, `body`, `span`, `mountHeight`, `dataSheet` and `unmodelled`. The `id` is show
+   format: a saved design stores it, so it never changes. A new brand file must also be spread into `PRODUCTS` in
+   `src/domain/fixtureProducts/index.ts`, or the desk does not know its products.
+2. `body.family` picks the parametric body family in `src/render/fixtures/families/` (`mover` in C1). A new family is
+   a new member of `ProductBody` and a new case in the family switch.
+3. Add the id to the expected id list of the first test in
+   `tests/unit/domain/fixtureProducts/catalogueRules.test.ts` (it compares `PRODUCT_IDS` to a literal list). Run `catalogueRules.test.ts`, `lazyProducts.test.ts`
+   and `productSpans.test.ts`. Pin `span` and `mountHeight` to the values measured from the built model, as
+   `BODY_SPANS` and `MOUNT_HEIGHTS` are.
+4. Never add a product to `createLensTextures` or `createModelMaterials`: everything for a product is made when the
+   first fixture of that product is built, so the boot draws no new `Math.random` (`random-calls.json`).
+5. Cite the manufacturer data sheet in `dataSheet`, and check every optical number against it.
 
 ### A phaser
 

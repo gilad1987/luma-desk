@@ -26,7 +26,8 @@ export const isStandInSpec = (spec: string): boolean => spec.startsWith(`${LUMA_
 /**
  * The GDTF file and mode an exported fixture names. An imported fixture that still has the type the import chose
  * keeps the file's GDTF name and mode, so a re-export names what the source file named. After the user changes the
- * type, or for a desk fixture, the desk type's real product and mode are written together. The mode rule lives in
+ * type or gives the fixture a catalogue product (see `importedGdtfInfo`), or for a desk fixture, the desk type's real
+ * product and mode are written together. The mode rule lives in
  * `gdtfModeOf` because the Sheet shows the same mode.
  */
 export function gdtfIdentity(fixture: StageFixture, mvr: MvrDesignInfo | undefined): GdtfIdentity {
