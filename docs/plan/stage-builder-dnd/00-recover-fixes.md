@@ -59,6 +59,10 @@ and the old uuid and GDTF name are still absent from the export.
   `mvr-render-screenshots.spec.ts` has no wall, so its blue deck glow goes away: the `mvr-stage-foh.png` and
   `mvr-stage-wide.png` baselines are recorded again in their own commit. The 9 baselines of `screenshots.spec.ts` and
   the goldens do not change.
+- The two MVR shots stay racy, on main as on this branch: three.js `SMAAPass` loads its lookup images from data URLs
+  in real time, so a slow run draws the last frame with SMAA and a fast run without it (1,540-6,400 edge pixels).
+  The baselines here are the fast state, as main's are. PR #7 (`rq/render-quality`, `smaaReady.ts`) fixes the race
+  and records both images again; whichever PR merges second records them again.
 - A deck height change stores the moved riser heights rounded to 1 mm, as `moveRiser` does.
 - The stricter parser (truss sizes 0.1-60 m, ring chains, one wall per screen fixture) rejects an old saved show that
   breaks a limit; the desk then loads the built-in stage with a toast. The builder could not make such a design.
