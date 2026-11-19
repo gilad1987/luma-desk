@@ -11,10 +11,6 @@ export const referenceOf = (body: MoverBody): MoverReference => MOVER_REFERENCES
 const scaleY = (y: number, shape: MoverBody['barrel'], { rear, front }: MoverBody['barrel']): number =>
   y >= 0 ? (y / shape.rear) * rear : (y / shape.front) * front;
 
-/** A reference front-end y (bezel, walls) mapped from the reference lens face onto `barrel.front`. */
-const frontY = (y: number, shape: MoverBody['barrel'], { front }: MoverBody['barrel']): number =>
-  front + (y - shape.front) * (front / shape.front);
-
 /** The barrel lathe: the reference profile with its radii scaled by `barrel.r` and its length by `rear` and `front`. */
 export function barrelProfile(body: MoverBody): readonly ProfilePoint[] {
   const { barrel, shape } = referenceOf(body);
@@ -29,13 +25,13 @@ export function barrelProfile(body: MoverBody): readonly ProfilePoint[] {
 export function bezelProfile(body: MoverBody): readonly ProfilePoint[] {
   const { bezel, shape } = referenceOf(body);
   const k = body.barrel.r / shape.r;
-  return bezel.map(([r, y], i) => [i === 0 ? body.lens.r : r * k, frontY(y, shape, body.barrel)]);
+  return bezel.map(([r, y], i) => [i === 0 ? body.lens.r : r * k, scaleY(y, shape, body.barrel)]);
 }
 
 /** The reference's inner walls (MegaPointe ring), at the lens radius and scaled in length like the bezel. */
 export function wallProfiles(body: MoverBody): readonly (readonly ProfilePoint[])[] {
   const { walls, shape } = referenceOf(body);
-  return walls.map((wall) => wall.map(([, y]): ProfilePoint => [body.lens.r, frontY(y, shape, body.barrel)]));
+  return walls.map((wall) => wall.map(([, y]): ProfilePoint => [body.lens.r, scaleY(y, shape, body.barrel)]));
 }
 
 /** The rib or groove rings at the given y, a thin cylinder just over the barrel each, as the reference's. */
