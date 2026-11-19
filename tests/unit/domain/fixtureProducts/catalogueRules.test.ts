@@ -1,7 +1,8 @@
 /**
  * The guard over the product catalogue: every product row keeps the invariants aiming, presets, the parser and the
- * render tables rely on (id, kebab-case, base motion and shape, zoom range, positive span, data sheet). It does not
- * pin the drawn span and mount heights against the built model: the render lane owns that (productSpans.test.ts).
+ * render tables rely on (id, kebab-case, base motion and shape, zoom range, positive span, data sheet, a drawable
+ * mover body: barrel around the tilt axis, lens and ribs inside it). It does not pin the drawn span and mount heights
+ * against the built model: the render lane owns that (productSpans.test.ts).
  */
 import { describe, expect, it } from 'vitest';
 import { fixtureTypeOf } from '../../../../src/domain/fixtureProducts/fixtureTypeOf.ts';
@@ -73,5 +74,14 @@ describe('product catalogue', () => {
       heights.every((h) => Number.isFinite(h) && h >= 0),
       dataSheet.startsWith('https://'),
     ]).toStrictEqual([true, true, true, true]);
+  });
+
+  it.each(PRODUCT_IDS)('keeps the %s lens and ribs inside its barrel, so no body is drawn inside out', (id) => {
+    const { barrel, lens, ribs = [] } = PRODUCTS[id].body;
+    expect([
+      barrel.front < 0 && 0 < barrel.rear,
+      0 < lens.r && lens.r < barrel.r,
+      ribs.every((y) => barrel.front < y && y < barrel.rear),
+    ]).toStrictEqual([true, true, true]);
   });
 });
