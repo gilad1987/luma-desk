@@ -10,8 +10,8 @@ float goboAt(vec2 q) {
   if (vGobo.x < 0.5) return 1.0;
   vec2 turned = vec2(vGobo.y * q.x - vGobo.z * q.y, vGobo.z * q.x + vGobo.y * q.y);
   vec2 cell = vec2(mod(vGobo.x, 4.0), floor(vGobo.x * 0.25));
-  // the clamp keeps the filter inside the cell: half a texel of level 3 is 3 % of it. A mask is white, its shape alpha
-  return textureLod(tGobo, (cell + clamp(turned * 0.5 + 0.5, 0.04, 0.96)) / vec2(4.0, 2.0), GOBO_LOD).a;
+  // the clamp keeps the filter inside the cell: half a texel of level 3 is 3 % of it
+  return textureLod(tGobo, (cell + clamp(turned * 0.5 + 0.5, 0.04, 0.96)) / vec2(4.0, 2.0), GOBO_LOD).r;
 }
 
 // Light scattered to the eye along the ray `co + t d` (relative to the apex) for t in `span`, per unit of
