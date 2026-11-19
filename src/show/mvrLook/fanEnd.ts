@@ -27,6 +27,8 @@ export function fanEndOf(area: LookArea, fixtures: readonly Placed[], seats?: St
   const depth = seats ? seats.max[2] - front : 0;
   if (!seats || !(depth > 0)) return houseRunOf(area, fixtures);
   const into = Math.min(FIRST_ROWS_M, ROW_SHARE * depth);
-  const plane = seats.min[1] + (into / depth) * (seats.max[1] - seats.min[1]);
+  // The plane rises over the whole seat box, also where its front is cut to the deck edge.
+  const rise = (front + into - seats.min[2]) / (seats.max[2] - seats.min[2]);
+  const plane = seats.min[1] + rise * (seats.max[1] - seats.min[1]);
   return { run: front + into - edge, height: Math.max(plane + OVER_SEATS_M, area.floor + MIN_HEIGHT_M) };
 }

@@ -44,6 +44,15 @@ describe('fanEndOf', () => {
     expect(end.height).toBeGreaterThan(AREA.floor + 5);
   });
 
+  it('ends over the seat plane of a house whose seat box starts upstage of the deck edge', () => {
+    const crossing: StageBounds = { min: [-20, 0, EDGE - 10], max: [20, 30, EDGE + 20] };
+    const end = fanEndOf(AREA, fans, crossing);
+    if (typeof end === 'number') throw new Error('no fan end from the seats');
+    const over = end.height - planeAt(crossing, EDGE + end.run);
+    expect(over).toBeGreaterThanOrEqual(2.5);
+    expect(over).toBeLessThanOrEqual(4);
+  });
+
   it('never ends lower than without seats, and aims every beam of the fan at that height', () => {
     const end = fanEndOf(AREA, fans, FLAT);
     if (typeof end === 'number') throw new Error('no fan end from the seats');
