@@ -85,7 +85,7 @@ test('fits the bar in an iPad portrait window', async ({ page }) => {
   const [, , barWidth, barHeight] = await boxOf(bar);
   const outside: string[] = [];
   for (const name of ['Plan', 'Split', '3D', 'Done']) {
-    const [x, y, w, h] = await boxOf(page.getByRole('button', { name, exact: true }));
+    const [x, y, w, h] = await boxOf(page.getByRole(name === 'Done' ? 'button' : 'radio', { name, exact: true }));
     if (x < 0 || y < 0 || x + w > barWidth || y + h > barHeight) outside.push(`${name}: ${x},${y} ${w}x${h}`);
   }
   const small = await bar
