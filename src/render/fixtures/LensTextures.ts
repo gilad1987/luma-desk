@@ -4,7 +4,10 @@ import { BAR_LENS_FACES } from './lens/barLensFaces';
 import { MOVER_LENS_FACES } from './lens/moverLensFaces';
 import { STATIC_LENS_FACES } from './lens/staticLensFaces';
 
-/** One lens face per fixture model (`FixtureType.model`); FORTE FS shares the FORTE face. */
+/**
+ * One lens face per native fixture model (`FixtureType.model`); FORTE FS shares the FORTE face. A product has a model
+ * id but no entry here: its family paints its face on the first fixture (`families/LazyLensTextures`).
+ */
 export type LensTextureSet = Readonly<Record<string, CanvasTexture>>;
 
 /**

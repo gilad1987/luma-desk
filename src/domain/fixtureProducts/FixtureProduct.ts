@@ -62,7 +62,7 @@ export interface FixtureProduct {
   /** The native type the product behaves as; a stored fixture with this product always has this `type`. */
   readonly base: FixtureTypeId;
   readonly optics?: ProductOptics;
-  /** `Manufacturer@Model.gdtf`, only when checked against a real GDTF file (the MVR export reads it). */
+  /** `Manufacturer@Model.gdtf`, only when checked against a real GDTF file (Phase C5's MVR export will read it). */
   readonly gdtfSpec?: string;
   /** The DMX mode of `gdtfSpec`, only when checked against the same file. */
   readonly gdtfMode?: string;
