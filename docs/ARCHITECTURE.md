@@ -245,8 +245,8 @@ A catalogue product (a real fixture such as the Robe Esprite) is a layer over a 
    `src/domain/fixtureProducts/index.ts`, or the desk does not know its products.
 2. `body.family` picks the parametric body family in `src/render/fixtures/families/` (`mover` in C1). A new family is
    a new member of `ProductBody` and a new case in the family switch.
-3. Add the id to the pinned product id list (`PRODUCT_IDS`) in
-   `tests/unit/domain/fixtureProducts/catalogueRules.test.ts`. Run `catalogueRules.test.ts`, `lazyProducts.test.ts`
+3. Add the id to the expected id list of the first test in
+   `tests/unit/domain/fixtureProducts/catalogueRules.test.ts` (it compares `PRODUCT_IDS` to a literal list). Run `catalogueRules.test.ts`, `lazyProducts.test.ts`
    and `productSpans.test.ts`. Pin `span` and `mountHeight` to the values measured from the built model, as
    `BODY_SPANS` and `MOUNT_HEIGHTS` are.
 4. Never add a product to `createLensTextures` or `createModelMaterials`: everything for a product is made when the
