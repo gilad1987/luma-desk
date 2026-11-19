@@ -41,6 +41,7 @@ describe('product catalogue', () => {
         'robe-ledbeam-150',
         'robe-spikie',
         'robe-tetrax',
+        'robe-patt-2013',
         'robe-onepatt',
       ],
       true,

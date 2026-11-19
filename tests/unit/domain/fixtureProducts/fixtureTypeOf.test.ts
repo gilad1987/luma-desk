@@ -29,6 +29,26 @@ describe('fixtureTypeOf', () => {
     });
   });
 
+  it("gives the PATT 2013 the par record with its own attrs and colour over the par's optics, once", () => {
+    const first = fixtureTypeOf({ type: 'par', product: 'robe-patt-2013' });
+    expect([first, fixtureTypeOf({ type: 'par', product: 'robe-patt-2013' }) === first]).toStrictEqual([
+      {
+        name: 'Robe PATT 2013',
+        model: 'robe-patt-2013',
+        attrs: ['dim'],
+        defColor: [100, 73, 42],
+        zr: [22, 22],
+        z0: 22,
+        power: 0.75,
+        moving: false,
+        shape: 'par',
+        size: 0.7386,
+        soft: 2.6,
+      },
+      true,
+    ]);
+  });
+
   it('makes the merged record of a product once and shares it', () => {
     const first = fixtureTypeOf({ type: 'spot', product: 'robe-esprite' });
     expect(fixtureTypeOf({ type: 'spot', product: 'robe-esprite' })).toBe(first);
