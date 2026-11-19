@@ -25,6 +25,8 @@ export interface FakeMvrFlow {
 /** A store that keeps every file under the hash `hash` and holds nothing. */
 const emptyStore = () => ({
   get: vi.fn(() => Promise.resolve<Uint8Array | null>(null)),
+  hashOf: vi.fn(() => Promise.resolve<string | null>('hash')),
+  has: vi.fn(() => Promise.resolve<boolean | undefined>(false)),
   put: vi.fn(() => Promise.resolve<string | null>('hash')),
   delete: vi.fn(() => Promise.resolve(true)),
 });

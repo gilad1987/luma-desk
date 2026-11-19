@@ -23,8 +23,9 @@ function setup() {
   let applies = 0;
   const deps: MvrImportDeps = {
     store: {
-      get: (hash) => real.get(hash),
-      put: (bytes) => real.put(bytes),
+      hashOf: (bytes) => real.hashOf(bytes),
+      has: (hash) => real.has(hash),
+      put: (bytes, hash) => real.put(bytes, hash),
       delete: (hash) => (deleted.push(hash), real.delete(hash)),
     },
     stage: { apply: () => void (applies += 1) },
