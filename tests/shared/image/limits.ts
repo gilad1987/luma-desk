@@ -5,8 +5,8 @@ import type { PerceptualDiff } from './perceptualDiff';
  * each case from the committed baselines and from synthetic images and asserts pass or fail (docs/render-gates.md
  * has the table and the measured run-to-run noise). Raise or lower one only with a measured reason in the same commit.
  * - exposure: |ln(Yb/Ya)| of the mean linear luminance. 2 % measures at most 0.019, 5 % at least 0.048.
- * - hue: the chroma-weighted hue turn. On the almost grey FOH and Front views the neutral chroma floor keeps a turn
- *   from showing in full: 3° measures at most 2.98°, 10° at least 6.16°.
+ * - hue: the chroma-weighted hue turn. 3° measures at most 2.98° (the synthetic stage); 10° at least 6.16° (the
+ *   almost grey Front view, where the neutral chroma floor keeps a turn from showing in full).
  * - share: changed blocks (shift-tolerant distance above 0.05). 0.0003 lets 5 of the 17,325 blocks of a 660x420 shot
  *   change; the brightest 1 % of the pixels dimmed by 30 % changes 15 or more (the dark wide view, the closest case),
  *   a lost 240 px truss line 60.
