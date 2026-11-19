@@ -5,11 +5,12 @@ import type { RobeHead } from '../models/robeMover';
 import { LazyLensTextures } from './LazyLensTextures';
 import { moverBuilder } from './moverFamily';
 import { tiltBarBuilder } from './tiltBarFamily';
+import { yokedCanBuilder } from './yokedCanFamily';
 
 /**
  * The native builder factories the families reuse, from the model table: `robe` caches the head and yoke geometry
  * `once` per call and draws on the table's one Robe base cache, so a product is built exactly like a native head;
- * `product` caches a whole model's geometry `once` and builds it with the table's kit, like a native static model.
+ * `product` caches a whole model's geometry `once` and builds it with the table's kit, like a native model.
  */
 export interface FamilyShared {
   readonly robe: (head: RobeHead, fs: boolean) => ModelBuilder;
@@ -39,5 +40,7 @@ function familyBuilder(scope: FamilyScope, id: ProductId): ModelBuilder {
       return moverBuilder(scope, id, body);
     case 'tiltBar':
       return tiltBarBuilder(scope, id, body);
+    case 'yokedCan':
+      return yokedCanBuilder(scope, id, body);
   }
 }

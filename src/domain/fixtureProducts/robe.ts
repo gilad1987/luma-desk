@@ -2,6 +2,7 @@ import type { FixtureProduct } from './FixtureProduct';
 import { ROBE_BEAMS } from './robe/robeBeams';
 import { ROBE_EFFECTS } from './robe/robeEffects';
 import { ROBE_LED_HEADS } from './robe/robeLedHeads';
+import { ROBE_RETRO } from './robe/robeRetro';
 import { ROBE_SPOTS } from './robe/robeSpots';
 
 /**
@@ -15,4 +16,5 @@ export const ROBE_PRODUCTS = {
   ...ROBE_BEAMS,
   ...ROBE_LED_HEADS,
   ...ROBE_EFFECTS,
+  ...ROBE_RETRO,
 } as const satisfies Record<string, FixtureProduct>;
