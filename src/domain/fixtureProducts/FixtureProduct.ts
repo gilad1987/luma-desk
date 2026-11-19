@@ -65,6 +65,6 @@ export interface FixtureProduct {
   readonly dataSheet: string;
   /** Real features the desk does not model, for the library card ("single cell / approximate"). English. */
   readonly unmodelled: readonly string[];
-  /** Set only when the manufacturer lists the product as discontinued; the library card shows a badge. */
+  /** Set only when the manufacturer lists the product as discontinued. No reader until the library card (lane ui). */
   readonly discontinued?: true;
 }
