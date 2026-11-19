@@ -14,22 +14,14 @@ interface OpenBuilder {
   readonly detachViewer: () => void;
 }
 
-/**
- * The classes of the host section: `builder` for every builder rule in styles/builder/, `wa-dark` for the dark Web
- * Awesome tokens, which the theme scopes to the element that carries the class.
- */
+/** The host's classes: `builder` for styles/builder/, `wa-dark` for the dark Web Awesome tokens, scoped to it. */
 const HOST_CLASS = 'builder wa-dark';
-
-/**
- * The body class that hides the console while the builder is open (styles/builder/). It must differ from the host's
- * `builder` class, or every rule for the host section would also lay out `<body>` as the builder grid.
- */
+/** The body class that hides the console (styles/builder/); `builder` would lay out `<body>` as the builder grid. */
 const BODY_CLASS = 'is-building';
 
 /**
- * The full-screen Builder mode behind "Build Stage": it hides the console, puts the builder screen over the desk and
- * moves the 3D view into the builder's 3D pane; Done keeps the draft, Cancel drops it. The host section is made on
- * enter and removed on exit, so a closed builder leaves no DOM and no listener behind.
+ * The full-screen Builder mode behind "Build Stage": the builder screen over the desk, with the 3D view moved into it;
+ * Done keeps the draft, Cancel drops it. The host is made on enter and removed on exit, so nothing stays behind.
  */
 export class BuilderMode {
   readonly #deps: BuilderDeps;
@@ -45,8 +37,8 @@ export class BuilderMode {
 
   /**
    * Opens the builder on the current stage; a second call while open does nothing. The viewer moves into the 3D pane
-   * before the layout fit, so the fit and the renderer size it in its new place. The fit runs before the console
-   * height is set to 0, because the fit sets that height itself and would undo the 0.
+   * before the fit, so the renderer sizes it in its new place; the fit runs before the console height 0, which it would
+   * undo. A mount step that throws takes back what ran before it and rethrows: no half-built screen without Cancel.
    */
   enter(): void {
     if (this.#open) return;
@@ -54,11 +46,18 @@ export class BuilderMode {
     const host = createElement('section', HOST_CLASS, builderMarkup);
     document.body.appendChild(host);
     document.body.classList.add(BODY_CLASS);
-    requireChild(host, '[data-builder="done"]').onclick = () => this.exit(true);
-    requireChild(host, '[data-builder="cancel"]').onclick = () => this.exit(false);
-    const unmount = mountBuilder(host, session, this.#deps);
-    const detachViewer = this.#deps.attachViewer(requireChild(host, '.builder-3d'));
-    this.#open = { host, session, unmount, detachViewer };
+    let unmount: (() => void) | null = null;
+    try {
+      requireChild(host, '[data-builder="done"]').onclick = () => this.exit(true);
+      requireChild(host, '[data-builder="cancel"]').onclick = () => this.exit(false);
+      unmount = mountBuilder(host, session, this.#deps);
+      this.#open = { host, session, unmount, detachViewer: this.#deps.attachViewer(requireChild(host, '.builder-3d')) };
+    } catch (error) {
+      unmount?.();
+      host.remove();
+      document.body.classList.remove(BODY_CLASS);
+      throw error;
+    }
     this.#deps.fitLayout();
     this.#deps.setConsoleHeight(0);
     this.#deps.setDeskInert(true);
