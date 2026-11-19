@@ -35,6 +35,15 @@ export const ROBE_PRODUCTS = {
     span: 1.171,
     mountHeight: { hang: 0.682, floor: 0.682 },
     dataSheet: 'https://www.robe.cz/esprite (Robe data sheets "Esprite" 27.11.2019 and "ESPRITE FS" 4/16/2026)',
-    unmodelled: ['colour wheels', 'framing shutters', 'animation wheel', 'prism', 'iris', 'frosts'],
+    unmodelled: [
+      'colour wheels',
+      'static gobo wheel',
+      'variable CTO',
+      'framing shutters',
+      'animation wheel',
+      'prism',
+      'iris',
+      'frosts',
+    ],
   },
 } as const satisfies Record<string, FixtureProduct>;
