@@ -53,18 +53,17 @@ export function builderDepsOf(deps: BuilderWiringDeps): BuilderDeps {
 
 /**
  * Builds Builder mode and opens it from `#buildBtn` in the top bar. Nothing else is built until the first click: the
- * session, the screen and every listener exist only while the builder is open. The click is asynchronous: it loads the
- * Web Awesome chunk first and enters when it resolves. A second click during the load is harmless, because `enter()`
- * ignores a call while the builder is open. A failed load (after a deploy, an open tab asks for a chunk that is gone)
- * shows a toast, so the button does not silently do nothing. The toast is the rejection handler of the load only, so
- * an error thrown by `enter()` stays an error and is not reported as a network failure.
+ * session, the screen and every listener exist only while the builder is open. The click is asynchronous: it books
+ * an open (`BuilderMode.book`), loads the Web Awesome chunk and enters when it resolves, unless a later click or an
+ * `exit` (Cancel) came first. A failed load (after a deploy, an open tab asks for a chunk that is gone) shows a
+ * toast, so the button does not silently do nothing. The toast is the rejection handler of the load only, so an error
+ * thrown by `enter()` stays an error and is not reported as a failed load.
  */
 export function wireBuilder(deps: BuilderWiringDeps): BuilderMode {
   const builder = new BuilderMode(builderDepsOf(deps));
-  byId('buildBtn').onclick = () =>
-    void deps.loadShell().then(
-      () => builder.enter(),
-      () => deps.bus.emit('message', { kind: 'toast', text: he.builder.loadFailed }),
-    );
+  byId('buildBtn').onclick = () => {
+    const enter = builder.book();
+    void deps.loadShell().then(enter, () => deps.bus.emit('message', { kind: 'toast', text: he.builder.loadFailed }));
+  };
   return builder;
 }

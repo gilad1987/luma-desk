@@ -12,6 +12,8 @@ const DEFAULT_SPLIT_PERCENT = 50;
 const PLAN_ONLY_PERCENT = 0;
 /** The position in 3D mode: the 3D pane takes 100 %. */
 const VIEW_ONLY_PERCENT = 100;
+/** The divider range in Split, in percent: a resize that drifts it to an edge must not collapse a pane there. */
+const SPLIT_RANGE = { min: 10, max: 90 } as const;
 
 const MODE_CLASSES: Readonly<Record<ViewMode, string>> = {
   plan: 'is-mode-plan',
@@ -69,14 +71,18 @@ export class CentreSplit {
   }
 
   /**
-   * Remembers a divider move in Split. In Plan and 3D it writes the mode's edge back: on a window resize the panel
-   * keeps the start pane's cached pixel size and recomputes `position`, so a taller window drops 3D below 100 % and a
-   * strip of the plan shows. The write raises one more `wa-reposition`, which then matches the edge and stops.
+   * Puts the divider back where the mode allows it: on a window resize the panel keeps the start pane's cached pixels
+   * and recomputes `position`, so 3D drops below 100 % or Split drifts to a 0 px pane. Split keeps and remembers it
+   * inside {@link SPLIT_RANGE}; a write raises one more `wa-reposition`, which then matches and stops.
    */
   #onReposition(): void {
     const position = this.#panel.position;
-    if (this.#mode === 'split') this.#splitPercent = position;
-    else if (position !== this.#positionOf(this.#mode)) this.#panel.position = this.#positionOf(this.#mode);
+    const kept =
+      this.#mode === 'split'
+        ? Math.min(SPLIT_RANGE.max, Math.max(SPLIT_RANGE.min, position))
+        : this.#positionOf(this.#mode);
+    if (this.#mode === 'split') this.#splitPercent = kept;
+    if (position !== kept) this.#panel.position = kept;
   }
 }
 
