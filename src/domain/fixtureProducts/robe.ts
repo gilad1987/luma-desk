@@ -2,6 +2,7 @@ import type { FixtureProduct } from './FixtureProduct';
 import { ROBE_BEAMS } from './robe/robeBeams';
 import { ROBE_EFFECTS } from './robe/robeEffects';
 import { ROBE_LED_HEADS } from './robe/robeLedHeads';
+import { ROBE_PROFILES } from './robe/robeProfiles';
 import { ROBE_RETRO } from './robe/robeRetro';
 import { ROBE_SPOTS } from './robe/robeSpots';
 
@@ -13,6 +14,7 @@ import { ROBE_SPOTS } from './robe/robeSpots';
  */
 export const ROBE_PRODUCTS = {
   ...ROBE_SPOTS,
+  ...ROBE_PROFILES,
   ...ROBE_BEAMS,
   ...ROBE_LED_HEADS,
   ...ROBE_EFFECTS,
