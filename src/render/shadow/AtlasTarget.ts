@@ -64,9 +64,10 @@ export class AtlasTarget {
     renderer.render(scene, camera);
     renderer.setRenderTarget(previous);
     renderer.autoClear = autoClear;
-    // with `info.autoReset` on (the default) the count restarts at each render; the test hook switches it off
+    // with `info.autoReset` on (the default) render() starts the count at 0, so it is the tile's own; the test hook
+    // switches it off, and the count then runs on from `before`
     const after = renderer.info.render.triangles;
-    return after >= before ? after - before : after;
+    return renderer.info.autoReset ? after : after - before;
   }
 
   /** Frees the target and both of its textures. */

@@ -63,6 +63,16 @@ describe('crowdView', () => {
       }
   });
 
+  it('holds a 240 m rig without seats in frame too: the eye moves back past 100 m', () => {
+    const wide: StageBounds = { min: [-120, 0, -10], max: [120, 11, 4] };
+    for (const frame of [frameOf(1600, 1200), frameOf(1920, 1080)]) {
+      const view = crowdView({ stage: wide, deck }, frame);
+      const at = boxInFrame(view, { min: [-120, 0, 4], max: wide.max }, frame);
+      expect(Math.min(at.left, at.right, at.top, at.bottom)).toBeGreaterThan(0.0599);
+      expect(view.fov).toBeLessThanOrEqual(75);
+    }
+  });
+
   it('holds the full rig height in the free rectangle, with a lens of 46 to 75 degrees', () => {
     const tall: StageBounds = { min: [-12, 0, -10], max: [12, 24, 4] };
     for (const frame of FRAMES)
