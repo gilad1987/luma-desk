@@ -1,10 +1,11 @@
 import { requireChild } from '../../dom';
+import { setWaInnerAria } from '../wa/waInnerAria';
 
 /**
  * Opens and closes the narrow screen's inspector drawer (`.inspector-drawer-frame`, shellMarkup.ts). It is the
  * builder's own panel, not a `wa-drawer`: that one always opens as a modal dialog, which covers the bar and makes
- * Cancel and Done inert. The Inspector button toggles it and tells its state (`aria-expanded`, `aria-controls`); the
- * Close button and Escape close it. Opening moves the focus into the drawer, closing moves it back to the button.
+ * Cancel and Done inert. The Inspector button toggles it and tells its state (`aria-expanded`, on the inner button too
+ * through `setWaInnerAria`, and `aria-controls`); the Close button and Escape close it. Opening moves the focus into the drawer, closing moves it back to the button.
  */
 export class InspectorDrawer {
   readonly #frame: HTMLElement;
@@ -22,7 +23,7 @@ export class InspectorDrawer {
     this.#button = button;
     this.#close = requireChild(frame, '[data-builder="inspector-close"]');
     button.setAttribute('aria-controls', frame.id);
-    button.setAttribute('aria-expanded', 'false');
+    void setWaInnerAria(button, 'aria-expanded', 'false');
     button.onclick = () => this.setOpen(!this.isOpen);
     this.#close.onclick = () => this.setOpen(false);
     document.addEventListener('keydown', this.#onKey);
@@ -36,7 +37,7 @@ export class InspectorDrawer {
   setOpen(isOpen: boolean): void {
     if (isOpen === this.isOpen) return;
     this.#frame.hidden = !isOpen;
-    this.#button.setAttribute('aria-expanded', String(isOpen));
+    void setWaInnerAria(this.#button, 'aria-expanded', String(isOpen));
     if (isOpen) this.#frame.focus();
     else this.#button.focus();
   }
