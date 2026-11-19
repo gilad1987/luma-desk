@@ -41,6 +41,20 @@ describe('parseStageDesign truss limits', () => {
     expect(errorsOf(edges)).toStrictEqual([]);
   });
 
+  it('accepts a 0.1 m and a 60 m line whose length carries float noise', () => {
+    const top = { a: [4.027027027027027, 0, 0], b: [64.02702702702703, 0, 0] };
+    expect(1 - 0.9).toBe(0.09999999999999998);
+    expect(64.02702702702703 - 4.027027027027027).toBe(60.00000000000001);
+    expect(errorsOf(withParams(0, { a: [0.9, 0, 0], b: [1, 0, 0] }))).toStrictEqual([]);
+    expect(errorsOf(withParams(0, top))).toStrictEqual([]);
+  });
+
+  it('rejects a line clearly under 0.1 m', () => {
+    expect(errorsOf(withParams(0, { a: [0.95, 0, 0], b: [1, 0, 0] }))).toStrictEqual([
+      `trusses[0].params.b: ${RANGE} 0.050000000000000044`,
+    ]);
+  });
+
   it.each(TEMPLATE_IDS)('keeps the %s template inside the limits', (id) => {
     expect(parseStageDesign(JSON.parse(JSON.stringify(createTemplate(id)))).ok).toBe(true);
   });

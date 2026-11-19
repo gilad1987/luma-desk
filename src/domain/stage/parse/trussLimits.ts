@@ -39,9 +39,14 @@ export function checkTrussLimits(r: Reader, params: TrussParams, path: string): 
   }
 }
 
+/** The float noise a size may carry past a limit, in metres: `[0.9,0,0]` to `[1,0,0]` measures 0.09999999999999998. */
+const SIZE_TOLERANCE_M = 1e-6;
+
 function checkSize(r: Reader, path: string, value: number): void {
   const { min, max } = TRUSS_SIZE_M;
-  if (value < min || value > max) r.fail(path, `expected a size from ${min} to ${max} m, got ${value}`);
+  if (value < min - SIZE_TOLERANCE_M || value > max + SIZE_TOLERANCE_M) {
+    r.fail(path, `expected a size from ${min} to ${max} m, got ${value}`);
+  }
 }
 
 function lengthOf(a: Vec3, b: Vec3): number {
