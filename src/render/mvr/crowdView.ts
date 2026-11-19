@@ -14,9 +14,13 @@ const ROW_SHARE = 1 / 6;
 const NO_SEATS_M = 8;
 /** The eye is never nearer than this to the house side of the rig (m), so no front truss hangs behind the eye. */
 const CLEAR_M = 6;
-/** A rig too tall for the widest lens moves the eye back in steps of this size (m), at most `STEPS` times. */
+/** A rig too tall for the widest lens moves the eye back in steps of this size (m), to the first step that fits. */
 const STEP_M = 0.5;
-const STEPS = 200;
+/**
+ * The search doubles its reach at most this often (2^16 steps, 32 km): any finite rig fits by then, as the lens it
+ * needs shrinks to nothing with the distance; a fixed reach cut a rig wider than about 200 m without seats.
+ */
+const DOUBLINGS = 16;
 
 /** The world z of the eye and the height of the floor under it: in the front seat rows, else in front of the deck. */
 function standing(place: StagePlace, downstage: number): { readonly z: number; readonly floor: number } {
@@ -65,7 +69,11 @@ export function crowdView(place: StagePlace, frame: ViewFrame): CameraView {
   const { z, floor } = standing(place, downstage);
   const middle = (upstage + downstage) / 2;
   const from = (step: number): CameraView => aimed([x, floor + EYE, z + step * STEP_M], place, middle, frame);
-  const steps = Array.from({ length: STEPS }, (_, step) => step);
-  const view = from(steps.find((step) => (from(step).fov ?? 0) <= LENS.max) ?? STEPS);
+  const fits = (step: number): boolean => (from(step).fov ?? 0) <= LENS.max;
+  let reach = 1;
+  for (let n = 0; n < DOUBLINGS && !fits(reach); n++) reach *= 2;
+  // the first step that fits, as before: the lens need not shrink at every step, so the reach only bounds the search
+  const steps = fits(reach) ? Array.from({ length: reach + 1 }, (_, step) => step) : [];
+  const view = from(steps.find(fits) ?? reach);
   return { ...view, fov: Math.min(LENS.max, Math.max(LENS.min, view.fov ?? LENS.min)) };
 }
