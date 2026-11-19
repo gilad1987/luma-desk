@@ -13,9 +13,11 @@
   }
   .tool-tab {
     flex: 1;
+    // brand normal (toolbar.md's selected state), so only Done is solid accent
     &.is-active {
-      background: var(--acc);
-      color: var(--bg);
+      background: color-mix(in srgb, var(--acc) 18%, var(--p2));
+      color: var(--acc);
+      border-color: var(--acc);
     }
   }
   .tool-panel,
@@ -68,7 +70,9 @@
     min-height: var(--builder-target);
     padding-inline: 10px;
     &.is-selected {
-      outline: 2px solid var(--acc);
+      background: color-mix(in srgb, var(--acc) 18%, var(--p2));
+      color: var(--acc);
+      border-color: var(--acc);
     }
   }
 }

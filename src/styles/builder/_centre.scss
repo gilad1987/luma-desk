@@ -15,6 +15,10 @@
   .centre-split::part(divider) {
     background: var(--line);
   }
+  // The divider is in the panel's shadow DOM, so no tooltip reaches it: the hover tint is its only affordance.
+  .centre-split::part(divider):hover {
+    background: var(--line2);
+  }
   .centre-split::part(divider):focus-visible {
     outline: 2px solid var(--acc);
     outline-offset: 1px;
@@ -45,6 +49,8 @@
   }
   // Hidden, not removed: the split panel places its panes in a fixed `start divider end` grid, and a divider with
   // `display: none` would shift the end pane into the divider's track. Hidden also takes it out of the tab order.
+  // Also hidden under the start screen, which it showed through as a grey line.
+  &:not(.is-editing) .centre-split::part(divider),
   .builder-centre.is-mode-plan .centre-split::part(divider),
   .builder-centre.is-mode-3d .centre-split::part(divider) {
     visibility: hidden;

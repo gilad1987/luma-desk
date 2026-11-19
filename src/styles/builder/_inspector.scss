@@ -6,18 +6,24 @@
     border-inline-start: 1px solid var(--line);
   }
   // The host is a child of the .builder grid; in flow it would add a third, 0 px row (and a 0 px box). Fixed, it leaves
-  // the grid. While open (closed it is display: none) it covers the window, so clicks go through it to the dialog only.
+  // the grid. While open (closed it is display: none) it covers the window below the bar, so the bar stays in view;
+  // clicks go through the host to the dialog and to the overlay only (a click on the overlay closes the drawer).
   .inspector-drawer {
     --size: 320px;
     --spacing: 12px;
     position: fixed;
-    inset: 0;
+    inset: var(--builder-bar-height) 0 0 0;
     pointer-events: none;
+  }
+  .inspector-drawer::part(overlay) {
+    pointer-events: auto;
   }
   .inspector-drawer::part(dialog) {
     pointer-events: auto;
     background: var(--p1);
     color: var(--txt);
+    border-inline-start: 1px solid var(--line);
+    box-shadow: var(--wa-shadow-l);
   }
   .inspector-drawer::part(body) {
     padding: 0;

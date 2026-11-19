@@ -13,14 +13,17 @@ export interface IconButton {
   readonly tip: string;
 }
 
+/** The Web Awesome `appearance`: `plain` for the edit buttons (no border), `outlined` for the mode group. */
+export type IconButtonAppearance = 'plain' | 'outlined';
+
 /**
- * The markup of an outlined `wa-button` with a start icon and its `wa-tooltip`. The tooltip replaces the old `title`
- * attribute: it is styled with the builder and also shows on keyboard focus. The edit toolbar and the view-mode switch
- * both build their buttons with it, so the two rows cannot drift apart.
+ * The markup of a `wa-button` with a start icon and its `wa-tooltip`. The tooltip replaces the old `title` attribute:
+ * it is styled with the builder and also shows on keyboard focus. The edit toolbar and the view-mode switch both build
+ * their buttons with it, so the two rows cannot drift apart; only their `appearance` differs (toolbar.md).
  */
-export function iconButton(button: IconButton): string {
+export function iconButton(button: IconButton, appearance: IconButtonAppearance): string {
   return (
-    `<wa-button id="${button.id}" ${button.hook} appearance="outlined">${startIcon(button.icon)}${button.label}` +
+    `<wa-button id="${button.id}" ${button.hook} appearance="${appearance}">${startIcon(button.icon)}${button.label}` +
     `</wa-button>\n<wa-tooltip for="${button.id}">${button.tip}</wa-tooltip>`
   );
 }

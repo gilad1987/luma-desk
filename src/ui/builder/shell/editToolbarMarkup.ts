@@ -20,5 +20,8 @@ const BUTTONS: readonly IconButton[] = EDIT_ACTIONS.map((action) => ({
   tip: he.builder.edit[action],
 }));
 
-/** The edit buttons; `data-edit` names the `EditToolbar` action, the Hebrew tooltip says what it does and its key. */
-export const editToolbarMarkup = BUTTONS.map(iconButton).join('\n');
+/**
+ * The edit buttons, plain (no border, as toolbar.md draws them); `data-edit` names the `EditToolbar` action, the
+ * Hebrew tooltip says what it does and its key.
+ */
+export const editToolbarMarkup = BUTTONS.map((button) => iconButton(button, 'plain')).join('\n');

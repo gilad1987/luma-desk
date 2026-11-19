@@ -26,7 +26,8 @@ export class ViewModeSwitch {
 
   /** Renders the button group into `root` with `initial` pressed; `onChange` hears only later changes. */
   constructor(root: HTMLElement, initial: ViewMode, onChange: (mode: ViewMode) => void) {
-    root.innerHTML = `<wa-button-group label="View">${MODES.map((mode) => iconButton(BUTTONS[mode])).join('\n')}</wa-button-group>`;
+    const buttons = MODES.map((mode) => iconButton(BUTTONS[mode], 'outlined')).join('\n');
+    root.innerHTML = `<wa-button-group label="View">${buttons}</wa-button-group>`;
     this.#buttons = new Map(MODES.map((mode) => [mode, requireChild(root, `[data-mode="${mode}"]`)]));
     for (const [mode, button] of this.#buttons) button.onclick = () => this.set(mode);
     this.#onChange = onChange;

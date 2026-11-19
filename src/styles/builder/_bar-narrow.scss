@@ -1,0 +1,42 @@
+@use '../abstracts/breakpoints' as *;
+
+// Below this width (iPad portrait) the bar has no room for its title (toolbar.md, narrow layout).
+$builder-title-hidden: 819px;
+
+// Narrow: the edit, mode and Inspector buttons show only the icon (44 x 44) and their tooltip; Cancel and Done keep
+// the text. The label (a <slot>) is hidden from sight only: with `display: none` the button would lose its name.
+@include below($builder-narrow) {
+  .builder .edit-tools wa-button,
+  .builder .view-modes wa-button,
+  .builder .builder-bar wa-button[data-builder='inspector'] {
+    &::part(label) {
+      display: block;
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .wa-icon-svg {
+      margin-inline-end: 0;
+    }
+  }
+  // The Inspector button shows here and becomes the first session button, so the flexible space moves to it.
+  .builder .builder-bar wa-button[data-builder='inspector'] {
+    margin-inline-start: auto;
+  }
+  .builder .builder-bar wa-button[data-builder='cancel'] {
+    margin-inline-start: 0;
+  }
+}
+
+// Without the title, the divider before the edit group would stand at the bar's edge.
+@include below($builder-title-hidden) {
+  .builder .builder-title {
+    display: none;
+  }
+  .builder .edit-tools::before {
+    content: none;
+  }
+}

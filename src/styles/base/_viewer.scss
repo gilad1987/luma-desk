@@ -47,3 +47,8 @@
 .chip b {
   color: var(--acc);
 }
+/* While the builder is open (#viewer moves into its 3D pane), only the two canvases show: the selection chips, the
+   help text, the tip and the cue card are the desk's HUD. */
+body.is-building #viewer > :not(canvas) {
+  display: none;
+}

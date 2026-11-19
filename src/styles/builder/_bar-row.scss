@@ -1,0 +1,94 @@
+// The builder bar's row (docs/plan/stage-builder-ux/toolbar.md): title, edit group, view-mode group, count badge,
+// flexible space, then the session buttons. One row that never wraps; the buttons get their colours from the Web
+// Awesome tokens. Only the badge may shrink (it ends in an ellipsis): a shrunk group would stack its buttons, and the
+// bar's row would clip them. The narrow-screen rules are in _bar-narrow.scss; _bar.scss loads both in order.
+.builder {
+  .builder-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-inline: 8px;
+    background: var(--p1);
+    border-block-end: 1px solid var(--line);
+    > * {
+      flex-shrink: 0;
+    }
+  }
+  .builder-title {
+    margin-inline-end: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  // The group dividers (1 px --line, 24 px tall) are pseudo-elements: before each group and after the mode group,
+  // each 8 px from the buttons (the 4 px margin plus the group's gap).
+  .edit-tools,
+  .view-modes {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    &::before,
+    &::after {
+      content: '';
+      inline-size: 1px;
+      block-size: 24px;
+      background: var(--line);
+    }
+    &::before {
+      margin-inline-end: 4px;
+    }
+  }
+  .edit-tools::after {
+    content: none;
+  }
+  .view-modes::after {
+    margin-inline-start: 4px;
+  }
+  // Plain edit buttons: no border, transparent; hover --p3 and pressed --line2 through the neutral tokens (_wa-theme).
+  .edit-tools wa-button::part(base) {
+    background: transparent;
+    border-color: transparent;
+  }
+  .edit-tools wa-button:not([disabled])::part(base):hover {
+    background: var(--wa-color-neutral-fill-normal);
+  }
+  .edit-tools wa-button:not([disabled])::part(base):active {
+    background: var(--wa-color-neutral-fill-loud);
+  }
+  // after `.builder-bar > *` (same specificity), so the badge alone shrinks
+  .count-badge {
+    flex-shrink: 1;
+    min-width: 0;
+    padding-inline: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--mut);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    &.is-warning {
+      color: var(--prog);
+      font-weight: 600;
+    }
+  }
+  // The flexible space sits before the first session button: Cancel on a wide screen (bar-narrow moves it).
+  .builder-bar wa-button[data-builder='cancel'] {
+    margin-inline-start: auto;
+  }
+  .builder-btn.is-primary::part(base) {
+    min-inline-size: 88px;
+    padding-inline: 16px;
+  }
+  .view-modes wa-button.is-pressed::part(base) {
+    background: var(--wa-color-brand-fill-normal);
+    color: var(--wa-color-brand-on-normal);
+    border-color: var(--wa-color-brand-border-normal);
+  }
+  // wa-button dims a disabled host to 0.5; the spec keeps full opacity and greys the text instead.
+  .builder-bar wa-button[disabled] {
+    opacity: 1;
+  }
+  .builder-bar wa-button[disabled]::part(base) {
+    color: var(--mut);
+  }
+}
