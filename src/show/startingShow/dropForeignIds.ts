@@ -16,10 +16,11 @@ function keepKeys<T>(record: Readonly<Record<string, T>>, keep: ReadonlySet<numb
   return Object.fromEntries(Object.entries(record).filter(([id]) => keep.has(Number(id))));
 }
 
+/** Saved shows are not validated, so a cue may lack its values or its phaser list; both read as empty, as in Tracking. */
 const keepCue = (cue: Cue, keep: ReadonlySet<number>): Cue => ({
   ...cue,
-  vals: keepKeys(cue.vals, keep),
-  fx: cue.fx.map((fx) => ({ ...fx, ids: fx.ids.filter((id) => keep.has(id)) })),
+  vals: keepKeys(cue.vals ?? {}, keep),
+  fx: (cue.fx || []).map((fx) => ({ ...fx, ids: fx.ids.filter((id) => keep.has(id)) })),
 });
 
 /** The groups with only kept ids; a group left without ids is dropped, as storing an empty selection drops it. */
