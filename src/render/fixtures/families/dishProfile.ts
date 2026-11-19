@@ -18,7 +18,7 @@ const CLIPS = 8;
 const SPOKES = 3;
 
 /** The bowl behind the bezel, front to rear so its faces point outward, closed at its back. */
-export function shellProfile({ rim, bowl }: YokedCanBody): ProfilePoint[] {
+function shellProfile({ rim, bowl }: YokedCanBody): ProfilePoint[] {
   const curve = BOWL_STEPS.map((t): ProfilePoint => {
     const r = bowl.r + (rim.r - bowl.r) * Math.sqrt(1 - t);
     return [r, rim.back + (bowl.y - rim.back) * t];
@@ -30,7 +30,7 @@ export function shellProfile({ rim, bowl }: YokedCanBody): ProfilePoint[] {
  * The spun bezel, front to rear: flat from the mouth out, round the rolled lip, then its wall back to the bowl. The
  * photos show the whole ring bare grey aluminium, so it is one alu part.
  */
-export function bezelProfile({ rim, mouth }: YokedCanBody): ProfilePoint[] {
+function bezelProfile({ rim, mouth }: YokedCanBody): ProfilePoint[] {
   const outer = rim.r + LIP.out;
   return [
     [mouth, rim.front],
@@ -43,7 +43,7 @@ export function bezelProfile({ rim, mouth }: YokedCanBody): ProfilePoint[] {
 }
 
 /** The reflector between the painted face and the mouth, listed rear to front so its faces point inward. */
-export function reflectorProfile({ rim, mouth, lens }: YokedCanBody): ProfilePoint[] {
+function reflectorProfile({ rim, mouth, lens }: YokedCanBody): ProfilePoint[] {
   return [
     [lens.r, lens.y],
     [lens.r + (mouth - lens.r) * 0.6, (lens.y + rim.front) / 2],

@@ -26,7 +26,7 @@ export function yokedCanBuilder(scope: FamilyScope, id: ProductId, body: YokedCa
  * in `aim`: the bowl in the body material; the bezel with its clips, the reflector wall and the grille spokes in alu,
  * the painted face behind. The arch, side brackets and T-knobs are bare metal too, as on the Robe photos.
  */
-export function yokedCanModel(body: YokedCanBody, face: () => CanvasTexture): FixtureModel<YokedCanGeometry> {
+function yokedCanModel(body: YokedCanBody, face: () => CanvasTexture): FixtureModel<YokedCanGeometry> {
   return {
     geometry: (prims) => ({ ...dishGeometry(prims, body), ...archYoke(prims, body) }),
     build(kit, G, c) {

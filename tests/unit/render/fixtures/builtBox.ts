@@ -1,3 +1,7 @@
+/**
+ * Builds one fixture visual in a test scene and measures its visible box, for the span, mount-height and proportion
+ * tests: the box covers the drawn meshes only, and `spanMm` gives its largest side in millimetres.
+ */
 import { Box3, Mesh, Vector3 } from 'three';
 import { Fixture, type FixtureInit } from '../../../../src/domain/Fixture';
 import { FixtureVisualBuilder, type FixtureVisual } from '../../../../src/render/fixtures';

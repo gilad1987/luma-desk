@@ -1,3 +1,7 @@
+/**
+ * Family-neutral helpers for the product render tests: the first product of each body family, a boot with a spy on
+ * the lens painter, and lookups of a built light's lens face and geometries by traversal, not by child order.
+ */
 import { Mesh, Scene, Vector3, type BufferGeometry, type Texture } from 'three';
 import { vi } from 'vitest';
 import { Fixture } from '../../../../../src/domain/Fixture';

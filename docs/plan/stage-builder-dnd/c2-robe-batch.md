@@ -303,7 +303,9 @@ the tree holds all 15.
   `pose` and the `wash` scale uses the native Spiider built head-forward (1.170 m, pinned by a render test), not
   `BODY_SPANS.wash` (1.063 m, hung at rest). The four `wash` products grew about 10 % (`body.size` only): LEDBeam 150
   and TetraX (approved at G1 and G2 at the smaller size), LEDBeam 350 and Tarrantula. FORTE and MegaPointe sheets
-  are head vertical, so no other row moved.
+  are head vertical, so no other row moved. This replaces the four wash targets in the table above: LEDBeam 150
+  0.751 → 0.827 m, LEDBeam 350 0.949 → 1.046 m, TetraX 1.141 → 1.256 m; Tarrantula head-forward target 1.44 m, pinned
+  hung span 1.277 m.
 - The gallery page is `src/render/fixtures/gallery/gallery.html`, with no npm script (as corrections 7 and 8 said).
   Run the shots with `npx playwright test -c playwright.gallery.config.ts`.
 - `tests/e2e/stage-product.spec.ts` moved its show helper to `tests/e2e/stageProductShow.ts`.

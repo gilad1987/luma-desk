@@ -17,7 +17,7 @@ const KNOB_BAR = { r: 0.012, length: 0.12 };
 const BRACKET = [0.05, 0.3, 0.1] as const;
 
 /** The arch centre line in the XY plane: straight up from each pivot, then a half circle of `halfWidth` over the top. */
-export function archPath({ halfWidth, height }: YokedCanBody['arch']): (readonly [number, number])[] {
+function archPath({ halfWidth, height }: YokedCanBody['arch']): (readonly [number, number])[] {
   const top = height - halfWidth;
   const arc = Array.from({ length: ARC_STEPS + 1 }, (_, k): readonly [number, number] => {
     const a = (k / ARC_STEPS) * Math.PI;

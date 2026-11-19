@@ -180,7 +180,7 @@ row lists the tilt range as unmodelled and neither the geometry nor the desk's t
   lens and ribs stay inside the barrel, attrs keep the base's channel order, `dimensions` are finite and positive,
   and only the listed ids are `discontinued`.
 - `tests/unit/domain/fixtureProducts/productSizes.test.ts` (C2): every pinned `span` is within 2 % of the size-rule
-  target (decision 4).
+  target (decision 4), except the head-forward products, which `productProportions.test.ts` checks built.
 - `tests/unit/render/fixtures/productProportions.test.ts` (C2): every built hung body is within 10 % of its
   data-sheet width / height (decision 4).
 - `tests/unit/render/fixtures/productSpans.test.ts`: the measured `span` and `mountHeight` equal the pinned values.
@@ -193,4 +193,6 @@ row lists the tilt range as unmodelled and neither the geometry nor the desk's t
 - Owner close-up gates G0-G3, checked in the dev gallery (`src/render/fixtures/gallery/`,
   `npx playwright test -c playwright.gallery.config.ts`): G0, G1, G2 and G3 approved by the owner on 2026-11-19. The
   owner accepted two open points as recorded: the TetraX tilt beyond the real range stays an `unmodelled` note, and
-  the onePATT stays about 4 % over strict scale.
+  the onePATT stays about 4 % over strict scale. After the approvals, the sheet-pose rule (the Spiider sheet draws
+  its height head-forward) made the four `wash` products about 10 % larger, `body.size` only: the LEDBeam 150 (G1)
+  and the TetraX (G2) were approved at the smaller size, with the same shapes.
