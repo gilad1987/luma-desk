@@ -1,6 +1,7 @@
 /**
  * Owns `frameOf` and the deck fit behind its band points: the default frame must equal the venue.ts constants
- * exactly, a design without a screen, ring or band must give null or empty targets, and another deck size must move
+ * exactly, a design without a screen, ring or band (or with the LED wall hidden) must give null or empty targets, and
+ * another deck size must move
  * the band marks with it.
  */
 import { describe, expect, it } from 'vitest';
@@ -31,6 +32,12 @@ describe('frameOf', () => {
       venue: 'sultans-pool',
       fit: IDENTITY_FIT,
     });
+  });
+
+  it('gives no screen target when the LED wall scenery is hidden', () => {
+    const hidden = { ...VENUE_DESIGN, scenery: { ...VENUE_DESIGN.scenery, ledWall: false } };
+    expect(hidden.screens.length).toBeGreaterThan(0);
+    expect(frameOf(hidden).screen).toBeNull();
   });
 
   it('takes the ring from the first circle truss, after other kinds', () => {

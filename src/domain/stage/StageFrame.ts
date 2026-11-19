@@ -13,6 +13,7 @@ export type BandPoint = (typeof BAND_PTS)[number];
  */
 export interface StageFrame {
   readonly deck: StageDeck;
+  /** The first screen; null when the design has none or the `ledWall` scenery part hides it. */
   readonly screen: Pick<StageScreen, 'z' | 'x0' | 'x1' | 'y0' | 'y1'> | null;
   /** The first circle truss: its centre and radius `R`. */
   readonly ring: { readonly x: number; readonly y: number; readonly z: number; readonly R: number } | null;
@@ -36,8 +37,9 @@ export function frameOf(d: StageDesign): StageFrame {
   };
 }
 
+/** Null when the `ledWall` scenery part is off: a hidden wall is no focus target, as band marks follow `band`. */
 function screenOf(d: StageDesign): StageFrame['screen'] {
-  const s = d.screens.at(0);
+  const s = d.scenery.ledWall ? d.screens.at(0) : undefined;
   return s ? { z: s.z, x0: s.x0, x1: s.x1, y0: s.y0, y1: s.y1 } : null;
 }
 
