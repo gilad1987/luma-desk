@@ -15,12 +15,14 @@ import { xmlElement, xmlText } from './xmlWriter';
 function linkWithFootprint(fixture: StageFixture, design: StageDesign): FixtureLink {
   const info = design.mvr?.fixtures[String(fixture.id)];
   const gdtf = gdtfIdentity(fixture, design.mvr);
+  const occurrence = info?.occurrence ? { occurrence: info.occurrence } : {};
+  const link = { ...linkOf(fixture), ...(info ? { uuid: info.uuid, ...occurrence } : {}) };
   if (info === undefined || (info.footprint === undefined && info.bodySize === undefined) || !gdtf.imported) {
-    return linkOf(fixture);
+    return link;
   }
   const counted = info.footprint === undefined ? {} : { channels: info.footprint };
   const sized = info.bodySize === undefined ? {} : { bodySize: info.bodySize };
-  return { ...linkOf(fixture), footprint: { ...counted, ...sized, gdtfSpec: gdtf.spec, gdtfMode: gdtf.mode } };
+  return { ...link, footprint: { ...counted, ...sized, gdtfSpec: gdtf.spec, gdtfMode: gdtf.mode } };
 }
 
 /**

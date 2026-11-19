@@ -36,6 +36,17 @@ export function ownRotations(raw: object): ReadonlySet<unknown> {
   return new Set(own.map((link) => field(link, 'id')));
 }
 
+/** The uuid key of a link, by its raw id: a non-text uuid or a bad occurrence reads as absent, so it pairs by id. */
+export function linkKeys(raw: object): ReadonlyMap<unknown, { readonly uuid: string; readonly occurrence?: number }> {
+  const keyed = objects(field(raw, 'links')).flatMap((link) => {
+    const uuid = field(link, 'uuid');
+    const occurrence = field(link, 'occurrence');
+    const counted = Number.isInteger(occurrence) && Number(occurrence) > 0 ? { occurrence: Number(occurrence) } : {};
+    return typeof uuid === 'string' ? [[field(link, 'id'), { uuid, ...counted }] as const] : [];
+  });
+  return new Map(keyed);
+}
+
 /**
  * Raw fixtures for checking the luma data with the stored-show parser: one per `links` entry (id, type, role, truss
  * id, mount, fixed, pixel) and
