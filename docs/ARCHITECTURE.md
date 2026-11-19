@@ -254,7 +254,9 @@ A catalogue product (a real fixture such as the Robe Esprite) is a layer over a 
    switch (`familyModels.ts`).
 4. Size: tune `body.size` until the hung span is within 2 % of the size-rule target
    `BODY_SPANS[base] * product largest sheet dimension / base product largest dimension` (ADR 0007, decision 4).
-   Three generic tests cover every product:
+   Base and product are each measured in the pose their sheet draws the height in: the base `pose` in
+   `baseSheets.ts` (head-forward scales from its `forwardSpan`), and a head-forward product goes in
+   `HEAD_FORWARD_SHEETS` (`tests/unit/domain/fixtureProducts/sheetSize.ts`). Three generic tests cover every product:
    `productSizes.test.ts` (the size rule), `productSpans.test.ts` (pin `span` and `mountHeight` to the values
    measured from the built model, as `BODY_SPANS` and `MOUNT_HEIGHTS` are) and `productProportions.test.ts` (width /
    height within 10 % of the sheet).

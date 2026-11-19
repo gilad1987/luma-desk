@@ -8,7 +8,7 @@ export const ROBE_TARRANTULA = {
   // Robe "Tarrantula" data sheet 7/21/2026: 1x 60 W + 36x 40 W RGBW multichips, zoom 4°-50° (12.5:1), 25,200 lm
   // integrating sphere / 21,358 lm goniophotometer, 1,000 W, 587 x 508 x 257 mm. User manual p15 and p34 drawings:
   // 37 cells (centre, a hexagon ring of 6, then rings of 12 and 18, a round lens in each) on a round head Ø~380, 225.6
-  // mm deep, front about 90 mm and rear about 130 mm from the tilt axis, about 397 mm above the base bottom.
+  // mm deep, front 93 mm and rear 131 mm from the tilt axis, about 397 mm above the base bottom.
   'robe-tarrantula': {
     id: 'robe-tarrantula',
     brand: 'Robe',
@@ -21,12 +21,13 @@ export const ROBE_TARRANTULA = {
     optics: { zr: [4, 50], power: 1.66 },
     // model units, the Spiider drum the reference: radius 190, front 93 and rear 131 mm over the 397 mm tilt axis
     // height (user manual p34 side view), on the shared 1.09. The sheet's 587 mm is drawn head-forward (axis +
-    // radius), so the size rule (1.063 * 587 / 477 = 1.308 m) and the width / height 508 / 587 are measured with the
-    // head tilted level (HEAD_FORWARD_SHEETS, productProportions.test.ts); hung at rest the 508 mm width is the span.
+    // radius), as the Spiider's 477 mm, so the size rule (head-forward Spiider 1.17 * 587 / 477 = 1.44 m) and the
+    // width / height 508 / 587 are measured with the head tilted level (HEAD_FORWARD_SHEETS,
+    // productProportions.test.ts); hung at rest the 508 mm width is the span.
     body: {
       family: 'mover',
       ref: 'spiider',
-      size: 0.8074,
+      size: 0.889,
       ax: 0.6,
       barrel: { r: 0.52, rear: 0.36, front: -0.255 },
       lens: { r: 0.47, y: 0.245, off: 0.255 },
@@ -35,8 +36,8 @@ export const ROBE_TARRANTULA = {
     },
     dimensions: { h: 587, w: 508, d: 257 },
     // measured from the built model and pinned by tests/unit/render/fixtures/productSpans.test.ts
-    span: 1.159,
-    mountHeight: { hang: 0.88, floor: 0.88 },
+    span: 1.277,
+    mountHeight: { hang: 0.969, floor: 0.969 },
     dataSheet:
       'https://www.robe.cz/tarrantula (Robe data sheet "Tarrantula" 7/21/2026, https://cdn.aws.robe.cz/print/en_product_666.pdf)',
     unmodelled: [

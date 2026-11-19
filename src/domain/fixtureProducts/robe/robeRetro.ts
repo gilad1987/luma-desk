@@ -43,7 +43,7 @@ export const ROBE_RETRO = {
     unmodelled: [
       'beam angle not published, approximate',
       'gold grille colour',
-      'large visible parabolic reflector look',
+      'reflector facets painted on a flat face, not modelled',
       'tungsten warm-up and red shift',
       'external dimmer',
     ],
@@ -86,7 +86,7 @@ export const ROBE_RETRO = {
       'https://www.robe.cz/onepatt (Robe data sheet "onePATT" 7/22/2026, user manual "onePATT" version 1.4, May 31, 2022)',
     unmodelled: [
       'external PATT Driver and chaining',
-      'half-ball diffuser dome look',
+      'half-ball diffuser dome painted flat on the face, not modelled',
       'pixel chase effects across units',
     ],
   },
