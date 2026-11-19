@@ -38,6 +38,7 @@ export const ROBE_EFFECTS = {
       'continuous pan rotation',
       'virtual colour library',
       'cell layout single row, one beam',
+      'tilt range 191° (the desk tilts to ±135°; past about ±115° the head passes through the yoke)',
     ],
   },
 } as const satisfies Record<string, FixtureProduct>;

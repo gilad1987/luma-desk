@@ -137,7 +137,9 @@ one rule `productIdOf`.
 Decided 2026-11-19 (Phase C2): the TetraX uses the base `wash`, because it keeps its real 540° pan (`bar` is
 tilt-only). Side effects: the TetraX joins the "Wash" type group, the wash pool (x1.4 in `poolContributions.ts`), the
 soft key light (`KeyLights.ts`), the `towW` auto slot (`src/domain/stage/autoSlots.ts`) and the MVR first look
-(`src/show/mvrLook/mvrFirstLook.ts`). The owner accepted them.
+(`src/show/mvrLook/mvrFirstLook.ts`). The owner accepted them. The base also brings the desk's tilt of ±135°, while
+the real TetraX tilts 191° (about ±95.5°): past about ±115° the drawn head passes through its crossbar yoke, so the
+row lists the tilt range as unmodelled and neither the geometry nor the desk's tilt range changes.
 
 ## Verified
 
