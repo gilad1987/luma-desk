@@ -4,8 +4,16 @@ import { partMesh, partsOf } from './ledMeshParts';
 import { partWalls } from './ledPartWalls';
 import { directionsOf, type StageSides } from './ledStageSides';
 
-/** Most instances a front is worked out for; a mesh with more keeps every face lit and the import stays quick. */
-const MOST_INSTANCES = 64;
+/**
+ * Most turns (the rotation and scale of an instance) a front is worked out for. The front of an instance depends on
+ * its turn only, not on where it stands, so the instances of a flat wall share one face search however many they
+ * are. A mesh with more turns than this keeps every face lit, and the import stays quick.
+ */
+const MOST_TURNS = 64;
+
+/** The turn of `world`: its 3 x 3 part, rounded to millionths. */
+const turnOf = (world: Matrix4): string =>
+  [0, 1, 2, 4, 5, 6, 8, 9, 10].map((k) => Math.round((world.elements[k] ?? 0) * 1e6)).join(',');
 
 /** The least cosine between a face and the front at which the face emits (`ledFace` in `ledShader`). */
 const EMITS = 0.5;
@@ -18,9 +26,10 @@ const EMITS = 0.5;
 const TRIM_SHARE = 0.15;
 
 /**
- * The meshes whose instances or parts agree on no front. Their search is the costly one (every face of every
- * instance or part), and a layer mark or a screen walk asks again on every `setLedLayers`; the answer stays
- * "no front" while the mesh lives, as the desk never moves the instances or the merged parts of a file mesh.
+ * The meshes whose instances or parts agree on no front. Their search is the costly one (every face of every turn
+ * of the instances, or of every part), and a layer mark or a screen walk asks again on every `setLedLayers`; the
+ * answer stays "no front" while the mesh lives, as the desk never moves the instances or the merged parts of a file
+ * mesh.
  */
 const noFront = new WeakSet<Mesh>();
 
@@ -69,14 +78,15 @@ export function meshFront(mesh: Mesh, sides: StageSides): Vector3 | undefined {
   if (noFront.has(mesh)) return undefined;
   const judge = directionsOf(mesh, sides);
   if (!(mesh instanceof InstancedMesh)) return agreed(mesh, sides, ledFrontOf(mesh, judge));
-  if (mesh.count > MOST_INSTANCES) return undefined;
   mesh.updateWorldMatrix(true, false);
   let front: Vector3 | undefined;
-  const at = new Matrix4();
+  const [at, fronts] = [new Matrix4(), new Map<string, Vector3>()];
   for (let i = 0; i < mesh.count; i += 1) {
     mesh.getMatrixAt(i, at);
-    const one = ledFrontOf(mesh, { ...judge, world: at.premultiply(mesh.matrixWorld) });
-    if (front && front.dot(one) < 0.99) {
+    const turn = turnOf(at.premultiply(mesh.matrixWorld));
+    const one = fronts.get(turn) ?? (fronts.size < MOST_TURNS ? ledFrontOf(mesh, { ...judge, world: at }) : undefined);
+    if (one) fronts.set(turn, one);
+    if (!one || (front && front.dot(one) < 0.99)) {
       noFront.add(mesh);
       return undefined;
     }

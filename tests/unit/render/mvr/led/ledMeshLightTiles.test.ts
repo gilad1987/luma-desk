@@ -3,10 +3,12 @@
  * parts of one merged mesh. The tiles of one wall join into one light of the wall's full area; walls apart keep a
  * light each, and a mirrored instance is measured where it stands.
  */
-import { BoxGeometry, InstancedMesh, Matrix4, Mesh, Vector3, type BufferGeometry } from 'three';
+import { BoxGeometry, Group, InstancedMesh, Matrix4, Mesh, Vector3, type BufferGeometry } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { afterEach, describe, expect, it } from 'vitest';
+import { drawAsLed } from '../../../../../src/render/mvr/led/ledLayerLook.ts';
 import { syncWallLights, wallLights } from '../../../../../src/render/mvr/led/ledLightPool.ts';
+import { createLedMaterial } from '../../../../../src/render/mvr/led/ledMaterial.ts';
 import { lightMesh, unlightMesh } from '../../../../../src/render/mvr/led/ledMeshLight.ts';
 
 const FRONT = new Vector3(0, 0, 1);
@@ -49,6 +51,17 @@ describe('lightMesh on a tiled wall', () => {
   it.each([0, 0.02])('gives an instanced wall of 72 tiles (gap %s m) one light of its full area', (gap) => {
     const lights = lightsOf(instanced(gap, tilesAt(0)));
     expect(lights.map(({ position }) => position)).toEqual([[0, 1.5, 0.35]]);
+    expect(nearArea(lights[0], 18)).toBe(true);
+  });
+
+  // the app path: a marked layer lights only a mesh that has a front, and the wall has more than 64 instances (R2-31)
+  it('gives the instanced wall of 72 tiles of a marked layer one light of its full area', () => {
+    const mesh = instanced(0.02, tilesAt(0));
+    lit.push(mesh);
+    drawAsLed(new Group().add(mesh), createLedMaterial(), true);
+    syncWallLights();
+    const lights = wallLights();
+    expect(lights.map(({ width, height }) => [Math.round(width), Math.round(height)])).toEqual([[6, 3]]);
     expect(nearArea(lights[0], 18)).toBe(true);
   });
 
