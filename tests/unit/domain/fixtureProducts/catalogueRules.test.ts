@@ -29,7 +29,15 @@ const KEBAB_CASE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 describe('product catalogue', () => {
   it('holds the listed product ids in catalogue order and knows only its own keys', () => {
     expect([PRODUCT_IDS, isProductId('robe-esprite'), isProductId('toString'), productOf(undefined)]).toStrictEqual([
-      ['robe-esprite', 'robe-pointe', 'robe-ledbeam-150', 'robe-tetrax', 'robe-onepatt'],
+      [
+        'robe-esprite',
+        'robe-pointe',
+        'robe-ledbeam-150',
+        'robe-ledbeam-350',
+        'robe-tarrantula',
+        'robe-tetrax',
+        'robe-onepatt',
+      ],
       true,
       false,
       undefined,

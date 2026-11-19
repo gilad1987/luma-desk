@@ -48,4 +48,47 @@ export const ROBE_LED_HEADS = {
       'eggcrate',
     ],
   },
+  // Robe "LEDBeam 350" data sheet 5/18/2026: 12x 40 W RGBW multichips, zoom 3.8°-60° (15.5:1), 8,200 lm integrating
+  // sphere / 6,574 lm goniophotometer, max. 450 W, 426 x 320 x 220 mm head vertical. User manual drawings: 12 cells
+  // (4 inner, a 2x2 group split by a cross, and 8 outer segments, a round lens in each) in a bezel Ø217 with a thick
+  // ring on a box-like head with rear vent slots, front 116 mm and rear 104 mm from the tilt axis.
+  'robe-ledbeam-350': {
+    id: 'robe-ledbeam-350',
+    brand: 'Robe',
+    name: 'LEDBeam 350',
+    category: 'wash',
+    base: 'wash',
+    // zoom from the sheet; power = TYPES.wash.power 0.9 * LEDBeam 350 8,200 lm / Spiider 13,700 lm (both integrating
+    // sphere) = 0.54
+    optics: { zr: [3.8, 60], power: 0.54 },
+    // model units, the Spiider drum the reference; the box head is drawn as a round drum. Front and rear are 116 and
+    // 104 over the tilt axis's 310 mm above the base bottom (426 - 116), on the shared 1.09; ax and size are tuned so
+    // the hung span meets the size rule (1.063 * 426 / 477 = 0.949 m) and the hung width / height meets 320 / 426.
+    body: {
+      family: 'mover',
+      ref: 'spiider',
+      size: 0.633,
+      ax: 0.46,
+      barrel: { r: 0.4, rear: 0.366, front: -0.408 },
+      lens: { r: 0.35, y: 0.398, off: 0.408 },
+      vents: true,
+      // inner 2x2 drawn as a ring of 4: the painter draws concentric rings only
+      face: { cells: [4, 8] },
+    },
+    dimensions: { h: 426, w: 320, d: 220 },
+    // measured from the built model and pinned by tests/unit/render/fixtures/productSpans.test.ts
+    span: 0.948,
+    mountHeight: { hang: 0.69, floor: 0.69 },
+    dataSheet:
+      'https://www.robe.cz/ledbeam-350 (Robe data sheet "LEDBeam 350" 5/18/2026, https://cdn.aws.robe.cz/print/en_product_4349.pdf)',
+    unmodelled: [
+      'virtual colour wheel and DataSwatch presets',
+      'tungsten lamp emulation',
+      'strobe and pulse effects',
+      'Cpulse flicker-free mode',
+      'optional Fresnel-wash diffuser',
+      'eggcrate',
+      'cell layout approximate (inner 2x2 drawn as a ring)',
+    ],
+  },
 } as const satisfies Record<string, FixtureProduct>;
