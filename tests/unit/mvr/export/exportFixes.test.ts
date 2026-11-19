@@ -35,6 +35,14 @@ describe('MVR export object fixes', () => {
     const hidden = { ...theatre, scenery: { ...theatre.scenery, deck: false } };
     expect(objectSpecs(hidden).filter((spec) => spec.shape.kind === 'riser' || spec.shape.kind === 'deck')).toEqual([]);
   });
+
+  it('exports no LED wall or side screen when the wall is hidden, but still the hidden trusses', () => {
+    const pool = createTemplate('sultans-pool');
+    const hidden = { ...pool, scenery: { ...pool.scenery, ledWall: false, trusses: false } };
+    const kinds = (d: typeof pool): string[] => objectSpecs(d).map((spec) => spec.shape.kind);
+    expect([kinds(pool).includes('screen'), kinds(hidden).includes('screen')]).toEqual([true, false]);
+    expect(kinds(hidden).filter((kind) => kind === 'truss')).toHaveLength(pool.trusses.length);
+  });
 });
 
 describe('MVR export patch fixes', () => {

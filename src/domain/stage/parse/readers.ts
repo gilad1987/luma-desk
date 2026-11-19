@@ -1,7 +1,8 @@
 import type { Quat, Vec3 } from '../types';
 import type { Choices, FieldReader, Key, NumbersShape } from './fieldReader';
 import { describeValue, type Raw } from './rawValues';
-import { ARRAY, BOOLEAN, FINITE, OBJECT, POSITIVE, POSITIVE_INT, STRING, type ValueRule } from './valueRules';
+import { ARRAY, BOOLEAN, FINITE, FIXTURE_ID, ID_MARK, OBJECT, POSITIVE, POSITIVE_INT, STRING } from './valueRules';
+import type { ValueRule } from './valueRules';
 import { toUnitQuat, toVec3 } from './vectors';
 
 /**
@@ -29,6 +30,8 @@ export class Reader {
   num = (o: Raw, key: Key, at: string): number | undefined => this.check(o, key, at, FINITE);
   positive = (o: Raw, key: Key, at: string): number | undefined => this.check(o, key, at, POSITIVE);
   positiveInt = (o: Raw, key: Key, at: string): number | undefined => this.check(o, key, at, POSITIVE_INT);
+  fixtureId = (o: Raw, key: Key, at: string): number | undefined => this.check(o, key, at, FIXTURE_ID);
+  idMark = (o: Raw, key: Key, at: string): number | undefined => this.check(o, key, at, ID_MARK);
   str = (o: Raw, key: Key, at: string): string | undefined => this.check(o, key, at, STRING);
   bool = (o: Raw, key: Key, at: string): boolean | undefined => this.check(o, key, at, BOOLEAN);
 

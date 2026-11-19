@@ -1,7 +1,7 @@
 import type { StageDesign, StageFixture, StageScreen } from '../StageDesign';
 import type { Vec3 } from '../types';
 import { type DeckSize, setSceneryPart } from './deckOps';
-import { nextIdBlock } from './ids';
+import { nextFixtureId, nextIdBlock } from './ids';
 import { checkSizes } from './inputChecks';
 import { isSameLength } from '../sameData';
 import { withoutFixtures } from './withoutFixtures';
@@ -12,11 +12,11 @@ export type WallSize = Pick<DeckSize, 'width' | 'height'>;
 const LED_WALL_ID = 'led-wall';
 
 /**
- * Turns the LED wall (the first screen) on at `size`, resizes it, or turns it off with `null`. The wall's screen
- * fixture is added, moved to the new centre or deleted with it, because that fixture drives the wall picture. A new
- * wall stands on the deck at its upstage edge, centred on x = 0. Turning it on also shows the LED wall scenery part,
- * so the new wall is not hidden. A wall that is on at that size already returns `d` itself, so History adds no undo
- * step.
+ * Adds the LED wall (the first screen) at `size`, resizes it, or deletes it with `null`. The wall's screen fixture is
+ * added, moved to the new centre or deleted with it, because that fixture drives the wall picture. To hide a wall and
+ * keep it, the builder calls `setSceneryPart(d, 'ledWall', false)` instead of `null`. A new wall stands on the deck at
+ * its upstage edge, centred on x = 0. A size also shows the LED wall scenery part, so the wall is not hidden. A wall
+ * that is shown at that size already returns `d` itself, so History adds no undo step.
  * @throws RangeError when a size is not a finite number > 0.
  */
 export function setLedWall(d: StageDesign, size: WallSize | null): StageDesign {
@@ -30,8 +30,10 @@ export function setLedWall(d: StageDesign, size: WallSize | null): StageDesign {
   return setSceneryPart(sized, 'ledWall', true);
 }
 
+/** Keeps `nextFixtureId`, so the screen fixture's id is never given to a later light. */
 function removeWall(d: StageDesign, wall: StageScreen): StageDesign {
-  return { ...withoutFixtures(d, new Set([wall.fixtureId])), screens: d.screens.slice(1) };
+  const rest = withoutFixtures(d, new Set([wall.fixtureId]));
+  return { ...rest, screens: d.screens.slice(1), nextFixtureId: nextFixtureId(d) };
 }
 
 function resizeWall(d: StageDesign, wall: StageScreen, size: WallSize): StageDesign {
@@ -43,7 +45,7 @@ function resizeWall(d: StageDesign, wall: StageScreen, size: WallSize): StageDes
 }
 
 function addWall(d: StageDesign, size: WallSize): StageDesign {
-  const id = nextIdBlock(d);
+  const id = nextIdBlock(d, 1);
   const { height: y0, z0: z } = d.deck;
   const x0 = -size.width / 2;
   const wall: StageScreen = { id: LED_WALL_ID, fixtureId: id, x0, x1: x0 + size.width, y0, y1: y0 + size.height, z };

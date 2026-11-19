@@ -1,6 +1,7 @@
 /**
  * Owns the deck, LED wall, riser and venue ops: the deck keeps its downstage edge, the wall brings its screen
- * fixture, and a venue sets its scenery defaults. Drawing them is owned by the render tests.
+ * fixture, and a venue sets its scenery defaults. What a deck height change moves is owned by `deckHeight.test.ts`;
+ * drawing them is owned by the render tests.
  */
 import { describe, expect, it } from 'vitest';
 import {

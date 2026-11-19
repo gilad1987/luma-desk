@@ -64,6 +64,26 @@ describe('MissingFixtureNotice edges (QA4)', () => {
     expect(logs()).toEqual([warn(1, 1, 2)]);
   });
 
+  it('reads a saved cue without vals or fx as empty, as Tracking does, so GO does not throw', () => {
+    const { notice, logs } = setup();
+    const saved = (cue: Cue, ...lacks: ('vals' | 'fx')[]): Cue => {
+      for (const key of lacks) Reflect.deleteProperty(cue, key);
+      return cue;
+    };
+    notice.check(0, saved(cueOf(1, {}), 'vals', 'fx'));
+    notice.check(0, saved(cueOf(2, { 90001: { dim: 1 } }), 'fx'));
+    notice.check(0, saved(cueOf(3, {}, [90001]), 'vals'));
+    expect(logs()).toEqual([warn(1, 2, 1), warn(1, 3, 1)]);
+  });
+
+  it('reads a saved fx of false or 0 as empty, as Tracking does', () => {
+    const { notice, logs } = setup();
+    for (const fx of [false, 0]) {
+      expect(() => notice.check(0, { ...cueOf(1, {}), fx: fx as unknown as Cue['fx'] })).not.toThrow();
+    }
+    expect(logs()).toEqual([]);
+  });
+
   it('warns again after a builder, import or show load apply, but not after a preview', () => {
     const { service, notice, logs } = setup();
     const theatre = createTemplate('theatre');

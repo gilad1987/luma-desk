@@ -27,6 +27,18 @@ export function keyActionOf(ev: KeyPress): KeyAction | null {
   return null;
 }
 
+/** Input types that take no typed text: a click leaves the focus on them, and the builder keys must still act. */
+const UNTYPED_INPUTS: readonly string[] = ['checkbox', 'radio'];
+
+/**
+ * True when `target` takes typed text (a text or number box), so Delete and Ctrl+Z belong to it. A checkbox and a list
+ * (`select`) do not: they keep the focus after a click, and the builder keys would otherwise go dead there.
+ */
+function takesTyping(target: EventTarget | null): boolean {
+  if (!(target instanceof Element) || target.tagName === 'SELECT' || !isTextField(target)) return false;
+  return !('type' in target && typeof target.type === 'string' && UNTYPED_INPUTS.includes(target.type));
+}
+
 /**
  * Sends the builder shortcuts to `run` until the returned disposer is called. A key typed in a field is left to the
  * field, so Delete in a number box deletes a digit, not the picked fixtures. A matched key is prevented, so Ctrl+D
@@ -34,7 +46,7 @@ export function keyActionOf(ev: KeyPress): KeyAction | null {
  */
 export function listenBuilderKeys(source: KeySource, run: (action: KeyAction) => void): () => void {
   const listener = (ev: KeyPress): void => {
-    if (isTextField(ev.target instanceof Element ? ev.target : null)) return;
+    if (takesTyping(ev.target)) return;
     const action = keyActionOf(ev);
     if (!action) return;
     ev.preventDefault();

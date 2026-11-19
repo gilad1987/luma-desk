@@ -1,3 +1,4 @@
+import { setSceneryPart } from '../../domain/stage/edit/deckOps';
 import { setLedWall, type WallSize } from '../../domain/stage/edit/ledWall';
 import type { StageDesign } from '../../domain/stage/StageDesign';
 import { he } from '../../i18n/he';
@@ -18,18 +19,23 @@ const WALL_FIELDS: readonly { key: keyof WallSize; label: string; title: string 
 ];
 
 /**
- * The LED wall section of the Stage tab: the on/off box, then the wall size while it is on. A size field reads the
- * other size from the draft at edit time, as the deck fields do, so it never sends a size the draft no longer has.
- * The size fields send their errors to their own line; the box sends through `run`, the tab's line.
+ * The LED wall section of the Stage tab: the show/hide box, then the wall size while it shows. Clearing the box only
+ * hides the wall (the `ledWall` scenery part), so its size, side screens and screen fixture id stay, and cues on that
+ * fixture keep working; ticking it shows the same wall again, or adds a new one when the stage has none. A size field
+ * reads the other size from the draft at edit time, as the deck fields do, so it never sends a size the draft no
+ * longer has. The size fields send their errors to their own line; the box sends through `run`, the tab's line.
  */
 export function wallControls(d: StageDesign, session: Pick<EditorSession, 'edit'>, run: RunEdit): HTMLElement[] {
-  const size = wallSizeOf(d);
+  const size = d.scenery.ledWall ? wallSizeOf(d) : null;
   const toggle = makeCheckbox({
     label: 'LED wall',
     key: 'ledWall',
     title: he.builder.tools.ledWall,
     isOn: size !== null,
-    onToggle: (isOn) => run((draft) => setLedWall(draft, isOn ? NEW_WALL : null)),
+    onToggle: (isOn) =>
+      run((draft) =>
+        isOn ? setLedWall(draft, wallSizeOf(draft) ?? NEW_WALL) : setSceneryPart(draft, 'ledWall', false),
+      ),
   });
   if (!size) return [makeHeading('LED wall'), toggle];
   const fields = WALL_FIELDS.map(({ key, label, title }) =>

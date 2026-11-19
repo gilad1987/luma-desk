@@ -1,13 +1,12 @@
 import type { Rig } from '../../domain/rig/Rig';
 import { aimAt } from '../../domain/aim';
-import type { StageFrame } from '../../domain/stage/StageFrame';
 import type { EngineBus } from '../../engine/events';
 import type { Programmer } from '../../engine/Programmer';
 import { toastSelectFirst } from '../../engine/programmerActions/toastSelectFirst';
 import type { Selection } from '../../engine/Selection';
 import { boxMap, pointerDrag, type BoxMap } from '../shared';
 import type { AimHeight } from './AimHeight';
-import { drawFocusMap, type PadPoint } from './drawFocusMap';
+import { drawFocusMap, type FocusMapFrame, type PadPoint } from './drawFocusMap';
 import { padScale, type PadScale } from './padScale';
 
 /** What a focus pad aims: the selection's moving fixtures, through the programmer, at the shared aim height. */
@@ -18,10 +17,11 @@ export interface FocusPadDeps {
   readonly rig: Pick<Rig, 'get'>;
   readonly aimHeight: AimHeight;
   /**
-   * The current stage's focus frame, read at each aim: a built or loaded stage moves and raises the deck, so the
-   * fixed venue `STAGE`/`DECK` would aim at the wrong height. For the built-in stage the deck equals them.
+   * The current stage's focus frame, read at each aim and each draw: a built or loaded stage moves and raises the
+   * deck, so the fixed venue `STAGE`/`DECK` would aim at the wrong height, and the map draws this stage's deck, wall
+   * and ring. For the built-in stage the frame equals the venue constants.
    */
-  readonly frame: () => Pick<StageFrame, 'deck'>;
+  readonly frame: () => FocusMapFrame;
 }
 
 /**
@@ -55,6 +55,7 @@ export function focusPad(c: HTMLCanvasElement, deps: FocusPadDeps): (pt?: PadPoi
   const draw = (pt?: PadPoint): void =>
     drawFocusMap(
       c,
+      deps.frame(),
       selection.ids.flatMap((id) => rig.get(id) ?? []),
       pt,
     );

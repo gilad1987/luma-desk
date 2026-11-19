@@ -3,15 +3,23 @@ import { TRUSS_KINDS } from '../types';
 import type { Key } from './fieldReader';
 import { allDefined, type Raw } from './rawValues';
 import type { Reader } from './readers';
+import { checkTrussLimits } from './trussLimits';
 
 /**
  * Reads truss `params` by `kind`, so each kind keeps only the numbers it needs and an unknown kind is an error rather
- * than a truss the renderer cannot draw. Sections, radii and sizes must be above zero for the same reason.
+ * than a truss the renderer cannot draw. Sections, radii and sizes must be above zero for the same reason, and truss
+ * sizes must stay within `TRUSS_SIZE_M` (`checkTrussLimits`), so the renderer never draws without end.
  */
 export function parseTrussParams(r: Reader, truss: Raw, at: string): TrussParams | undefined {
   const o = r.obj(truss, 'params', at);
   if (!o) return undefined;
   const path = r.path(at, 'params');
+  const params = parseKind(r, o, path);
+  if (params) checkTrussLimits(r, params, path);
+  return params;
+}
+
+function parseKind(r: Reader, o: Raw, path: string): TrussParams | undefined {
   const kind = r.oneOf(o, 'kind', path, { options: TRUSS_KINDS, what: 'truss kind' });
   switch (kind) {
     case undefined:

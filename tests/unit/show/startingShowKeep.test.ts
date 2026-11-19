@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import type { Cue } from '../../../src/engine/CueList';
+import { PRESET_TYPE_IDS, type PresetPools } from '../../../src/engine/presetTypes';
+import { dropForeignIds } from '../../../src/show/startingShow/dropForeignIds';
 import { sameFixtureIds } from '../../../src/show/startingShow/sameFixtureIds';
 import { importedSourceOf, startingShowWorld } from '../../shared';
 
@@ -20,5 +23,15 @@ describe('StartingShow.keep', () => {
     }
     for (const group of Object.values(world.groups.all)) for (const id of group.ids) expect(ids.has(id)).toBe(true);
     expect(world.events).toContain('showChanged');
+  });
+
+  it('reads a saved cue without vals or fx (or with fx false) as empty, as Tracking does', () => {
+    const bare = { num: 1, name: '', fade: 0 };
+    const exec = { cues: [bare, { ...bare, fx: false }] as unknown as Cue[], invalidate: vi.fn() };
+    const pools = Object.fromEntries(PRESET_TYPE_IDS.map((type) => [type, {}])) as PresetPools;
+    const presetLibrary = { all: pools, replace: vi.fn() };
+    dropForeignIds({ execs: [exec], groupLibrary: { all: {}, replace: vi.fn() }, presetLibrary }, new Set([1]));
+    expect(exec.cues).toEqual([1, 2].map(() => ({ ...bare, vals: {}, fx: [] })));
+    expect(exec.invalidate).toHaveBeenCalledOnce();
   });
 });
