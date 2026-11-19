@@ -42,6 +42,8 @@ export function wireLayout(deps: LayoutDeps): LayoutHandles {
     aimHeight: deps.aimHeight,
     frame: () => stage.frame,
   });
+  // a template load, an MVR import or the builder's Done changes the stage: the map draws the new one
+  deps.bus.on('rigChanged', () => redrawFocus());
   const layout = new LayoutManager(layoutHost(deps));
   const ma = new MaLayout({
     readout: maReadout(deps),
