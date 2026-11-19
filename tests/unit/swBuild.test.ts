@@ -69,10 +69,12 @@ describe('the Web Awesome chunk boundary', () => {
     return name ? readFileSync(join(outDir, 'assets', name), 'utf8') : '';
   };
 
-  // catches a static import of the wa folder, which pulls Web Awesome into the desk's start-up chunk
-  it('keeps the wa-button definition out of the main chunk and in the registerWa chunk', () => {
+  // catches a static import of the wa folder, which pulls Web Awesome into the desk's start-up chunk. The marker is a
+  // Web Awesome token name: the component styles carry `--wa-` tokens, the builder's own TypeScript never does (U7),
+  // while the tag name `wa-button` is in the builder markup of the main chunk by design.
+  it('keeps the Web Awesome component code out of the main chunk and in the registerWa chunk', () => {
     const main = assetText(/^index-[\w-]+\.js$/);
     const wa = assetText(/^registerWa-[\w-]+\.js$/);
-    expect([main.length > 0, main.includes('wa-button'), wa.includes('wa-button')]).toEqual([true, false, true]);
+    expect([main.length > 0, main.includes('--wa-'), wa.includes('--wa-')]).toEqual([true, false, true]);
   });
 });
