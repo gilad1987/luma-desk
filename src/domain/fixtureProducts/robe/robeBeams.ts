@@ -22,14 +22,15 @@ export const ROBE_BEAMS = {
     // head with a thick front ring round a deep lens and side vents (robe.cz/pointe photos). The lens is 110/150 of
     // the MegaPointe's; ax, barrel radius and length are tuned so the hung span meets the size rule (0.94 * 575 / 640
     // = 0.845 m) and the hung width / height meets 365 / 575 (productProportions.test.ts), as the sheet gives no
-    // barrel diameter.
+    // barrel diameter. The lens sits 0.062 behind the front, the MegaPointe's 0.085 recess scaled by the lens radius
+    // (0.198 / 0.27), so its hot spot shows at a slant as the native one does (mover.test.ts).
     body: {
       family: 'mover',
       ref: 'megapointe',
       size: 0.5,
       ax: 0.43,
       barrel: { r: 0.35, rear: 0.4, front: -0.6 },
-      lens: { r: 0.198, y: 0.5, off: 0.6 },
+      lens: { r: 0.198, y: 0.538, off: 0.6 },
       vents: true,
       face: 'hotspot',
     },
