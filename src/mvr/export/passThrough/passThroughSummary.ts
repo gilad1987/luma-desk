@@ -1,3 +1,4 @@
+import { findGdtfMatch } from '../../gdtf/findGdtf';
 import { childText, descendantElements } from '../../xml/elements';
 import type { KeptCounts, MvrExportSummary } from '../MvrExportSummary';
 import type { OriginalArchive } from './readOriginal';
@@ -10,14 +11,14 @@ import type { ScenePatch } from './patchScene';
 const OBJECT_TAGS = ['SceneObject', 'Support', 'VideoScreen', 'Projector'];
 const MESH_FILE = /\.(3ds|glb|gltf|obj)$/i;
 
-/** The GDTF names fixtures refer to that no archive entry holds, matched without case and with or without `.gdtf`. */
+/**
+ * The GDTF names fixtures refer to that no root-level archive entry serves, by the import's own rules
+ * (`findGdtfMatch`): a file the import finds, such as Vectorworks' `Maker@Model.gdtf` for `Model`, is not missing.
+ */
 function missingGdtfs(doc: Document, archive: OriginalArchive): string[] {
-  const names = new Set(archive.entries.map((entry) => entry.name.toLowerCase()));
+  const names = archive.entries.map((entry) => entry.name).filter((name) => !name.includes('/'));
   const specs = descendantElements(doc.documentElement, 'Fixture').map((el) => childText(el, 'GDTFSpec') ?? '');
-  const missing = specs.filter((spec) => {
-    const lower = spec.toLowerCase();
-    return spec !== '' && !names.has(lower) && !names.has(`${lower}.gdtf`);
-  });
+  const missing = specs.filter((spec) => spec !== '' && findGdtfMatch(names, spec) === undefined);
   return [...new Set(missing)];
 }
 
