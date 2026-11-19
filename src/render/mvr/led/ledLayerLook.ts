@@ -48,11 +48,12 @@ function frontScreen(node: Mesh, sides: () => StageSides): void {
 /**
  * Draws the file meshes under `layer` as LED walls, or gives them their own materials back. The user marks a layer
  * when the file holds its LED wall as a plain solid with no screen evidence: the solid then shows the generated
- * content at the wall level in place of a dark block. Each mesh gets a material of its own with the look of `panel`
- * and the front of that mesh (`ledFrontOf`), worked out once here: only the faces to the audience emit, and the rest
- * of a solid stays the dark cabinet. The audience side comes from the seat proxies of the stage, else downstage. All
- * these materials share one program. Screens the file names get their front on the same walk (`frontScreen`). What
- * the desk itself draws in the layer (`isDeskMade`: panel proxies, seats, the audience) stays as it is.
+ * content at the wall level in place of a dark block. Each mesh gets an LED material of its own with the front of
+ * that mesh (`ledFrontOf`), worked out once here: only the faces to the audience emit, and the rest of a solid stays
+ * the dark cabinet. `panel` is not read: the look comes from the shared LED uniforms, as for every LED material.
+ * The audience side comes from the seat proxies of the stage, else downstage. All these materials share one
+ * program. Screens the file names get their front on the same walk (`frontScreen`). What the desk itself draws in
+ * the layer (`isDeskMade`: panel proxies, seats, the audience) stays as it is.
  */
 export function drawAsLed(layer: Object3D, panel: Material, isLed: boolean): void {
   // The sides of the stage are worked out once, and only for a layer that has a mesh to give a front to.
