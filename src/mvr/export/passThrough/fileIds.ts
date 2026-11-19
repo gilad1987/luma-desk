@@ -1,12 +1,18 @@
+import { fixtureIdNumber } from '../../design/assignIds';
 import { childText } from '../../xml/elements';
 
-/** A positive integer id, or `undefined`; FixtureIDNumeric first, as the import reads it. */
+/** `value` when it is a positive integer, else `undefined`. */
+const positive = (value: number | undefined): number | undefined =>
+  value !== undefined && Number.isInteger(value) && value > 0 ? value : undefined;
+
+/**
+ * A positive integer id, or `undefined`, read as the import reads it: FixtureIDNumeric first as a whole number, then
+ * FixtureID only when it is digits only (`fixtureIdNumber`), so `1.0` or `0x1` is a label here too.
+ */
 export function numericId(element: Element): number | undefined {
-  for (const text of [childText(element, 'FixtureIDNumeric'), childText(element, 'FixtureID')]) {
-    const value = Number(text ?? '');
-    if (text && Number.isInteger(value) && value > 0) return value;
-  }
-  return undefined;
+  const numeric = childText(element, 'FixtureIDNumeric');
+  const fromNumeric = numeric?.trim() ? positive(Number(numeric)) : undefined;
+  return fromNumeric ?? positive(fixtureIdNumber(childText(element, 'FixtureID') ?? ''));
 }
 
 /** File ids that are usable: positive and held by one fixture only (a shared id made the desk assign one, D1). */

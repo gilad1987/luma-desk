@@ -1,4 +1,5 @@
 import type { StageFixture } from '../../../domain/stage/StageDesign';
+import { fixtureIdNumber } from '../../design/assignIds';
 import { childElement } from '../../xml/elements';
 import type { ExportContext } from '../ExportContext';
 import { gdtfIdentity } from '../gdtfIdentity';
@@ -33,7 +34,8 @@ export interface FixtureEdits {
 
 /**
  * Renumbers a fixture the user gave another id. A file id that was empty, zero or shared by two fixtures made the
- * desk assign one, so the file's own text is kept then (D1). FixtureID changes only when it held the number itself.
+ * desk assign one, so the file's own text is kept then (D1). FixtureID changes only when it held the number itself,
+ * read by the import's rule (`fixtureIdNumber`), so `001` is the number 1 and a label stays.
  */
 function renumber(element: Element, fileId: number | undefined, id: number): boolean {
   if (fileId === undefined || fileId === id) return false;
@@ -41,7 +43,8 @@ function renumber(element: Element, fileId: number | undefined, id: number): boo
   const numeric = childElement(element, 'FixtureIDNumeric')
     ? setChildText(element, 'FixtureIDNumeric', `${id}`)
     : false;
-  const named = text === `${fileId}` ? setChildText(element, 'FixtureID', `${id}`) : false;
+  const named =
+    text !== undefined && fixtureIdNumber(text) === fileId ? setChildText(element, 'FixtureID', `${id}`) : false;
   return numeric || named;
 }
 

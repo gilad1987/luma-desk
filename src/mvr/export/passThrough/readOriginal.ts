@@ -1,9 +1,12 @@
 import { unzipSync, type UnzipFileInfo } from 'fflate';
 import { MAX_ENTRY_BYTES, MAX_TOTAL_BYTES } from '../../archive/MvrArchive';
+import { nameDecoder } from '../../archive/legacyNames';
 import { MvrError } from '../../MvrWarning';
+import { entryNameResolver, repeatedNames } from './entryNames';
 
 /** One file of the original archive, copied to the export with its bytes unchanged. */
 export interface OriginalEntry {
+  /** The name as the import reads it (`entryNameResolver`), not fflate's raw key of a name without the UTF-8 flag. */
   readonly name: string;
   readonly bytes: Uint8Array;
   /** True when the original stored the entry without compression; the export stores it the same way. */
@@ -42,17 +45,18 @@ export function isSafeEntryName(name: string): boolean {
  * folders too: the import reads only root files, while a re-export must carry every file the source had.
  */
 export function readOriginal(bytes: Uint8Array): OriginalArchive {
+  const decode = nameDecoder(bytes);
   let total = 0;
   const stored = new Set<string>();
   const unsafe: string[] = [];
-  const seen = new Set<string>();
-  const duplicates: string[] = [];
+  const order: string[] = [];
   const keep = (entry: UnzipFileInfo): boolean => {
-    if (entry.name.endsWith('/')) return false;
-    if (seen.has(entry.name)) duplicates.push(entry.name);
-    seen.add(entry.name);
-    if (!isSafeEntryName(entry.name)) {
-      unsafe.push(entry.name);
+    const { name, alt } = decode(entry.name);
+    if (entry.name.endsWith('/') || name.endsWith('/')) return false;
+    order.push(entry.name);
+    // both readings are checked: the export writes one of them, chosen only once the scene is read
+    if (![name, alt ?? name].every(isSafeEntryName)) {
+      unsafe.push(name);
       return false;
     }
     total += entry.originalSize;
@@ -62,8 +66,18 @@ export function readOriginal(bytes: Uint8Array): OriginalArchive {
     return true;
   };
   const files = unzipSync(bytes, { filter: keep });
-  const entries = Object.entries(files).map(([name, data]) => ({ name, bytes: data, stored: stored.has(name) }));
-  const scene = entries.find((entry) => entry.name.toLowerCase() === SCENE_FILE);
-  if (!scene) throw new MvrError('no-scene', 'The original file has no GeneralSceneDescription.xml.');
-  return { entries, sceneName: scene.name, sceneText: new TextDecoder().decode(scene.bytes), unsafe, duplicates };
+  const sceneRaw = Object.keys(files).find((raw) => decode(raw).name.toLowerCase() === SCENE_FILE);
+  if (sceneRaw === undefined) throw new MvrError('no-scene', 'The original file has no GeneralSceneDescription.xml.');
+  const sceneText = new TextDecoder().decode(files[sceneRaw]);
+  const resolve = entryNameResolver(decode, sceneText);
+  // Two raw names can decode to one name; the ZIP writer keeps one entry per name, so the first is copied.
+  const taken = new Set<string>();
+  const entries = Object.entries(files).flatMap(([raw, data]) => {
+    const name = resolve(raw);
+    if (taken.has(name)) return [];
+    taken.add(name);
+    return [{ name, bytes: data, stored: stored.has(raw) }];
+  });
+  const duplicates = repeatedNames(order.map(resolve));
+  return { entries, sceneName: resolve(sceneRaw), sceneText, unsafe, duplicates };
 }
