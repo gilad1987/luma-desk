@@ -1,5 +1,5 @@
-/** The Web Awesome events the builder listens to. */
-export type WaEventName = 'wa-reposition' | 'wa-show' | 'wa-hide' | 'wa-after-hide' | 'wa-after-show';
+/** The Web Awesome events the builder listens to; a later phase adds the drawer's `wa-show`/`wa-hide` when it needs them. */
+export type WaEventName = 'wa-reposition';
 
 /**
  * Listens for one Web Awesome event and returns the disposer that removes the same listener (rule U6), so a builder

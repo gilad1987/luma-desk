@@ -18,8 +18,8 @@ baselines of the desk layouts. The owner chose Web Awesome 3.15.0 (MIT) over Man
 
 1. `@awesome.me/webawesome` is pinned to `3.15.0` in `dependencies` and bundled by Vite. Nothing is loaded from a
    CDN: the components are imported one by one (`dist/components/<name>/<name>.js`), never the autoloader.
-2. One folder imports the package: `src/ui/builder/wa/` (`registerWa.ts`, `waIcons.ts`, `waEvents.ts`,
-   `waButton.ts`). ESLint (`eslint/waBoundary.ts`) rejects the import anywhere else. The rest of the builder drives
+2. One folder imports the package: `src/ui/builder/wa/` (`registerWa.ts`, `waIcons.ts`, `waIconPaths.ts`,
+   `waEvents.ts`, `waButton.ts`). ESLint (`eslint/waBoundary.ts`) rejects the import anywhere else. The rest of the builder drives
    Web Awesome elements through the plain `HTMLElement` surface (attributes, properties, `onclick`), so unit tests on
    FakeDom or jsdom never load the package.
 3. Only the theme tokens are imported: `dist/styles/themes/default.css`. Not `webawesome.css`, which pulls in
@@ -87,8 +87,8 @@ Costs and risks:
   lists the chunk; the main chunk has no `--wa-` string, the chunk does). The boot CSS `assets/index-*.css` is 56,958
   bytes (12,992 gzip; main: 48,700): the builder's own shell styles and the token mapping are desk styles, scoped
   under `.builder`.
-- `tests/unit/app/ui/wireBuilder.test.ts`: the click awaits the chunk before `enter()`; `viewerHost.test.ts`: the
-  viewer moves into the pane and back before `#side`.
+- `tests/unit/app/ui/wireBuilder.load.test.ts`: the click awaits the chunk before `enter()` and a failed load shows
+  a toast; `viewerHost.test.ts`: the viewer moves into the pane and back before `#side`.
 - `tests/e2e/builder-shell.network.spec.ts`: no off-origin request from the Build Stage click to Done, no `wa-icon`
   element, no Web Awesome custom element or token in the page before the click, the chunk under a 600 KB budget;
   `builder-shell.layout.spec.ts` and `builder-shell.divider.spec.ts`: the column widths, the 44 px buttons, the

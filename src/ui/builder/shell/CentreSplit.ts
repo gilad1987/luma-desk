@@ -25,8 +25,8 @@ const MODE_CLASSES: Readonly<Record<ViewMode, string>> = {
  * Only a move in Split mode is remembered; the 0 and 100 of the other modes are not the user's choice, so a reposition
  * there puts the edge back. It does not own the mode buttons (`ViewModeSwitch`) or what the panes hold.
  *
- * Risk (docs/plan/stage-builder-dnd/01-shell.md): a 0 % pane gives the renderer a 0 px box, so the 3D canvas sizes
- * to 0 height in Plan mode; QA watches the console in both single-view modes.
+ * A 0 % pane would give the renderer a 0 px canvas, and WebGL then warns on every frame; the moved viewer keeps a 2 px
+ * minimum height (`src/styles/builder/_centre.scss`), so Plan mode draws a 2 px 3D strip instead.
  */
 export class CentreSplit {
   readonly #centre: HTMLElement;

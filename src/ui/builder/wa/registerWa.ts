@@ -13,7 +13,7 @@ import '@awesome.me/webawesome/dist/components/drawer/drawer.js';
 import '@awesome.me/webawesome/dist/styles/themes/default.css';
 
 /** The custom elements the imports above define; the builder markup may use only these. */
-export const WA_TAGS = ['wa-button', 'wa-button-group', 'wa-tooltip', 'wa-split-panel', 'wa-drawer'] as const;
+const WA_TAGS = ['wa-button', 'wa-button-group', 'wa-tooltip', 'wa-split-panel', 'wa-drawer'] as const;
 
 /**
  * Resolves when every tag in {@link WA_TAGS} is defined, so the builder screen mounts upgraded elements and never

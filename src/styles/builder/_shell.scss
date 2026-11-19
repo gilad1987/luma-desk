@@ -64,10 +64,6 @@ body.is-building {
   .is-narrow-only {
     display: none;
   }
-  // The builder root is dir="ltr"; `:dir()` reads the nearest dir, so a Hebrew page around it does not mirror (U8).
-  .wa-icon-svg.is-directional:dir(rtl) {
-    transform: scaleX(-1);
-  }
 }
 
 // Narrow: the library becomes a 56 px icon rail and the inspector moves into the drawer, opened from the bar.
