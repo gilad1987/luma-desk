@@ -54,7 +54,7 @@ export interface StageRiser {
 /**
  * One design fixture. `position` is absolute (metres, world frame, Y-up, audience at +z) so the rig keeps exact
  * floats; `trussId` is only the parent link. `rotation` is a unit quaternion `[x, y, z, w]`, world frame: the body
- * orientation to the rest pose (hanging, beam straight down). Without it `mount` works as today (parity, G1).
+ * orientation relative to the rest pose (hanging, beam straight down). Without it `mount` works as before (parity, G1).
  */
 export interface StageFixture {
   readonly id: number;
