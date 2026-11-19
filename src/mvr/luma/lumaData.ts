@@ -62,7 +62,10 @@ export type LumaStageData = Pick<StageDesign, 'venue' | 'scenery' | 'deck' | 'sc
   readonly offset: Vec3;
   readonly links: readonly FixtureLink[];
   readonly hiddenLayers?: readonly string[];
-  /** Only in an export made from another program's file: who wrote that file, as the root now names the desk. */
+  /**
+   * Only in an export made from another program's file: who wrote that file (empty strings when its root named no
+   * one), as the root now names the desk. Its absence marks a file the desk made, whose bodies keep the desk size.
+   */
   readonly originalProvider?: OriginalProvider;
 };
 

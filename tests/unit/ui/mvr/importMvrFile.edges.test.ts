@@ -22,7 +22,11 @@ function setup() {
   const deleted: string[] = [];
   let applies = 0;
   const deps: MvrImportDeps = {
-    store: { put: (bytes) => real.put(bytes), delete: (hash) => (deleted.push(hash), real.delete(hash)) },
+    store: {
+      get: (hash) => real.get(hash),
+      put: (bytes) => real.put(bytes),
+      delete: (hash) => (deleted.push(hash), real.delete(hash)),
+    },
     stage: { apply: () => void (applies += 1) },
     cancelBuilder: () => {},
   };
@@ -45,6 +49,17 @@ describe('importMvrFile edges', () => {
     const loadParser = () => Promise.resolve({ importMvr: () => Promise.reject(broken), MvrError });
     await expect(importMvrFile({ name: 'a.mvr', bytes: mvrBytes() }, { ...deps, loadParser })).rejects.toBe(broken);
     expect([applies(), db.records.size, deleted.length]).toEqual([0, 0, 1]);
+  });
+
+  it.each([
+    ['a rejected file', new MvrError('bad-xml', 'bad')],
+    ['an error that is no MvrError', new SyntaxError('Unexpected token b in JSON')],
+  ])('keeps the bytes a saved show may need on %s that was stored before (R2-6)', async (_label, error) => {
+    const { db, deps, deleted } = setup();
+    expect((await importMvrFile({ name: 'a.mvr', bytes: mvrBytes() }, deps)).kind).toBe('imported');
+    const loadParser = () => Promise.resolve({ importMvr: () => Promise.reject(error), MvrError });
+    await importMvrFile({ name: 'b.mvr', bytes: mvrBytes() }, { ...deps, loadParser }).catch(() => undefined);
+    expect([db.records.size, deleted]).toEqual([1, []]);
   });
 
   it('deletes nothing for a rejected file the store had refused', async () => {
