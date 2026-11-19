@@ -10,24 +10,35 @@ const CLICK_SLOP_PX = 5;
 /**
  * Calls `onMoved` when a gesture of the orbit controls ends with the camera moved. The controls send 'start' on
  * every pointer down, also for a plain click (a fixture pick on the same canvas), and turn the camera on every
- * pointer move while the button is down. So a pointer gesture whose pointer went less than the click slop from
- * pointerdown to pointerup is a click and never a move (review R2-38); a wheel zoom and a longer drag are moves when
- * the pose at 'end' differs from the pose at 'start'.
+ * pointer move while the button is down. So a pointer gesture whose pointer went less than the click slop from its
+ * own pointerdown to its pointerup is a click and never a move (review R2-38); a wheel zoom, a longer drag and a
+ * gesture of two pointers at once are moves when the pose at 'end' differs from the pose at 'start'.
  */
 export function watchUserMove(camera: Camera, controls: OrbitControls, onMoved: () => void): void {
   const position = new Vector3(),
     target = new Vector3();
-  /** Where the button went down, and the travel at pointerup: this listener runs before the one of the controls. */
-  let down: { readonly x: number; readonly y: number } | null = null;
+  /**
+   * Where each pointer that is down went down, by pointerId, and the travel at pointerup of the pointer that went up:
+   * this listener runs before the one of the controls. A gesture with two pointers down at once (a pinch) is no click.
+   */
+  const downs = new Map<number, { readonly x: number; readonly y: number }>();
+  let isMulti = false;
   let travel: number | null = null;
   const element: GlobalEventHandlers = controls.domElement;
   element.addEventListener('pointerdown', (event) => {
-    down = { x: event.clientX, y: event.clientY };
+    downs.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (downs.size > 1) isMulti = true;
   });
+  const forget = (event: PointerEvent): void => {
+    downs.delete(event.pointerId);
+    if (downs.size === 0) isMulti = false;
+  };
   element.addEventListener('pointerup', (event) => {
-    if (down) travel = Math.hypot(event.clientX - down.x, event.clientY - down.y);
-    down = null;
+    const down = downs.get(event.pointerId);
+    if (down) travel = isMulti ? Infinity : Math.hypot(event.clientX - down.x, event.clientY - down.y);
+    forget(event);
   });
+  element.addEventListener('pointercancel', forget);
   controls.addEventListener('start', () => {
     position.copy(camera.position);
     target.copy(controls.target);
