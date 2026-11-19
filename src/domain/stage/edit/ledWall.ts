@@ -12,11 +12,11 @@ export type WallSize = Pick<DeckSize, 'width' | 'height'>;
 const LED_WALL_ID = 'led-wall';
 
 /**
- * Turns the LED wall (the first screen) on at `size`, resizes it, or turns it off with `null`. The wall's screen
- * fixture is added, moved to the new centre or deleted with it, because that fixture drives the wall picture. A new
- * wall stands on the deck at its upstage edge, centred on x = 0. Turning it on also shows the LED wall scenery part,
- * so the new wall is not hidden. A wall that is on at that size already returns `d` itself, so History adds no undo
- * step.
+ * Adds the LED wall (the first screen) at `size`, resizes it, or deletes it with `null`. The wall's screen fixture is
+ * added, moved to the new centre or deleted with it, because that fixture drives the wall picture. To hide a wall and
+ * keep it, the builder calls `setSceneryPart(d, 'ledWall', false)` instead of `null`. A new wall stands on the deck at
+ * its upstage edge, centred on x = 0. A size also shows the LED wall scenery part, so the wall is not hidden. A wall
+ * that is shown at that size already returns `d` itself, so History adds no undo step.
  * @throws RangeError when a size is not a finite number > 0.
  */
 export function setLedWall(d: StageDesign, size: WallSize | null): StageDesign {
