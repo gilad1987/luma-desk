@@ -1,9 +1,4 @@
-/** Lit's `updateComplete`, read structurally, so an element that is not a Lit element (or a fake) needs no cast. */
-function pendingRender(host: object): Promise<unknown> | undefined {
-  if (!('updateComplete' in host)) return undefined;
-  const update = host.updateComplete;
-  return update instanceof Promise ? update : undefined;
-}
+import { pendingRender } from './waRender';
 
 /**
  * Sets an ARIA attribute on a Web Awesome host and on the control inside it that takes the focus; `null` removes it.

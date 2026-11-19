@@ -2,6 +2,7 @@ import { mirrorLeftToRight } from '../../domain/stage/edit/mirror';
 import { requireChild } from '../dom';
 import type { KeyAction } from './builderKeys';
 import type { EditorSession } from './EditorSession';
+import { focusNearEnabled } from './keepToolbarFocus';
 import { isEmptySelection } from './selection';
 import { deleteSelection, duplicateSelection } from './selectionOps';
 import { editToolbarMarkup } from './shell/editToolbarMarkup';
@@ -84,17 +85,7 @@ export class EditToolbar {
       button.classList.toggle('is-disabled', isOff[action]);
       setWaDisabled(button, isOff[action]);
     }
-    if (focused !== undefined && isOff[focused]) this.#focusNear(focused, isOff);
-  }
-
-  /**
-   * Gives the focus to the next enabled button after `from`, else the nearest one before it: Delete, or the last Undo,
-   * turns its own focused button off, which would drop a keyboard user's focus to `<body>`. It runs after the paint,
-   * so a button that turned on in the same paint (Redo after Undo) can take it. Mirror is never off.
-   */
-  #focusNear(from: EditAction, isOff: OffState): void {
-    const at = ACTIONS.indexOf(from);
-    const target = [...ACTIONS.slice(at + 1), ...ACTIONS.slice(0, at).reverse()].find((action) => !isOff[action]);
-    if (target !== undefined) this.#buttons.get(target)?.focus();
+    // Mirror is never off, so a focused button that turns off always has a neighbour to give the focus to
+    if (focused !== undefined && isOff[focused]) focusNearEnabled(this.#buttons, focused, (action) => isOff[action]);
   }
 }
