@@ -1,3 +1,4 @@
+import { Vector3 } from 'three';
 import type { WallExtent } from './ledMeshExtents';
 
 /**
@@ -14,13 +15,11 @@ const touch = (a: WallExtent, b: WallExtent): boolean =>
   Math.abs(a.high.z - b.high.z) <= JOIN_GAP;
 
 /**
- * Joins the extents of the tiles of one wall into one extent round them all, and keeps walls apart apart. A video
- * wall of N cabinets is N parts (N instances of one cabinet, or N parts of one merged mesh); a light per part would
- * give the pool four small lights of four tiles, where the wall needs one light of its full area. Two extents are
- * one wall when their rectangles on the wall axes touch or overlap within `JOIN_GAP` and their fronts stand at about
- * one depth; a wall is every extent that a chain of such pairs reaches.
+ * The walls among `extents`, each as the numbers of the extents of its tiles. Two extents are one wall when their
+ * rectangles on the wall axes touch or overlap within `JOIN_GAP` and their fronts stand at about one depth; a wall is
+ * every extent that a chain of such pairs reaches.
  */
-export function joinExtents(extents: readonly WallExtent[]): WallExtent[] {
+export function wallGroups(extents: readonly WallExtent[]): number[][] {
   const group = extents.map((_, i) => i);
   const find = (i: number): number => {
     let at = i;
@@ -38,14 +37,31 @@ export function joinExtents(extents: readonly WallExtent[]): WallExtent[] {
       if (touch(first, other)) group[find(b)] = find(a);
     }
   });
-  const joined = new Map<number, WallExtent>();
-  extents.forEach((extent, i) => {
+  const walls = new Map<number, number[]>();
+  extents.forEach((_, i) => {
     const root = find(i);
-    const into = joined.get(root);
-    if (into) {
-      into.low.min(extent.low);
-      into.high.max(extent.high);
-    } else joined.set(root, { low: extent.low.clone(), high: extent.high.clone() });
+    const tiles = walls.get(root) ?? [];
+    tiles.push(i);
+    walls.set(root, tiles);
   });
-  return [...joined.values()];
+  return [...walls.values()];
+}
+
+/**
+ * Joins the extents of the tiles of one wall into one extent round them all, and keeps walls apart apart. A video
+ * wall of N cabinets is N parts (N instances of one cabinet, or N parts of one merged mesh); a light per part would
+ * give the pool four small lights of four tiles, where the wall needs one light of its full area. The walls are the
+ * ones of `wallGroups`.
+ */
+export function joinExtents(extents: readonly WallExtent[]): WallExtent[] {
+  return wallGroups(extents).map((tiles) => {
+    const [low, high] = [new Vector3(Infinity, Infinity, Infinity), new Vector3(-Infinity, -Infinity, -Infinity)];
+    for (const i of tiles) {
+      const extent = extents[i];
+      if (!extent) continue;
+      low.min(extent.low);
+      high.max(extent.high);
+    }
+    return { low, high };
+  });
 }

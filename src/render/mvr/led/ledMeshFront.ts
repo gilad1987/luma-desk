@@ -1,6 +1,7 @@
 import { InstancedMesh, Matrix4, Vector3, type Mesh } from 'three';
 import { ledFrontOf } from './ledFront';
 import { partMesh, partsOf } from './ledMeshParts';
+import { partWalls } from './ledPartWalls';
 import { directionsOf, type StageSides } from './ledStageSides';
 
 /** Most instances a front is worked out for; a mesh with more keeps every face lit and the import stays quick. */
@@ -10,8 +11,9 @@ const MOST_INSTANCES = 64;
 const EMITS = 0.5;
 
 /**
- * A part with less front area than this share of the largest part's is trim (a top cap, an end sheet), not a
- * screen: it may not cancel the front. Each part is judged alone, so many small caps do not add up to a screen.
+ * A wall with less front area than this share of the largest wall's is trim (a top cap, an end sheet), not a
+ * screen: it may not cancel the front. A wall is the parts that face one way and touch (`partWalls`), so the
+ * cabinets of a tiled wall add up to a screen, and caps apart or facing other ways do not.
  */
 const TRIM_SHARE = 0.15;
 
@@ -36,22 +38,24 @@ function frontArea(corners: Float32Array, front: Vector3): number {
 }
 
 /**
- * `front` if every connected part of `mesh` that is a screen emits to it, else undefined. Static scenery merges the
- * screens of one material into one mesh, and one front would leave a screen that faces another way dark. A part is
- * a screen when its area seen from its own front is at least `TRIM_SHARE` of the largest part's.
+ * `front` if every wall of the connected parts of `mesh` that is a screen emits to it, else undefined. Static
+ * scenery merges the screens of one material into one mesh, and one front would leave a screen that faces another
+ * way dark. A wall is a screen when its area seen from its own front is at least `TRIM_SHARE` of the largest wall's.
  */
 function agreed(mesh: Mesh, sides: StageSides, front: Vector3): Vector3 | undefined {
   mesh.updateWorldMatrix(true, false);
   const parts = partsOf(mesh, mesh.matrixWorld);
   if (parts.length < 2) return front;
   const world = new Matrix4();
-  const judged = parts.map((part) => {
-    const one = partMesh(part);
-    const own = ledFrontOf(one, { ...directionsOf(one, sides), world });
-    return { own, area: frontArea(part, own) };
-  });
-  const largest = judged.reduce((most, { area }) => Math.max(most, area), 0);
-  const apart = judged.some(({ own, area }) => area >= TRIM_SHARE * largest && own.dot(front) < EMITS);
+  const walls = partWalls(
+    parts.map((corners) => {
+      const one = partMesh(corners);
+      const own = ledFrontOf(one, { ...directionsOf(one, sides), world });
+      return { corners, own, area: frontArea(corners, own) };
+    }),
+  );
+  const largest = walls.reduce((most, { area }) => Math.max(most, area), 0);
+  const apart = walls.some(({ front: own, area }) => area >= TRIM_SHARE * largest && own.dot(front) < EMITS);
   if (apart) noFront.add(mesh);
   return apart ? undefined : front;
 }
