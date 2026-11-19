@@ -11,5 +11,8 @@ import { isGenericGdtf } from './isGenericGdtf';
  * stand-ins differently.
  */
 export function isPlaceholderGdtf(info: GdtfInfo, channels: readonly GdtfChannel[]): boolean {
-  return !info.hasBeam && isGenericGdtf(channels);
+  // A stand-in carries an intensity channel or none; Pan and Tilt alone, without a beam, are a real turntable or
+  // camera head, which the classifier must type as a device, not as a stand-in light.
+  const dimmed = channels.length === 0 || channels.some(({ attribute }) => /^Dimmer\d*$/.test(attribute));
+  return !info.hasBeam && dimmed && isGenericGdtf(channels);
 }
