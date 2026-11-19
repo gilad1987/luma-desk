@@ -37,6 +37,11 @@ export interface DeviceVisual {
   /** The visible body's material: the selection tints it, as a light's `bodyMat`. */
   readonly bodyMat: MeshStandardMaterial;
   readonly lensMat: MeshBasicMaterial;
+  /**
+   * The meshes of its GDTF body; empty when the box is the body. Taking the GDTF source away rebuilds a device with
+   * a GDTF body, as the source frees the geometry these meshes draw.
+   */
+  readonly pick: readonly Mesh[];
 }
 
 /** A light's three.js objects and the render-only state the frame update keeps for it. */

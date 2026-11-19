@@ -69,7 +69,7 @@ export class FixtureVisuals {
    * after the rig swap in, and picking and selection go on by fixture. Taking the source away rebuilds only a rig that drew from it.
    */
   setGdtf(source: GdtfBodySource | undefined): void {
-    const used = this.#visuals.some((v) => v.kind === 'light' && v.axisAt !== undefined);
+    const used = this.#visuals.some((v) => (v.kind === 'device' ? v.pick.length > 0 : v.kind === 'light' && v.axisAt));
     this.#gdtf = source;
     if (this.#last && (source || used)) this.rebuild(...this.#last);
   }
