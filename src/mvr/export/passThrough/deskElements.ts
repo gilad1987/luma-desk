@@ -22,15 +22,28 @@ function childListOf(layer: Element): Element {
 }
 
 /**
- * The `<ChildList>` a fixture added on the desk goes to: the layer its MVR facts name, unless that layer has its own
- * `<Matrix>` (the writer's pose is a world pose), else the desk's own `Fixtures` layer, made once at the end.
+ * The desk's own `Fixtures` layer, made once at the end: the plain writer's uuid, unless the file has a layer with
+ * that uuid and its own `<Matrix>`, which would move the fixture a second time. Then the next uuid of a stable series
+ * is tried, so a re-export finds the layer it made, and the first uuid no layer has is made: none is ever repeated.
  */
-function targetList(layers: Element, layerUuid: string, fallback: { uuid: string; name: string }): Element {
+function fallbackLayer(all: readonly Element[], layers: Element): Element {
+  for (let index = 0; ; index += 1) {
+    const uuid = stableUuid(index === 0 ? 'layer|fixtures' : `layer|fixtures|${index}`);
+    const own = all.find((layer) => attr(layer, 'uuid')?.toUpperCase() === uuid);
+    if (!own)
+      return layers.appendChild(adopt(layers.ownerDocument, xmlElement('Layer', { uuid, name: 'Fixtures' }, [])));
+    if (!childElement(own, 'Matrix')) return own;
+  }
+}
+
+/**
+ * The `<ChildList>` a fixture added on the desk goes to: the layer its MVR facts name, unless that layer has its own
+ * `<Matrix>` (the writer's pose is a world pose), else the desk's own `Fixtures` layer (`fallbackLayer`).
+ */
+function targetList(layers: Element, layerUuid: string): Element {
   const all = childElements(layers, 'Layer');
   const named = all.find((layer) => attr(layer, 'uuid') === layerUuid && !childElement(layer, 'Matrix'));
-  if (named) return childListOf(named);
-  const own = all.find((layer) => attr(layer, 'uuid') === fallback.uuid);
-  return childListOf(own ?? layers.appendChild(adopt(layers.ownerDocument, xmlElement('Layer', fallback, []))));
+  return childListOf(named ?? fallbackLayer(all, layers));
 }
 
 /**
@@ -45,14 +58,12 @@ export function appendAdded(
 ): void {
   if (added.length === 0) return;
   const layerPlan = planLayers(context.design);
-  // the same uuid and name as the plain writer's fixture layer, so a desk export and this one agree
-  const fallback = { uuid: stableUuid('layer|fixtures'), name: 'Fixtures' };
   const units = new Map<string | null, number>();
   for (const fixture of added) {
     const unit = (units.get(fixture.trussId) ?? 0) + 1;
     units.set(fixture.trussId, unit);
     const xml = fixtureXml(fixture, { patch: plan.patches.get(fixture.id), unit }, context);
-    targetList(layers, layerPlan.layerOf(fixture.id), fallback).appendChild(adopt(layers.ownerDocument, xml));
+    targetList(layers, layerPlan.layerOf(fixture.id)).appendChild(adopt(layers.ownerDocument, xml));
   }
 }
 
