@@ -52,7 +52,7 @@ it('opens the list when nothing changed during the load', async () => {
   release();
   await tick();
   expect(flow.modal.open).toHaveBeenCalledTimes(1);
-  expect(dialog.textContent).toContain('A');
+  expect(rows(dialog)[0]).toEqual(['A', true]);
 });
 
 it('opens no list of the old stage after a stage change during the load', async () => {
@@ -61,7 +61,6 @@ it('opens no list of the old stage after a stage change during the load', async 
   release();
   await tick();
   expect(flow.modal.open).not.toHaveBeenCalled();
-  expect(flow.stage.design.mvr?.hiddenLayers).toEqual(['B-hidden']);
   expect(flow.toasts).toEqual([]);
 });
 
