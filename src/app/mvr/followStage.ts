@@ -33,7 +33,8 @@ export interface StageFollowDeps {
  * stage of the same file keeps the scenery but takes its hidden layers, which a show load may change, and fits the
  * camera views to the scenery again: the stage scene subscribes first (`wireRender` runs before `wireMvr`), so its
  * rebuild has just fitted them to the design only. The MVR
- * import's own apply (cause `import`) is left to the import flow, which draws its scenery itself after the apply.
+ * import's own apply (cause `import`) is left to the import flow, which draws its scenery itself after the apply; the
+ * follower only takes away the Layers button and the LED bar of the stage before, which the import offers again.
  * The follower remembers the source it last saw, from the boot stage on, because the scenery may still be loading.
  *
  * It is also the one owner of the stage title and of whether the hall light is on: both follow the stage kind (MVR
@@ -55,7 +56,12 @@ export function followStage(deps: StageFollowDeps): () => void {
     // before the import's return: an open list of the stage before must not write into the new one
     closeStaleLayerList(design);
     followKind(design);
-    if (stage.cause === 'import') return;
+    if (stage.cause === 'import') {
+      // the import offers its own list and LED bar once drawn; until then a click on the old ones would edit its stage
+      showLedBar(undefined);
+      hideLayerList();
+      return;
+    }
     if (showsMvrFile(design, previous)) {
       scenery.setHiddenLayers(design.mvr.hiddenLayers);
       drawLedLayers(design.mvr.ledLayers ?? []);
