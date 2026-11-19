@@ -19,9 +19,9 @@ export function isProductId(v: string): v is ProductId {
 }
 
 /**
- * Whether `id` names a catalogue product whose `base` is `type`: the rule a stored product must satisfy (the parser
- * drops one that fails it). False for an id the catalogue does not know. `addFixtures` checks a value already typed
- * `ProductId` inline, because a type guard cannot narrow it.
+ * Whether `id` names a catalogue product whose `base` is `type`: the one owner of the rule a stored or added product
+ * must satisfy (the parser drops one that fails it, `addFixtures` throws). False for an id the catalogue does not
+ * know.
  */
 export function isProductOf(id: string, type: FixtureTypeId): id is ProductId {
   return isProductId(id) && PRODUCTS[id].base === type;

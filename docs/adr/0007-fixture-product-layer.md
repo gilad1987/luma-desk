@@ -88,9 +88,10 @@ Costs and risks:
 - One more table to keep honest: each product needs its data sheet, and its drawn `span` and `mountHeight` must be
   measured again when its body changes.
 
-Decided: `addFixturesOnTruss` and `addFloorRow` throw on a product of another base, because that is a programming
-error at an edit site, while `setFixtureProps` drops it silently through the parser, because a retype must drop a
-product that no longer matches.
+Decided: `addFixturesOnTruss` and `addFloorRow` throw a `RangeError` on a product that is not of the batch's type
+(another base or an unknown id), because that is a programming error at an edit site, while `setFixtureProps` drops
+it silently through the parser, because a retype must drop a product that no longer matches. Both paths apply the
+one rule `isProductOf`.
 
 ## Verified
 

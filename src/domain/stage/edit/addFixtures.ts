@@ -1,4 +1,4 @@
-import { PRODUCTS } from '../../fixtureProducts';
+import { isProductOf } from '../../fixtureProducts';
 import type { StageDesign, StageFixture } from '../StageDesign';
 import { type FixturePlace, placesOnLine, placesOnTruss } from '../trussPlaces';
 import type { StageTruss } from '../trussTypes';
@@ -44,7 +44,7 @@ export function addFixturesOnTruss(d: StageDesign, batch: TrussBatch): StageDesi
 
 /**
  * Adds a floor row, evenly spaced (see `placesOnLine`) and lane-shifted like `addFixturesOnTruss`.
- * @throws RangeError when `count` is not a whole number >= 1, or `product` is not of `type` (its `base` differs).
+ * @throws RangeError when `count` is not a whole number >= 1, or `product` is not of `type` (`isProductOf`).
  */
 export function addFloorRow(d: StageDesign, row: FloorRow): StageDesign {
   checkCount(row.count);
@@ -60,8 +60,8 @@ export function isSameSpot(at: Vec3, other: Vec3): boolean {
 
 /** The type and, only when set, the product of a batch, so a plain batch adds fixtures with no `product` key. */
 function unitOf({ type, product }: Pick<StageFixture, 'type' | 'product'>): Pick<StageFixture, 'type' | 'product'> {
-  if (product !== undefined && PRODUCTS[product].base !== type)
-    throw new RangeError(`addFixtures: product ${product} has base ${PRODUCTS[product].base}, not type ${type}`);
+  if (product !== undefined && !isProductOf(String(product), type))
+    throw new RangeError(`addFixtures: ${product} is not a product of type ${type}`);
   return product === undefined ? { type } : { type, product };
 }
 
