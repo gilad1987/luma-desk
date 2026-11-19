@@ -39,7 +39,9 @@ export function parseStageDesign(raw: unknown): StageParseResult {
   const mvr = r.optional(o, 'mvr', '', (c, k, p) => parseMvrInfo(r, c, k, p));
   if (mvr) checkMvrFixtureIds(r, mvr, parsed.ids);
   // Absent in a design that never lost a fixture; `nextIdBlock` then derives it from the highest id.
-  const nextFixtureId = r.optional(o, 'nextFixtureId', '', r.positiveInt);
+  const nextFixtureId = r.optional(o, 'nextFixtureId', '', (c, k, p) =>
+    safeMark(r, r.positiveInt(c, k, p), r.path(p, k)),
+  );
   if (!allDefined(design) || r.errors.length > 0) return { ok: false, errors: r.errors };
   const mvrField = mvr === undefined ? {} : { mvr };
   const idMark = nextFixtureId === undefined ? {} : { nextFixtureId };
@@ -48,6 +50,12 @@ export function parseStageDesign(raw: unknown): StageParseResult {
     ok: true,
     design: { v: STAGE_DESIGN_VERSION, ...design, venue, trusses, fixtures: parsed.fixtures, ...mvrField, ...idMark },
   };
+}
+
+/** The id mark only up to `Number.MAX_SAFE_INTEGER`: above it `mark + 1` can equal `mark`, so ids would repeat. */
+function safeMark(r: Reader, mark: number | undefined, path: string): number | undefined {
+  if (mark === undefined || Number.isSafeInteger(mark)) return mark;
+  return r.fail(path, `expected a safe integer, got ${mark}`);
 }
 
 function parseSource(r: Reader, stage: Raw): StageSource | undefined {
