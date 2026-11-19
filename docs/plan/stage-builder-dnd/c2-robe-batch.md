@@ -283,7 +283,7 @@ the tree holds all 15.
   joiner `robe.ts` keeps the catalogue order.
 - The Tarrantula is measured head-forward for size and proportion. Its user manual (p34) draws the 587 mm height
   with the head facing front. The list of such products is `HEAD_FORWARD_SHEETS` in
-  `tests/unit/domain/fixtureProducts/sheetSize.ts`; its pinned `span` stays the hung-at-rest value (1.159 m). The drum
+  `tests/unit/domain/fixtureProducts/sheetSize.ts`; its pinned `span` stays the hung-at-rest value (1.277 m). The drum
   stays centred on the tilt axis (front 93 mm, rear 131 mm, as drawn).
 - PATT 2013: the gold grille colour is in `unmodelled`, because no body field can tint the grille and C2 adds no
   material.
@@ -293,10 +293,17 @@ the tree holds all 15.
   next to `robe` instead (`FixtureModels.ts`, `familyModels.ts`).
 - No `uBracket` and no ParFect refactor. The onePATT hangs in its own two-tube arch yoke (`archYoke.ts`), not in a
   U-bracket, so `parfectModel.ts` did not change.
-- LEDBeam 350 cell layout: 4 inner + 8 outer cells (UM drawing), not 3 + 9. The LEDBeam 350 row is not in the tree
-  yet (Step 4), so this is the layout for that row.
+- LEDBeam 350 cell layout: 4 inner + 8 outer cells (UM drawing), not 3 + 9. The inner 2x2 group is drawn as a ring
+  of 4, and `unmodelled` says the layout is approximate.
+- The iBolt body has `vents: true`, as its photos show; the table above lists no vents for it.
 - The proportion test measures a static product head-forward: its head turned level to the front, as the data sheet
-  draws it (`productProportions.test.ts`). Moving heads are measured hung at rest.
+  draws it (`productProportions.test.ts`). A moving head is measured head vertical unless its drawing gives the
+  height head-forward (the Tarrantula and sheet-pose entries).
+- Sheet pose of the bases: the Spiider user manual (p34) draws the 477 mm height head-forward, so `BaseSheet` has a
+  `pose` and the `wash` scale uses the native Spiider built head-forward (1.170 m, pinned by a render test), not
+  `BODY_SPANS.wash` (1.063 m, hung at rest). The four `wash` products grew about 10 % (`body.size` only): LEDBeam 150
+  and TetraX (approved at G1 and G2 at the smaller size), LEDBeam 350 and Tarrantula. FORTE and MegaPointe sheets
+  are head vertical, so no other row moved.
 - The gallery page is `src/render/fixtures/gallery/gallery.html`, with no npm script (as corrections 7 and 8 said).
   Run the shots with `npx playwright test -c playwright.gallery.config.ts`.
 - `tests/e2e/stage-product.spec.ts` moved its show helper to `tests/e2e/stageProductShow.ts`.
