@@ -1,5 +1,5 @@
 /** The user's "LED" mark on a layer: its file meshes draw as LED walls, come back when the mark goes, and are saved. */
-import { BoxGeometry, Group, Mesh, MeshStandardMaterial } from 'three';
+import { BoxGeometry, DoubleSide, FrontSide, Group, Mesh, MeshStandardMaterial, PlaneGeometry } from 'three';
 import { describe, expect, it } from 'vitest';
 import { parseMvrInfo } from '../../../../../src/domain/stage/parse/parseMvrInfo.ts';
 import { Reader } from '../../../../../src/domain/stage/parse/readers.ts';
@@ -43,6 +43,14 @@ describe('drawAsLed', () => {
       true,
       false,
     ]);
+  });
+
+  it('keeps the side the file draws a mesh with: a double-sided sheet that faces away still shows', () => {
+    const away = new Mesh(new PlaneGeometry(4, 2).rotateY(Math.PI), new MeshStandardMaterial({ side: DoubleSide }));
+    const solid = new Mesh(new BoxGeometry(), new MeshStandardMaterial());
+    drawAsLed(new Group().add(away, solid), createLedMaterial(), true);
+    const sides = [away.material, solid.material].map((m) => (Array.isArray(m) ? -1 : m.side));
+    expect(sides).toEqual([DoubleSide, FrontSide]);
   });
 
   it('hands a later choice to every stage that follows it, until the stage ends that', () => {

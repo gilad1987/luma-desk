@@ -1,4 +1,4 @@
-import type { Material, Mesh, Object3D } from 'three';
+import { DoubleSide, FrontSide, type Material, type Mesh, type Object3D, type Side } from 'three';
 import { isDeskMade } from '../deskMade';
 import { isMesh } from '../isMesh';
 import { meshFront } from './ledMeshFront';
@@ -6,12 +6,20 @@ import { createLedMaterial, ledFrontIn, withLedFront } from './ledMaterial';
 import { lightMesh, unlightMesh } from './ledMeshLight';
 import { stageSides, type StageSides } from './ledStageSides';
 
+export { followLedLayers, setLedLayers } from './ledLayerChoice';
+
 /** The materials the meshes of a marked layer drew with before, so the mark can be taken off again. */
 const own = new WeakMap<Object3D, Mesh['material']>();
 /** The LED materials this module made, one per mesh; the other materials belong to the mesh library. */
 const mine = new WeakSet<Material>();
 
 const listOf = (material: Mesh['material']): Material[] => (Array.isArray(material) ? material : [material]);
+
+/** The side the file draws a mesh with: of its materials when they agree, else both, so no face goes missing. */
+function sideOf(material: Mesh['material']): Side {
+  const [side = FrontSide, ...rest] = new Set(listOf(material).map((one) => one.side));
+  return rest.length > 0 ? DoubleSide : side;
+}
 
 /** Frees the LED materials this module made for a mesh. */
 function free(material: Mesh['material']): void {
@@ -57,7 +65,8 @@ export function drawAsLed(layer: Object3D, panel: Material, isLed: boolean): voi
     if (isLed && before === undefined) {
       own.set(node, node.material);
       const front = meshFront(node, sides());
-      node.material = made(createLedMaterial({ side: panel.side, ...(front ? { front } : {}) }));
+      // the file's side, as `withLedFront` keeps it: a one-sheet wall drawn from behind must not disappear
+      node.material = made(createLedMaterial({ side: sideOf(node.material), ...(front ? { front } : {}) }));
       // a marked wall lights the stage as a panel wall does
       if (front) lightMesh(node, front);
     }
@@ -80,18 +89,4 @@ export function freeLedMaterials(layer: Object3D): void {
     if (before !== undefined) free(before);
     own.delete(node);
   });
-}
-
-/** The stages that take the user's LED layer choice; the app has one, which lives as long as the page. */
-const stages = new Set<(uuids: readonly string[]) => void>();
-
-/** Lets a stage take every later LED layer choice through `apply`; the returned call ends that when the stage goes. */
-export function followLedLayers(apply: (uuids: readonly string[]) => void): () => void {
-  stages.add(apply);
-  return () => void stages.delete(apply);
-}
-
-/** Draws the layers with these uuids as LED walls on the stage now built, and every other layer as the file gives it. */
-export function setLedLayers(uuids: readonly string[]): void {
-  for (const apply of stages) apply(uuids);
 }
