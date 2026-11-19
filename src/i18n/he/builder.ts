@@ -1,7 +1,12 @@
+import { builderProps } from './builderProps';
+import { builderStart } from './builderStart';
+import { builderTools } from './builderTools';
+
 /**
  * The Stage Builder: the soft-limit and bad-stage messages first (the engine and the show file hold no UI language,
- * so the app passes these in), then the Hebrew tooltips and help of the builder screens. The control labels stay
- * English, as on the rest of the desk.
+ * so the app passes these in), then the Hebrew tooltips of the builder shell. The start screen, the tool tabs and the
+ * property panel have their own files, joined back here so every key path (`he.builder.tools.x`) stays the same. The
+ * control labels stay English, as on the rest of the desk.
  */
 export const builder = {
   /** The toast after a stage change that leaves more fixtures than the soft limit (500). */
@@ -17,65 +22,18 @@ export const builder = {
     delete: 'מחיקת הפריטים הנבחרים (Delete)',
     mirror: 'העתקת הצד השמאלי של הבמה לצד הימני',
   },
-  start: {
-    templateHelp: 'בחרו במה להתחלה. אפשר לשנות הכול אחר כך.',
-    venueHelp: 'בחרו את המקום שמסביב לבמה.',
+  /** The tooltips of the shell: the Inspector button, the three view modes, the split divider and the library rail. */
+  shell: {
+    inspector: 'פתיחת המאפיינים של הפריט הנבחר',
+    modePlan: 'תצוגת תוכנית בלבד',
+    modeSplit: 'תוכנית ותצוגה תלת-ממדית יחד',
+    mode3d: 'תצוגה תלת-ממדית בלבד',
+    divider: 'גרירה משנה את החלוקה בין התצוגות',
+    library: 'ספריית גופי התאורה (בעדכון הבא)',
   },
-  templates: {
-    empty: 'במה ריקה בלי גופי תאורה. בונים הכול מההתחלה.',
-    theatre: 'במת תיאטרון ברוחב 10 מטר: שלושה מוטות, טראס קדמי וכ-30 גופי תאורה.',
-    festival: 'במת פסטיבל ברוחב 30 מטר: טראסים, טבעת, מגדלי צד, מסך לד וכ-150 גופי תאורה.',
-    sultansPool: 'הבמה של בריכת הסולטן, כמו שהיא בקונסולה היום.',
-  },
-  venues: {
-    sultansPool: 'בריכת הסולטן: המדרגות, הלהקה והקהל של המקום.',
-    blackBox: 'אולם שחור וסגור, בלי נוף מסביב.',
-    openField: 'שטח פתוח עם קהל.',
-  },
-  /** The title of a pool slot whose computed preset aims at a part this stage does not have (G10). */
-  presetMissing: {
-    ring: 'אין טבעת בבמה הזאת, ולכן הפריסט הזה לא זמין.',
-    screen: 'אין מסך לד בבמה הזאת, ולכן הפריסט הזה לא זמין.',
-    band: 'הלהקה מוסתרת בבמה הזאת, ולכן הפריסט הזה לא זמין.',
-  },
-  startBack: 'חזרה לבחירת במה להתחלה',
-  tools: {
-    stageTab: 'גודל הבמה, מסך הלד, במות ההגבהה והמקום',
-    trussTab: 'הוספת טראסים ושינוי הגודל שלהם',
-    fixtureTab: 'הוספת כמה גופי תאורה בבת אחת',
-    badNumber: (min: number, max: number) => `יש להזין מספר בין ${min} ל-${max}.`,
-    deckWidth: 'רוחב הבמה במטרים',
-    deckDepth: 'עומק הבמה במטרים. הקצה הקדמי נשאר במקומו.',
-    deckHeight: 'גובה משטח הבמה מעל הקרקע במטרים',
-    ledWall: 'הצגה או הסתרה של מסך הלד בירכתי הבמה. ההסתרה שומרת את המסך ואת המספר שלו. כשאין מסך, הסימון מוסיף מסך.',
-    wallWidth: 'רוחב מסך הלד במטרים',
-    wallHeight: 'גובה מסך הלד במטרים',
-    addRiser: 'הוספת במת הגבהה במרכז הבמה',
-    removeRiser: 'הסרת במת ההגבהה',
-    venue: 'המקום שמסביב לבמה. החלפה מחזירה את הנוף לברירת המחדל שלו.',
-    scenery: 'הצגה או הסתרה של חלק מהנוף',
-    preset: 'הוספת טראס חדש מהסוג הזה',
-    pickTruss: 'בחירת הטראס לעריכה',
-    length: 'אורך הטראס במטרים',
-    radius: 'רדיוס הטראס העגול במטרים',
-    width: 'רוחב השער במטרים',
-    height: 'גובה הטראס במטרים',
-    fixtureType: 'סוג גוף התאורה',
-    count: 'כמה גופי תאורה להוסיף',
-    target: 'על איזה טראס לתלות את הגופים, או שורה על רצפת הבמה',
-    role: 'התפקיד קובע לאילו קבוצות הגוף נכנס. אוטומטי: לפי הטראס וסוג הגוף.',
-    add: 'הוספת הגופים במרווחים שווים',
-  },
-  props: {
-    nothingSelected: 'בחרו טראס או גוף תאורה כדי לראות את המאפיינים שלו.',
-    x: 'מיקום מצד לצד במטרים',
-    y: 'גובה מעל הקרקע במטרים',
-    z: 'מיקום מירכתי הבמה לכיוון הקהל במטרים',
-    pan: 'סיבוב אופקי קבוע במעלות',
-    tilt: 'הטיה קבועה במעלות',
-    name: 'שם הטראס',
-    trussRole: 'התפקיד של גופים חדשים שנוספים לטראס הזה',
-  },
+  ...builderStart,
+  tools: builderTools,
+  props: builderProps,
   /** The title of the top-bar button that opens the builder. */
   openTitle: 'בניית במה: עריכת הבמה, הטראסים וגופי התאורה',
 } as const;

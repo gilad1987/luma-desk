@@ -1,23 +1,21 @@
 import { he } from '../../i18n/he';
+import { startIcon } from './shell/startIcon';
 
 /**
- * The builder screen inside its `section.builder` host: the bar (title, edit tools, count, Cancel, Done), the start
- * screen, and the two slots the tool tabs and the top view mount into. The middle stays empty, so the 3D view shows.
+ * The builder bar inside its `section.builder` host (title, edit tools, view modes, count, Inspector, Cancel, Done)
+ * and the start screen. `mountShell` appends the columns after them (`shell/shellMarkup.ts`). The Inspector button is
+ * shown only on a narrow screen, where the inspector moves into a drawer. Each button has a Hebrew `wa-tooltip`.
  */
 export const builderMarkup = `<header class="builder-bar">
   <span class="builder-title">Stage Builder</span>
   <div class="edit-tools"></div>
+  <div class="view-modes"></div>
   <span class="count-badge"></span>
-  <button class="builder-btn" data-builder="cancel" title="${he.builder.cancel}">Cancel</button>
-  <button class="builder-btn is-primary" data-builder="done" title="${he.builder.done}">Done</button>
+  <wa-button id="builder-inspector" class="builder-btn is-narrow-only" data-builder="inspector" appearance="outlined">${startIcon('inspector')}Inspector</wa-button>
+  <wa-tooltip for="builder-inspector">${he.builder.shell.inspector}</wa-tooltip>
+  <wa-button id="builder-cancel" class="builder-btn" data-builder="cancel" appearance="outlined">Cancel</wa-button>
+  <wa-tooltip for="builder-cancel">${he.builder.cancel}</wa-tooltip>
+  <wa-button id="builder-done" class="builder-btn is-primary" data-builder="done" variant="brand">Done</wa-button>
+  <wa-tooltip for="builder-done">${he.builder.done}</wa-tooltip>
 </header>
-<div class="start-screen"></div>
-<aside class="builder-tools"></aside>
-<aside class="builder-view"></aside>`;
-
-/** The edit buttons; `data-edit` names the `EditToolbar` action, the Hebrew title says what it does and its key. */
-export const editToolbarMarkup = `<button data-edit="undo" title="${he.builder.edit.undo}">Undo</button>
-<button data-edit="redo" title="${he.builder.edit.redo}">Redo</button>
-<button data-edit="duplicate" title="${he.builder.edit.duplicate}">Duplicate</button>
-<button data-edit="delete" title="${he.builder.edit.delete}">Delete</button>
-<button data-edit="mirror" title="${he.builder.edit.mirror}">Mirror L → R</button>`;
+<div class="start-screen"></div>`;

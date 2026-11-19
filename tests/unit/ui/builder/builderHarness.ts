@@ -1,9 +1,10 @@
 import { vi } from 'vitest';
 import type { StageDesign } from '../../../../src/domain/stage/StageDesign';
-import type { BuilderDeps } from '../../../../src/ui/builder/BuilderDeps.ts';
+import type { BuilderDeps, BuilderSlots } from '../../../../src/ui/builder/BuilderDeps.ts';
 import type { KeyPress } from '../../../../src/ui/builder/builderKeys.ts';
 import type { EditorSession } from '../../../../src/ui/builder/EditorSession.ts';
 import type { PlanViewDeps } from '../../../../src/ui/builder/plan/PlanView.ts';
+import { FakeNarrowScreen } from './fakeNarrowScreen.ts';
 import { fakeStage } from './fakeStage.ts';
 
 type KeyListener = (ev: KeyPress) => void;
@@ -21,7 +22,8 @@ export const press = (key: string, mods: Partial<Pick<KeyPress, 'ctrlKey' | 'met
 
 /**
  * `BuilderDeps` as plain fakes that record what Builder mode does with them: the layout calls in order, the key
- * listeners it holds, the bus messages, and the session the tools were mounted with.
+ * listeners it holds, the bus messages, the slots and session the tools were mounted with, and the pane the viewer
+ * moved into. `narrow` is a wide screen unless the test passes `isNarrow`.
  */
 export class BuilderHarness {
   readonly stage: ReturnType<typeof fakeStage>;
@@ -30,11 +32,15 @@ export class BuilderHarness {
   readonly emit = vi.fn();
   /** Each `setDeskInert` value in order; kept out of `calls`, whose order the layout tests check. */
   readonly deskInert: boolean[] = [];
+  readonly narrow: FakeNarrowScreen;
   readonly deps: BuilderDeps;
   session: EditorSession | null = null;
   view: PlanViewDeps | null = null;
+  slots: BuilderSlots | null = null;
+  pane: HTMLElement | null = null;
 
-  constructor(design?: StageDesign) {
+  constructor(design?: StageDesign, isNarrow = false) {
+    this.narrow = new FakeNarrowScreen(isNarrow);
     this.stage = fakeStage(design);
     this.deps = {
       stage: this.stage,
@@ -47,16 +53,19 @@ export class BuilderHarness {
       fitLayout: () => this.calls.push('fit'),
       setDeskInert: (inert) => void this.deskInert.push(inert),
       frames: { nextFrame: () => 0, cancelFrame: () => undefined },
-      mountTools: (_slots, session, view) => {
+      mountTools: (slots, session, view) => {
+        this.slots = slots;
         this.session = session;
         this.view = view;
         this.calls.push('mount');
         return () => this.calls.push('unmount');
       },
-      attachViewer: (_pane) => {
+      attachViewer: (pane) => {
+        this.pane = pane;
         this.calls.push('viewer');
         return () => this.calls.push('viewer off');
       },
+      narrow: this.narrow,
     };
   }
 

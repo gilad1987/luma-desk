@@ -11,6 +11,12 @@ import { attachViewer } from './viewerHost';
  */
 const DESK_AREA_IDS = ['side', 'enc', 'desk'] as const;
 
+/**
+ * The screens on which the builder reflows: below 1100 px the inspector moves into a drawer and the centre opens in
+ * Plan mode. 1100 px is the desk's own `min-width`; the builder is fixed to the window, so it can go narrower.
+ */
+const NARROW_SCREEN_QUERY = '(max-width: 1099px)';
+
 /** What the Stage Builder takes from the engine, the renderer and the layout. */
 export interface BuilderWiringDeps {
   readonly stage: BuilderDeps['stage'];
@@ -40,6 +46,7 @@ export function builderDepsOf(deps: BuilderWiringDeps): BuilderDeps {
     frames: { nextFrame: (paint) => requestAnimationFrame(paint), cancelFrame: (id) => cancelAnimationFrame(id) },
     mountTools,
     attachViewer,
+    narrow: matchMedia(NARROW_SCREEN_QUERY),
   };
 }
 

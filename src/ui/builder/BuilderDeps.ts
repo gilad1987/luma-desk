@@ -3,12 +3,13 @@ import type { KeySource } from './builderKeys';
 import type { EditorSession } from './EditorSession';
 import type { EditorSessionDeps } from './LivePreview';
 import type { PlanViewDeps } from './plan/PlanView';
+import type { NarrowScreen } from './shell/InspectorHost';
 
 /** The two panels the builder screen leaves to the tool tabs (W4b) and the top view (W4c). */
 export interface BuilderSlots {
-  /** The inline-start panel: Stage, Trusses and Fixtures tabs and the property panel. */
+  /** The inspector: Stage, Trusses and Fixtures tabs and the property panel, in the column or the narrow drawer. */
   readonly tools: HTMLElement;
-  /** The inline-end panel: the 2D plan. */
+  /** The plan pane of the centre split: the 2D plan. */
   readonly view: HTMLElement;
 }
 
@@ -47,4 +48,9 @@ export interface BuilderDeps extends EditorSessionDeps {
    * removed.
    */
   readonly attachViewer: (pane: HTMLElement) => () => void;
+  /**
+   * Whether the screen is too narrow for three columns: the app passes `matchMedia('(max-width: 1099px)')`, tests a
+   * fake they can flip. Narrow puts the inspector in a drawer and opens the centre in Plan mode.
+   */
+  readonly narrow: NarrowScreen;
 }

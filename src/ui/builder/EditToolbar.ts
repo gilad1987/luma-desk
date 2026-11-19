@@ -1,10 +1,11 @@
 import { mirrorLeftToRight } from '../../domain/stage/edit/mirror';
 import { requireChild } from '../dom';
-import { editToolbarMarkup } from './builderMarkup';
 import type { KeyAction } from './builderKeys';
 import type { EditorSession } from './EditorSession';
 import { isEmptySelection } from './selection';
 import { deleteSelection, duplicateSelection } from './selectionOps';
+import { editToolbarMarkup } from './shell/editToolbarMarkup';
+import { setWaDisabled } from './wa/waButton';
 
 /** Every toolbar action: the keyboard ones plus Mirror, which has no key. */
 export type EditAction = KeyAction | 'mirror';
@@ -16,7 +17,8 @@ const ACTIONS: readonly EditAction[] = ['undo', 'redo', 'duplicate', 'delete', '
 
 /**
  * Undo, Redo, Duplicate, Delete and Mirror for the draft. The keyboard shortcuts call `run` too, so a key and its
- * button can never do different things. A button that has nothing to act on gets `is-disabled`.
+ * button can never do different things. A button that has nothing to act on gets `is-disabled` and the Web Awesome
+ * `disabled` state, so it neither looks live nor takes a click or the focus.
  */
 export class EditToolbar {
   readonly #session: ToolbarSession;
@@ -73,6 +75,9 @@ export class EditToolbar {
       delete: isEmpty,
       mirror: false,
     };
-    for (const [action, button] of this.#buttons) button.classList.toggle('is-disabled', isOff[action]);
+    for (const [action, button] of this.#buttons) {
+      button.classList.toggle('is-disabled', isOff[action]);
+      setWaDisabled(button, isOff[action]);
+    }
   }
 }

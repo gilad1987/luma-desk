@@ -1,7 +1,7 @@
 /**
- * The app wiring of the Stage Builder: each browser binding of `BuilderDeps`, `#buildBtn` as the only thing built at
- * boot, and its click waiting for the Web Awesome chunk before it enters. Builder mode itself is owned by tests/unit/ui/builder/BuilderMode.test.ts; opening it for real (the tool
- * panels need a real DOM) is owned by tests/e2e/builder-*.spec.ts.
+ * The app wiring of the Stage Builder: each browser binding of `BuilderDeps` (the narrow-screen query included),
+ * `#buildBtn` as the only thing built at boot, and its click waiting for the Web Awesome chunk before it enters.
+ * Builder mode is owned by ui/builder/BuilderMode.test.ts; opening it for real by tests/e2e/builder-*.spec.ts.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { attachViewer } from '../../../../src/app/ui/viewerHost';
@@ -15,6 +15,8 @@ function setup() {
   const dom = new FakeDom();
   dom.add('buildBtn', new FakeButton());
   const h = new BuilderHarness();
+  const matchMedia = vi.fn((_query: string) => h.narrow);
+  vi.stubGlobal('matchMedia', matchMedia);
   const setConsoleHeight = vi.fn<(px: number) => void>();
   const fitLayout = vi.fn();
   // a deferred shell load the test resolves by hand, so it sees the click before and after the chunk arrives
@@ -35,12 +37,11 @@ describe('wireBuilder', () => {
     expect(builder.isOpen).toBe(false);
     expect(dom.body.children).toHaveLength(0);
     expect(dom.get('buildBtn').onclick).toBeTypeOf('function');
-    expect(fitLayout).not.toHaveBeenCalled();
-    expect(loadShell).not.toHaveBeenCalled();
+    expect([fitLayout.mock.calls, loadShell.mock.calls]).toEqual([[], []]);
   });
 
-  // catches a builder that cannot move the 3D viewer into its pane, because the wiring forgot the binding
-  it('binds the stage, bus, document keys, the real tools, the viewer move, the console height and the layout fit', () => {
+  // catches a viewer the builder cannot move (binding forgotten) or a narrow query off the desk's 1100 px line
+  it('binds stage, bus, document keys, real tools, viewer move, narrow query, console height and layout fit', () => {
     const { h, wiring, setConsoleHeight, fitLayout } = setup();
     const deps = builderDepsOf(wiring);
     expect([deps.stage, deps.bus, deps.keys, deps.mountTools, deps.attachViewer]).toEqual([
@@ -50,10 +51,10 @@ describe('wireBuilder', () => {
       mountTools,
       attachViewer,
     ]);
+    expect([deps.narrow, vi.mocked(matchMedia).mock.calls]).toEqual([h.narrow, [['(max-width: 1099px)']]]);
     deps.setConsoleHeight(120);
     deps.fitLayout();
-    expect(setConsoleHeight).toHaveBeenCalledWith(120);
-    expect(fitLayout).toHaveBeenCalledOnce();
+    expect([setConsoleHeight.mock.calls, fitLayout.mock.calls.length]).toEqual([[[120]], 1]);
   });
 
   // catches an enter before the chunk loads, which would mount bare, unstyled wa-* tags

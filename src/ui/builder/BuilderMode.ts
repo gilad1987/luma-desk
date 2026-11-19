@@ -10,21 +10,26 @@ interface OpenBuilder {
   readonly host: HTMLElement;
   readonly session: EditorSession;
   readonly unmount: () => void;
+  /** Puts the 3D viewer back on the desk; it must run before the host (and the pane holding the viewer) is removed. */
+  readonly detachViewer: () => void;
 }
 
-/** The class of the host section; every `.builder` rule in styles/builder/_layout.scss styles it. */
-const HOST_CLASS = 'builder';
+/**
+ * The classes of the host section: `builder` for every builder rule in styles/builder/, `wa-dark` for the dark Web
+ * Awesome tokens, which the theme scopes to the element that carries the class.
+ */
+const HOST_CLASS = 'builder wa-dark';
 
 /**
- * The body class that hides the console while the builder is open (styles/builder/_layout.scss). It must differ from
- * `HOST_CLASS`, or every rule for the host section would also lay out `<body>` as the builder grid.
+ * The body class that hides the console while the builder is open (styles/builder/). It must differ from the host's
+ * `builder` class, or every rule for the host section would also lay out `<body>` as the builder grid.
  */
 const BODY_CLASS = 'is-building';
 
 /**
- * The full-screen Builder mode behind "Build Stage": it hides the console, gives its height to the 3D view and puts
- * the builder screen over it; Done keeps the draft, Cancel drops it. The host section is made on enter and removed on
- * exit, so a closed builder leaves no DOM and no listener behind.
+ * The full-screen Builder mode behind "Build Stage": it hides the console, puts the builder screen over the desk and
+ * moves the 3D view into the builder's 3D pane; Done keeps the draft, Cancel drops it. The host section is made on
+ * enter and removed on exit, so a closed builder leaves no DOM and no listener behind.
  */
 export class BuilderMode {
   readonly #deps: BuilderDeps;
@@ -39,8 +44,9 @@ export class BuilderMode {
   }
 
   /**
-   * Opens the builder on the current stage; a second call while open does nothing. The layout fit runs before the
-   * console height is set to 0, because the fit sets that height itself and would undo the 0.
+   * Opens the builder on the current stage; a second call while open does nothing. The viewer moves into the 3D pane
+   * before the layout fit, so the fit and the renderer size it in its new place. The fit runs before the console
+   * height is set to 0, because the fit sets that height itself and would undo the 0.
    */
   enter(): void {
     if (this.#open) return;
@@ -50,16 +56,18 @@ export class BuilderMode {
     document.body.classList.add(BODY_CLASS);
     requireChild(host, '[data-builder="done"]').onclick = () => this.exit(true);
     requireChild(host, '[data-builder="cancel"]').onclick = () => this.exit(false);
-    this.#open = { host, session, unmount: mountBuilder(host, session, this.#deps) };
+    const unmount = mountBuilder(host, session, this.#deps);
+    const detachViewer = this.#deps.attachViewer(requireChild(host, '.builder-3d'));
+    this.#open = { host, session, unmount, detachViewer };
     this.#deps.fitLayout();
     this.#deps.setConsoleHeight(0);
     this.#deps.setDeskInert(true);
   }
 
   /**
-   * Closes the builder: `keep` commits the draft (Done), otherwise the start design comes back (Cancel). The DOM, the
-   * body class, the live desk and the layout come back in `finally`: a throwing `rigChanged` listener must not leave
-   * the console hidden or the desk inert under a dead builder screen.
+   * Closes the builder: `keep` commits the draft (Done), otherwise the start design comes back (Cancel). The viewer,
+   * the DOM, the body class, the live desk and the layout come back in `finally`: a throwing `rigChanged` listener
+   * must not leave the console hidden, the 3D view gone or the desk inert under a dead builder screen.
    */
   exit(keep: boolean): void {
     const open = this.#open;
@@ -70,6 +78,7 @@ export class BuilderMode {
       if (keep) open.session.commit();
       else open.session.cancel();
     } finally {
+      open.detachViewer();
       open.host.remove();
       document.body.classList.remove(BODY_CLASS);
       this.#deps.setDeskInert(false);
