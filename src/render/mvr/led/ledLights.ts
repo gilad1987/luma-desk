@@ -14,8 +14,9 @@ const NEAR = 3;
 /**
  * The light the panel walls of one import throw on the stage: per wall one wide, soft spot just in front of the
  * wall's middle, with the wall's mean content colour and an intensity of radiance times area (`ledLightPool`, which
- * holds the fixed set of lights and syncs them once per frame). A wall whose layers are all hidden gives no light, and of
- * the walls on screen the four that are largest and at the venue get one; a wall far outside the venue never does.
+ * holds the fixed set of lights and syncs them once per frame). A wall whose layers are all hidden gives no light,
+ * and of the walls on screen the four that are largest and at the venue get one; a wall far outside the venue never
+ * does.
  * The file does not say which side of a wall is its front: `frontSign` states the rule (the seats, else downstage),
  * and the emitting face of the panels follows the same rule.
  */

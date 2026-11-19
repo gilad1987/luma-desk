@@ -44,7 +44,7 @@ function proxyMesh(kind: DrawnProxyKind, matrices: readonly Matrix4[]): Instance
 /** Adds the meshes of one kind on one layer. Panels draw as LED walls; a duplicate of a panel gets its own mesh. */
 function addKind(holder: Group, kind: DrawnProxyKind, onLayer: readonly MvrProxy[], led: LedProxyLook): void {
   const mine = onLayer.filter((proxy) => proxy.kind === kind);
-  for (const group of kind === 'panel' ? led.split(mine) : [{ panels: mine, keeper: undefined }]) {
+  for (const group of kind === 'panel' ? led.split(mine) : [{ panels: mine, keepers: [] }]) {
     const matrices = group.panels.flatMap((proxy) => proxyMatrix(proxy, led.offset) ?? []);
     if (matrices.length === 0) continue;
     const mesh = proxyMesh(kind, matrices);

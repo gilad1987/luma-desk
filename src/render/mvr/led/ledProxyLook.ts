@@ -6,12 +6,11 @@ import { isShown } from './ledShown';
 import type { V3 } from './ledPose';
 import { frontSign, seatsCentre } from './ledWallFront';
 
-/** The panels of one layer that draw as one mesh; `keeper` is the first layer that draws the same panels already. */
+/** The panels of one layer that draw as one mesh. */
 export interface PanelGroup {
   readonly panels: readonly MvrProxy[];
-  readonly keeper: string | undefined;
-  /** Every layer that draws the same panels earlier, `keeper` first: the mesh draws while none of them is shown. */
-  readonly keepers?: readonly string[];
+  /** Every layer that draws the same panels earlier, in panel order: the mesh draws while none of them is shown. */
+  readonly keepers: readonly string[];
 }
 
 /** The layers of `panels`, each once, in panel order. */
@@ -46,12 +45,12 @@ export class LedProxyLook {
 
   /** The drawable panels of one layer: first those always drawn, then its duplicates by the layers they repeat. */
   split(panels: readonly MvrProxy[]): PanelGroup[] {
-    const groups = new Map<string, PanelGroup & { panels: MvrProxy[] }>([['', { panels: [], keeper: undefined }]]);
+    const groups = new Map<string, PanelGroup & { panels: MvrProxy[] }>([['', { panels: [], keepers: [] }]]);
     for (const panel of panels) {
       if (!this.#plan.coords.has(panel)) continue;
       const keepers = layersOf(this.#plan.duplicateOf.get(panel) ?? []);
       const key = keepers.join('\n');
-      const group = groups.get(key) ?? { panels: [], keeper: keepers[0], keepers };
+      const group = groups.get(key) ?? { panels: [], keepers };
       group.panels.push(panel);
       groups.set(key, group);
     }
@@ -81,7 +80,7 @@ export class LedProxyLook {
     mesh.geometry.setAttribute('ledAxes', new InstancedBufferAttribute(axes, 4));
     mesh.geometry.setAttribute('ledSide', new InstancedBufferAttribute(side, 1));
     const lights = this.#lights;
-    const keepers = group.keepers ?? [];
+    const { keepers } = group;
     if (keepers.length > 0) {
       const count = mesh.count;
       // The renderer reads `count` after this call, so the choice holds for the frame that is drawn now.
