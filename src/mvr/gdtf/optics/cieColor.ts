@@ -23,7 +23,10 @@ const XYZ_TO_SRGB: readonly (readonly [number, number, number])[] = [
  * `Custom@` files write 0-255 RGB triples here ("255.0,31.0,0.0"), which this rule rejects.
  */
 export function parseColorCie(text: string | undefined): OpticsXyy | undefined {
-  const parts = (text ?? '').replace(/[{}]/g, '').split(',').map(Number);
+  const texts = (text ?? '').replace(/[{}]/g, '').split(',');
+  // `Number('')` is 0: a blank part would read as black or as a point on the edge of the diagram
+  if (texts.some((part) => part.trim() === '')) return undefined;
+  const parts = texts.map(Number);
   const [x, y, luminance] = parts;
   if (parts.length !== 3 || x === undefined || y === undefined || luminance === undefined) return undefined;
   if (!parts.every(Number.isFinite)) return undefined;
