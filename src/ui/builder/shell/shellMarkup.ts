@@ -7,10 +7,20 @@ import { iconButton } from './iconButton';
  * the bar stays usable while it is open. `.inspector-drawer` is its body, the tools slot; the frame with the title and
  * the Close button stays put when the tools move to the column.
  */
-const drawerMarkup = `<aside id="builder-inspector-drawer" class="inspector-drawer-frame" tabindex="-1" aria-labelledby="builder-inspector-drawer-title" hidden>
+const drawerMarkup = `<aside id="builder-inspector-drawer" class="inspector-drawer-frame" tabindex="-1"
+  aria-labelledby="builder-inspector-drawer-title" hidden>
   <div class="inspector-drawer-head">
     <h2 id="builder-inspector-drawer-title" class="inspector-drawer-title">Inspector</h2>
-    ${iconButton({ id: 'builder-inspector-close', hook: 'data-builder="inspector-close"', icon: 'close', label: 'Close', tip: he.builder.shell.inspectorClose }, 'plain')}
+    ${iconButton(
+      {
+        id: 'builder-inspector-close',
+        hook: 'data-builder="inspector-close"',
+        icon: 'close',
+        label: 'Close',
+        tip: he.builder.shell.inspectorClose,
+      },
+      'plain',
+    )}
   </div>
   <div class="inspector-drawer"></div>
 </aside>`;
@@ -23,7 +33,8 @@ const drawerMarkup = `<aside id="builder-inspector-drawer" class="inspector-draw
  * 3D pane never begins at a 0 px box.
  */
 export const shellMarkup = `<aside class="builder-library">
-  <h2 id="builder-library-title" class="library-title">${iconSvg('library')}<span class="library-label">Library</span></h2>
+  <h2 id="builder-library-title" class="library-title"
+    >${iconSvg('library')}<span class="library-label">Library</span></h2>
   <wa-tooltip for="builder-library-title" dir="rtl">${he.builder.shell.library}</wa-tooltip>
   <p class="library-hint">The fixture library arrives in the next update.</p>
 </aside>

@@ -1,8 +1,8 @@
 /**
  * The ARIA the builder sets on a `wa-button` host as Chromium's accessibility tree exposes it on the inner button: the
  * Hebrew help as the description with no `title` (so no native browser tooltip next to the `wa-tooltip`), and the
- * Inspector button's open state. The names and the mode radios are owned by builder-shell.a11y, the drawer's layout
- * and focus by builder-shell.drawer.
+ * Inspector button's open state. The names are owned by builder-shell.names, the mode radios by builder-shell.radios,
+ * the drawer's layout and focus by builder-shell.drawer.
  */
 import { expect, test } from '@playwright/test';
 import { he } from '../../src/i18n/he';

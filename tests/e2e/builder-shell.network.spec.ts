@@ -7,7 +7,10 @@
 import { expect, test, type Page } from '@playwright/test';
 import { bootApp, boxOf, collectErrors, dragDivider, openBuilder } from '../shared/e2e';
 
-/** The budget of what the Build Stage click downloads (JS and CSS, decoded bytes): docs/plan/stage-builder-dnd/01-shell.md. */
+/**
+ * The budget of what the Build Stage click downloads (JS and CSS, decoded bytes):
+ * docs/plan/stage-builder-dnd/01-shell.md.
+ */
 const CHUNK_BUDGET_BYTES = 600_000;
 
 /** What the page reports about Web Awesome: whether `wa-button` is defined and the brand token on the root. */

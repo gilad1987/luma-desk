@@ -55,9 +55,10 @@ export function builderDepsOf(deps: BuilderWiringDeps): BuilderDeps {
  * Builds Builder mode and opens it from `#buildBtn` in the top bar. Nothing else is built until the first click: the
  * session, the screen and every listener exist only while the builder is open. The click is asynchronous: it books
  * an open (`BuilderMode.book`), loads the Web Awesome chunk and enters when it resolves, unless a later click or an
- * `exit` (Cancel) came first. A failed load (after a deploy, an open tab asks for a chunk that is gone) shows a
- * toast, so the button does not silently do nothing. The toast is the rejection handler of the load only, so an error
- * thrown by `enter()` stays an error and is not reported as a failed load.
+ * `exit` came first; during the load, that `exit` comes from a show load or an MVR import (`cancelBuilder`, main.ts),
+ * since the builder's own Cancel is not on screen yet. A failed load (after a deploy, an open tab asks for a chunk
+ * that is gone) shows a toast, so the button does not silently do nothing. The toast is the rejection handler of the
+ * load only, so an error thrown by `enter()` stays an error and is not reported as a failed load.
  */
 export function wireBuilder(deps: BuilderWiringDeps): BuilderMode {
   const builder = new BuilderMode(builderDepsOf(deps));

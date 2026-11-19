@@ -15,8 +15,9 @@ export interface MountedShell {
 
 /**
  * Appends the columns (`shellMarkup`) to `host`, after the bar and the start screen, gives the bar's and the drawer's
- * buttons their Hebrew help as a description, and joins the view-mode switch, the centre split and the inspector host. The first mode is Plan on a narrow screen (a split of a small screen
- * leaves two panes too small to use) and Split otherwise. `host` must be in the page with Web Awesome registered, so
+ * buttons their Hebrew help as a description, and joins the view-mode switch, the centre split and the inspector
+ * host. The first mode is Plan on a narrow screen (a split of a small screen leaves two panes too small to use) and
+ * Split otherwise. `host` must be in the page with Web Awesome registered, so
  * the split panel is upgraded when `CentreSplit` reads it.
  */
 export function mountShell(host: HTMLElement, deps: Pick<BuilderDeps, 'narrow'>): MountedShell {

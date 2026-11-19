@@ -2,7 +2,8 @@
 /**
  * Owns the narrow screen's inspector drawer (InspectorDrawer): the Inspector button toggles it and tells its state,
  * the Close button and Escape close it, the focus moves into it and back, and a dispose lets go of the keys. Where the
- * tools live is owned by InspectorHost.test.ts. jsdom, on the real shell markup.
+ * tools live is owned by InspectorHost.test.ts; which Escape closes it and when the focus stays put by
+ * InspectorHost.drawerFocus.test.ts. jsdom, on the real shell markup.
  */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { InspectorDrawer } from '../../../../../src/ui/builder/shell/InspectorDrawer.ts';
@@ -21,7 +22,9 @@ describe('InspectorDrawer', () => {
     drawer.dispose();
     document.body.replaceChildren();
   });
-  const escape = (): boolean => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  /** Presses Escape on the focused element; it bubbles to the window, as the keyboard's does. */
+  const escape = (): boolean | undefined =>
+    document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   const state = (): [boolean, string | null, boolean] => [
     frame.hidden,
     button.getAttribute('aria-expanded'),

@@ -1,9 +1,4 @@
-/** Lit's `updateComplete`, read structurally, so an element that is not a Lit element (or a fake) needs no cast. */
-function pendingRender(host: object): Promise<unknown> | undefined {
-  if (!('updateComplete' in host)) return undefined;
-  const update = host.updateComplete;
-  return update instanceof Promise ? update : undefined;
-}
+import { pendingRender } from './waRender';
 
 /**
  * Sets an ARIA attribute on a Web Awesome host and on the control inside it that takes the focus; `null` removes it.
@@ -11,7 +6,8 @@ function pendingRender(host: object): Promise<unknown> | undefined {
  * Why: `wa-button` delegates the focus to the inner `[part~="base"]` element of its open shadow root and passes only
  * `title`, `aria-disabled` and `aria-busy` to it. ARIA on the host has no role to attach to, so it never reaches the
  * accessibility tree: Chromium shows the inner button without the host's `aria-expanded` or `aria-description`. The
- * host keeps the attribute too, for the builder's CSS and for tests.
+ * host keeps the attribute too, for the builder's CSS and for tests. The host must be connected: Lit's
+ * `updateComplete` waits for the connection, so the copy to a host that is not in the page waits until it is.
  *
  * It depends on the `base` part, which Web Awesome documents as a public styling API, not on private markup. The copy
  * waits for the tag's definition and the element's render, then copies the host's value at that moment, so the last of

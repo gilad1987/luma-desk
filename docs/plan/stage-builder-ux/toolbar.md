@@ -116,8 +116,10 @@ Notes:
   `wa-button` host split them over the host and its inner button). Roving tabindex: only the checked radio has
   `tabindex="0"`; the arrow keys (Right/Down next, Left/Up previous, wrapping) and Home/End move the focus and select.
 - Each button: the visible English label is the accessible name; the Hebrew help is the accessible description. A
-  `wa-button` gets it from its `title`, which `wa-button` forwards to its inner button; a mode radio from
-  `aria-description`. The mode tooltip anchors on a wrapper `span`, as `wa-tooltip` adds itself to its anchor's
+  `wa-button` gets it from `aria-description`, which `describeWaButtons` copies from the host to its inner button
+  (`setWaInnerAria`), since ARIA on the role-less host never reaches the accessibility tree; it has no `title`, so no
+  native browser tooltip shows beside the `wa-tooltip`. A mode radio gets it from its own `aria-description`. The
+  mode tooltip anchors on a wrapper `span`, as `wa-tooltip` adds itself to its anchor's
   `aria-labelledby` and would replace the name. Every Hebrew `wa-tooltip` is `dir="rtl"`. The texts come from
   `he.builder.edit.*`, `he.builder.shell.*`, `he.builder.cancel`, `he.builder.done`. Undo/Redo tooltips name the key.
 - The badge is `aria-live="polite"` so the count change after a drop is announced; the warning text names the limit.
