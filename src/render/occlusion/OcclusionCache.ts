@@ -17,6 +17,7 @@ export class OcclusionCache {
   readonly #view = new Matrix4();
   readonly #projection = new Matrix4();
   readonly #meshes: Mesh[] = [];
+  readonly #watched = new Set<Object3D>();
   #key = Number.NaN;
   #stamp = Number.NaN;
   #looks = Number.NaN;
@@ -49,6 +50,7 @@ export class OcclusionCache {
       // the list is rebuilt, as the move may be a mesh that came or left; at rest the stamp is one pass over it
       this.#watch.clear();
       this.#meshes.length = 0;
+      this.#watched.clear();
       scene.traverse(this.#add);
       this.#stamp = this.#watch.stamp();
     }
@@ -59,10 +61,23 @@ export class OcclusionCache {
     return true;
   }
 
-  /** Watches the matrix of a mesh that writes depth; of any other object only that it is there and visible. */
+  /**
+   * Watches each mesh that writes depth with its matrix, and each object above one for its visibility and children
+   * (a hidden group of such meshes still counts). Beams, pools and glows write no depth, and a strobe shows and hides
+   * them in each flash: watched, they redrew the occlusion for a depth that did not change. An empty group is watched
+   * too, as the surface buffers watch it, so a mesh that loads into it later moves the stamp at once. The traversal
+   * meets a parent before its children, so the walk up stops at the first object that is watched already.
+   */
   readonly #add = (object: Object3D): void => {
-    this.#watch.add(object, isMesh(object) && writesDepth(object.material));
     if (isMesh(object)) this.#meshes.push(object);
+    if (isMesh(object) && writesDepth(object.material)) {
+      this.#watched.add(object);
+      this.#watch.add(object, true);
+      for (let up = object.parent; up && !this.#watched.has(up); up = up.parent) {
+        this.#watched.add(up);
+        this.#watch.add(up, false);
+      }
+    } else if (object.type === 'Group' && object.children.length === 0) this.#watch.add(object, false);
   };
 
   /** Changes when a mesh gets another material: a wall that becomes an LED wall is an emitter without a move. */
