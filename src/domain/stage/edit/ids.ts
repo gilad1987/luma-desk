@@ -5,12 +5,23 @@ import type { TrussKind } from '../types';
 const ID_BLOCK = 100;
 
 /**
+ * The highest `nextFixtureId` a stored design may hold (one billion). A rig has hundreds of fixtures; the bound keeps
+ * the next block (the mark rounded up to a hundred) and any batch after it far below `Number.MAX_SAFE_INTEGER`, past
+ * which `id + 1` can equal `id` and ids would repeat. Reaching that limit would take trillions of added batches.
+ */
+export const MAX_ID_MARK = 1_000_000_000;
+
+/**
  * The first id of the next free block: the highest fixture id ever used rounded up to a full hundred, plus 1 (an empty
  * design starts at 1). A new batch then never shares a hundred with an older one, so its ids read as one group.
+ * @throws RangeError when the ids of the block are not all safe integers (a stored fixture id near
+ * `Number.MAX_SAFE_INTEGER`; the parser bounds the mark itself), as they could repeat.
  */
 export function nextIdBlock(d: StageDesign): number {
   const highest = nextFixtureId(d) - 1;
-  return Math.ceil(highest / ID_BLOCK) * ID_BLOCK + 1;
+  const first = Math.ceil(highest / ID_BLOCK) * ID_BLOCK + 1;
+  if (!Number.isSafeInteger(first + ID_BLOCK)) throw new RangeError(`nextIdBlock: no safe fixture id after ${highest}`);
+  return first;
 }
 
 /**

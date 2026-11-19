@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { addFloorRow } from '../../../../../src/domain/stage/edit/addFixtures.ts';
+import { MAX_ID_MARK } from '../../../../../src/domain/stage/edit/ids.ts';
 import { deleteFixtures } from '../../../../../src/domain/stage/edit/itemOps.ts';
 import type { MvrFixtureInfo } from '../../../../../src/domain/stage/mvr.ts';
 import { parseStageDesign } from '../../../../../src/domain/stage/parse/parseStageDesign.ts';
@@ -60,11 +61,11 @@ describe('parseStageDesign nextFixtureId', () => {
     expect(markErrors(sampleDesign(), mark)[0]).toMatch(/^nextFixtureId: /);
   });
 
-  it('names an unsafe mark as such, and accepts the largest safe one', () => {
+  it('names a mark above MAX_ID_MARK as such, and accepts MAX_ID_MARK itself', () => {
     expect(markErrors(sampleDesign(), 1e20)).toEqual([
-      'nextFixtureId: expected a safe integer, got 100000000000000000000',
+      `nextFixtureId: expected at most ${MAX_ID_MARK}, got 100000000000000000000`,
     ]);
-    expect(markErrors(sampleDesign(), Number.MAX_SAFE_INTEGER)).toEqual([]);
+    expect(markErrors(sampleDesign(), MAX_ID_MARK)).toEqual([]);
   });
 
   it('accepts a mark at or below the highest id, and a new batch still starts above the highest id', () => {

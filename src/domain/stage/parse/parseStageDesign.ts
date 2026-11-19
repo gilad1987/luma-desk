@@ -1,3 +1,4 @@
+import { MAX_ID_MARK } from '../edit/ids';
 import { STAGE_DESIGN_VERSION, type StageDesign } from '../StageDesign';
 import { SOURCE_KINDS, VENUE_KINDS, type SceneryPart, type StageSource } from '../types';
 import { checkMvrFixtureIds } from './checkMvrFixtureIds';
@@ -52,10 +53,10 @@ export function parseStageDesign(raw: unknown): StageParseResult {
   };
 }
 
-/** The id mark only up to `Number.MAX_SAFE_INTEGER`: above it `mark + 1` can equal `mark`, so ids would repeat. */
+/** The id mark only up to `MAX_ID_MARK`, so the next id block and every batch after it keep safe, unique ids. */
 function safeMark(r: Reader, mark: number | undefined, path: string): number | undefined {
-  if (mark === undefined || Number.isSafeInteger(mark)) return mark;
-  return r.fail(path, `expected a safe integer, got ${mark}`);
+  if (mark === undefined || mark <= MAX_ID_MARK) return mark;
+  return r.fail(path, `expected at most ${MAX_ID_MARK}, got ${mark}`);
 }
 
 function parseSource(r: Reader, stage: Raw): StageSource | undefined {
