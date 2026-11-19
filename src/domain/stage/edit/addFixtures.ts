@@ -58,7 +58,7 @@ export function isSameSpot(at: Vec3, other: Vec3): boolean {
   return Math.hypot(at[0] - other[0], at[1] - other[1], at[2] - other[2]) < SAME_SPOT_M;
 }
 
-/** The type and, only when set, the product of a batch, so a plain batch adds fixtures with no `product` key. */
+/** The type and product (only when set) of a batch; `String()` keeps the guard from narrowing `product` to never. */
 function unitOf({ type, product }: Pick<StageFixture, 'type' | 'product'>): Pick<StageFixture, 'type' | 'product'> {
   if (product !== undefined && !isProductOf(String(product), type))
     throw new RangeError(`addFixtures: ${product} is not a product of type ${type}`);

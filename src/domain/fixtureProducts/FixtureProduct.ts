@@ -67,7 +67,10 @@ export interface FixtureProduct {
   /** The DMX mode of `gdtfSpec`, only when checked against the same file. */
   readonly gdtfMode?: string;
   readonly body: ProductBody;
-  /** Drawn hung span in metres (largest dimension), pinned against the built model as BODY_SPANS. */
+  /**
+   * Drawn hung span in metres (largest dimension), pinned against the built model as BODY_SPANS. No reader until C5
+   * (`bodyScale` for a product's own GDTF size).
+   */
   readonly span: number;
   /** Drawn mounting-point distances, pinned against the built model as MOUNT_HEIGHTS. */
   readonly mountHeight: MountHeight;

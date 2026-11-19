@@ -42,14 +42,14 @@ A product shows its real data-sheet values where the desk can show them (the hon
 its base where the desk tuned the natives by eye. So the Esprite's `zr` is its real [5.5, 50], while the base `spot`
 keeps its desk mapping [7, 42] for the FORTE's real 5-55°.
 
-| Field                    | Kind     | Why                                                                                   |
-| ------------------------ | -------- | ------------------------------------------------------------------------------------- |
-| `zr`, `z0`               | Absolute | Degrees from the sheet; `z0` lies in `zr` (the `catalogueRules` test checks it).      |
-| `attrs`                  | Absolute | The product's own set, a subset of the base's.                                        |
-| `defColor`               | Absolute | The product's own default colour.                                                     |
-| `power`                  | Relative | Product lumens over the base's real product, same measure, so it sits by the natives. |
-| `beamK`, `soft`, `glowK` | Relative | Desk render tunings of the base's look; C1 sets none.                                 |
-| `body.size`              | Relative | The drawn-size convention (4): base size times the height ratio.                      |
+| Field                    | Kind     | Why                                                                                                                           |
+| ------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `zr`, `z0`               | Absolute | Degrees from the sheet; `z0` lies in `zr` (the `catalogueRules` test checks it).                                              |
+| `attrs`                  | Absolute | The product's own set, a subset of the base's.                                                                                |
+| `defColor`               | Absolute | The product's own default colour.                                                                                             |
+| `power`                  | Relative | The base's `power` times the product's lumens over the base's real product (same measure); the merge replaces the base value. |
+| `beamK`, `soft`, `glowK` | Relative | Desk render tunings of the base's look; C1 sets none.                                                                         |
+| `body.size`              | Relative | The drawn-size convention (4): base size times the height ratio.                                                              |
 
 ## Alternatives rejected
 

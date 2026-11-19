@@ -17,11 +17,6 @@ function addedProducts(before: StageDesign, after: StageDesign): unknown[] {
   return after.fixtures.slice(before.fixtures.length).map((f) => (Object.hasOwn(f, 'product') ? f.product : 'none'));
 }
 
-/** Types any id as `ProductId` without a cast, as an unchecked drag payload or hand-made batch would reach the op. */
-function isUncheckedId(id: string): id is ProductId {
-  return id !== '';
-}
-
 /** Two spots on the pipe. */
 const SPOTS = { trussId: PIPE.id, type: 'spot', count: 2 } as const;
 
@@ -65,8 +60,8 @@ describe('edit ops carry the product', () => {
   });
 
   it('refuses a batch whose product id the catalogue does not know, with a RangeError', () => {
-    const add = (): StageDesign[] =>
-      ['acme-x'].filter(isUncheckedId).map((product) => addFixturesOnTruss(sampleDesign(), { ...SPOTS, product }));
+    const product = 'acme-x' as ProductId; // an unchecked drag payload, as patchedFixtures.test.ts does for a type
+    const add = (): StageDesign => addFixturesOnTruss(sampleDesign(), { ...SPOTS, product });
     expect(add).toThrow(RangeError);
     expect(add).toThrow(new RangeError('addFixtures: acme-x is not a product of type spot'));
   });
