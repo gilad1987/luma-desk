@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { bootApp, collectErrors, mvrFile, pickMvrFile } from '../shared/e2e';
+import { awaitMvrChain, bootApp, collectErrors, mvrFile, pickMvrFile } from '../shared/e2e';
 import { measureFrames, RENDER_RIG_FIXTURES, renderStageMvr } from '../shared';
 import { movingPeak } from './mvrMovingPeak';
 
@@ -7,11 +7,13 @@ import { movingPeak } from './mvrMovingPeak';
 // a state (mvrReady, frozen-clock frames), so only the time budget grows, never a result.
 test.describe.configure({ timeout: 360_000 });
 const FRAMES = 60;
+const WARM_UP_FRAMES = 40;
 // a run of frames that always holds one surface-buffer draw while a fixture moves (every second frame at most)
 const MOVING_FRAMES = 8;
 
 /**
- * What the build drew for the synthetic stage at full, measured by this spec on 2026-11-19 at ee8faf54 (rq/wave4).
+ * What the build drew for the synthetic stage at full, measured by this spec on 2026-11-19: rest at 867ab800,
+ * moving and objects at ee8faf54 (at 867ab800 the moving peak measured 766 calls and 150,743 triangles).
  * The counts do not depend on the GPU, so SwiftShader in CI gates them. Frame time is only attached here: SwiftShader
  * time says nothing of a GPU (the real-GPU gate is `test:perf`).
  *
@@ -19,9 +21,10 @@ const MOVING_FRAMES = 8;
  * ba4ee2c1 nothing on this stage moves at rest, so the settled frame no longer holds a buffer draw: 674 calls and
  * 143,917 triangles before, about half after); while a fixture moves, every second frame draws the scene a second
  * time for the buffers. The moving peak catches that frame whatever the cache phase, so a lost buffer draw fails.
+ * The rest of 468 calls and 76,542 triangles before 867ab800 was a transient frame soon after the chain, not rest.
  */
 const MEASURED = {
-  rest: { calls: 468, triangles: 76_542 },
+  rest: { calls: 385, triangles: 75_875 },
   moving: { calls: 765, triangles: 150_742 },
   objects: { programs: 43, geometries: 66, textures: 61 },
 } as const;
@@ -55,6 +58,11 @@ test('the synthetic MVR stage at full stays within its draw-call, triangle and G
   // the lit rows: every fixture at full, an exact count, which is stricter than a floor
   const out = await desk.evaluate((d) => d.outputAt(11));
   expect(out.filter((o) => o['dim'] === 100)).toHaveLength(RENDER_RIG_FIXTURES);
+  // The frame on which the lazy MVR chain arrives depends on real time and sets the phase of the surface-buffer
+  // redraws that follow, so the spec waits for the chain first. The warm-up ends those transient redraws; the
+  // measured frame (the 100th after the chain) then sits between two age redraws of the cache, at rest.
+  await awaitMvrChain(desk);
+  await measureFrames(desk, WARM_UP_FRAMES);
   const measure = await measureFrames(desk, FRAMES);
   const moving = await movingPeak(desk, 101, MOVING_FRAMES);
   await testInfo.attach('render-stats.json', {

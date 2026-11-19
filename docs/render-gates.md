@@ -90,8 +90,12 @@ so the marks are gone and all four checks gate.
 
 ## Count budgets (`tests/e2e/mvr-render-stats.spec.ts`)
 
-The counts do not depend on the GPU, so SwiftShader in CI gates them. `MEASURED` holds the values of 2026-11-18 on
-`rq/f-gates` (674 calls, 143,917 triangles, 36 programs, 66 geometries, 59 textures, the same in 4 runs). Every count
+The counts do not depend on the GPU, so SwiftShader in CI gates them. `MEASURED` holds the values of 2026-11-19 at
+`867ab800` on `rq/wave4`: at rest 385 calls and 75,875 triangles, while a fixture moves 765 calls and 150,742
+triangles, and 43 programs, 66 geometries, 61 textures (rest the same in 5 runs). The spec waits for the lazy MVR
+chain and draws 40 warm-up frames before the 60 measured frames: the chain's arrival frame depends on real time and
+sets the phase of the surface-buffer redraws, so without the wait the last frame was a buffer redraw in some CI runs
+(765 calls). The earlier rest of 468 calls and 76,542 triangles was such a transient frame, not rest. Every count
 has a ceiling of 1.15x. Calls and triangles also have a floor of 0.85x, so a change that stops drawing the beams fails.
 All 40 fixtures must be at dim 100 in the output (an exact count). A change that needs more or saves some changes
 `MEASURED` in its own commit, with the values from the attached `render-stats.json` and the reason.
