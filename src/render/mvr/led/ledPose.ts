@@ -42,9 +42,7 @@ export function proxyPose(proxy: MvrProxy): PanelPose | undefined {
   };
 }
 
-/** The layer most of `panels` are on; empty when none brings a layer. */
-export function commonLayer(panels: readonly PanelPose[]): string {
-  const counts = new Map<string, number>();
-  for (const { layer } of panels) if (layer !== undefined) counts.set(layer, (counts.get(layer) ?? 0) + 1);
-  return [...counts].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
+/** The layers of `panels`, each once, in panel order; empty when none brings a layer. */
+export function panelLayers(panels: readonly PanelPose[]): string[] {
+  return [...new Set(panels.flatMap(({ layer }) => (layer === undefined ? [] : [layer])))];
 }

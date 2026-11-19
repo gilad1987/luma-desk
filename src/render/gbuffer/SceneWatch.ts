@@ -1,9 +1,16 @@
 import { InstancedMesh } from 'three';
 import type { Object3D } from 'three';
 
-/** The elements of a world matrix that a move or a turn changes: a part of the rotation, and the translation. */
-const MOVED = [0, 2, 5, 10, 12, 13, 14] as const;
-/** World units per step of the hash: a quarter of a millimetre, and a turn of about 0.014 degrees. */
+/**
+ * The elements of a world matrix that a move or a turn changes: all nine of the rotation and scale, and the
+ * translation (3, 7 and 11 stay 0 and 15 stays 1). With a part of the rotation only, a turn about X or Z to +30 and to
+ * -30 degrees gave one stamp, and a tilt near level moved only the cosine terms, which hardly change there.
+ */
+const MOVED = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14] as const;
+/**
+ * World units per step of the hash: a quarter of a millimetre, and a turn of 0.014 degrees about a matrix axis
+ * (1/4096 radian on the sine term; up to 0.03 degrees about a slanted axis, where no element moves at full rate).
+ */
 const STEPS = 4096;
 
 /**
@@ -43,7 +50,12 @@ export class SceneWatch {
       hash = Math.imul(hash ^ object.id ^ ((object.visible ? object.children.length + 1 : 0) << 20), 16777619);
       if (this.#isSurface[i] !== true) continue;
       const m = object.matrixWorld.elements;
-      for (const k of MOVED) hash = Math.imul(hash ^ ((m[k] ?? 0) * STEPS), 16777619);
+      for (const k of MOVED) {
+        hash = Math.imul(hash ^ ((m[k] ?? 0) * STEPS), 16777619);
+        // A multiply carries a change only to higher bits. Without the shift that brings them down, a turn about X
+        // to +30 and to -30 degrees (two sine terms that swap sign) gave one stamp.
+        hash ^= hash >>> 15;
+      }
       hash ^= object.layers.mask;
       if (object instanceof InstancedMesh) hash = Math.imul(hash ^ object.count ^ object.instanceMatrix.version, 31);
     }
