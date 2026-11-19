@@ -7,7 +7,9 @@ export function followLedLayers(apply: (uuids: readonly string[]) => void): () =
   return () => void stages.delete(apply);
 }
 
-/** Draws the layers with these uuids as LED walls on the stage now built, and every other layer as the file gives it. */
+/**
+ * Draws the layers with these uuids as LED walls on the stage now built, and every other layer as the file gives it.
+ */
 export function setLedLayers(uuids: readonly string[]): void {
   for (const apply of stages) apply(uuids);
 }

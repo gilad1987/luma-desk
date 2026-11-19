@@ -57,7 +57,9 @@ export class LedProxyLook {
     return [...groups.values()];
   }
 
-  /** Records the proxy group of a layer, which says whether its panels are on screen, and hangs its wall lights there. */
+  /**
+   * Records the proxy group of a layer, which says whether its panels are on screen, and hangs its wall lights there.
+   */
   holder(layer: string, holder: Object3D): void {
     this.#holders.set(layer, holder);
     this.#lights?.attach(layer, holder);

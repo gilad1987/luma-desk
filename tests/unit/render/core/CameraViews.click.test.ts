@@ -17,10 +17,13 @@ function pointerCanvas(): HTMLCanvasElement {
   return asReal<HTMLCanvasElement>(Object.assign(new EventTarget(), { style: {}, clientHeight: 600, ...capture }));
 }
 
-/** A left-button mouse event of `type` at (x, 0), as the browser sends it to the canvas. */
-function pointer(v: CameraViews, type: string, x: number): void {
-  const fields = { pointerId: 1, pointerType: 'mouse', button: 0, clientX: x, clientY: 0 };
-  v.controls.domElement.dispatchEvent(Object.assign(new Event(type), fields));
+/** Each [type, x, finger] step as the browser sends it to the canvas at (x, 0): of a left-button mouse, or a finger. */
+function gesture(v: CameraViews, ...steps: [type: string, x: number, finger?: number][]): void {
+  for (const [type, x, finger] of steps) {
+    const [pointerId, pointerType] = finger === undefined ? [1, 'mouse'] : [finger, 'touch'];
+    const fields = { pointerId, pointerType, button: 0, clientX: x, clientY: 0, pageX: x, pageY: 0 };
+    v.controls.domElement.dispatchEvent(Object.assign(new Event(type), fields));
+  }
 }
 
 /** A camera on the fitted front view of a 16:9 frame; `reshape` makes it 4:3 and runs one frame of the controls. */
@@ -76,12 +79,22 @@ describe('CameraViews after a gesture of the orbit controls', () => {
     const { v, reshape } = onFront(views);
     v.controls.enableDamping = false;
     const before = v.camera.position.clone();
-    pointer(v, 'pointerdown', 100);
-    pointer(v, 'pointermove', 100 + travel);
-    pointer(v, 'pointerup', 100 + travel);
+    gesture(v, ['pointerdown', 100], ['pointermove', 100 + travel], ['pointerup', 100 + travel]);
     const turned = v.camera.position.clone();
     expect(turned.distanceTo(before)).toBeGreaterThan(0.01);
     reshape();
     expect(v.camera.position.distanceTo(turned) > 0.1).toBe(isFitted);
+  });
+
+  // the second finger's press must not take the place of the first one's (review R2-38)
+  it('stops fitting the view after a two-finger zoom whose second finger went up where it went down', () => {
+    const views = new CameraViews(pointerCanvas(), { isMaLayout: () => false, onViewChanged: () => undefined });
+    const { v, reshape } = onFront(views);
+    v.controls.enableDamping = false;
+    gesture(v, ['pointerdown', 100, 1], ['pointerdown', 300, 2], ['pointermove', 200, 1], ['pointerup', 301, 2]);
+    // a camera that the zoom did not move would fit itself again on `reshape`, and fail this test too
+    const moved = v.camera.position.clone();
+    reshape();
+    expect(v.camera.position.distanceTo(moved)).toBeLessThan(1e-3);
   });
 });

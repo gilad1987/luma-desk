@@ -28,4 +28,15 @@ describe('the front of a screen with trim merged into one mesh', () => {
     const side = new BoxGeometry(3, 1.5, 0.1).rotateY(-Math.PI / 2).translate(6, 3, 0);
     expect(meshFront(merged(main, side), seated)).toBeUndefined();
   });
+
+  // each cabinet is 1.4 % of the main screen, but the side wall they make is 23 % of it (review R2-26)
+  it('gives no front for a main screen and a side wall of 18 separate 0.5 m cabinets', () => {
+    const main = new BoxGeometry(6, 3, 0.1).translate(0, 3, 0);
+    const side = Array.from({ length: 18 }, (_, i) =>
+      new BoxGeometry(0.48, 0.48, 0.1)
+        .rotateY(Math.PI / 2)
+        .translate(6, 2.5 + Math.floor(i / 6) * 0.5, -1.25 + (i % 6) * 0.5),
+    );
+    expect(meshFront(merged(main, ...side), seated)).toBeUndefined();
+  });
 });

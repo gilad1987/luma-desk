@@ -21,7 +21,7 @@ export function axesOf(front: Vector3): WallAxes {
 }
 
 /** The extent of `corners` (three numbers per corner) moved by `world`; undefined for a part with no wall face. */
-function extentOf(corners: Float32Array, world: Matrix4 | undefined, axes: WallAxes): WallExtent | undefined {
+export function extentOf(corners: Float32Array, world: Matrix4 | undefined, axes: WallAxes): WallExtent | undefined {
   const { right, up, front } = axes;
   const [low, high] = [new Vector3(Infinity, Infinity, Infinity), new Vector3(-Infinity, -Infinity, -Infinity)];
   const [point, along] = [new Vector3(), new Vector3()];
