@@ -27,9 +27,9 @@ const NATIVE_MODELS: readonly string[] = [
 const KEBAB_CASE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 describe('product catalogue', () => {
-  it('holds the Robe Esprite as its one product and knows only its own keys', () => {
+  it('holds the listed product ids in catalogue order and knows only its own keys', () => {
     expect([PRODUCT_IDS, isProductId('robe-esprite'), isProductId('toString'), productOf(undefined)]).toStrictEqual([
-      ['robe-esprite'],
+      ['robe-esprite', 'robe-pointe', 'robe-ledbeam-150'],
       true,
       false,
       undefined,
