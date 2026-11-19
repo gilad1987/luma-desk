@@ -10,6 +10,7 @@ import { expect, test, type Page } from '@playwright/test';
 interface GalleryId {
   readonly id: string;
   readonly family: string;
+  readonly moving: boolean;
 }
 
 const GALLERY_PAGE = 'src/render/fixtures/gallery/gallery.html';
@@ -47,7 +48,7 @@ test('shoots each product next to its native base model', async ({ page }) => {
     await test.step(item.id, async () => {
       for (const view of VIEWS)
         for (const [light, query] of LIGHTS) await shoot(page, item, `&view=${view}${query}`, `${view}-${light}`);
-      if (item.family !== 'mover') return;
+      if (!item.moving) return;
       for (const [light, query] of LIGHTS)
         await shoot(page, item, `&view=front34&pan=30&tilt=45${query}`, `front34-posed-${light}`);
     });
