@@ -51,11 +51,19 @@ export class InspectorHost {
     this.#isNarrow = this.#parts.narrow.matches;
     const to = this.slot;
     if (to === from) return;
+    const wasInDrawer = this.#drawer.hasFocus;
     // a moved field loses its focus without a `change`, so a typed, uncommitted value would be lost; a blur commits it
     const active = document.activeElement;
-    if (active instanceof HTMLElement && from.contains(active)) active.blur();
+    const field = active instanceof HTMLElement && from.contains(active) ? active : null;
+    field?.blur();
     to.append(...Array.from(from.children));
+    // a field moved into the drawer is not focused again: the drawer stays closed, and a hidden field cannot take it
+    if (this.#isNarrow) return;
     // the Inspector button is hidden on a wide screen, so it cannot take the focus back
-    if (!this.#isNarrow) this.#drawer.setOpen(false, false);
+    this.#drawer.setOpen(false, false);
+    // the field is the same element, now in the column, with its value committed; the frame and its Close button are
+    // hidden now, so a focus on them goes to the column instead of falling to the body
+    if (field) field.focus({ preventScroll: true });
+    else if (wasInDrawer) this.#parts.column.focus({ preventScroll: true });
   }
 }

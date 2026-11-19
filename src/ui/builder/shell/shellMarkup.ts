@@ -30,7 +30,8 @@ const drawerMarkup = `<aside id="builder-inspector-drawer" class="inspector-draw
  * with the 3D pane and the plan pane in one `wa-split-panel`, and the inspector column. The drawer is the inspector's
  * second home below 1100 px (`InspectorHost`). The split panel's start pane is the 3D view, so its `position` is the
  * 3D share in percent. The start screen covers these columns until a choice; they are laid out from the start, so the
- * 3D pane never begins at a 0 px box.
+ * 3D pane never begins at a 0 px box. The inspector column has `tabindex="-1"` so it can take the focus when a widen
+ * hides the drawer that had it (`InspectorHost`).
  */
 export const shellMarkup = `<aside class="builder-library">
   <h2 id="builder-library-title" class="library-title"
@@ -44,5 +45,5 @@ export const shellMarkup = `<aside class="builder-library">
     <div slot="end" class="builder-plan"></div>
   </wa-split-panel>
 </div>
-<aside class="builder-inspector"></aside>
+<aside class="builder-inspector" tabindex="-1"></aside>
 ${drawerMarkup}`;

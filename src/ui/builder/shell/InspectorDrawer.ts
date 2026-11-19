@@ -14,9 +14,11 @@ export class InspectorDrawer {
   readonly #button: HTMLElement;
   readonly #close: HTMLElement;
   /**
-   * On `window`, so it runs after the document's listeners: a `wa-tooltip` that is open takes its Escape first and
-   * prevents the default, so one Escape closes the tooltip, not the drawer too. An Escape from outside the drawer (the
-   * plan, the bar) leaves the drawer open and the focus where it is.
+   * On `window`, so it runs after the document's listeners: an open `wa-tooltip` takes Escape in a `document` listener
+   * that calls `stopPropagation()`, so that Escape never reaches `window` and one Escape closes the tooltip, not the
+   * drawer too. The `window` choice does that work; `defaultPrevented` covers other handlers that take an Escape
+   * without stopping it. An Escape from outside the drawer (the plan, the bar) leaves the drawer open and the focus
+   * where it is.
    */
   readonly #onKey = (ev: KeyboardEvent): void => {
     if (ev.key !== 'Escape' || ev.defaultPrevented || !this.isOpen) return;
@@ -39,6 +41,11 @@ export class InspectorDrawer {
 
   get isOpen(): boolean {
     return !this.#frame.hidden;
+  }
+
+  /** Whether the focus is in the drawer: on its frame, its Close button or the tools in it. */
+  get hasFocus(): boolean {
+    return this.#frame.contains(document.activeElement);
   }
 
   /**
