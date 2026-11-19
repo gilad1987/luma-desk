@@ -6,8 +6,9 @@ import { marginsOf, SHARE_SLACK, VIEWS } from './mvrViewFitRules';
 // The framing gate of an imported stage: every whole-stage view holds its box in the part of the 3D view that no
 // console covers and fills that part, in every layout, for 16:9, 4:3 and ultra-wide windows, and also after the
 // window or the layout changed under a view that was already set (the follow path of the camera).
-// SwiftShader draws the large windows slowly: 29 to 43 s a row on a Mac, past 120 s for the MA rows on the Linux CI
-// runner. Every wait here is on a state (mvrReady, frozen-clock frames), so only the time budget grows, never a result.
+// SwiftShader draws a frame in 4 to 26 s on the Linux CI runner; the MA layout and the change rows (five frames a view)
+// passed 120 s there, while a row takes 29 to 43 s on a Mac. Every wait here is on a state (mvrReady, frozen-clock
+// frames), so only the time budget grows, never a result.
 test.describe.configure({ timeout: 360_000 });
 const LAYOUTS = ['classic', 'desk', 'ma'] as const;
 const SIZES = [
