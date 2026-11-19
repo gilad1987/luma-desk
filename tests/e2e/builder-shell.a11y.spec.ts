@@ -65,3 +65,27 @@ test('the bar is a toolbar named Stage Builder with an Edit group and a polite c
   await expect(bar.locator('.count-badge')).toHaveAttribute('aria-live', 'polite');
   expect(errors).toEqual([]);
 });
+
+// Bug: wa-button-group rounds only its last child, and a trailing wa-tooltip was that child, so 3D had square corners
+test('the mode group rounds its outer corners only: Plan at the start, 3D at the end', async ({ page }) => {
+  await bootApp(page);
+  await openBuilder(page);
+  const corners = await modes(page)
+    .getByRole('radio')
+    .evaluateAll((all) =>
+      all.map((radio) => {
+        const style = getComputedStyle(radio);
+        return [
+          style.borderStartStartRadius,
+          style.borderEndStartRadius,
+          style.borderStartEndRadius,
+          style.borderEndEndRadius,
+        ];
+      }),
+    );
+  expect(corners).toEqual([
+    ['4px', '4px', '0px', '0px'],
+    ['0px', '0px', '0px', '0px'],
+    ['0px', '0px', '4px', '4px'],
+  ]);
+});
