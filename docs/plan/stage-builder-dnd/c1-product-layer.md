@@ -57,9 +57,10 @@ Facts that shape the plan (verified in the code):
 
 Merged record: `{ ...withoutGdtf(TYPES[base]), ...optics, ...(gdtfSpec/gdtfMode when set), name:
 \`${brand} ${name}\`, model: id, size: body.size }`, where `withoutGdtf` strips the base's `gdtfSpec`/`gdtfMode`
-first, so the record names a GDTF only when the product sets its own. `ProductOptics` is a `Partial<Pick<FixtureType, ...>>` that cannot name `moving`,
-`tiltOnly`, `shape`, `model`, `name` or `size`, so the type system already keeps the invariants; the guard test
-checks them on the merged record anyway (it guards a future widening of `ProductOptics`).
+first, so the record names a GDTF only when the product sets its own. `ProductOptics` is a
+`Partial<Pick<FixtureType, ...>>` that cannot name `moving`, `tiltOnly`, `shape`, `model`, `name` or `size`, so the
+type system already keeps the invariants; the guard test checks them on the merged record anyway (it guards a future
+widening of `ProductOptics`).
 
 Drawn size convention (decision, recorded in the ADR): a product is drawn at the desk's scale relative to its base
 model, not at real metres: `body.size = TYPES[base].size * (product height / base product height)` from the two
