@@ -41,10 +41,10 @@ describe('BuilderMode enter failure', () => {
   });
 
   // the bug: mountBuilder gave its disposer only on return, so a throwing mountTools left the builder's keys, the
-  // drawer's document Escape and the screen query's change listener behind
+  // drawer's Escape (on the document, now on the window) and the screen query's change listener behind
   it('lets go of every listener the mount made when mountTools throws', () => {
-    const added = vi.spyOn(document, 'addEventListener');
-    const removed = vi.spyOn(document, 'removeEventListener');
+    const added = [vi.spyOn(document, 'addEventListener'), vi.spyOn(window, 'addEventListener')];
+    const removed = [vi.spyOn(document, 'removeEventListener'), vi.spyOn(window, 'removeEventListener')];
     const failing = new BuilderMode({
       ...h.deps,
       mountTools: () => {
@@ -52,8 +52,8 @@ describe('BuilderMode enter failure', () => {
       },
     });
     expect(() => failing.enter()).toThrow('no tools');
-    const keydowns = (spy: typeof added | typeof removed): number =>
-      spy.mock.calls.filter(([type]) => type === 'keydown').length;
+    const keydowns = (spies: typeof added): number =>
+      spies.flatMap((spy) => spy.mock.calls).filter(([type]) => type === 'keydown').length;
     expect([h.keys.size, h.narrow.listeners.size, keydowns(added) - keydowns(removed)]).toEqual([0, 0, 0]);
   });
 

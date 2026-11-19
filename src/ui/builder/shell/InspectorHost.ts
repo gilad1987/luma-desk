@@ -55,6 +55,7 @@ export class InspectorHost {
     const active = document.activeElement;
     if (active instanceof HTMLElement && from.contains(active)) active.blur();
     to.append(...Array.from(from.children));
-    if (!this.#isNarrow) this.#drawer.setOpen(false);
+    // the Inspector button is hidden on a wide screen, so it cannot take the focus back
+    if (!this.#isNarrow) this.#drawer.setOpen(false, false);
   }
 }
