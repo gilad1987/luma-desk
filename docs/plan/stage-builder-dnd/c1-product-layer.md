@@ -52,11 +52,12 @@ Facts that shape the plan (verified in the code):
 |---|---|
 | `FixtureProduct.ts` | Types only: `PRODUCT_CATEGORIES`, `ProductCategory`, `ProductOptics`, `MoverBody`, `ProductBody`, `FixtureProduct`. |
 | `robe.ts` | `ROBE_PRODUCTS = { 'robe-esprite': {...} } as const satisfies Record<string, FixtureProduct>`. One product in C1. Each brand file stays under 100 lines (C2 splits Robe into `robe-movers.ts` / `robe-static.ts` when needed). |
-| `index.ts` | Does work (A6): joins the brand files into `PRODUCTS`, derives `ProductId`, `PRODUCT_IDS`, `isProductId`, `productOf`. |
+| `index.ts` | Does work (A6): joins the brand files into `PRODUCTS`, derives `ProductId`, `PRODUCT_IDS`, `isProductId`, `isProductOf`, `productOf`. |
 | `fixtureTypeOf.ts` | `fixtureTypeOf`: `TYPES[type]` (same object) for a plain fixture; for a product a merged `FixtureType`, memoised per product id in a module `Map` (the catalogue is static data, as `TYPES` is). |
 
-Merged record: `{ ...TYPES[base], ...optics, ...(gdtfSpec/gdtfMode when set), name: \`${brand} ${name}\`,
-model: id, size: body.size }`. `ProductOptics` is a `Partial<Pick<FixtureType, ...>>` that cannot name `moving`,
+Merged record: `{ ...withoutGdtf(TYPES[base]), ...optics, ...(gdtfSpec/gdtfMode when set), name:
+\`${brand} ${name}\`, model: id, size: body.size }`, where `withoutGdtf` strips the base's `gdtfSpec`/`gdtfMode`
+first, so the record names a GDTF only when the product sets its own. `ProductOptics` is a `Partial<Pick<FixtureType, ...>>` that cannot name `moving`,
 `tiltOnly`, `shape`, `model`, `name` or `size`, so the type system already keeps the invariants; the guard test
 checks them on the merged record anyway (it guards a future widening of `ProductOptics`).
 
@@ -202,6 +203,7 @@ export const PRODUCTS = { ...ROBE_PRODUCTS } as const satisfies Record<string, F
 export type ProductId = keyof typeof PRODUCTS; // 'robe-esprite' in C1; PRODUCTS[id] is a FixtureProduct
 export const PRODUCT_IDS: readonly ProductId[]; // catalogue order (brand file order), the library's default order
 export function isProductId(v: string): v is ProductId;
+export function isProductOf(id: string, type: FixtureTypeId): id is ProductId;
 export function productOf(id: string | undefined): FixtureProduct | undefined; // undefined for a plain fixture or an unknown id
 
 // src/domain/fixtureProducts/fixtureTypeOf.ts

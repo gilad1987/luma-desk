@@ -35,9 +35,10 @@ export function linkFootprints(raw: object): (readonly [unknown, unknown])[] {
 
 /**
  * Raw fixtures for checking the luma data with the stored-show parser: one per `links` entry (id, type, role, truss
- * id, mount, product, fixed, pixel) and one per LED wall driver id. The real fixtures travel as `<Fixture>` elements, but the parser checks a role, a truss
- * link and a wall driver only on fixtures, so these stand-ins let the one parser check the whole block. Nothing is
- * filtered here: a bad id, role or truss link fails the parse, and the import then treats the file as a plain MVR.
+ * id, mount, product, fixed, pixel) and one per LED wall driver id. The real fixtures travel as `<Fixture>`
+ * elements, but the parser checks a role, a truss link and a wall driver only on fixtures, so these stand-ins let the
+ * one parser check the whole block. Nothing is filtered here: a bad id, role or truss link fails the parse, and the
+ * import then treats the file as a plain MVR.
  */
 export function lumaStandIns(raw: object): Record<string, unknown>[] {
   const drivers = new Set(objects(field(raw, 'screens')).map((screen) => field(screen, 'fixtureId')));

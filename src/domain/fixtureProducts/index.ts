@@ -1,3 +1,4 @@
+import type { FixtureTypeId } from '../FixtureType';
 import type { FixtureProduct } from './FixtureProduct';
 import { ROBE_PRODUCTS } from './robe';
 
@@ -15,6 +16,14 @@ export type ProductId = keyof typeof PRODUCTS;
 /** Whether a stored string names a catalogue product; own keys only, so `'toString'` is not a product. */
 export function isProductId(v: string): v is ProductId {
   return Object.hasOwn(PRODUCTS, v);
+}
+
+/**
+ * Whether `id` names a catalogue product whose `base` is `type`: the one owner of the rule a stored or added product
+ * must satisfy (the parser drops one that fails it). False for an id the catalogue does not know.
+ */
+export function isProductOf(id: string, type: FixtureTypeId): id is ProductId {
+  return isProductId(id) && PRODUCTS[id].base === type;
 }
 
 /** Every product id in catalogue order, the library's default order; the guard keeps the key type without a cast. */

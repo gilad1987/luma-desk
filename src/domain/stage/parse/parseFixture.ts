@@ -1,5 +1,5 @@
 import { MOUNTS, type PanTilt } from '../../Fixture';
-import { isProductId, PRODUCTS, type ProductId } from '../../fixtureProducts';
+import { isProductOf, type ProductId } from '../../fixtureProducts';
 import type { FixtureTypeId } from '../../FixtureType';
 import { TYPES } from '../../fixtureTypes';
 import type { StageFixture } from '../StageDesign';
@@ -77,7 +77,7 @@ function parseFields(
 function productReader(r: Reader, type: FixtureTypeId | undefined): FieldReader<ProductId> {
   return (o, key, at) => {
     const id = r.str(o, key, at);
-    return id !== undefined && isProductId(id) && PRODUCTS[id].base === type ? id : undefined;
+    return id !== undefined && type !== undefined && isProductOf(id, type) ? id : undefined;
   };
 }
 
