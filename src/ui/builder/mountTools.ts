@@ -5,14 +5,14 @@ import type { EditorSession } from './EditorSession';
 import { FixtureTab } from './FixtureTab';
 import { PropertyPanel } from './PropertyPanel';
 import { StageTab } from './StageTab';
+import { PlanView, type PlanViewDeps } from './plan/PlanView';
 import { ToolTabs } from './ToolTabs';
-import { TopView, type TopViewDeps } from './TopView';
 import { TrussTab } from './TrussTab';
 
 /**
- * Mounts the tool tabs and the property panel into `slots.tools` and the top view into `slots.view` (the
+ * Mounts the tool tabs and the property panel into `slots.tools` and the plan view into `slots.view` (the
  * `BuilderDeps.mountTools` contract), and returns the one disposer that stops the session subscriptions, cancels a
- * pending top view frame and a pending panel render, and removes the DOM it added (U6). Every panel edits only
+ * pending plan view frame and a pending panel render, and removes the DOM it added (U6). Every panel edits only
  * through the session, so no panel reads or writes the stage itself.
  *
  * The panels re-render once per burst of session changes, on the next task of `schedule` (a timer, not a microtask):
@@ -22,7 +22,7 @@ import { TrussTab } from './TrussTab';
 export function mountTools(
   slots: BuilderSlots,
   session: EditorSession,
-  view: TopViewDeps,
+  view: PlanViewDeps,
   schedule: Schedule = timerSchedule,
 ): () => void {
   const stage = new StageTab(session);
@@ -40,14 +40,14 @@ export function mountTools(
   root.appendChild(tabs.root);
   root.appendChild(props.root);
   slots.tools.appendChild(root);
-  const topView = new TopView(slots.view, session, view);
+  const planView = new PlanView(slots.view, session, view);
   const panels = [stage, trusses, fixtures, props];
   const render = new Debounce(schedule, 0);
   const stop = session.onChange(() => render.request(() => panels.forEach((panel) => panel.render())));
   return () => {
     stop();
     render.cancel();
-    topView.dispose();
+    planView.dispose();
     root.remove();
   };
 }

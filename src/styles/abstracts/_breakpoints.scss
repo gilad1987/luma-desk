@@ -3,6 +3,9 @@
 $top-bar-wide: 2100px;
 $top-bar-narrow: 1700px;
 
+// The builder reflows below 1100 px (icon rail, inspector drawer); the desk itself keeps min-width 1100px.
+$builder-narrow: 1099px;
+
 // Rules for windows at most `$width` wide.
 @mixin below($width) {
   @media (max-width: $width) {

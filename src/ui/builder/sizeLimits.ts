@@ -6,5 +6,5 @@
 /** The smallest size a size field sends, in metres: below it the domain's checks or the renderer have nothing to draw. */
 export const MIN_SIZE_M = 0.1;
 
-/** The arrow-key step of a size field, in metres: half-metre steps match the 0.5 m grid of the top view. */
+/** The arrow-key step of a size field, in metres: half-metre steps match the 0.5 m grid of the plan. */
 export const SIZE_STEP_M = 0.5;

@@ -2,13 +2,14 @@ import type { EngineBus } from '../../engine/events';
 import type { KeySource } from './builderKeys';
 import type { EditorSession } from './EditorSession';
 import type { EditorSessionDeps } from './LivePreview';
-import type { TopViewDeps } from './TopView';
+import type { PlanViewDeps } from './plan/PlanView';
+import type { NarrowScreen } from './shell/InspectorHost';
 
-/** The two panels the builder screen leaves to the tool tabs (W4b) and the top view (W4c). */
+/** The two panels the builder screen leaves to the inspector and the plan. */
 export interface BuilderSlots {
-  /** The inline-start panel: Stage, Trusses and Fixtures tabs and the property panel. */
+  /** The inspector: Stage, Trusses and Fixtures tabs and the property panel, in the column or the narrow drawer. */
   readonly tools: HTMLElement;
-  /** The inline-end panel: the 2D top view. */
+  /** The plan pane of the centre split: the 2D plan. */
   readonly view: HTMLElement;
 }
 
@@ -28,18 +29,28 @@ export interface BuilderDeps extends EditorSessionDeps {
    */
   readonly fitLayout: () => void;
   /**
-   * Makes the desk areas the builder screen leaves on show (in the classic layout the encoders and executors under its
-   * open middle cell) inert while it is open, so no click or Tab key reaches the desk; the app picks the areas.
+   * Makes the desk areas inert while the builder is open: the builder covers the whole window, but the desk areas stay
+   * in the DOM under it, so no click or Tab key may reach the desk; the app picks the areas.
    */
   readonly setDeskInert: (inert: boolean) => void;
   /**
-   * The frame clock of the top view: the app passes `requestAnimationFrame` and `cancelAnimationFrame`, so the view
+   * The frame clock of the plan: the app passes `requestAnimationFrame` and `cancelAnimationFrame`, so the view
    * draws at most once per frame; tests pass a queue they run by hand.
    */
-  readonly frames: Pick<TopViewDeps, 'nextFrame' | 'cancelFrame'>;
+  readonly frames: Pick<PlanViewDeps, 'nextFrame' | 'cancelFrame'>;
   /**
-   * Mounts the tool tabs and the top view on enter; returns their disposer, called on exit. `view` is `frames` with
+   * Mounts the tool tabs and the plan on enter; returns their disposer, called on exit. `view` is `frames` with
    * the report sink, which shows a refused drag as a toast through `bus.emit('message', ...)`.
    */
-  readonly mountTools: (slots: BuilderSlots, session: EditorSession, view: TopViewDeps) => () => void;
+  readonly mountTools: (slots: BuilderSlots, session: EditorSession, view: PlanViewDeps) => () => void;
+  /**
+   * Moves the 3D viewer into the builder's 3D pane on enter; the disposer puts it back on exit, before the host is
+   * removed.
+   */
+  readonly attachViewer: (pane: HTMLElement) => () => void;
+  /**
+   * Whether the screen is too narrow for three columns: the app passes `matchMedia('(max-width: 1099px)')`, tests a
+   * fake they can flip. Narrow puts the inspector in a drawer and opens the centre in Plan mode.
+   */
+  readonly narrow: NarrowScreen;
 }

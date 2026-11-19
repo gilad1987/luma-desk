@@ -46,7 +46,13 @@
 @use 'overlays/tour';
 @use 'overlays/modal';
 @use 'overlays/rec-toast-scrollbar';
-@use 'builder/layout';
+@use 'builder/wa-theme';
+@use 'builder/wa-controls';
+@use 'builder/shell';
+@use 'builder/bar';
+@use 'builder/centre';
+@use 'builder/library';
+@use 'builder/inspector';
 @use 'builder/start';
 @use 'builder/panel';
-@use 'builder/topview';
+@use 'builder/plan';

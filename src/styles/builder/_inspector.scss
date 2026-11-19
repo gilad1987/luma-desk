@@ -1,0 +1,48 @@
+// The builder inspector: a scrolling column on wide screens, a drawer at the end edge below $builder-narrow
+// (the .builder-panel moves between the two; _panel.scss styles it in both).
+.builder {
+  .builder-inspector {
+    background: var(--p1);
+    border-inline-start: 1px solid var(--line);
+  }
+  // The drawer (InspectorDrawer.ts) is the builder's own panel, not a modal: fixed under the bar, so the bar stays in
+  // view and usable while it is open. Fixed, it also leaves the .builder grid, which would give it a third, 0 px row.
+  .inspector-drawer-frame {
+    position: fixed;
+    inset-block: var(--builder-bar-height) 0;
+    inset-inline-end: 0;
+    // over the centre's panes and the library rail
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    inline-size: var(--builder-inspector-width);
+    max-inline-size: 100%;
+    background: var(--p1);
+    color: var(--txt);
+    border-inline-start: 1px solid var(--line);
+    box-shadow: var(--wa-shadow-l);
+    &[hidden] {
+      display: none;
+    }
+    &:focus {
+      outline: none;
+    }
+  }
+  .inspector-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-inline: 12px 4px;
+    border-block-end: 1px solid var(--line);
+  }
+  .inspector-drawer-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .inspector-drawer {
+    flex: 1;
+    min-block-size: 0;
+    overflow: auto;
+  }
+}

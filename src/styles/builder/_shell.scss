@@ -1,0 +1,91 @@
+@use '../abstracts/breakpoints' as *;
+
+// Builder mode (BuilderMode.ts): `body.is-building` hides the top bar and both consoles and pins the #app rows, or the
+// 3D view moves into the empty 40 px row. The 3D view itself moves into the builder's centre pane while it is open.
+body.is-building {
+  #top,
+  #console,
+  #maConsole {
+    display: none;
+  }
+  #app > #main {
+    grid-row: 2;
+  }
+  #app > #enc {
+    grid-row: 3;
+  }
+  #app > #desk {
+    grid-row: 4;
+  }
+}
+
+// The builder host: bar over library, centre and inspector. Every cell is opaque, so nothing of the desk shows through.
+// The start screen (_start.scss) covers row 2 until a choice sets `is-editing`; the columns are laid out under it.
+.builder {
+  --builder-library-width: 300px;
+  --builder-inspector-width: 320px;
+  --builder-target: 44px;
+  --builder-bar-height: 56px;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: var(--builder-library-width) minmax(0, 1fr) var(--builder-inspector-width);
+  grid-template-rows: var(--builder-bar-height) minmax(0, 1fr);
+  background: var(--bg);
+  color: var(--txt);
+  font:
+    13px/1.3 Inter,
+    system-ui,
+    sans-serif;
+
+  .builder-bar {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .builder-library,
+  .builder-centre,
+  .builder-inspector {
+    grid-row: 2;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .builder-library {
+    grid-column: 1;
+  }
+  .builder-centre {
+    grid-column: 2;
+  }
+  .builder-inspector {
+    grid-column: 3;
+    overflow: auto;
+  }
+  .is-narrow-only {
+    display: none;
+  }
+}
+
+// Before a choice the view modes and the Inspector button have nothing to act on (the columns are `inert`,
+// mountBuilder.ts); `visibility` keeps their place, so the bar does not reflow when the tools appear.
+.builder:not(.is-editing) {
+  .view-modes,
+  [data-builder='inspector'] {
+    visibility: hidden;
+  }
+}
+
+// Narrow: the library becomes a 56 px icon rail and the inspector moves into the drawer, opened from the bar.
+@include below($builder-narrow) {
+  .builder {
+    --builder-library-width: 56px;
+    grid-template-columns: var(--builder-library-width) minmax(0, 1fr);
+
+    .builder-inspector {
+      display: none;
+    }
+    .is-narrow-only {
+      display: inline-flex;
+    }
+  }
+}

@@ -1,13 +1,14 @@
+// @vitest-environment jsdom
 /**
  * Owns the edit toolbar: each button runs its edit on the session as one undo step, a refused edit is reported, and
- * the disabled state follows history and selection. The edit ops themselves are owned by tests/unit/domain/stage/edit.
+ * the disabled state (class and Web Awesome attribute) follows history and selection. The edit ops themselves are
+ * owned by tests/unit/domain/stage/edit. jsdom, because the disabled state is a real attribute.
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mirrorLeftToRight } from '../../../../src/domain/stage/edit/mirror.ts';
 import { createTemplate } from '../../../../src/domain/stage/templates';
 import { EditorSession } from '../../../../src/ui/builder/EditorSession.ts';
 import { EditToolbar } from '../../../../src/ui/builder/EditToolbar.ts';
-import { asReal, FakeDom, FakeElement } from '../../../shared/dom';
 import { sampleDesign } from '../../domain/stage/edit/sampleDesign.ts';
 import { fakeStage } from './fakeStage.ts';
 
@@ -22,24 +23,32 @@ const sessionMembers = (s: EditorSession) => ({
   onChange: (listener: () => void) => s.onChange(listener),
 });
 
+const ACTIONS = ['undo', 'redo', 'duplicate', 'delete', 'mirror'];
+
 describe('EditToolbar', () => {
-  let root: FakeElement, session: EditorSession, report: ReturnType<typeof vi.fn<(text: string) => void>>;
+  let root: HTMLElement, session: EditorSession, report: ReturnType<typeof vi.fn<(text: string) => void>>;
   let toolbar: EditToolbar;
   beforeEach(() => {
-    new FakeDom();
-    root = new FakeElement();
+    root = document.createElement('div');
     session = new EditorSession({ stage: fakeStage(createTemplate('theatre')) });
     report = vi.fn<(text: string) => void>();
-    toolbar = new EditToolbar(asReal<HTMLElement>(root), session, report);
+    toolbar = new EditToolbar(root, session, report);
   });
-  afterEach(() => vi.unstubAllGlobals());
-  const button = (action: string): FakeElement => root.part(`[data-edit="${action}"]`);
-  const click = (action: string): void => button(action).onclick?.({ target: undefined });
-  const disabled = (): string[] =>
-    ['undo', 'redo', 'duplicate', 'delete', 'mirror'].filter((a) => button(a).classList.contains('is-disabled'));
+  const button = (action: string): HTMLElement | null => root.querySelector<HTMLElement>(`[data-edit="${action}"]`);
+  const click = (action: string): void => button(action)?.click();
+  const disabled = (): string[] => ACTIONS.filter((a) => button(a)?.classList.contains('is-disabled'));
 
   it('starts with Undo, Redo, Duplicate and Delete disabled and Mirror enabled', () => {
     expect(disabled()).toEqual(['undo', 'redo', 'duplicate', 'delete']);
+  });
+
+  // catches a button that looks off but still takes a click, because the wa-button never got `disabled`
+  it('gives a disabled action the disabled attribute and is-disabled, and an enabled one neither', () => {
+    const state = (action: string) => [button(action)?.hasAttribute('disabled'), disabled().includes(action)];
+    expect([state('undo'), state('mirror')]).toEqual([
+      [true, true],
+      [false, false],
+    ]);
   });
 
   it('duplicates and deletes the selected truss with its fixtures, each as one undo step', () => {
@@ -61,14 +70,14 @@ describe('EditToolbar', () => {
 
   it('mirrors the draft as one undo step', () => {
     const mirrored = new EditorSession({ stage: fakeStage(sampleDesign()) });
-    const bar = new EditToolbar(asReal<HTMLElement>(new FakeElement()), mirrored, report);
+    const bar = new EditToolbar(document.createElement('div'), mirrored, report);
     bar.run('mirror');
     expect([mirrored.draft, mirrored.canUndo]).toEqual([mirrorLeftToRight(sampleDesign()), true]);
   });
 
   it('reports the text of a refused edit instead of throwing', () => {
     const refusing = { ...sessionMembers(session), edit: () => 'no room' };
-    new EditToolbar(asReal<HTMLElement>(new FakeElement()), refusing, report).run('mirror');
+    new EditToolbar(document.createElement('div'), refusing, report).run('mirror');
     expect(report.mock.calls).toEqual([['no room']]);
   });
 

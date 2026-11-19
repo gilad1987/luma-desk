@@ -31,7 +31,8 @@ export class ViewportPicking {
     this.#viewer = byId('viewer');
     this.#rect = byId('selRect');
     deps.canvas.addEventListener('pointerdown', (ev) => {
-      const box = ev.shiftKey && ev.button === 0;
+      // no box while the builder is open: `#selRect` is the desk's HUD, and its release would select nothing
+      const box = ev.shiftKey && ev.button === 0 && !deps.isBuilding();
       this.#press = { x: ev.clientX, y: ev.clientY, shift: ev.shiftKey, box };
       if (box) deps.controls.enabled = false;
     });

@@ -8,6 +8,7 @@ import { i18nRules } from './eslint/i18nRules.ts';
 import { layerRules } from './eslint/layerRules.ts';
 import { SHARED_INTERNALS } from './eslint/sharedInternals.ts';
 import { testRules } from './eslint/testRules.ts';
+import { waBoundary } from './eslint/waBoundary.ts';
 
 export default defineConfig(
   { ignores: ['dist/', 'test-results/', 'playwright-report/', '.cache/'] },
@@ -27,5 +28,6 @@ export default defineConfig(
   layerRules,
   domGlobalRules,
   testRules,
+  waBoundary,
   prettier,
 );

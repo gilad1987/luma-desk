@@ -1,0 +1,94 @@
+// @vitest-environment jsdom
+/**
+ * Owns the centre layout per view mode: the split position, the divider's `disabled` state, the one `is-mode-*`
+ * class, the divider position remembered across Plan and 3D, and the Plan and 3D edges put back after the panel
+ * repositions itself (a window resize). The buttons are owned by ViewModeSwitch.test.ts.
+ * jsdom with a fake `wa-split-panel` (defineFakeSplitPanel.ts), because the real panel needs a browser.
+ */
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { CentreSplit } from '../../../../../src/ui/builder/shell/CentreSplit.ts';
+import { shellMarkup } from '../../../../../src/ui/builder/shell/shellMarkup.ts';
+import type { ViewMode } from '../../../../../src/ui/builder/shell/ViewModeSwitch.ts';
+import { defineFakeSplitPanel } from './defineFakeSplitPanel.ts';
+
+type Panel = HTMLElement & { position: number };
+
+const isPanel = (element: Element | null | undefined): element is Panel =>
+  element instanceof HTMLElement && 'position' in element && typeof element.position === 'number';
+
+describe('CentreSplit', () => {
+  let host: HTMLElement, centre: HTMLElement, panel: Panel;
+  beforeEach(() => {
+    defineFakeSplitPanel();
+    host = document.body.appendChild(document.createElement('section'));
+    host.innerHTML = shellMarkup;
+    const found = host.querySelector<HTMLElement>('.builder-centre');
+    const split = found?.querySelector('wa-split-panel');
+    if (!found || !isPanel(split)) throw new Error('the fake split panel is not upgraded');
+    centre = found;
+    panel = split;
+  });
+  afterEach(() => host.remove());
+  const layout = (): [number, boolean, string[]] => [
+    panel.position,
+    panel.hasAttribute('disabled'),
+    Array.from(centre.classList).filter((name) => name.startsWith('is-mode-')),
+  ];
+  const dragTo = (percent: number): void => {
+    panel.position = percent;
+    panel.dispatchEvent(new CustomEvent('wa-reposition'));
+  };
+
+  // catches Plan or 3D left with a live divider, which a drag would pull back into a split
+  it.each<[ViewMode, [number, boolean, string[]]]>([
+    ['plan', [0, true, ['is-mode-plan']]],
+    ['3d', [100, true, ['is-mode-3d']]],
+    ['split', [50, false, ['is-mode-split']]],
+  ])('lays out %s with its position, divider state and one mode class', (mode, expected) => {
+    new CentreSplit(centre, 'split').setMode(mode);
+    expect(layout()).toEqual(expected);
+  });
+
+  // the bug: a mode switch that loses the user's divider position
+  it('brings back the divider position dragged in Split after a trip to Plan and 3D', () => {
+    const split = new CentreSplit(centre, 'split');
+    dragTo(30);
+    split.setMode('plan');
+    split.setMode('3d');
+    split.setMode('split');
+    expect(layout()).toEqual([30, false, ['is-mode-split']]);
+  });
+
+  // the bug: a window resize recomputes the position from the cached pixels, so a strip of the other view shows; a
+  // Plan or 3D position saved as the user's split, or a Split drift to an edge saved as a 0 px pane, comes back later
+  it.each<[ViewMode, number, number, number]>([
+    ['3d', 87, 100, 50],
+    ['plan', 13, 0, 50],
+    ['split', 37, 37, 37],
+    ['split', 100, 90, 90],
+    ['split', 0, 10, 10],
+  ])('in %s mode, a reposition to %d leaves the panel at %d and Split at %d', (mode, drifted, kept, remembered) => {
+    const split = new CentreSplit(centre, mode);
+    dragTo(drifted);
+    const after = panel.position;
+    split.setMode('plan');
+    split.setMode('split');
+    expect([after, panel.position]).toEqual([kept, remembered]);
+  });
+
+  // a kept listener would write the closed builder's divider into a dead object on every reposition
+  it('stops remembering repositions after dispose', () => {
+    const split = new CentreSplit(centre, 'split');
+    split.dispose();
+    dragTo(20);
+    split.setMode('plan');
+    split.setMode('split');
+    expect(layout()[0]).toBe(50);
+  });
+
+  // catches a mount before Web Awesome is registered, which would silently drive a dead tag
+  it('throws for a split panel without a numeric position', () => {
+    Reflect.deleteProperty(panel, 'position');
+    expect(() => new CentreSplit(centre, 'split')).toThrow('wa-split-panel has no numeric position');
+  });
+});
