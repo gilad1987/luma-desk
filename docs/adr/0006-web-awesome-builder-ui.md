@@ -83,10 +83,10 @@ Costs and risks:
 ## Verified
 
 - `npm run build`: the lazy chunk `assets/registerWa-*.js` is 226,683 bytes (58,139 gzip) and its CSS
-  `assets/registerWa-*.css` 50,570 bytes (6,891 gzip); the boot chunk `assets/index-*.js` is 994,157 bytes
-  (294,715 gzip; main: 985,358) and holds no Web Awesome code (`tests/unit/swBuild.test.ts`: the service worker shell
-  lists the chunk; the main chunk has no `--wa-` string, the chunk does). The boot CSS `assets/index-*.css` is 56,891
-  bytes (12,962 gzip; main: 48,700): the builder's own shell styles and the token mapping are desk styles, scoped
+  `assets/registerWa-*.css` 50,570 bytes (6,891 gzip); the boot chunk `assets/index-*.js` is 995,439 bytes
+  (295,149 gzip; main: 988,967) and holds no Web Awesome code (`tests/unit/swBuild.test.ts`: the service worker shell
+  lists the chunk; the main chunk has no `--wa-` string, the chunk does). The boot CSS `assets/index-*.css` is 56,998
+  bytes (12,985 gzip; main: 48,700): the builder's own shell styles and the token mapping are desk styles, scoped
   under `.builder`.
 - `tests/unit/app/ui/wireBuilder.load.test.ts`: the click awaits the chunk before `enter()` and a failed load shows
   a toast; `viewerHost.test.ts`: the viewer moves into the pane and back before `#side`.
