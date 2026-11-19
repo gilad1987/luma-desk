@@ -23,7 +23,7 @@ export type FixtureModelTable = Readonly<Record<string, ModelBuilder>>;
  * One procedural builder per real product. Geometry is in fixture units (the visual scales the group by T.size),
  * built in the hang orientation (base up, tilt axis at the origin, lens facing -Y), and made on the first fixture
  * of each model, then shared by every fixture of that model; so the table belongs to one scene build. The catalogue
- * products follow the 9 natives, keyed by product id, and share the Robe base cache with them.
+ * products follow the 9 natives, keyed by product id, and are built by the same `robe` factory and base cache.
  */
 export function createFixtureModels(kit: ModelKit): FixtureModelTable {
   const robeBase = once(() => robeBaseGeometry(kit.prims));
@@ -46,5 +46,5 @@ export function createFixtureModels(kit: ModelKit): FixtureModelTable {
     s4: product(SOURCE_FOUR_MODEL),
     tetra2: product(TETRA2_MODEL),
   };
-  return { ...natives, ...familyModels(kit, { robeBase }) };
+  return { ...natives, ...familyModels({ robe }) };
 }

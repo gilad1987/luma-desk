@@ -31,7 +31,8 @@ new object at boot.
    the built model and pinned by tests, as `BODY_SPANS` and `MOUNT_HEIGHTS` are.
 5. Product ids are show format. A saved design stores them, so an id is never renamed.
 6. Every optical number is checked against the manufacturer data sheet, and the record names the sheet
-   (`dataSheet`). Real features that the desk does not model are listed in the record (`unmodelled`).
+   (`dataSheet`). Real features that the desk does not model are listed in the record (`unmodelled`). A product
+   without a verified GDTF name has none in its merged record, so C5 falls back to the base type's for export.
 7. Parametric body families live in `src/render/fixtures/families/`. C1 ships the `mover` family, which reuses the
    Robe base, the yoke and the mover builder of the native Robe models.
 

@@ -1,6 +1,8 @@
 import type { FixtureProduct } from './FixtureProduct';
 import { ROBE_PRODUCTS } from './robe';
 
+// fixtureTypeOf.ts imports this file, so this file must never re-export fixtureTypeOf (import cycle).
+
 /**
  * Every catalogue product by id, joined from the brand files in catalogue order. It is checked with `satisfies`, not
  * typed as a record, so `ProductId` derives from its keys and a bad id is a type error in every edit op and test.

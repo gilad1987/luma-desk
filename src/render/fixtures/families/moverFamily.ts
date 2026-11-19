@@ -1,9 +1,7 @@
-import type { CanvasTexture } from 'three';
 import type { MoverBody } from '../../../domain/fixtureProducts/FixtureProduct';
 import { merge } from '../modelGeometry';
 import type { ModelPrimitives } from '../ModelPrimitives';
-import type { BuiltModel, ModelContext, ModelKit } from '../models/ModelContext';
-import { buildRobeMover, type RobeHead, type RobeHeadGeometry, type RobeMoverParts } from '../models/robeMover';
+import type { RobeHead, RobeHeadGeometry } from '../models/robeMover';
 import { barrelProfile, bezelProfile, ribRings, sideVents } from './moverProfile';
 
 /**
@@ -18,20 +16,6 @@ export function moverHead(body: MoverBody): RobeHead {
     lensOff: body.lens.off,
     geometry: (prims) => headGeometry(prims, body),
   };
-}
-
-/**
- * Builds one mover product fixture: it sets the lazily painted lens face on the fixture's own lens material, which
- * the native path gets from `createLensTextures` through the builder, then builds the Robe mover.
- */
-export function buildMover(
-  kit: ModelKit,
-  c: ModelContext,
-  parts: RobeMoverParts,
-  lens: () => CanvasTexture,
-): BuiltModel {
-  c.lensMat.map = lens();
-  return buildRobeMover(kit, c, parts);
 }
 
 function headGeometry(prims: ModelPrimitives, body: MoverBody): RobeHeadGeometry {

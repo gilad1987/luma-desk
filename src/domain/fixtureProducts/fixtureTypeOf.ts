@@ -24,10 +24,14 @@ export function fixtureTypeOf(fixture: {
   return merged;
 }
 
+/** A type record without its GDTF identity, which names the base's real product, never the catalogue product. */
+const withoutGdtf = ({ gdtfSpec: _spec, gdtfMode: _mode, ...rest }: FixtureType): FixtureType => rest;
+
+/** The merged record names a GDTF only when the product sets its own, so C5 falls back to the base type's. */
 function mergeProduct(product: FixtureProduct): FixtureType {
   const { gdtfSpec, gdtfMode } = product;
   return {
-    ...TYPES[product.base],
+    ...withoutGdtf(TYPES[product.base]),
     ...product.optics,
     ...(gdtfSpec === undefined ? {} : { gdtfSpec }),
     ...(gdtfMode === undefined ? {} : { gdtfMode }),

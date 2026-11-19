@@ -3,34 +3,22 @@
  * body's lens numbers, and a mover body gets side vents only when it asks for them. The lazy creation rule is owned by
  * `lazyProducts.test.ts`, the pinned sizes by `productSpans.test.ts`.
  */
-import { BufferGeometry, Vector3 } from 'three';
+import { BufferGeometry } from 'three';
 import { afterEach, expect, it, vi } from 'vitest';
-import { Fixture } from '../../../../../src/domain/Fixture';
 import { PRODUCTS } from '../../../../../src/domain/fixtureProducts';
 import type { MoverBody } from '../../../../../src/domain/fixtureProducts/FixtureProduct';
-import { FixtureVisualBuilder, ModelPrimitives } from '../../../../../src/render/fixtures';
+import { ModelPrimitives, type LightVisual } from '../../../../../src/render/fixtures';
 import { moverHead } from '../../../../../src/render/fixtures/families/moverFamily';
 import { stubCanvasDocument } from '../../stubCanvasDocument';
-import { buildFixtureScene } from '../buildFixtureScene';
+import { visualBuilder } from '../builtBox';
 
 afterEach(() => vi.unstubAllGlobals());
 
 const ESPRITE = PRODUCTS['robe-esprite'];
 
-function buildEsprite() {
+function buildEsprite(): LightVisual {
   stubCanvasDocument();
-  const { scene, prims, beam, gobo, models, lensTextures, screenMeshes } = buildFixtureScene();
-  const picker = { register: () => undefined };
-  const deps = { scene, prims, beam, gobo, models, lensTextures, screenMesh: screenMeshes, picker };
-  const fixture = new Fixture({
-    id: 9001,
-    type: 'spot',
-    pos: new Vector3(),
-    mount: 'hang',
-    fixed: null,
-    product: 'robe-esprite',
-  });
-  const visual = new FixtureVisualBuilder(deps).build(fixture);
+  const visual = visualBuilder()({ type: 'spot', product: 'robe-esprite' });
   if (visual.kind !== 'light') throw new Error('an Esprite builds a light visual');
   return visual;
 }

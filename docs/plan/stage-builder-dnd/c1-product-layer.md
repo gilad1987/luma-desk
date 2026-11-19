@@ -104,14 +104,14 @@ drawn values, measured from the built model and pinned by a test, exactly as `BO
 
 | File | Content |
 |---|---|
-| `familyModels.ts` | `familyModels(kit, shared: { robeBase: () => RobeBaseGeometry }): FixtureModelTable`: one entry per `PRODUCT_IDS`, built by an exhaustive `switch (body.family)` (T6; one member in C1). Each entry is a `once`-cached geometry closure; nothing three.js is created until the first fixture of that product is built. It creates the one `LazyLensTextures` and holds it in its closure: same lifetime as the kit (`createFixtureModels` runs once at boot), no change to `ModelKit` or the test helpers. |
-| `moverFamily.ts` | `moverHead(body: MoverBody): RobeHead` (`ax`, `lensR`, `lensY`, `lensOff` and a `geometry(prims)` method from the body numbers) and `buildMover(kit, c, parts, lens)`: sets `c.lensMat.map = lens()` then calls `buildRobeMover` with `robeYokeGeometry(prims, body.ax)` and the shared `robeBase()`. |
+| `familyModels.ts` | `familyModels(shared: { robe: (head: RobeHead, fs: boolean) => ModelBuilder }): FixtureModelTable` (the C1 review replaced `kit` and `robeBase` with the native `robe` factory): one entry per `PRODUCT_IDS`, built by an exhaustive `switch (body.family)` (T6; one member in C1). Each entry is a `once`-cached geometry closure; nothing three.js is created until the first fixture of that product is built. It creates the one `LazyLensTextures` and holds it in its closure: same lifetime as the kit (`createFixtureModels` runs once at boot), no change to `ModelKit` or the test helpers. |
+| `moverFamily.ts` | `moverHead(body: MoverBody): RobeHead` (`ax`, `lensR`, `lensY`, `lensOff` and a `geometry(prims)` method from the body numbers) only; `familyModels` sets `c.lensMat.map = lens()` and then calls the native `robe(moverHead(body), false)` builder, which adds `robeYokeGeometry(prims, body.ax)` and the shared Robe base. |
 | `moverProfile.ts` | The barrel lathe profile and bezel from `barrel`, `lens`, `ribs`, `vents`: the FORTE profile (`forteHead.ts`) normalised and scaled by radius and length, so a mover product keeps the realistic shape (widened body around the tilt axis, stepped bezel, rib rings, optional side vents as the MegaPointe). Profile points are module constants. Split out only if `moverFamily.ts` would pass 100 lines. |
 | `LazyLensTextures.ts` | `class LazyLensTextures { get(id, painter, w?, h?): CanvasTexture }` with a private `Map`; creates on first `get`, shares after. Never disposed, as the native lens set. |
 
 - `src/render/fixtures/LensTextures.ts`: export the existing `lensTexture` helper (no new entry in
   `createLensTextures`; the second export is noted in the PR body).
-- `src/render/fixtures/FixtureModels.ts` (47 -> about 50): `return { ...natives, ...familyModels(kit, { robeBase }) }`
+- `src/render/fixtures/FixtureModels.ts` (47 -> about 50): `return { ...natives, ...familyModels({ robe }) }`
   so the products share the one Robe base `once`. The 9 native entries and the model files are untouched.
 - `src/render/fixtures/fixtureBody.ts:33`: `map: lensMap` becomes a conditional spread
   (`...(lensMap === undefined ? {} : { map: lensMap })`), because three 0.160 `Material.setValues` warns on

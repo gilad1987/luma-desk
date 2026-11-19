@@ -1,23 +1,23 @@
+import type { CanvasTexture } from 'three';
 import { PRODUCT_IDS, PRODUCTS, type ProductId } from '../../../domain/fixtureProducts';
 import type { MoverBody } from '../../../domain/fixtureProducts/FixtureProduct';
 import type { CanvasPainter } from '../../shared';
 import type { FixtureModelTable, ModelBuilder } from '../FixtureModels';
 import { MOVER_LENS_FACES } from '../lens/moverLensFaces';
-import { once } from '../modelGeometry';
-import type { ModelKit } from '../models/ModelContext';
-import type { RobeBaseGeometry } from '../models/robeBase';
-import { robeYokeGeometry } from '../models/robeYoke';
+import type { RobeHead } from '../models/robeMover';
 import { LazyLensTextures } from './LazyLensTextures';
-import { buildMover, moverHead } from './moverFamily';
+import { moverHead } from './moverFamily';
 
-/** The native geometry the families share with the native models, each a `once` cache of the model table. */
+/**
+ * The native builder factories the families reuse, from the model table: `robe` caches the head and yoke geometry
+ * `once` per call and draws on the table's one Robe base cache, so a product is built exactly like a native head.
+ */
 export interface FamilyShared {
-  readonly robeBase: () => RobeBaseGeometry;
+  readonly robe: (head: RobeHead, fs: boolean) => ModelBuilder;
 }
 
-/** What every family builder closes over: the kit, the shared geometry and the one lazy lens set of the table. */
+/** What every family builder closes over: the shared factories and the one lazy lens set of the table. */
 interface FamilyScope extends FamilyShared {
-  readonly kit: ModelKit;
   readonly lenses: LazyLensTextures;
 }
 
@@ -33,8 +33,8 @@ const MOVER_FACE_PAINTERS = {
  * face in the lazy set, so a product costs no `Math.random` draw until its first fixture is built (the boot goldens
  * count every draw), and a product without a fixture costs nothing at all.
  */
-export function familyModels(kit: ModelKit, shared: FamilyShared): FixtureModelTable {
-  const scope: FamilyScope = { ...shared, kit, lenses: new LazyLensTextures() };
+export function familyModels(shared: FamilyShared): FixtureModelTable {
+  const scope: FamilyScope = { ...shared, lenses: new LazyLensTextures() };
   return Object.fromEntries(PRODUCT_IDS.map((id) => [id, familyBuilder(scope, id)]));
 }
 
@@ -46,10 +46,15 @@ function familyBuilder(scope: FamilyScope, id: ProductId): ModelBuilder {
   }
 }
 
+/**
+ * The native Robe builder for the product's head, with the lazily painted lens face set on the fixture's own lens
+ * material first, which a native head gets from `createLensTextures` through the builder instead.
+ */
 function moverBuilder(scope: FamilyScope, id: ProductId, body: MoverBody): ModelBuilder {
-  const { kit, lenses } = scope;
-  const head = moverHead(body);
-  const geometry = once(() => ({ ...head.geometry(kit.prims, false), ...robeYokeGeometry(kit.prims, body.ax) }));
-  const lens = (): ReturnType<LazyLensTextures['get']> => lenses.get(id, MOVER_FACE_PAINTERS[body.face]);
-  return (c) => buildMover(kit, c, { model: head, geometry: geometry(), base: scope.robeBase() }, lens);
+  const build = scope.robe(moverHead(body), false);
+  const lens = (): CanvasTexture => scope.lenses.get(id, MOVER_FACE_PAINTERS[body.face]);
+  return (c) => {
+    c.lensMat.map = lens();
+    return build(c);
+  };
 }
