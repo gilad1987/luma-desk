@@ -5,7 +5,7 @@
  * before the mark existed derives it from its highest id.
  */
 import { describe, expect, it } from 'vitest';
-import { addFloorRow } from '../../../../../src/domain/stage/edit/addFixtures.ts';
+import { addFixturesOnTruss, addFloorRow } from '../../../../../src/domain/stage/edit/addFixtures.ts';
 import { nextIdBlock } from '../../../../../src/domain/stage/edit/ids.ts';
 import { deleteFixtures, deleteTruss } from '../../../../../src/domain/stage/edit/itemOps.ts';
 import { setLedWall } from '../../../../../src/domain/stage/edit/ledWall.ts';
@@ -28,11 +28,21 @@ describe('fixture ids after a delete', () => {
     expect(added.fixtures.slice(-2).map((f) => f.id)).toEqual([401, 402]);
   });
 
-  it('keeps the ids of a deleted truss and of a removed LED wall', () => {
+  it('keeps the ids of a removed LED wall', () => {
     const walled = setLedWall(sampleDesign(), { width: 8, height: 4 });
     expect(nextIdBlock(setLedWall(walled, null))).toBe(501);
-    const onTop = addFloorRow(sampleDesign(), { ...ROW, count: 1 });
-    expect(nextIdBlock(deleteFixtures(deleteTruss(onTop, 'pipe-1'), [401]))).toBe(501);
+  });
+
+  it('keeps the ids of a deleted truss that held the highest fixtures', () => {
+    const onPipe = addFixturesOnTruss(sampleDesign(), { trussId: 'pipe-1', type: 'par', count: 2 });
+    const top = onPipe.fixtures.filter((f) => f.id > 400);
+    expect(top.map((f) => [f.id, f.trussId])).toEqual([
+      [401, 'pipe-1'],
+      [402, 'pipe-1'],
+    ]);
+    const deleted = deleteTruss(onPipe, 'pipe-1');
+    expect(Math.max(...deleted.fixtures.map((f) => f.id))).toBeLessThan(401);
+    expect(nextIdBlock(deleted)).toBe(501);
   });
 
   it('keeps the mark through a save and load', () => {
