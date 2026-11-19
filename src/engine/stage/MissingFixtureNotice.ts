@@ -4,11 +4,12 @@ import type { RigSource } from './RigSource';
 
 /**
  * Every fixture id a cue names, in its values and in its effects, without repeats. Saved shows are not validated, so
- * a cue may lack its values or its phaser list; both read as empty, as `tracked` reads them, so GO still plays.
+ * a cue may lack its values or its phaser list; both read as empty, as `tracked` reads them, so GO still plays. A
+ * phaser list saved as `false` or `0` also reads as empty, through `||` as in `tracked`.
  */
 function cueIds(cue: Readonly<Cue>): Set<number> {
   const ids = new Set(Object.keys(cue.vals ?? {}).map(Number));
-  for (const fx of cue.fx ?? []) for (const id of fx.ids) ids.add(id);
+  for (const fx of cue.fx || []) for (const id of fx.ids) ids.add(id);
   return ids;
 }
 

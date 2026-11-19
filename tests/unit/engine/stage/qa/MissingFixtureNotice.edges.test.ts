@@ -76,6 +76,14 @@ describe('MissingFixtureNotice edges (QA4)', () => {
     expect(logs()).toEqual([warn(1, 2, 1), warn(1, 3, 1)]);
   });
 
+  it('reads a saved fx of false or 0 as empty, as Tracking does', () => {
+    const { notice, logs } = setup();
+    for (const fx of [false, 0]) {
+      expect(() => notice.check(0, { ...cueOf(1, {}), fx: fx as unknown as Cue['fx'] })).not.toThrow();
+    }
+    expect(logs()).toEqual([]);
+  });
+
   it('warns again after a builder, import or show load apply, but not after a preview', () => {
     const { service, notice, logs } = setup();
     const theatre = createTemplate('theatre');
