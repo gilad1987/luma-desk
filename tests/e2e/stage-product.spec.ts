@@ -37,9 +37,12 @@ async function appSavedShowText(page: Page, desk: JSHandle<DeskTestApi>): Promis
     d.run(`Fixture ${window.__desk.fixtures[0]?.id ?? 0} At 100`);
     d.run('Store Exec 1');
   });
-  const saved = await page.waitForFunction((key) => localStorage.getItem(key), STORAGE_KEYS.show, TIMER_POLLING);
-  return (await saved.jsonValue()) as string;
+  const saved = await page.waitForFunction((key) => localStorage.getItem(key) ?? '', STORAGE_KEYS.show, TIMER_POLLING);
+  return saved.jsonValue();
 }
+
+/** The cue count of executor 1: the app's save has one cue more than the test's own show, so it tells them apart. */
+const cuesOf = (show: SavedShow): number => show.execs[0]?.cues.length ?? 0;
 
 test('a theatre stage with a Robe Esprite keeps the product in the show the app saves and in a boot from it', async ({
   page,
@@ -65,11 +68,19 @@ test('a theatre stage with a Robe Esprite keeps the product in the show the app 
 
   const savedText = await appSavedShowText(page, loaded);
   const saved = JSON.parse(savedText) as ShowWithStage;
-  expect([saved.stage.fixtures.at(-1)?.product, saved.stage.fixtures.length]).toEqual([
+  expect([saved.stage.fixtures.at(-1)?.product, saved.stage.fixtures.length, cuesOf(saved)]).toEqual([
     'robe-esprite',
     withEsprite.stage.fixtures.length,
+    cuesOf(withEsprite) + 1,
   ]);
 
+  // bootApp adds one more init script; the cue count shows the boot really read the app's saved text
   const reloaded = await bootApp(page, { show: savedText });
-  expect([errors, ...(await readProductStage(reloaded))]).toEqual([[], 'robe-esprite', theatreCount + 1]);
+  const again = (await reloaded.evaluate((d) => d.serialize())) as ShowWithStage;
+  expect([errors, ...(await readProductStage(reloaded)), cuesOf(again)]).toEqual([
+    [],
+    'robe-esprite',
+    theatreCount + 1,
+    cuesOf(saved),
+  ]);
 });
