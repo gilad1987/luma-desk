@@ -19,12 +19,13 @@ export function isProductId(v: string): v is ProductId {
 }
 
 /**
- * Whether `id` names a catalogue product whose `base` is `type`: the one owner of the rule a stored or added product
- * must satisfy (the parser drops one that fails it, `addFixtures` throws). False for an id the catalogue does not
- * know.
+ * The id when it names a catalogue product whose `base` is `type`, else undefined (also for an id the catalogue does
+ * not know): the one owner of the rule a stored or added product must satisfy (the parser drops one that fails it,
+ * `addFixtures` throws). It returns the id, not a type guard, because a guard's false branch would
+ * tell TypeScript the id is not a `ProductId`, which is wrong for a real product of another base.
  */
-export function isProductOf(id: string, type: FixtureTypeId): id is ProductId {
-  return isProductId(id) && PRODUCTS[id].base === type;
+export function productIdOf(id: string, type: FixtureTypeId): ProductId | undefined {
+  return isProductId(id) && PRODUCTS[id].base === type ? id : undefined;
 }
 
 /** Every product id in catalogue order, the library's default order; the guard keeps the key type without a cast. */
