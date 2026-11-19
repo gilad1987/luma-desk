@@ -20,6 +20,7 @@ const control = (choices: AudienceChoice[], built = true): AudienceControl => ({
   seats,
   figures: (occupancy, hidden) => Math.round(seats(hidden) * occupancy),
   onChange: (choice) => choices.push(choice),
+  choice: () => choices.at(-1),
   built: Promise.resolve(built),
 });
 
@@ -63,6 +64,27 @@ it('starts on at 85 % under "Show proxies", reports each change and follows the 
   expect([box.disabled, share.disabled, note.textContent]).toEqual([true, true, audienceLine(0, 3000)]);
   proxies.click();
   expect([box.disabled, note.textContent, choices.length]).toEqual([false, audienceLine(3000, 3000), 3]);
+});
+
+it('starts a row made again from the last choice, and an occupancy change keeps the audience off', () => {
+  const choices: AudienceChoice[] = [];
+  const first = document.body.appendChild(document.createElement('div'));
+  audienceRow(first, control(choices), () => []);
+  first.querySelector<HTMLSelectElement>('#mvrAudienceShare')?.dispatchEvent(new Event('change', { bubbles: true }));
+  first.querySelector<HTMLInputElement>('#mvrAudience')?.click();
+  const again = document.body.appendChild(document.createElement('div'));
+  const note = audienceRow(again, control(choices), () => []);
+  const box = again.querySelector<HTMLInputElement>('#mvrAudience');
+  const share = again.querySelector<HTMLSelectElement>('#mvrAudienceShare');
+  expect([box?.checked, share?.value, note.textContent]).toEqual([false, '85', audienceLine(0, 3000)]);
+  if (!share) return;
+  share.value = '50';
+  share.dispatchEvent(new Event('change', { bubbles: true }));
+  expect(choices.at(-1)).toEqual({ shown: false, occupancy: 0.5 });
+  expect(note.textContent).toBe(audienceLine(0, 3000));
+  const third = document.body.appendChild(document.createElement('div'));
+  audienceRow(third, control(choices), () => []);
+  expect(third.querySelector<HTMLSelectElement>('#mvrAudienceShare')?.value).toBe('50');
 });
 
 it('says so when the audience was not built', async () => {

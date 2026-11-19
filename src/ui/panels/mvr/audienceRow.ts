@@ -11,6 +11,8 @@ export interface AudienceControl {
   readonly seats: (hidden: readonly string[]) => number;
   readonly figures: (occupancy: number, hidden: readonly string[]) => number;
   readonly onChange: (choice: AudienceChoice) => void;
+  /** The last choice reported for this stage, so a row made again starts from it; undefined before the first. */
+  readonly choice: () => AudienceChoice | undefined;
   /** Resolves false when no audience was built for the stage (its code did not load): the row then says so. */
   readonly built: Promise<boolean>;
 }
@@ -31,15 +33,15 @@ export function audienceLine(figures: number, seats: number): string {
   return `${count(figures)} audience figures are added by the desk on ${on}; they are not in the file.`;
 }
 
-/** The occupancy choice: 85 % at first. */
-function shareSelect(): HTMLSelectElement {
+/** The occupancy choice, set to `selected` (%). */
+function shareSelect(selected: number): HTMLSelectElement {
   const share = createElement('select');
   share.id = 'mvrAudienceShare';
   for (const percent of SHARES) {
     const option = createElement('option');
     option.value = String(percent);
     option.textContent = `${percent} %`;
-    option.selected = percent === DEFAULT_SHARE;
+    option.selected = percent === selected;
     share.appendChild(option);
   }
   return share;
@@ -48,18 +50,21 @@ function shareSelect(): HTMLSelectElement {
 /**
  * The "Audience" row of the layer list, after "Show proxies": a box, the occupancy and the summary line. The figures
  * sit on seat proxies of shown layers: the row is off while the proxies are hidden, and the line counts the layers
- * that `hidden` (the uuids of the unchecked layers now) leaves. Any change in `host` words the line again. The
- * labels are English inline, like the other summary labels.
+ * that `hidden` (the uuids of the unchecked layers now) leaves. Any change in `host` words the line again. The row
+ * starts from the last choice of the stage (`control.choice`), on at 85 % before the first: an occupancy change of
+ * a row made again then keeps an audience that was turned off. The labels are English inline, like the other summary
+ * labels.
  */
 export function audienceRow(host: HTMLElement, control: AudienceControl, hidden: () => readonly string[]): HTMLElement {
+  const last = control.choice();
   const row = createElement('label', 'mvrLayer');
   const box = createElement('input');
   box.type = 'checkbox';
   box.id = 'mvrAudience';
-  box.checked = true;
+  box.checked = last?.shown ?? true;
   const name = createElement('span');
   name.textContent = 'Audience';
-  const share = shareSelect();
+  const share = shareSelect(last ? Math.round(last.occupancy * 100) : DEFAULT_SHARE);
   const note = createElement('div');
   note.id = 'mvrAudienceNote';
   const proxies = host.querySelector<HTMLInputElement>('#mvrShowProxies');

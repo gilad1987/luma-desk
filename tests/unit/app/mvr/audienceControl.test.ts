@@ -33,6 +33,15 @@ it('reports a module that did not load, and says the audience is not built', asy
   expect(await control?.built).toBe(false);
 });
 
+it('keeps the last choice of its stage, and a new control starts without one', () => {
+  const load = (): Promise<AudienceModule> => Promise.resolve({ setAudience: () => 0, audienceLayers: () => 1 });
+  const control = audienceControl(proxies, vi.fn(), load);
+  expect(control?.choice()).toBeUndefined();
+  control?.onChange({ shown: false, occupancy: 0.5 });
+  expect(control?.choice()).toEqual({ shown: false, occupancy: 0.5 });
+  expect(audienceControl(proxies, vi.fn(), load)?.choice()).toBeUndefined();
+});
+
 it('gives no control and reports nothing for a file without seats', () => {
   const report = vi.fn();
   expect(audienceControl([], report)).toBeUndefined();
