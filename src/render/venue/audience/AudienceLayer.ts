@@ -61,9 +61,13 @@ export class AudienceLayer extends Group {
     return figureCount(this.#people.order.length, this.#occupancy);
   }
 
-  /** Notes the camera that draws the audience, for the next sort, and steps the idle clock. */
+  /**
+   * Notes the camera that draws the audience, for the next sort, and steps the idle clock. A camera that draws for a
+   * pass (`userData.passCamera`: the lamp of a shadow map) is no eye: a sort for the lamp, then one for the viewer,
+   * moved people between the levels in each frame, and each move outdated the shadow maps (`SceneWatch`).
+   */
   see(camera: Camera): void {
-    this.worldToLocal(this.#eye.setFromMatrixPosition(camera.matrixWorld));
+    if (camera.userData['passCamera'] !== true) this.worldToLocal(this.#eye.setFromMatrixPosition(camera.matrixWorld));
     // `?test` freezes `performance.now`, so the sway is the same in every test frame.
     this.#uniforms.uTime.value = performance.now() / 1000;
   }
