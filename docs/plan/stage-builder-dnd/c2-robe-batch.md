@@ -274,8 +274,19 @@ Open questions: none.
 
 ## Departures during implementation
 
-Recorded 2026-11-19. The tree at this point holds 5 of the 15 products (Esprite, Pointe, LEDBeam 150, TetraX,
-onePATT); Steps 4 and 5 are not done.
+Recorded 2026-11-19. The owner approved G0-G3 on 2026-11-19; Steps 4 and 5 then added the other 10 products, so
+the tree holds all 15.
+
+- Data files: the 100-line limit moved rows. `robeSpots.ts` (iFORTE, Esprite), `robeProfiles.ts` (Painte, T1, T2),
+  `robeBeams.ts` (Pointe, GigaPointe), `robeBolts.ts` (iBolt), `robeLedHeads.ts` (LEDBeam 150, 350),
+  `robeTarrantula.ts` (Tarrantula), `robeEffects.ts` (Spikie, TetraX), `robeRetro.ts` (PATT 2013, onePATT). The
+  joiner `robe.ts` keeps the catalogue order.
+- The Tarrantula is measured head-forward for size and proportion. Its user manual (p34) draws the 587 mm height
+  with the head facing front. The list of such products is `HEAD_FORWARD_SHEETS` in
+  `tests/unit/domain/fixtureProducts/sheetSize.ts`; its pinned `span` stays the hung-at-rest value (1.159 m). The drum
+  stays centred on the tilt axis (front 93 mm, rear 131 mm, as drawn).
+- PATT 2013: the gold grille colour is in `unmodelled`, because no body field can tint the grille and C2 adds no
+  material.
 
 - TetraX draws its own base. `tiltBarParts.ts` draws a low rectangular base and a box crossbar yoke, because the
   TetraX has no round Robe base. So `FamilyShared` has no `robeBase`; it passes the model table's `product` factory

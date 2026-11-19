@@ -189,5 +189,6 @@ row lists the tilt range as unmodelled and neither the geometry nor the desk's t
   the real app and a reload. The show helper is in `tests/e2e/stageProductShow.ts`.
 - Not verified: the GDTF identity of a product (Phase C5).
 - Owner close-up gates G0-G3, checked in the dev gallery (`src/render/fixtures/gallery/`,
-  `npx playwright test -c playwright.gallery.config.ts`): `G0: pending`, `G1: pending`, `G2: pending`,
-  `G3: pending`.
+  `npx playwright test -c playwright.gallery.config.ts`): G0, G1, G2 and G3 approved by the owner on 2026-11-19. The
+  owner accepted two open points as recorded: the TetraX tilt beyond the real range stays an `unmodelled` note, and
+  the onePATT stays about 4 % over strict scale.
