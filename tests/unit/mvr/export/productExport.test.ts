@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 /**
  * Owns what the MVR export writes for a product fixture until Phase C5 gives products their own GDTF: the Esprite
- * names its base type's GDTF (the FORTE), and the import reads it back as a plain spot with no product key. Where the
- * fixture lands after the round trip is not pinned here (see the C1 QA report: it moves by the mount-height delta).
+ * names its base type's GDTF (the FORTE), and the import reads it back as a spot that still carries the product
+ * through the luma link. Where the fixture lands after the round trip is owned by `productRoundTrip.test.ts`.
  */
 import { describe, expect, it } from 'vitest';
 import { TYPES } from '../../../../src/domain/fixtureTypes/index.ts';
@@ -27,13 +27,13 @@ function withEsprite(): StageDesign {
 }
 
 describe('MVR export of a product fixture', () => {
-  it('names the base type GDTF for an Esprite and reads it back as a plain spot', async () => {
+  it('names the base type GDTF for an Esprite and reads it back as a spot with its product', async () => {
     const back = await importMvr(exportMvr(withEsprite()).bytes, { name: 'round trip' });
     const fixture = back.design.fixtures.find((f) => f.id === 501);
-    expect([
-      back.design.mvr?.fixtures['501']?.gdtfName,
-      fixture?.type,
-      fixture !== undefined && Object.hasOwn(fixture, 'product'),
-    ]).toStrictEqual([TYPES.spot.gdtfSpec, 'spot', false]);
+    expect([back.design.mvr?.fixtures['501']?.gdtfName, fixture?.type, fixture?.product]).toStrictEqual([
+      TYPES.spot.gdtfSpec,
+      'spot',
+      'robe-esprite',
+    ]);
   });
 });
