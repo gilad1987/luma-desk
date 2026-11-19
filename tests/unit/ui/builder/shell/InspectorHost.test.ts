@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 /**
  * Owns where the tools panel lives: the column on a wide screen, the drawer on a narrow one, the move of the panel
- * when the screen crosses the line, the drawer's open state and the listeners a dispose removes. What the panel holds
+ * when the screen crosses the line (a focused field blurred first), the drawer's open state and the listeners a dispose removes. What the panel holds
  * is owned by mountTools.test.ts. jsdom, because the drawer state is a real attribute.
  */
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { InspectorHost } from '../../../../../src/ui/builder/shell/InspectorHost.ts';
 import { FakeNarrowScreen } from '../fakeNarrowScreen.ts';
 
@@ -45,6 +45,22 @@ describe('InspectorHost', () => {
     const wasOpen = drawer.hasAttribute('open');
     screen.flip(false);
     expect([wasOpen, panel.parentElement === column, drawer.hasAttribute('open')]).toEqual([true, true, false]);
+  });
+
+  // catches a typed, uncommitted inspector value lost when the window crosses 1100 px: the move drops the focus
+  // without a `change`. A browser fires `change` on that blur when the value changed; jsdom does not, so the blur
+  // itself is checked.
+  it('blurs the focused field in the panel before the move', () => {
+    document.body.append(column, drawer);
+    const screen = new FakeNarrowScreen(false);
+    mount(screen);
+    const input = document.createElement('input');
+    panel.append(input);
+    input.focus();
+    const where: unknown[] = [];
+    input.onblur = vi.fn(() => where.push(input.parentElement?.parentElement));
+    screen.flip(true);
+    expect([where, input.parentElement?.parentElement === drawer]).toEqual([[column], true]);
   });
 
   // a kept media listener would move a closed builder's panel on the next resize

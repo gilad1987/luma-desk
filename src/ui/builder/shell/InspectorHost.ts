@@ -55,6 +55,9 @@ export class InspectorHost {
     this.#isNarrow = this.#parts.narrow.matches;
     const to = this.slot;
     if (to === from) return;
+    // a moved field loses its focus without a `change`, so a typed, uncommitted value would be lost; a blur commits it
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && from.contains(active)) active.blur();
     to.append(...Array.from(from.children));
     if (!this.#isNarrow) setWaOpen(this.#parts.drawer, false);
   }
