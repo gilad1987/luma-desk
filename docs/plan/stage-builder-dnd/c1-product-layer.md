@@ -306,3 +306,11 @@ plan file, e2e spec, stageField test) with divided file ownership; then `reviewe
 ## Open questions
 
 Open questions: none.
+
+## Follow-ups
+
+- Move the test helpers that have 2+ users into `tests/shared/` (rule T12):
+  `tests/unit/domain/stage/edit/sampleDesign.ts` (with `withEsprite`), and the render helpers `tests/unit/render/stubCanvasDocument.ts`,
+  `tests/unit/render/fixtures/buildFixtureScene.ts` and `tests/unit/render/fixtures/builtBox.ts`. Do it once PR #13
+  and PR #14 are merged and before Phase 2, because the move touches lane `ui` test files while PR #14 is open
+  (review #16, #17, #18).
