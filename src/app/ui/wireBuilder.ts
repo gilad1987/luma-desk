@@ -56,14 +56,15 @@ export function builderDepsOf(deps: BuilderWiringDeps): BuilderDeps {
  * session, the screen and every listener exist only while the builder is open. The click is asynchronous: it loads the
  * Web Awesome chunk first and enters when it resolves. A second click during the load is harmless, because `enter()`
  * ignores a call while the builder is open. A failed load (after a deploy, an open tab asks for a chunk that is gone)
- * shows a toast, so the button does not silently do nothing.
+ * shows a toast, so the button does not silently do nothing. The toast is the rejection handler of the load only, so
+ * an error thrown by `enter()` stays an error and is not reported as a network failure.
  */
 export function wireBuilder(deps: BuilderWiringDeps): BuilderMode {
   const builder = new BuilderMode(builderDepsOf(deps));
   byId('buildBtn').onclick = () =>
-    void deps
-      .loadShell()
-      .then(() => builder.enter())
-      .catch(() => deps.bus.emit('message', { kind: 'toast', text: he.builder.loadFailed }));
+    void deps.loadShell().then(
+      () => builder.enter(),
+      () => deps.bus.emit('message', { kind: 'toast', text: he.builder.loadFailed }),
+    );
   return builder;
 }
