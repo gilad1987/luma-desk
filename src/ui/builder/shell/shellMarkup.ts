@@ -24,7 +24,7 @@ const drawerMarkup = `<aside id="builder-inspector-drawer" class="inspector-draw
  */
 export const shellMarkup = `<aside class="builder-library">
   <h2 id="builder-library-title" class="library-title">${iconSvg('library')}<span class="library-label">Library</span></h2>
-  <wa-tooltip for="builder-library-title">${he.builder.shell.library}</wa-tooltip>
+  <wa-tooltip for="builder-library-title" dir="rtl">${he.builder.shell.library}</wa-tooltip>
   <p class="library-hint">The fixture library arrives in the next update.</p>
 </aside>
 <div class="builder-centre is-mode-split">
