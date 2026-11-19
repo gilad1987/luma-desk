@@ -4,6 +4,7 @@ import {
   type StageFixture,
 } from '../../../../../src/domain/stage/StageDesign.ts';
 import type { StageTruss } from '../../../../../src/domain/stage/trussTypes.ts';
+import type { Vec3 } from '../../../../../src/domain/stage/types.ts';
 
 /** A 10 m pipe on the centre line, 7 m up. */
 export const PIPE: StageTruss = {
@@ -52,6 +53,24 @@ export function sampleDesign(): StageDesign {
       { id: 301, type: 'par', role: 'floor', trussId: null, position: [-3, 1, 3], mount: 'floor' },
     ],
   };
+}
+
+/**
+ * The sample design plus one hung Esprite on the pipe, id 501, at `position` (house left by default). The product
+ * tests of the edit ops, the engine, the render and the MVR export all need this one fixture, so it has one owner here.
+ */
+export function withEsprite(position: Vec3 = [-4, 7, 0]): StageDesign {
+  const d = sampleDesign();
+  const esprite: StageFixture = {
+    id: 501,
+    type: 'spot',
+    role: 'mid',
+    trussId: PIPE.id,
+    position,
+    mount: 'hang',
+    product: 'robe-esprite',
+  };
+  return { ...d, fixtures: [...d.fixtures, esprite] };
 }
 
 /** Numbers rounded to 1e-9 with -0 made +0, so float results compare with `toEqual`. */

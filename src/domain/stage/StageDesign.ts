@@ -1,5 +1,6 @@
 import type { Mount, PanTilt } from '../Fixture';
 import type { FixtureTypeId } from '../FixtureType';
+import type { ProductId } from '../fixtureProducts';
 import type { DmxPatch } from './DmxPatch';
 import type { MvrDesignInfo } from './mvr';
 import type { StageTruss } from './trussTypes';
@@ -51,10 +52,9 @@ export interface StageRiser {
 }
 
 /**
- * One fixture of the design. `position` is absolute (metres, world frame, Y-up, audience at +z), so the rig keeps
- * exact floats; `trussId` is only the parent link. `rotation` is a unit quaternion `[x, y, z, w]`, world frame: the
- * body orientation relative to the rest pose (hanging, beam straight down). Without `rotation`, `mount` works
- * exactly as today, which keeps the default rig at parity (G1).
+ * One design fixture. `position` is absolute (metres, world frame, Y-up, audience at +z) so the rig keeps exact
+ * floats; `trussId` is only the parent link. `rotation` is a unit quaternion `[x, y, z, w]`, world frame: the body
+ * orientation relative to the rest pose (hanging, beam straight down). Without it `mount` works as before (parity, G1).
  */
 export interface StageFixture {
   readonly id: number;
@@ -63,6 +63,8 @@ export interface StageFixture {
   readonly trussId: string | null;
   readonly position: Vec3;
   readonly mount: Mount;
+  /** The catalogue product; absent for a plain fixture. The parser keeps it only when its `base` equals `type`. */
+  readonly product?: ProductId;
   readonly rotation?: Quat;
   readonly fixed?: PanTilt;
   readonly pixel?: { readonly p: Vec3; readonly tan: Vec3; readonly len: number };

@@ -31,11 +31,15 @@ export interface LinkFootprint {
  * The desk fields of one fixture that a `<Fixture>` element cannot hold or holds only lossily: the role, the truss it
  * hangs on, the desk type and mount (MVR has only a GDTF name and a matrix), and the `fixed` and `pixel` aims that
  * the rig derives special fixtures from. Without them a round trip would turn those fixtures into plain moving heads.
+ * `product` travels too: its body and mount height place the fixture, so without it the import would move it.
  * `footprint` exists because the export holds no GDTF file, so without it a second export would measure the patch
  * with the desk type's estimate, and the body would lose its GDTF size and move by the change in mount shift. It is
  * MVR data, not a fixture field, so the import puts it back into the MVR facts, never onto the fixture.
  */
-export type FixtureLink = Pick<StageFixture, 'id' | 'type' | 'role' | 'trussId' | 'mount' | 'fixed' | 'pixel'> & {
+export type FixtureLink = Pick<
+  StageFixture,
+  'id' | 'type' | 'role' | 'trussId' | 'mount' | 'product' | 'fixed' | 'pixel'
+> & {
   readonly footprint?: LinkFootprint;
 };
 
@@ -54,6 +58,15 @@ export type LumaStageData = Pick<StageDesign, 'venue' | 'scenery' | 'deck' | 'sc
 
 /** The link of a fixture; optional fields stay absent when the fixture has none, so the JSON never holds `null`s. */
 export function linkOf(fixture: StageFixture): FixtureLink {
-  const { id, type, role, trussId, mount, fixed, pixel } = fixture;
-  return { id, type, role, trussId, mount, ...(fixed ? { fixed } : {}), ...(pixel ? { pixel } : {}) };
+  const { id, type, role, trussId, mount, product, fixed, pixel } = fixture;
+  return {
+    id,
+    type,
+    role,
+    trussId,
+    mount,
+    ...(product ? { product } : {}),
+    ...(fixed ? { fixed } : {}),
+    ...(pixel ? { pixel } : {}),
+  };
 }

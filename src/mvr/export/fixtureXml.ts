@@ -1,9 +1,9 @@
+import { fixtureTypeOf } from '../../domain/fixtureProducts/fixtureTypeOf';
 import type { DmxPatch } from '../../domain/stage/DmxPatch';
 import type { StageFixture } from '../../domain/stage/StageDesign';
 import { bodyShift } from '../design/bodyShift';
 import { restRotation } from '../math/restRotation';
 import { toAbsoluteAddress } from '../patch/address';
-import { deskType } from './deskType';
 import type { ExportContext } from './ExportContext';
 import { gdtfIdentity } from './gdtfIdentity';
 import { poseMatrix } from './poseMatrix';
@@ -19,7 +19,8 @@ export interface FixtureSlot {
 
 /**
  * One `<Fixture>`. FixtureID and FixtureIDNumeric both hold the desk id, so the import gives the fixture the same id
- * again; the patch is written as one absolute address on break 0, the only break the desk keeps (G9). An imported
+ * again; the patch is written as one absolute address on break 0, the only break the desk keeps (G9). The name is the
+ * one the desk shows (a product's own, such as "Robe Esprite 501"), while the GDTF stays the base type's. An imported
  * fixture keeps its uuid. A wall-mounted fixture (the LED screen driver) has the hanging rest rotation. The matrix
  * is placed at the mounting point (`bodyShift`), as MVR defines the insertion point.
  */
@@ -39,5 +40,5 @@ export function fixtureXml(fixture: StageFixture, slot: FixtureSlot, context: Ex
     ...(address === undefined ? [] : [xmlElement('Addresses', {}, [xmlText('Address', address, { break: '0' })])]),
   ];
   const uuid = context.design.mvr?.fixtures[id]?.uuid ?? context.uuidOf('fixture', id);
-  return xmlElement('Fixture', { uuid, name: `${deskType(fixture).name} ${id}` }, children);
+  return xmlElement('Fixture', { uuid, name: `${fixtureTypeOf(fixture).name} ${id}` }, children);
 }

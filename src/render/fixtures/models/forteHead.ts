@@ -1,5 +1,34 @@
 import { merge } from '../modelGeometry';
+import type { ProfilePoint } from '../ModelPrimitives';
 import type { RobeHead } from './robeMover';
+
+/**
+ * The FORTE barrel, front to rear: slim lens end, widened body around the tilt axis, domed rear cap. The `mover`
+ * family scales it to each product (`families/moverProfile.ts`), so the two never drift apart.
+ */
+export const FORTE_BARREL_PROFILE: readonly ProfilePoint[] = [
+  [0.26, -0.72],
+  [0.3, -0.7],
+  [0.3, -0.42],
+  [0.315, -0.3],
+  [0.33, -0.15],
+  [0.335, 0.05],
+  [0.33, 0.2],
+  [0.31, 0.32],
+  [0.27, 0.4],
+  [0.18, 0.44],
+  [0, 0.45],
+];
+
+/** The FORTE bezel: lens lip, flat front plate, then the step that stands out over the barrel; the family scales it. */
+export const FORTE_BEZEL_PROFILE: readonly ProfilePoint[] = [
+  [0.235, -0.78],
+  [0.3, -0.78],
+  [0.3, -0.765],
+  [0.325, -0.755],
+  [0.325, -0.69],
+  [0.305, -0.68],
+];
 
 /** Robe FORTE: long barrel, wider body around the tilt axis, ribbed rear underside, stepped bezel round the lens. */
 export const FORTE_HEAD: RobeHead = {
@@ -8,30 +37,9 @@ export const FORTE_HEAD: RobeHead = {
   lensY: 0.772,
   lensOff: 0.78,
   geometry: ({ box, cylinder, lathe }, fs) => ({
-    head: merge([
-      lathe([
-        [0.26, -0.72],
-        [0.3, -0.7],
-        [0.3, -0.42],
-        [0.315, -0.3],
-        [0.33, -0.15],
-        [0.335, 0.05],
-        [0.33, 0.2],
-        [0.31, 0.32],
-        [0.27, 0.4],
-        [0.18, 0.44],
-        [0, 0.45],
-      ]),
-    ]),
+    head: merge([lathe(FORTE_BARREL_PROFILE)]),
     headTrim: merge([
-      lathe([
-        [0.235, -0.78],
-        [0.3, -0.78],
-        [0.3, -0.765],
-        [0.325, -0.755],
-        [0.325, -0.69],
-        [0.305, -0.68],
-      ]),
+      lathe(FORTE_BEZEL_PROFILE),
       ...[0.12, 0.17, 0.22, 0.27].map((y) => cylinder([0, y, 0], 0.345, 0.014)),
       // FORTE FS: the RoboSpot camera on top of the barrel, next to the lens
       ...(fs
