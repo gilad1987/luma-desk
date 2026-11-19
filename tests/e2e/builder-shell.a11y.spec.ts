@@ -5,7 +5,7 @@
  */
 import { expect, test, type Page } from '@playwright/test';
 import { he } from '../../src/i18n/he';
-import { bootApp, collectErrors, openBuilder } from '../shared/e2e';
+import { bootApp, boxOf, collectErrors, offBy, openBuilder } from '../shared/e2e';
 
 const modes = (page: Page) => page.getByRole('radiogroup', { name: 'View' });
 
@@ -88,4 +88,13 @@ test('the mode group rounds its outer corners only: Plan at the start, 3D at the
     ['0px', '0px', '0px', '0px'],
     ['0px', '0px', '4px', '4px'],
   ]);
+});
+
+// Bug: the outlined buttons sat edge to edge, so two 1 px borders drew a 2 px line between the modes
+test('neighbouring mode radios share one 1 px border', async ({ page }) => {
+  await bootApp(page);
+  await openBuilder(page);
+  const [planX, , planWidth] = await boxOf(modes(page).getByRole('radio', { name: 'Plan', exact: true }));
+  const [splitX] = await boxOf(modes(page).getByRole('radio', { name: 'Split', exact: true }));
+  expect(offBy([splitX], [planX + planWidth - 1], 0.5)).toEqual([0]);
 });
