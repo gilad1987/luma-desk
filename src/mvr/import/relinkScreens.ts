@@ -11,9 +11,9 @@ export interface RelinkedScreens {
  * The LED walls of the luma data, each on its driver fixture of this import. A wall names its driver by the desk id
  * at export, which a round trip can change as it changes a link's (review R2-2), so the id goes through the driver's
  * paired link: `links` maps each fixture's id now to its link, which holds the id at export. A link without a sole uuid
- * (an older export, a blank or shared uuid) pairs by id, so its walls keep their ids as before. A wall whose driver link paired with no fixture,
- * or whose driver is no `screen` fixture now, is dropped with a `missing-screen-driver` warning, because the rig
- * needs that driver to light it and the luma data reader could only check stand-ins.
+ * (an older export, a blank or shared uuid) pairs by id, so its walls keep their ids as before. A wall whose driver
+ * link paired with no fixture, or whose driver is no `screen` fixture now, is dropped with a `missing-screen-driver`
+ * warning, because the rig needs that driver to light it and the luma data reader could only check stand-ins.
  */
 export function relinkScreens(
   screens: readonly StageScreen[],

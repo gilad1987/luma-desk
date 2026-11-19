@@ -33,8 +33,8 @@ export class MvrStore {
   }
 
   /**
-   * Stores the bytes under `hash` (by default their own hash) and resolves the key once the write has committed, or
-   * `null` when it failed.
+   * Stores the bytes under `hash` (by default their own hash; a given `hash` must come from `hashOf` of these bytes)
+   * and resolves the key once the write has committed, or `null` when it failed.
    */
   async put(bytes: Uint8Array<ArrayBuffer>, hash?: string): Promise<string | null> {
     try {

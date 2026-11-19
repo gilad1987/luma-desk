@@ -10,7 +10,7 @@ interface KeyedLink {
 
 const keyOf = (uuid: string, occurrence: number | undefined): string => `${uuid}#${String(occurrence ?? 0)}`;
 
-/** The uuid of a link that names its fixture alone: not empty, on no other link, and first of its file (review R2-2). */
+/** The uuid of a link that names its fixture alone: not empty, on no other link, first of its file (review R2-2). */
 function soleUuids(links: readonly KeyedLink[]): ReadonlySet<string> {
   const counts = new Map<string, number>();
   for (const { uuid } of links) if (uuid) counts.set(uuid, (counts.get(uuid) ?? 0) + 1);
@@ -24,6 +24,8 @@ function soleUuids(links: readonly KeyedLink[]): ReadonlySet<string> {
  * `FixtureID` (empty, or the text from before a renumber), so the next import numbers again and a neighbour can take
  * the old id. Any other link pairs by id: one without a uuid (a fixture the desk added, or an export from before the
  * uuid), and one whose uuid is empty or shared, because then the occurrence is only file order, which a delete shifts.
+ * Limit: a pass-through export of a file with empty or shared uuids keeps its empty `FixtureID`, so after a delete
+ * such a link can still pair with a neighbour. MVR asks for unique uuids, so only a file that breaks it is affected.
  */
 export function pairLinks<L extends KeyedLink>(
   fixtures: readonly StageFixture[],

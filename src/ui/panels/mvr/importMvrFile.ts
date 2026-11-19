@@ -54,7 +54,7 @@ export async function importMvrFile(
   try {
     result = await importMvr(file.bytes, hash === null ? { name: file.name } : { name: file.name, fileHash: hash });
   } catch (error) {
-    // A failed import takes out the bytes it stored: no show points to them, and a code bug must not leave them.
+    // A failed import takes out the bytes it newly stored: no show points to them, and a code bug must not leave them.
     if (hash !== null && isNew) await deps.store.delete(hash);
     if (!(error instanceof MvrError)) throw error;
     return { kind: 'failed', message: error.message };
