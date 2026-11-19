@@ -1,9 +1,10 @@
 /**
  * The Stage Builder bar as Chromium's accessibility tree exposes it: the Plan, Split and 3D radio group (one Tab stop,
- * the arrow keys). The bar's columns and 44 px targets are owned by builder-shell.layout; what a mode does to the
+ * the arrow keys) and the controls' English names and Hebrew descriptions. The bar's columns and 44 px targets are owned by builder-shell.layout; what a mode does to the
  * centre by builder-shell.divider.
  */
 import { expect, test, type Page } from '@playwright/test';
+import { he } from '../../src/i18n/he';
 import { bootApp, collectErrors, openBuilder } from '../shared/e2e';
 
 const modes = (page: Page) => page.getByRole('radiogroup', { name: 'View' });
@@ -31,4 +32,22 @@ test('the mode group is one Tab stop whose focused radio has the name and the ch
     .getByRole('radio')
     .evaluateAll((all) => all.map((radio) => radio.getAttribute('tabindex')));
   expect([tabStops, errors]).toEqual([['-1', '-1', '0'], []]);
+});
+
+// Bug: each wa-tooltip put its id in the aria-labelledby of the wa-button host, which has no role, so the focused inner
+// button had no description and a screen reader never heard the Hebrew help or the shortcut
+test('a bar control is named by its English label and described by its Hebrew help', async ({ page }) => {
+  const errors = collectErrors(page);
+  await bootApp(page);
+  await openBuilder(page);
+  const controls = [
+    [page.getByRole('button', { name: 'Undo', exact: true }), 'Undo', he.builder.edit.undo],
+    [page.getByRole('button', { name: 'Done', exact: true }), 'Done', he.builder.done],
+    [modes(page).getByRole('radio', { name: 'Plan', exact: true }), 'Plan', he.builder.shell.modePlan],
+  ] as const;
+  for (const [control, name, help] of controls) {
+    await expect(control).toHaveAccessibleName(name);
+    await expect(control).toHaveAccessibleDescription(help);
+  }
+  expect(errors).toEqual([]);
 });

@@ -84,13 +84,16 @@ export class ViewModeSwitch {
 
 /**
  * One radio and its tooltip. The tooltip's anchor is a wrapper `span`, not the radio: `wa-tooltip` adds its id to the
- * anchor's `aria-labelledby`, which would replace the radio's name ("Plan") with the Hebrew text.
+ * anchor's `aria-labelledby`, which would replace the radio's name ("Plan") with the Hebrew text. The help is the
+ * radio's `aria-description`: an `aria-describedby` at the closed tooltip gave Chromium an empty description, as the
+ * text sits in a hidden shadow slot.
  */
 function modeMarkup(mode: ViewMode): string {
   const { icon, label, tip } = LOOKS[mode];
   const id = `builder-mode-${mode}`;
   return (
-    `<span id="${id}" class="mode-anchor"><button type="button" class="mode-radio" role="radio" data-mode="${mode}">` +
-    `${iconSvg(icon)}<span class="mode-label">${label}</span></button></span>\n<wa-tooltip for="${id}">${tip}</wa-tooltip>`
+    `<span id="${id}" class="mode-anchor"><button type="button" class="mode-radio" role="radio" data-mode="${mode}" ` +
+    `aria-description="${tip}">${iconSvg(icon)}<span class="mode-label">${label}</span></button></span>\n` +
+    `<wa-tooltip for="${id}">${tip}</wa-tooltip>`
   );
 }

@@ -5,6 +5,7 @@
  * out a mode by CentreSplit.test.ts. jsdom, for real `aria-checked` and `tabIndex`.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { he } from '../../../../../src/i18n/he';
 import { ViewModeSwitch, type ViewMode } from '../../../../../src/ui/builder/shell/ViewModeSwitch.ts';
 
 const MODES: readonly ViewMode[] = ['plan', 'split', '3d'];
@@ -50,6 +51,19 @@ describe('ViewModeSwitch', () => {
     radio('split')?.click();
     modes.set('split');
     expect(onChange.mock.calls).toEqual([]);
+  });
+
+  // Bug: the Hebrew help reached the radio's aria-labelledby (replacing "Plan") or nothing, never its description
+  it('describes each radio by its Hebrew tooltip and leaves the tooltip off the radio itself', () => {
+    const plan = radio('plan');
+    const tip = root.querySelector('wa-tooltip');
+    const target = root.querySelector(`#${tip?.getAttribute('for') ?? 'none'}`);
+    expect([
+      plan?.getAttribute('aria-description'),
+      tip?.textContent,
+      target === plan,
+      target?.contains(plan ?? null),
+    ]).toEqual([he.builder.shell.modePlan, he.builder.shell.modePlan, false, true]);
   });
 
   // Bug: the mode group was three wa-button hosts with role="radio" whose inner buttons held the name and the focus

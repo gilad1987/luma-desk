@@ -20,10 +20,14 @@ export type IconButtonAppearance = 'plain' | 'outlined';
  * The markup of a `wa-button` with a start icon and its `wa-tooltip`. The tooltip is styled with the builder and also
  * shows on keyboard focus. The edit toolbar builds its buttons with it; the mode radios are native buttons
  * (`ViewModeSwitch`), drawn to match.
+ *
+ * The tooltip's text is also the `title`: `wa-button` passes `title` to its inner button, the element that takes the
+ * focus, where it becomes the accessible description. The tooltip's own `aria-labelledby` lands on the host, which has
+ * no role, so without the `title` a screen reader would hear the label and never the help or the key.
  */
 export function iconButton(button: IconButton, appearance: IconButtonAppearance): string {
   return (
-    `<wa-button id="${button.id}" ${button.hook} appearance="${appearance}">${startIcon(button.icon)}${button.label}` +
-    `</wa-button>\n<wa-tooltip for="${button.id}">${button.tip}</wa-tooltip>`
+    `<wa-button id="${button.id}" ${button.hook} appearance="${appearance}" title="${button.tip}">` +
+    `${startIcon(button.icon)}${button.label}</wa-button>\n<wa-tooltip for="${button.id}">${button.tip}</wa-tooltip>`
   );
 }
