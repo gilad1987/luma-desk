@@ -57,12 +57,14 @@ and the old uuid and GDTF name are still absent from the export.
 
 - `2a90db85` (here `e14869a6`) removes the stale LED wall spill light from a stage without a screen. The synthetic MVR stage of
   `mvr-render-screenshots.spec.ts` has no wall, so its blue deck glow goes away: the `mvr-stage-foh.png` and
-  `mvr-stage-wide.png` baselines are recorded again in their own commit. The 9 baselines of `screenshots.spec.ts` and
+  `mvr-stage-wide.png` baselines were recorded again in their own commit. The 9 baselines of `screenshots.spec.ts` and
   the goldens do not change.
-- The two MVR shots stay racy, on main as on this branch: three.js `SMAAPass` loads its lookup images from data URLs
-  in real time, so a slow run draws the last frame with SMAA and a fast run without it (1,540-6,400 edge pixels).
-  The baselines here are the fast state, as main's are. PR #7 (`rq/render-quality`, `smaaReady.ts`) fixes the race
-  and records both images again; whichever PR merges second records them again.
+- The two MVR shots were racy on main: three.js `SMAAPass` loads its lookup images from data URLs in real time, so a
+  slow run drew the last frame with SMAA and a fast run without it (1,540-6,400 edge pixels). PR #7
+  (`rq/render-quality`) waits for those images (`smaaReady.ts`) and deleted `mvr-render-screenshots.spec.ts` and its
+  two shots; the image gate
+  (`tests/e2e/mvr-image-gate.spec.ts`, see `docs/render-gates.md`) covers that view. The merge of main into
+  `rq/render-quality` keeps the delete, so no PR records the two shots again.
 - A deck height change stores the moved riser heights rounded to 1 mm, as `moveRiser` does.
 - The stricter parser (truss sizes 0.1-60 m, ring chains, one wall per screen fixture) rejects an old saved show that
   breaks a limit, or that holds a fixture id above `Number.MAX_SAFE_INTEGER`; the desk then loads the built-in stage
