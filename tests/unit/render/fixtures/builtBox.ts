@@ -1,3 +1,7 @@
+/**
+ * Builds one fixture visual in a test scene and measures its visible box, for the span, mount-height and proportion
+ * tests: the box covers the drawn meshes only, and `spanMm` gives its largest side in millimetres.
+ */
 import { Box3, Mesh, Vector3 } from 'three';
 import { Fixture, type FixtureInit } from '../../../../src/domain/Fixture';
 import { FixtureVisualBuilder, type FixtureVisual } from '../../../../src/render/fixtures';
@@ -24,19 +28,21 @@ export function visualBuilder(): (fixture: BoxFixture) => FixtureVisual {
 }
 
 /**
- * Measures the bodies the desk really builds (`visualBuilder`). The box is the world bounding box of every visible
- * mesh of the built visual; a screen fixture, which has no body, gives an empty box at the origin.
+ * The world bounding box of every visible mesh of a built visual, in its pose now; a screen fixture, which has no
+ * body, gives an empty box at the origin.
  */
+export function visualBox(visual: FixtureVisual): Box3 {
+  const box = new Box3();
+  if (!('g' in visual)) return box.setFromCenterAndSize(new Vector3(), new Vector3());
+  visual.g.updateMatrixWorld(true);
+  visual.g.traverse((o) => void (o instanceof Mesh && o.visible && box.expandByObject(o)));
+  return box;
+}
+
+/** Measures the bodies the desk really builds (`visualBuilder`) at their rest pose, with {@link visualBox}. */
 export function boxBuilder(): (fixture: BoxFixture) => Box3 {
   const build = visualBuilder();
-  return (fixture) => {
-    const visual = build(fixture);
-    const box = new Box3();
-    if (!('g' in visual)) return box.setFromCenterAndSize(new Vector3(), new Vector3());
-    visual.g.updateMatrixWorld(true);
-    visual.g.traverse((o) => void (o instanceof Mesh && o.visible && box.expandByObject(o)));
-    return box;
-  };
+  return (fixture) => visualBox(build(fixture));
 }
 
 /** The largest dimension of `box` in millimetres, the unit the span pins compare in. */

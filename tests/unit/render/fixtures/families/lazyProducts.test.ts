@@ -2,49 +2,24 @@
  * Owns the lazy-creation rule of the product families: the boot-time sets (lens textures, materials, model table)
  * stay the 9 natives' and draw no `Math.random` for a product until its first fixture is built, so `random-calls.json`
  * and the fixture-scene golden cannot move; later fixtures of the product reuse that first geometry and lens face.
+ * The per-product cases run on the first product of each body family, so a new family is covered with no edit.
  * The product body shape is owned by `mover.test.ts`.
  */
-import { CanvasTexture, Mesh, Scene, Vector3 } from 'three';
+import { CanvasTexture } from 'three';
 import { afterEach, expect, it, vi } from 'vitest';
-import { Fixture } from '../../../../../src/domain/Fixture';
 import { PRODUCT_IDS } from '../../../../../src/domain/fixtureProducts';
 import * as fx from '../../../../../src/render/fixtures';
 import { stubCanvasDocument } from '../../stubCanvasDocument';
+import { bootThenSpy, firstProductOfEachFamily, groupGeometries, lensFace } from './productVisual';
 
 const NATIVE_LENS_KEYS = ['forte', 'megapointe', 'spiider', 'parfect', 'strike4', 'wtf', 'tetra2', 's4', 'forteFS'];
 const NATIVE_MODEL_KEYS = ['forte', 'forteFS', 'megapointe', 'spiider', 'wtf', 'strike4', 'parfect', 's4', 'tetra2'];
+const FAMILY_FIRSTS = firstProductOfEachFamily();
 
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
-
-/** The boot before the model table, then the spy, so only the table and the fixtures count. */
-function bootThenSpy() {
-  stubCanvasDocument();
-  const scene = new Scene();
-  const gobo = fx.createGoboAtlas();
-  const beam = fx.createBeamShared();
-  const lensTextures = fx.createLensTextures();
-  const prims = new fx.ModelPrimitives();
-  const kit = { prims, materials: fx.createModelMaterials(fx.createTrimMaterial()) };
-  const spy = vi.spyOn(Math, 'random');
-  const models = fx.createFixtureModels(kit);
-  const picker = { register: () => undefined };
-  const builder = new fx.FixtureVisualBuilder({
-    scene,
-    prims,
-    beam,
-    gobo,
-    models,
-    lensTextures,
-    screenMesh: new Map(),
-    picker,
-  });
-  const esprite = () =>
-    new Fixture({ id: 9001, type: 'spot', pos: new Vector3(), mount: 'hang', fixed: null, product: 'robe-esprite' });
-  return { spy, models, builder, esprite };
-}
 
 it('keeps the boot-time lens set to the 9 native faces in their order', () => {
   stubCanvasDocument();
@@ -66,34 +41,25 @@ it('creates the model table with no random draw and keys it by the natives then 
   ]);
 });
 
-it('draws the product geometry and lens face on the first fixture only', () => {
-  const { spy, builder, esprite } = bootThenSpy();
+it.each(FAMILY_FIRSTS)('draws the %s geometry and lens face on the first fixture only', (id) => {
+  const { spy, build } = bootThenSpy();
   const draws = (): number => {
     const before = spy.mock.calls.length;
-    builder.build(esprite());
+    build(id);
     return spy.mock.calls.length - before;
   };
   const [first, second, third] = [draws(), draws(), draws()];
   expect([first > 0, second < first, third]).toStrictEqual([true, true, second]);
 });
 
-it('reuses one product geometry for every fixture of that product', () => {
-  const { builder, esprite } = bootThenSpy();
-  const [a, b] = [builder.build(esprite()), builder.build(esprite())];
-  if (a.kind !== 'light' || b.kind !== 'light') throw new Error('an Esprite builds a light visual');
-  // The yoke holds the yoke mesh first; the tilt group holds the head, then the head trim (`buildRobeMover`).
-  const parts = (v: fx.LightVisual) => [v.head, v.joints?.yoke.children[0], v.joints?.tiltG.children[1]];
-  const [pa, pb] = [parts(a), parts(b)];
-  const shared = pa.map((o, i) => {
-    const q = pb[i];
-    return o instanceof Mesh && q instanceof Mesh && o.geometry === q.geometry;
-  });
-  expect(shared).toStrictEqual([true, true, true]);
+it.each(FAMILY_FIRSTS)('reuses every %s group geometry for the next fixture of that product', (id) => {
+  const { build } = bootThenSpy();
+  const [a, b] = [groupGeometries(build(id)), groupGeometries(build(id))];
+  expect([a.length > 0, a.length === b.length, a.every((g, i) => g === b[i])]).toStrictEqual([true, true, true]);
 });
 
-it('shares one painted lens face between two fixtures of the same product', () => {
-  const { builder, esprite } = bootThenSpy();
-  const [a, b] = [builder.build(esprite()), builder.build(esprite())];
-  if (a.kind !== 'light' || b.kind !== 'light') throw new Error('an Esprite builds a light visual');
-  expect([a.lensMat.map instanceof CanvasTexture, a.lensMat.map === b.lensMat.map]).toStrictEqual([true, true]);
+it.each(FAMILY_FIRSTS)('shares one painted %s lens face between two fixtures of that product', (id) => {
+  const { build } = bootThenSpy();
+  const [a, b] = [lensFace(build(id)), lensFace(build(id))];
+  expect([a instanceof CanvasTexture, a === b]).toStrictEqual([true, true]);
 });

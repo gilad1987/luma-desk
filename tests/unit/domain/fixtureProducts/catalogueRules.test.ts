@@ -1,8 +1,8 @@
 /**
  * The guard over the product catalogue: every product row keeps the invariants aiming, presets, the parser and the
- * render tables rely on (id, kebab-case, base motion and shape, zoom range, positive span, data sheet, a drawable
- * mover body: barrel around the tilt axis, lens and ribs inside it). It does not pin the drawn span and mount heights
- * against the built model: the render lane owns that (productSpans.test.ts).
+ * render tables rely on (id, kebab-case, base motion and shape, zoom range, positive span, data sheet). The body,
+ * channel-order, dimension and discontinued rules are catalogueBodies.test.ts's. It does not pin the drawn span and
+ * mount heights against the built model: the render lane owns that (productSpans.test.ts).
  */
 import { describe, expect, it } from 'vitest';
 import { fixtureTypeOf } from '../../../../src/domain/fixtureProducts/fixtureTypeOf.ts';
@@ -27,9 +27,25 @@ const NATIVE_MODELS: readonly string[] = [
 const KEBAB_CASE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 describe('product catalogue', () => {
-  it('holds the Robe Esprite as its one product and knows only its own keys', () => {
+  it('holds the listed product ids in catalogue order and knows only its own keys', () => {
     expect([PRODUCT_IDS, isProductId('robe-esprite'), isProductId('toString'), productOf(undefined)]).toStrictEqual([
-      ['robe-esprite'],
+      [
+        'robe-iforte',
+        'robe-esprite',
+        'robe-painte',
+        'robe-t1-profile',
+        'robe-t2-profile',
+        'robe-pointe',
+        'robe-gigapointe',
+        'robe-ibolt',
+        'robe-ledbeam-150',
+        'robe-ledbeam-350',
+        'robe-tarrantula',
+        'robe-spikie',
+        'robe-tetrax',
+        'robe-patt-2013',
+        'robe-onepatt',
+      ],
       true,
       false,
       undefined,
@@ -74,14 +90,5 @@ describe('product catalogue', () => {
       heights.every((h) => Number.isFinite(h) && h >= 0),
       dataSheet.startsWith('https://'),
     ]).toStrictEqual([true, true, true, true]);
-  });
-
-  it.each(PRODUCT_IDS)('keeps the %s lens and ribs inside its barrel, so no body is drawn inside out', (id) => {
-    const { barrel, lens, ribs = [] } = PRODUCTS[id].body;
-    expect([
-      barrel.front < 0 && 0 < barrel.rear,
-      0 < lens.r && lens.r < barrel.r,
-      ribs.every((y) => barrel.front < y && y < barrel.rear),
-    ]).toStrictEqual([true, true, true]);
   });
 });

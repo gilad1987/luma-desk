@@ -1,5 +1,8 @@
 import type { FixtureType, FixtureTypeId } from '../FixtureType';
 import type { MountHeight } from '../fixtureTypes/mountHeights';
+import type { MoverBody } from './bodies/moverBody';
+import type { TiltBarBody } from './bodies/tiltBarBody';
+import type { YokedCanBody } from './bodies/yokedCanBody';
 
 /** Every library category a product can sit in; the library groups its cards by this list, in this order. */
 export const PRODUCT_CATEGORIES = [
@@ -23,30 +26,12 @@ export type ProductOptics = Partial<
   Pick<FixtureType, 'attrs' | 'zr' | 'z0' | 'power' | 'beamK' | 'soft' | 'glowK' | 'defColor'>
 >;
 
-/**
- * The parametric body of a moving head drawn on the Robe base and yoke. All lengths are model units, scaled by
- * `size` like a native model, so one family builder draws every mover product from these numbers.
- */
-export interface MoverBody {
-  readonly family: 'mover';
-  /** Metres per model unit (`FixtureType.size`). */
-  readonly size: number;
-  /** Yoke arm offset from the pan axis, model units. */
-  readonly ax: number;
-  /** Barrel radius at the tilt axis; y of the rear cap and of the lens face (negative = towards the lens). */
-  readonly barrel: { readonly r: number; readonly rear: number; readonly front: number };
-  /** Lens radius, y of its face, and the group-origin-to-lens-face offset (`BuiltModel.lensOff`). */
-  readonly lens: { readonly r: number; readonly y: number; readonly off: number };
-  /** y of each cooling rib ring; none for a smooth barrel. */
-  readonly ribs?: readonly number[];
-  /** Side vent grilles on the head. */
-  readonly vents?: boolean;
-  /** Lens face painter: 'rings' (one front lens over zoom optics), 'hotspot' (short-arc beam). */
-  readonly face: 'rings' | 'hotspot';
-}
+export type { MoverBody } from './bodies/moverBody';
+export type { TiltBarBody } from './bodies/tiltBarBody';
+export type { YokedCanBody } from './bodies/yokedCanBody';
 
-/** Every body family a product can be drawn with; C2 adds tiltBar and yokedCan, C3 panel and tube. */
-export type ProductBody = MoverBody;
+/** Every body family a product can be drawn with; other families join the union as they land. */
+export type ProductBody = MoverBody | TiltBarBody | YokedCanBody;
 
 /**
  * One real fixture of the catalogue, drawn and driven as its `base` type with its own optics and body. It is static
@@ -67,6 +52,8 @@ export interface FixtureProduct {
   /** The DMX mode of `gdtfSpec`, only when checked against the same file. */
   readonly gdtfMode?: string;
   readonly body: ProductBody;
+  /** Data-sheet size in millimetres (height, width, depth, as the sheet states them); feeds the size rule. */
+  readonly dimensions: { readonly h: number; readonly w: number; readonly d: number };
   /**
    * Drawn hung span in metres (largest dimension), pinned against the built model as BODY_SPANS. No reader until C5
    * (`bodyScale` for a product's own GDTF size).
@@ -78,4 +65,6 @@ export interface FixtureProduct {
   readonly dataSheet: string;
   /** Real features the desk does not model, for the library card ("single cell / approximate"). English. */
   readonly unmodelled: readonly string[];
+  /** Set only when the manufacturer lists the product as discontinued. No reader until the library card (lane ui). */
+  readonly discontinued?: true;
 }
