@@ -52,6 +52,14 @@ describe('InspectorDrawer focus guards', () => {
     expect([isOpen(), document.activeElement === close]).toEqual([true, true]);
   });
 
+  // catches a drawer listener on `document`: it runs before an open wa-tooltip's `document` listener stops the Escape
+  it('stays open on an Escape that a document listener stopped', () => {
+    document.addEventListener('keydown', (ev) => ev.stopPropagation(), { once: true });
+    close.focus();
+    escape();
+    expect([isOpen(), document.activeElement === close]).toEqual([true, true]);
+  });
+
   // catches the guard shutting out the drawer's own Escape
   it('closes on an Escape from inside the drawer and gives the focus to the Inspector button', () => {
     close.focus();

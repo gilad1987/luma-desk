@@ -51,8 +51,8 @@ describe('wireBuilder #buildBtn load', () => {
     expect(enter.mock.contexts).toEqual([builder]);
   });
 
-  // the bug: a Cancel (main.ts `cancelBuilder`, which calls exit) during a slow load did nothing, and the builder
-  // opened
+  // the bug: an exit during a slow load (a show load or an MVR import, main.ts `cancelBuilder`) did nothing, and the
+  // builder opened
   it('does not open when the builder exits before the shell loads', async () => {
     const { shell, release } = slowShell();
     const { enter, builder } = clickWith(shell);
