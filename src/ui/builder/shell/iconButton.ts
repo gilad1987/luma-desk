@@ -13,8 +13,8 @@ export interface IconButton {
   readonly tip: string;
 }
 
-/** The Web Awesome `appearance`: `plain` for the edit buttons (no border), `outlined` for a boxed button. */
-export type IconButtonAppearance = 'plain' | 'outlined';
+/** The Web Awesome `appearance`: `plain` for the edit buttons (no border), the only bar buttons built here. */
+export type IconButtonAppearance = 'plain';
 
 /**
  * The markup of a `wa-button` with a start icon and its `wa-tooltip`. The tooltip is styled with the builder and also

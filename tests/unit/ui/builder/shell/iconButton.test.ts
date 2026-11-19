@@ -14,8 +14,8 @@ const appearances = (root: HTMLElement): string[] =>
 describe('iconButton', () => {
   it('writes the appearance it is given on the button', () => {
     const root = document.createElement('div');
-    root.innerHTML = iconButton({ id: 'b', hook: 'data-x="y"', icon: 'undo', label: 'Undo', tip: 'tip' }, 'outlined');
-    expect(appearances(root)).toEqual(['outlined']);
+    root.innerHTML = iconButton({ id: 'b', hook: 'data-x="y"', icon: 'undo', label: 'Undo', tip: 'tip' }, 'plain');
+    expect(appearances(root)).toEqual(['plain']);
   });
 
   // Bug: the Hebrew help was only in the wa-tooltip, which labels the role-less host, so the focused inner button had
