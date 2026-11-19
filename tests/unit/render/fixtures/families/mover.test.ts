@@ -1,8 +1,8 @@
 /**
  * Owns the shape of a built mover product: the Esprite is a Robe mover with joints, head and lens, drawn with its
  * body's lens offset and radius, the body `ref` picks the native head lathe the barrel scales, a `cells` face paints
- * one lens per cell, and a mover body gets side vents only when it asks for them. The lazy creation rule
- * is owned by `lazyProducts.test.ts`, the pinned sizes by `productSpans.test.ts`.
+ * one lens per cell, a mover body gets side vents only when it asks for them, and the Pointe lens is as deep as the
+ * MegaPointe one. The lazy creation rule is owned by `lazyProducts.test.ts`, the pinned sizes by `productSpans.test.ts`.
  */
 import { Box3, BufferGeometry, Vector3 } from 'three';
 import { afterEach, expect, it, vi } from 'vitest';
@@ -14,7 +14,7 @@ import { moverFacePainter } from '../../../../../src/render/fixtures/families/mo
 import { barrelProfile } from '../../../../../src/render/fixtures/families/moverProfile';
 import { MOVER_REFERENCES } from '../../../../../src/render/fixtures/families/moverReferences';
 import { FORTE_BARREL_PROFILE } from '../../../../../src/render/fixtures/models/forteHead';
-import { MEGAPOINTE_BARREL_PROFILE } from '../../../../../src/render/fixtures/models/megapointeHead';
+import { MEGAPOINTE_BARREL_PROFILE, MEGAPOINTE_HEAD } from '../../../../../src/render/fixtures/models/megapointeHead';
 import { SPIIDER_DRUM_PROFILE } from '../../../../../src/render/fixtures/models/spiiderHead';
 import type { CanvasPainter } from '../../../../../src/render/shared';
 import { asReal } from '../../../../shared/dom';
@@ -80,6 +80,13 @@ it('paints one round lens per cell of a cells face, the sum of its ring counts',
   expect([arcCount(moverFacePainter({ cells: [1, 6] })), arcCount(moverFacePainter({ cells: [1, 6, 12] }))]).toEqual([
     7, 19,
   ]);
+});
+
+it('sinks the Pointe lens as deep, in lens radii, as the MegaPointe one, so its hot spot shows at a slant', () => {
+  const depth = (front: number, y: number, r: number): number => (-front - y) / r;
+  const { barrel, lens } = PRODUCTS['robe-pointe'].body;
+  const native = depth(MOVER_REFERENCES.megapointe.shape.front, MEGAPOINTE_HEAD.lensY, MEGAPOINTE_HEAD.lensR);
+  expect(depth(barrel.front, lens.y, lens.r)).toBeCloseTo(native, 2);
 });
 
 it('cuts side vents into a mover head only when its body asks for them', () => {
