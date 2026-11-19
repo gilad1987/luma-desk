@@ -37,6 +37,8 @@ export class ShadowAtlas {
     this.texture.compareFunction = LessEqualCompare;
     this.texture.minFilter = this.texture.magFilter = LinearFilter;
     this.#target.scissorTest = true;
+    // a lamp, not an eye: what sorts itself for the viewer (the audience levels) must not sort for this camera
+    this.#camera.userData['passCamera'] = true;
   }
 
   /**

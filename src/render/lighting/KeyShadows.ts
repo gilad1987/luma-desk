@@ -2,6 +2,7 @@ import { ROW } from '../beams/packBeam';
 import { KeyOffers } from './KeyOffers';
 import { EXTRA } from './LightBatch';
 import type { ShadowLayers } from './ShadowSource';
+import { SlotHold } from './SlotHold';
 
 /** Shadow maps that exist at one time: one per key light. */
 export const KEYS = 8;
@@ -12,9 +13,10 @@ const POSE = [0, 1, 2, 4, 5, 6, 7, 14] as const;
 
 /**
  * Which fixtures have a shadow map, by fixture id, and which maps are out of date. The best `KEYS` offers of a frame
- * hold a slot each. A fixture keeps its slot and its map while no better key needs the slot (a strobe that is dark
- * for a frame loses nothing), and a map is drawn again when the pose of its key changed, when the scene moved
- * (`stamp`: every map then, as any map may hold the mover), and in turn by age.
+ * hold a slot each. A fixture that stops offering keeps its slot and its map for `HOLD` frames against a weaker new
+ * key (`SlotHold`), and after that while no new key needs the slot: a strobe that is dark for a few frames loses
+ * nothing, also when a weaker key fills its place in the offers of a dark frame. A map is drawn again when the pose
+ * of its key changed, when the scene moved (`stamp`: every map then, as any map may hold the mover), and by age.
  */
 export class KeyShadows implements ShadowLayers {
   /** Per slot, the row its map is drawn from next. */
@@ -22,6 +24,7 @@ export class KeyShadows implements ShadowLayers {
   readonly #ids = new Int32Array(KEYS).fill(-1);
   readonly #hasMap = new Uint8Array(KEYS);
   readonly #isDirty = new Uint8Array(KEYS);
+  readonly #hold = new SlotHold(KEYS);
   readonly #offers = new KeyOffers(KEYS);
   #cursor = 0;
   #frame = 0;
@@ -40,20 +43,15 @@ export class KeyShadows implements ShadowLayers {
   /**
    * Ends the offers of a frame: gives slots to new keys and marks the maps that `rows` or new scenery outdate. It
    * then writes the layer of each key to its row of `extras`, after the slots are given: a fixture that lost its
-   * slot in this frame, or whose first map is not drawn, reads no map, never the map of another fixture.
+   * slot in this frame, waits for one, or whose first map is not drawn, reads no map, never one of another fixture.
    */
   update(rows: Float32Array, extras: Float32Array, stamp: number): void {
     for (let i = 0; i < this.#offers.count; i++) {
-      const id = this.#offers.idAt(i);
-      let slot = this.#ids.indexOf(id);
-      if (slot < 0) {
-        slot = this.#freeSlot();
-        this.#ids[slot] = id;
-        this.#hasMap[slot] = 0;
-        this.#isDirty[slot] = 1;
-      }
+      const slot = this.#slotFor(this.#offers.idAt(i), this.#offers.scoreAt(i));
       const index = this.#offers.rowAt(i);
-      extras[index * EXTRA] = this.#hasMap[slot] === 1 ? slot : -1;
+      extras[index * EXTRA] = slot >= 0 && this.#hasMap[slot] === 1 ? slot : -1;
+      if (slot < 0) continue;
+      this.#hold.keep(slot, this.#frame, this.#offers.scoreAt(i));
       const from = index * ROW;
       const to = slot * ROW;
       for (const k of POSE) if (this.poses[to + k] !== rows[from + k]) this.#isDirty[slot] = 1;
@@ -83,11 +81,16 @@ export class KeyShadows implements ShadowLayers {
     this.#hasMap[slot] = 1;
   }
 
-  /** An empty slot, or the slot of a fixture that is no key in this frame: there are never more offers than slots. */
-  #freeSlot(): number {
-    const empty = this.#ids.indexOf(-1);
-    if (empty >= 0) return empty;
-    for (let slot = 0; slot < KEYS; slot++) if (!this.#offers.has(this.#ids[slot] ?? -1)) return slot;
-    return 0;
+  /** The slot of `id`; else an empty one, or one that `SlotHold` lets a new key of `score` take; -1 when none is. */
+  #slotFor(id: number, score: number): number {
+    let slot = this.#ids.indexOf(id);
+    if (slot >= 0) return slot;
+    slot = this.#ids.indexOf(-1);
+    if (slot < 0) slot = this.#hold.pick(score, this.#frame, (k) => !this.#offers.has(this.#ids[k] ?? -1));
+    if (slot < 0) return slot;
+    this.#ids[slot] = id;
+    this.#hasMap[slot] = 0;
+    this.#isDirty[slot] = 1;
+    return slot;
   }
 }

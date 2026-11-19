@@ -6,6 +6,18 @@ export const MAX_AGE = 60;
 /** What a frame draws beyond the lights: nothing, the surface buffers, or one shadow map. */
 export const DRAW = { none: 0, buffers: 1, tile: 2 } as const;
 export type ExtraDraw = (typeof DRAW)[keyof typeof DRAW];
+/**
+ * The largest change of a camera matrix element that is no view change: a quarter of a millimetre, and 1/4096 radian
+ * (0.014 degrees, a third of a pixel of a 50 degree view 1280 pixels wide), the step of `SceneWatch`. The orbit
+ * damping eases a drag out over seconds in ever smaller steps, and an exact compare drew the buffers in each of those
+ * frames. The compare is with the matrices of the last draw, so small steps that add up still draw again.
+ */
+const STILL = 1 / 4096;
+
+function isNear(a: Matrix4, b: Matrix4): boolean {
+  for (let i = 0; i < 16; i++) if (Math.abs((a.elements[i] ?? 0) - (b.elements[i] ?? 0)) > STILL) return false;
+  return true;
+}
 
 /**
  * Which one extra draw of the scenery a frame gets, if any. The surface buffers and a shadow map each cost a draw
@@ -35,8 +47,8 @@ export class SurfaceCache {
     const area = size.width * 16384 + size.height;
     const isView =
       area !== this.#size ||
-      !camera.matrixWorld.equals(this.#view) ||
-      !camera.projectionMatrix.equals(this.#projection);
+      !isNear(camera.matrixWorld, this.#view) ||
+      !isNear(camera.projectionMatrix, this.#projection);
     const isOld = stamp !== this.#stamp || this.#age >= MAX_AGE;
     this.#age++;
     let draw: ExtraDraw = DRAW.none;
