@@ -57,6 +57,11 @@ export class KeyOffers {
     return this.#rows[i] ?? 0;
   }
 
+  /** The score of offer `i`. */
+  scoreAt(i: number): number {
+    return this.#scores[i] ?? 0;
+  }
+
   has(fixtureId: number): boolean {
     for (let i = 0; i < this.count; i++) if (this.#ids[i] === fixtureId) return true;
     return false;
