@@ -13,10 +13,11 @@ const POSE = [0, 1, 2, 4, 5, 6, 7, 14] as const;
 
 /**
  * Which fixtures have a shadow map, by fixture id, and which maps are out of date. The best `KEYS` offers of a frame
- * hold a slot each. A fixture that stops offering keeps its slot and its map for `HOLD` frames against a weaker new
- * key (`SlotHold`), and after that while no new key needs the slot: a strobe that is dark for a few frames loses
- * nothing, also when a weaker key fills its place in the offers of a dark frame. A map is drawn again when the pose
- * of its key changed, when the scene moved (`stamp`: every map then, as any map may hold the mover), and by age.
+ * hold a slot each. A fixture that goes dark keeps its slot and its map for `HOLD` frames against a weaker new key
+ * (`SlotHold`), and after that while no new key needs the slot: a strobe that is dark for a few frames loses nothing,
+ * also when a weaker key fills its place in the offers of a dark frame. A lit fixture that is outranked holds nothing:
+ * the key that passed it takes its slot at once. A map is drawn again when the pose of its key changed, when the
+ * scene moved (`stamp`: every map then, as any map may hold the mover), and by age.
  */
 export class KeyShadows implements ShadowLayers {
   /** Per slot, the row its map is drawn from next. */
@@ -35,9 +36,10 @@ export class KeyShadows implements ShadowLayers {
     return slot >= 0 && this.#hasMap[slot] === 1 ? slot : -1;
   }
 
-  /** Keeps the offer when it is one of the best of this frame. */
+  /** Keeps the offer when it is one of the best of this frame, and notes a lit key's slot, which then holds nothing. */
   offer(fixtureId: number, index: number, row: Float32Array): void {
-    this.#offers.offer(fixtureId, index, row);
+    const slot = this.#offers.offer(fixtureId, index, row) > 0 ? this.#ids.indexOf(fixtureId) : -1;
+    if (slot >= 0) this.#hold.lit(slot, this.#frame);
   }
 
   /**
@@ -64,7 +66,7 @@ export class KeyShadows implements ShadowLayers {
     this.#offers.endFrame();
   }
 
-  /** The next slot whose map is out of date, in turn, so several moving keys share the draws; -1 when none is. A peek keeps the turn. */
+  /** The next out-of-date slot, in turn, so moving keys share the draws; -1 when none is. A peek keeps the turn. */
   next(isPeek = false): number {
     for (let k = 0; k < KEYS; k++) {
       const slot = (this.#cursor + k) % KEYS;

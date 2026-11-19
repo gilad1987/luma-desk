@@ -22,13 +22,13 @@ export class KeyOffers {
     this.#scores = new Float32Array(capacity);
   }
 
-  /** Keeps the offer when it is one of the best of this frame. */
-  offer(fixtureId: number, index: number, row: Float32Array): void {
+  /** Keeps the offer when it is one of the best of this frame. Returns its score, also when it is not kept. */
+  offer(fixtureId: number, index: number, row: Float32Array): number {
     const last = this.capacity - 1;
     const landing = (row[1] ?? 0) + (row[5] ?? 0) * (row[3] ?? 0);
     if ((row[15] ?? 1) <= 0.5 && landing < this.#lowest) this.#lowest = landing;
     const score = keyScore(row, this.#floor);
-    if (score <= 0 || (this.count === this.capacity && score <= (this.#scores[last] ?? 0))) return;
+    if (score <= 0 || (this.count === this.capacity && score <= (this.#scores[last] ?? 0))) return score;
     let at = this.count === this.capacity ? last : this.count++;
     for (; at > 0 && (this.#scores[at - 1] ?? 0) < score; at--) {
       this.#ids[at] = this.#ids[at - 1] ?? -1;
@@ -38,6 +38,7 @@ export class KeyOffers {
     this.#ids[at] = fixtureId;
     this.#rows[at] = index;
     this.#scores[at] = score;
+    return score;
   }
 
   /** Ends the offers of a frame; the lowest landing of it, if a beam landed, is the floor of the next frame. */
