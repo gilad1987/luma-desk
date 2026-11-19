@@ -20,12 +20,18 @@ export function watchUserMove(camera: Camera, controls: OrbitControls, onMoved: 
   /**
    * Where each pointer that is down went down, by pointerId, and the travel at pointerup of the pointer that went up:
    * this listener runs before the one of the controls. A gesture with two pointers down at once (a pinch) is no click.
+   * A primary pointerdown means no other pointer of its type is down, so it forgets every press before it: a pointer
+   * whose pointerup never came to the canvas (review R2-38).
    */
   const downs = new Map<number, { readonly x: number; readonly y: number }>();
   let isMulti = false;
   let travel: number | null = null;
   const element: GlobalEventHandlers = controls.domElement;
   element.addEventListener('pointerdown', (event) => {
+    if (event.isPrimary) {
+      downs.clear();
+      isMulti = false;
+    }
     downs.set(event.pointerId, { x: event.clientX, y: event.clientY });
     if (downs.size > 1) isMulti = true;
   });
