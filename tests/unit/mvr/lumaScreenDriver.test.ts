@@ -75,7 +75,11 @@ describe('LED walls pair with their driver by fixture uuid (R2-2)', () => {
   it('drops a wall whose driver link pairs with no fixture, and does not move it to the fixture with that id', async () => {
     const design = await walled();
     const { venue, scenery, deck, risers, trusses, screens } = design;
-    const links = design.fixtures.map((f) => ({ ...linkOf(f), uuid: f.id === idOf(design, u(3)) ? 'gone' : u(9) }));
+    // each its own uuid that no fixture has: a uuid on two links would pair by id (R2-2)
+    const links = design.fixtures.map((f) => ({
+      ...linkOf(f),
+      uuid: f.id === idOf(design, u(3)) ? 'gone' : u(f.id + 6),
+    }));
     const luma: LumaStageData = { venue, scenery, deck, screens, risers, trusses, offset: [0, 0, 0], links };
     const applied = applyLumaData(design, luma);
     expect(applied.design.screens).toEqual([]);

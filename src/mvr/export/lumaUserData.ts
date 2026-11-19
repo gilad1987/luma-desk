@@ -16,7 +16,8 @@ function linkWithFootprint(fixture: StageFixture, design: StageDesign): FixtureL
   const info = design.mvr?.fixtures[String(fixture.id)];
   const gdtf = gdtfIdentity(fixture, design.mvr);
   const occurrence = info?.occurrence ? { occurrence: info.occurrence } : {};
-  const link = { ...linkOf(fixture), ...(info ? { uuid: info.uuid, ...occurrence } : {}) };
+  // A blank uuid names no fixture (many `<Fixture>` elements can lack one), so its link pairs by id (review R2-2).
+  const link = { ...linkOf(fixture), ...(info?.uuid ? { uuid: info.uuid, ...occurrence } : {}) };
   if (info === undefined || (info.footprint === undefined && info.bodySize === undefined) || !gdtf.imported) {
     return link;
   }
