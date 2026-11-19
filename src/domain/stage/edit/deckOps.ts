@@ -17,9 +17,9 @@ export interface DeckSize {
 /**
  * Resizes the deck around its centre line, keeping the downstage edge (z1) where it is, so the deck grows away from
  * the audience. Risers and the LED wall stand on the deck, so a new height moves them up or down with it in the same
- * step (the riser row has no height field to fix them later): the wall with its side screens and its screen fixture
- * (`wallRisen`). Trusses and the other fixtures do not move. The size the deck already has (float noise aside)
- * returns `d` itself, so History adds no undo step.
+ * step (the riser row has no height field to fix them later): the wall with its screen fixture (`wallRisen`). The
+ * side screens stand off the deck, so they stay, as do trusses and the other fixtures. The size the deck already has
+ * (float noise aside) returns `d` itself, so History adds no undo step.
  * @throws RangeError when a size is not a finite number > 0: a zero deck has no top for beams to land on.
  */
 export function setDeckSize(d: StageDesign, size: DeckSize): StageDesign {
