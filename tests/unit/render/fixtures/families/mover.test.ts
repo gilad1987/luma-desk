@@ -1,9 +1,9 @@
 /**
  * Owns the shape of a built mover product: the Esprite is a Robe mover with joints, head and lens, drawn with its
- * body's lens numbers, and a mover body gets side vents only when it asks for them. The lazy creation rule is owned by
- * `lazyProducts.test.ts`, the pinned sizes by `productSpans.test.ts`.
+ * body's lens offset and radius, and a mover body gets side vents only when it asks for them. The lazy creation rule
+ * is owned by `lazyProducts.test.ts`, the pinned sizes by `productSpans.test.ts`.
  */
-import { BufferGeometry } from 'three';
+import { Box3, BufferGeometry, Vector3 } from 'three';
 import { afterEach, expect, it, vi } from 'vitest';
 import { PRODUCTS } from '../../../../../src/domain/fixtureProducts';
 import type { MoverBody } from '../../../../../src/domain/fixtureProducts/FixtureProduct';
@@ -27,6 +27,13 @@ it('builds the Esprite as a moving light with joints, a head and a lens at the b
   const visual = buildEsprite();
   expect([visual.joints === null, visual.head.isMesh, visual.lens.isMesh]).toStrictEqual([false, true, true]);
   expect(visual.lensOff).toBeCloseTo(ESPRITE.body.lens.off * ESPRITE.body.size, 6);
+});
+
+it('draws the Esprite lens disc at the body lens radius, not the FORTE one', () => {
+  const visual = buildEsprite();
+  visual.g.updateMatrixWorld(true);
+  const width = new Box3().setFromObject(visual.lens).getSize(new Vector3()).x;
+  expect(width / 2).toBeCloseTo(ESPRITE.body.lens.r * ESPRITE.body.size, 3);
 });
 
 it('paints the lens on the fixture lens material, and that material is the lens mesh material', () => {
