@@ -72,7 +72,8 @@ Good:
 - A new product needs no engine, render or UI change: one data record, and a body family that already exists.
 - The goldens and the screenshot baselines stay byte-equal, because the native types, models and boot objects do
   not change.
-- Designs are forward-compatible: a desk that does not know a product loads the design with the base type.
+- Designs are forward-compatible: a desk that does not know a product loads the design with the base type. Its next
+  save writes the design without the product, so the product name is lost once an older desk saves the design.
 
 Costs and risks:
 
