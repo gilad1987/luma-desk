@@ -13,17 +13,22 @@ export interface IconButton {
   readonly tip: string;
 }
 
-/** The Web Awesome `appearance`: `plain` for the edit buttons (no border), `outlined` for the mode group. */
-export type IconButtonAppearance = 'plain' | 'outlined';
+/** The Web Awesome `appearance`: `plain` for the edit buttons (no border), the only bar buttons built here. */
+export type IconButtonAppearance = 'plain';
 
 /**
- * The markup of a `wa-button` with a start icon and its `wa-tooltip`. The tooltip replaces the old `title` attribute:
- * it is styled with the builder and also shows on keyboard focus. The edit toolbar and the view-mode switch both build
- * their buttons with it, so the two rows cannot drift apart; only their `appearance` differs (toolbar.md).
+ * The markup of a `wa-button` with a start icon and its `wa-tooltip`. The tooltip is styled with the builder and also
+ * shows on keyboard focus. The edit toolbar builds its buttons with it; the mode radios are native buttons
+ * (`ViewModeSwitch`), drawn to match.
+ *
+ * The tooltip's text is also the `title`: `wa-button` passes `title` to its inner button, the element that takes the
+ * focus, where it becomes the accessible description. The tooltip's own `aria-labelledby` lands on the host, which has
+ * no role, so without the `title` a screen reader would hear the label and never the help or the key.
  */
 export function iconButton(button: IconButton, appearance: IconButtonAppearance): string {
   return (
-    `<wa-button id="${button.id}" ${button.hook} appearance="${appearance}">${startIcon(button.icon)}${button.label}` +
-    `</wa-button>\n<wa-tooltip for="${button.id}">${button.tip}</wa-tooltip>`
+    `<wa-button id="${button.id}" ${button.hook} appearance="${appearance}" title="${button.tip}">` +
+    `${startIcon(button.icon)}${button.label}</wa-button>\n` +
+    `<wa-tooltip for="${button.id}" dir="rtl">${button.tip}</wa-tooltip>`
   );
 }

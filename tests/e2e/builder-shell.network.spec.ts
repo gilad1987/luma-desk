@@ -25,7 +25,7 @@ test('a builder visit with every mode, a drag and a resize asks no other origin'
     if (new URL(request.url()).origin !== new URL(page.url()).origin) offOrigin.push(request.url());
   });
   await openBuilder(page);
-  for (const mode of ['3D', 'Plan', 'Split']) await page.getByRole('button', { name: mode, exact: true }).click();
+  for (const mode of ['3D', 'Plan', 'Split']) await page.getByRole('radio', { name: mode, exact: true }).click();
   await dragDivider(page, 100);
   await page.setViewportSize({ width: 1000, height: 700 });
   // a class: the narrow layout's library rail shows the resize has reached the shell
